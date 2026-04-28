@@ -234,21 +234,9 @@ export default function MedicoHorarios() {
     refresh();
   }
 
-  if (!session) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Meus horários"
-          description="Cadastre os horários disponíveis para os pacientes agendarem."
-        />
-        <div className="card-elevated p-10 text-center text-sm text-muted-foreground">
-          Faça login como médico para gerenciar seus horários.
-        </div>
-      </div>
-    );
-  }
-
+  const devMode = !session;
   const grouped = groupByDay(slots);
+
 
   return (
     <div className="space-y-6">
@@ -256,11 +244,25 @@ export default function MedicoHorarios() {
         title="Meus horários"
         description="Configure sua disponibilidade e o sistema gera os slots automaticamente conforme a duração da consulta."
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-            <Database className="h-3 w-3" /> Dados em tempo real
-          </span>
+          devMode ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-medium text-warning">
+              <Info className="h-3 w-3" /> Visualização (sem login)
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+              <Database className="h-3 w-3" /> Dados em tempo real
+            </span>
+          )
         }
       />
+
+      {devMode && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-warning-foreground">
+          <b>Modo visualização de dev:</b> você não está logado como médico. A tela é
+          exibida pra inspecionar layout e fluxo, mas <b>gerar/excluir horários está
+          desabilitado</b>. Faça login como médico aprovado para usar de verdade.
+        </div>
+      )}
 
       {/* Faixa de info de duração */}
       <div className="card-elevated flex items-center gap-3 p-4">
@@ -426,7 +428,7 @@ export default function MedicoHorarios() {
             <div className="flex justify-end">
               <Button
                 onClick={gerarSemanal}
-                disabled={savingSemana || !duracao}
+                disabled={savingSemana || !duracao || devMode}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 {savingSemana ? "Gerando…" : "Gerar horários"}
@@ -527,7 +529,7 @@ export default function MedicoHorarios() {
               <div className="flex justify-end">
                 <Button
                   onClick={gerarDia}
-                  disabled={savingDia || !duracao || !dataSel}
+                  disabled={savingDia || !duracao || !dataSel || devMode}
                   className="bg-gradient-primary hover:opacity-90"
                 >
                   {savingDia ? "Gerando…" : "Adicionar ao dia"}
