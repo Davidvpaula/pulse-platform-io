@@ -428,7 +428,7 @@ export default function MedicoHorarios() {
             <div className="flex justify-end">
               <Button
                 onClick={gerarSemanal}
-                disabled={savingSemana || !duracao}
+                disabled={savingSemana || !duracao || devMode}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 {savingSemana ? "Gerando…" : "Gerar horários"}
@@ -529,7 +529,7 @@ export default function MedicoHorarios() {
               <div className="flex justify-end">
                 <Button
                   onClick={gerarDia}
-                  disabled={savingDia || !duracao || !dataSel}
+                  disabled={savingDia || !duracao || !dataSel || devMode}
                   className="bg-gradient-primary hover:opacity-90"
                 >
                   {savingDia ? "Gerando…" : "Adicionar ao dia"}
