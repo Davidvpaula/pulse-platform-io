@@ -289,43 +289,109 @@ export default function MedicoConfiguracoes() {
                   {especialidades.map((e) => {
                     const l = linhas[e.id];
                     if (!l) return null;
+                    const cg = isClinicaGeral(e);
                     return (
                       <div key={e.id} className={cn(
-                        "grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm",
+                        "px-3 py-2.5 text-sm",
                         !l.ativo && "opacity-60"
                       )}>
-                        <div className="col-span-5">
-                          <p className="font-medium">{e.nome}</p>
-                          {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
+                        <div className="grid grid-cols-12 items-center gap-2">
+                          <div className="col-span-5">
+                            <p className="font-medium">{e.nome}</p>
+                            {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
+                            {cg && (
+                              <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                                CFM: não exige RQE
+                              </span>
+                            )}
+                          </div>
+                          <div className="col-span-3">
+                            <Input
+                              type="number"
+                              min={5}
+                              step={5}
+                              value={l.duracao_minutos}
+                              disabled={!l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { duracao_minutos: Math.max(5, Number(ev.target.value) || 0) })}
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <Input
+                              type="number"
+                              min={0}
+                              step={10}
+                              value={(l.preco_centavos / 100).toFixed(2)}
+                              disabled={!l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { preco_centavos: Math.max(0, Math.round(Number(ev.target.value) * 100) || 0) })}
+                            />
+                          </div>
+                          <div className="col-span-1 flex justify-end">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-primary"
+                              checked={l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { ativo: ev.target.checked })}
+                            />
+                          </div>
                         </div>
-                        <div className="col-span-3">
-                          <Input
-                            type="number"
-                            min={5}
-                            step={5}
-                            value={l.duracao_minutos}
-                            disabled={!l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { duracao_minutos: Math.max(5, Number(ev.target.value) || 0) })}
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <Input
-                            type="number"
-                            min={0}
-                            step={10}
-                            value={(l.preco_centavos / 100).toFixed(2)}
-                            disabled={!l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { preco_centavos: Math.max(0, Math.round(Number(ev.target.value) * 100) || 0) })}
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-end">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 accent-primary"
-                            checked={l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { ativo: ev.target.checked })}
-                          />
-                        </div>
+
+                        {/* Linha 2: especialista CFM + RQE */}
+                        {l.ativo && !cg && (
+                          <div className="mt-2 grid grid-cols-12 items-center gap-2 rounded-md bg-muted/30 px-2 py-2">
+                            <div className="col-span-5 flex items-center gap-3">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Especialista (CFM)
+                              </span>
+                              <div className="flex items-center gap-3 text-xs">
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`esp-${e.id}`}
+                                    className="accent-primary"
+                                    checked={l.especialista === true}
+                                    onChange={() => updateLinha(e.id, { especialista: true })}
+                                  />
+                                  Sim
+                                </label>
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`esp-${e.id}`}
+                                    className="accent-primary"
+                                    checked={l.especialista === false}
+                                    onChange={() => updateLinha(e.id, { especialista: false, rqe: "" })}
+                                  />
+                                  Não
+                                </label>
+                              </div>
+                            </div>
+                            <div className="col-span-7">
+                              {l.especialista ? (
+                                <div className="flex items-center gap-2">
+                                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                                    RQE *
+                                  </label>
+                                  <Input
+                                    placeholder="Ex.: 12345"
+                                    value={l.rqe}
+                                    onChange={(ev) => updateLinha(e.id, { rqe: ev.target.value })}
+                                    className={cn(
+                                      "max-w-[180px]",
+                                      !l.rqe.trim() && "border-destructive/50"
+                                    )}
+                                  />
+                                  <span className="text-[11px] text-muted-foreground">
+                                    Aparecerá no seu perfil público.
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-muted-foreground">
+                                  Aparecerá no site como <strong className="text-foreground">"Não especialista"</strong>.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
