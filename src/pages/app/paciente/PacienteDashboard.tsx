@@ -212,7 +212,7 @@ export default function PacienteDashboard() {
             </Button>
           </div>
           <div className="mt-4 divide-y divide-border">
-            {proximasConsultasPaciente.map(c => (
+            {consultas.map(c => (
               <div key={c.id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
                   <Stethoscope className="h-5 w-5" />
