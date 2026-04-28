@@ -90,7 +90,8 @@ export default function CadastroMedico() {
     setSubmitting(true);
     try {
       const documentos = Object.values(docs).filter(Boolean) as DocumentoMedico[];
-      const novo = createMedico({ ...parsed.data, documentos });
+      const data = parsed.data as FormData;
+      const novo = createMedico({ ...data, documentos });
       setCurrentMedicoId(novo.id);
       toast({
         title: "Cadastro enviado!",
