@@ -47,7 +47,15 @@ type LinhaEsp = {
   duracao_minutos: number;
   preco_centavos: number;
   pronto_atendimento: boolean;
+  especialista: boolean;
+  rqe: string;
   dirty?: boolean;
+};
+
+const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
+  const s = (e.slug ?? "").toLowerCase();
+  if (s === "clinica-geral" || s === "clinico-geral") return true;
+  return /cl[ií]nic[ao]\s+geral/i.test(e.nome);
 };
 
 export default function MedicoConfiguracoes() {
@@ -84,6 +92,8 @@ export default function MedicoConfiguracoes() {
             duracao_minutos: 30,
             preco_centavos: 0,
             pronto_atendimento: false,
+            especialista: false,
+            rqe: "",
           };
         }
         setLinhas(mapa);
@@ -99,6 +109,8 @@ export default function MedicoConfiguracoes() {
             duracao_minutos: v?.duracao_minutos ?? 30,
             preco_centavos: v?.preco_centavos ?? 0,
             pronto_atendimento: (v as any)?.pronto_atendimento ?? false,
+            especialista: (v as any)?.especialista ?? false,
+            rqe: (v as any)?.rqe ?? "",
           };
         }
         setLinhas(mapa);
@@ -130,16 +142,31 @@ export default function MedicoConfiguracoes() {
       toast("Nenhuma alteração para salvar.");
       return;
     }
+    // Validação CFM: especialidades marcadas como "especialista" precisam de RQE
+    const espMap = new Map(especialidades.map((e) => [e.id, e]));
+    for (const l of dirties) {
+      const esp = espMap.get(l.especialidade_id);
+      if (!esp || !l.ativo) continue;
+      if (isClinicaGeral(esp)) continue;
+      if (l.especialista && !l.rqe.trim()) {
+        toast.error(`Informe o RQE para ${esp.nome} (especialista CFM).`);
+        return;
+      }
+    }
     setSavingAt(true);
     let okCount = 0;
     let failCount = 0;
     for (const l of dirties) {
+      const esp = espMap.get(l.especialidade_id);
+      const cg = esp ? isClinicaGeral(esp) : false;
       const r = await upsertVinculoEspecialidade({
         especialidade_id: l.especialidade_id,
         ativo: l.ativo,
         duracao_minutos: l.duracao_minutos,
         preco_centavos: l.preco_centavos,
         pronto_atendimento: l.pronto_atendimento && l.ativo,
+        especialista: cg ? false : l.especialista,
+        rqe: cg || !l.especialista ? null : l.rqe.trim(),
       });
       if (r.ok) okCount++;
       else failCount++;
@@ -262,43 +289,109 @@ export default function MedicoConfiguracoes() {
                   {especialidades.map((e) => {
                     const l = linhas[e.id];
                     if (!l) return null;
+                    const cg = isClinicaGeral(e);
                     return (
                       <div key={e.id} className={cn(
-                        "grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm",
+                        "px-3 py-2.5 text-sm",
                         !l.ativo && "opacity-60"
                       )}>
-                        <div className="col-span-5">
-                          <p className="font-medium">{e.nome}</p>
-                          {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
+                        <div className="grid grid-cols-12 items-center gap-2">
+                          <div className="col-span-5">
+                            <p className="font-medium">{e.nome}</p>
+                            {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
+                            {cg && (
+                              <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                                CFM: não exige RQE
+                              </span>
+                            )}
+                          </div>
+                          <div className="col-span-3">
+                            <Input
+                              type="number"
+                              min={5}
+                              step={5}
+                              value={l.duracao_minutos}
+                              disabled={!l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { duracao_minutos: Math.max(5, Number(ev.target.value) || 0) })}
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <Input
+                              type="number"
+                              min={0}
+                              step={10}
+                              value={(l.preco_centavos / 100).toFixed(2)}
+                              disabled={!l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { preco_centavos: Math.max(0, Math.round(Number(ev.target.value) * 100) || 0) })}
+                            />
+                          </div>
+                          <div className="col-span-1 flex justify-end">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-primary"
+                              checked={l.ativo}
+                              onChange={(ev) => updateLinha(e.id, { ativo: ev.target.checked })}
+                            />
+                          </div>
                         </div>
-                        <div className="col-span-3">
-                          <Input
-                            type="number"
-                            min={5}
-                            step={5}
-                            value={l.duracao_minutos}
-                            disabled={!l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { duracao_minutos: Math.max(5, Number(ev.target.value) || 0) })}
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <Input
-                            type="number"
-                            min={0}
-                            step={10}
-                            value={(l.preco_centavos / 100).toFixed(2)}
-                            disabled={!l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { preco_centavos: Math.max(0, Math.round(Number(ev.target.value) * 100) || 0) })}
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-end">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 accent-primary"
-                            checked={l.ativo}
-                            onChange={(ev) => updateLinha(e.id, { ativo: ev.target.checked })}
-                          />
-                        </div>
+
+                        {/* Linha 2: especialista CFM + RQE */}
+                        {l.ativo && !cg && (
+                          <div className="mt-2 grid grid-cols-12 items-center gap-2 rounded-md bg-muted/30 px-2 py-2">
+                            <div className="col-span-5 flex items-center gap-3">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Especialista (CFM)
+                              </span>
+                              <div className="flex items-center gap-3 text-xs">
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`esp-${e.id}`}
+                                    className="accent-primary"
+                                    checked={l.especialista === true}
+                                    onChange={() => updateLinha(e.id, { especialista: true })}
+                                  />
+                                  Sim
+                                </label>
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`esp-${e.id}`}
+                                    className="accent-primary"
+                                    checked={l.especialista === false}
+                                    onChange={() => updateLinha(e.id, { especialista: false, rqe: "" })}
+                                  />
+                                  Não
+                                </label>
+                              </div>
+                            </div>
+                            <div className="col-span-7">
+                              {l.especialista ? (
+                                <div className="flex items-center gap-2">
+                                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                                    RQE *
+                                  </label>
+                                  <Input
+                                    placeholder="Ex.: 12345"
+                                    value={l.rqe}
+                                    onChange={(ev) => updateLinha(e.id, { rqe: ev.target.value })}
+                                    className={cn(
+                                      "max-w-[180px]",
+                                      !l.rqe.trim() && "border-destructive/50"
+                                    )}
+                                  />
+                                  <span className="text-[11px] text-muted-foreground">
+                                    Aparecerá no seu perfil público.
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-muted-foreground">
+                                  Aparecerá no site como <strong className="text-foreground">"Não especialista"</strong>.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -325,12 +418,23 @@ export default function MedicoConfiguracoes() {
               </div>
               <div className="divide-y divide-border">
                 {[
-                  { nome: "Clínica Geral", duracao: 30, preco: 180 },
-                  { nome: "Psiquiatria", duracao: 50, preco: 350 },
-                  { nome: "Pediatria", duracao: 30, preco: 220 },
+                  { nome: "Clínica Geral", duracao: 30, preco: 180, especialista: null as null | boolean, rqe: "" },
+                  { nome: "Psiquiatria", duracao: 50, preco: 350, especialista: true, rqe: "12345" },
+                  { nome: "Pediatria", duracao: 30, preco: 220, especialista: false, rqe: "" },
                 ].map((ex) => (
                   <div key={ex.nome} className="grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm">
-                    <div className="col-span-5 font-medium">{ex.nome}</div>
+                    <div className="col-span-5">
+                      <p className="font-medium">{ex.nome}</p>
+                      {ex.especialista === null ? null : ex.especialista ? (
+                        <span className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                          Especialista · RQE {ex.rqe}
+                        </span>
+                      ) : (
+                        <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          Não especialista
+                        </span>
+                      )}
+                    </div>
                     <div className="col-span-3 text-muted-foreground">{ex.duracao} min</div>
                     <div className="col-span-3 text-muted-foreground">R$ {ex.preco.toFixed(2).replace(".", ",")}</div>
                     <div className="col-span-1 flex justify-end">
@@ -343,9 +447,9 @@ export default function MedicoConfiguracoes() {
 
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {[
-                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00" },
-                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00" },
-                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00" },
+                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00", tag: null as null | string },
+                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00", tag: "Especialista · RQE 12345" },
+                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00", tag: "Não especialista" },
               ].map((c) => (
                 <div key={c.label} className="rounded-lg border border-border bg-card p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{c.label}</p>
@@ -353,12 +457,15 @@ export default function MedicoConfiguracoes() {
                     <span className="font-display text-lg font-semibold">{c.preco}</span>
                     <span className="text-[11px] text-muted-foreground">{c.duracao}</span>
                   </div>
+                  {c.tag && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">{c.tag}</p>
+                  )}
                 </div>
               ))}
             </div>
 
             <p className="mt-2 text-[11px] text-muted-foreground">
-              ↑ Esses cards são <strong>exemplos visuais</strong>. Ao preencher a tabela acima e salvar, suas especialidades aparecerão no catálogo público com esses dados.
+              ↑ Exemplos visuais conforme regra do <strong>CFM</strong>: Clínica Geral nunca exige RQE; demais especialidades mostram <em>"Especialista · RQE"</em> ou <em>"Não especialista"</em> no perfil público.
             </p>
           </div>
 
