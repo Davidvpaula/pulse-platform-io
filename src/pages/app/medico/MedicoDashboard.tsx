@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  Video, Users, FileText, Wallet, ExternalLink, Play, Calendar, Stethoscope,
+  Video, Users, FileText, Wallet, Play, Calendar, Stethoscope,
   CheckCircle2, AlertTriangle, ArrowRight, Clock, BookOpen, Settings, Search,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
