@@ -55,7 +55,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .from("user_roles")
       .select("role")
       .eq("user_id", uid);
-    setRoles((data ?? []).map((r) => r.role as Role));
+    const newRoles = (data ?? []).map((r) => r.role as Role);
+    setRoles(newRoles);
+
+    // Auto-cria registro em `pacientes` quando o usuário tem esse papel
+    if (newRoles.includes("paciente")) {
+      const { ensurePaciente } = await import("@/lib/clinico");
+      ensurePaciente().catch((e) => console.error("[session] ensurePaciente", e));
+    }
   }
 
   async function signOut() {

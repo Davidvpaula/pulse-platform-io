@@ -1,17 +1,20 @@
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download,
   ChevronRight, Building2, User, MessageCircle, RefreshCw, Bell, AlertTriangle,
-  CheckCircle2, Info, Repeat, Stethoscope,
+  CheckCircle2, Info, Repeat, Stethoscope, Database as DbIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { proximasConsultasPaciente, documentosPaciente, timelinePaciente } from "@/lib/mock";
+import { proximasConsultasPaciente, documentosPaciente, timelinePaciente, type Status } from "@/lib/mock";
 import { CategorizedTimeline } from "@/components/CategorizedTimeline";
 import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { cn } from "@/lib/utils";
 
 type AlertTone = "urgente" | "atencao" | "ok";
@@ -37,11 +40,41 @@ const messages = [
   { id: 4, kind: "financeiro",   icon: Wallet,         titulo: "Cobrança gerada",       texto: "Fatura C-1031 disponível para pagamento.",          data: "ontem" },
 ];
 
+type ConsultaItem = {
+  id: string; medico: string; esp: string; data: string; hora: string;
+  modalidade: string; status: Status;
+};
+
 export default function PacienteDashboard() {
-  const proxima = proximasConsultasPaciente[0];
   const { patientLink, setPatientLink } = useAuth();
+  const { session } = useSession();
   const empresarial = patientLink.tipo === "empresarial";
 
+  const [dbConsultas, setDbConsultas] = useState<ConsultaItem[] | null>(null);
+  useEffect(() => {
+    if (!session) { setDbConsultas(null); return; }
+    listConsultasDoPaciente().then((rows) => {
+      setDbConsultas(rows.map((c) => ({
+        id: c.id,
+        medico: c.medico_nome ?? "Médico",
+        esp: c.especialidade_nome ?? "—",
+        data: formatDataBR(c.inicio),
+        hora: formatHora(c.inicio),
+        modalidade: c.modalidade,
+        status: toStatusBadge(c.status),
+      })));
+    });
+  }, [session]);
+
+  const consultas: ConsultaItem[] = useMemo(() => {
+    if (session && dbConsultas) return dbConsultas;
+    return proximasConsultasPaciente.map((c) => ({
+      id: String(c.id), medico: c.medico, esp: c.esp, data: c.data,
+      hora: c.hora, modalidade: c.modalidade, status: c.status as Status,
+    }));
+  }, [session, dbConsultas]);
+
+  const proxima = consultas[0] ?? proximasConsultasPaciente[0];
   const msgConsulta = `Olá, preciso de ajuda com minha consulta ${proxima?.id ?? ""}`.trim();
 
   return (
@@ -50,9 +83,16 @@ export default function PacienteDashboard() {
         title="Olá, Marina 👋"
         description="Sua central de saúde — ações rápidas, próximas consultas e suporte direto."
         actions={
-          <Button asChild className="bg-gradient-primary hover:opacity-90">
-            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {session && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+                <DbIcon className="h-3 w-3" /> Dados em tempo real
+              </span>
+            )}
+            <Button asChild className="bg-gradient-primary hover:opacity-90">
+              <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
+            </Button>
+          </div>
         }
       />
 
@@ -179,7 +219,7 @@ export default function PacienteDashboard() {
             </Button>
           </div>
           <div className="mt-4 divide-y divide-border">
-            {proximasConsultasPaciente.map(c => (
+            {consultas.map(c => (
               <div key={c.id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
                   <Stethoscope className="h-5 w-5" />
