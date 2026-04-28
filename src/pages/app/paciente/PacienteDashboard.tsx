@@ -1,17 +1,20 @@
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download,
   ChevronRight, Building2, User, MessageCircle, RefreshCw, Bell, AlertTriangle,
-  CheckCircle2, Info, Repeat, Stethoscope,
+  CheckCircle2, Info, Repeat, Stethoscope, Database as DbIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { proximasConsultasPaciente, documentosPaciente, timelinePaciente } from "@/lib/mock";
+import { proximasConsultasPaciente, documentosPaciente, timelinePaciente, type Status } from "@/lib/mock";
 import { CategorizedTimeline } from "@/components/CategorizedTimeline";
 import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { cn } from "@/lib/utils";
 
 type AlertTone = "urgente" | "atencao" | "ok";
