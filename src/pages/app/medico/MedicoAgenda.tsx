@@ -1,10 +1,18 @@
-import { useMemo, useState } from "react";
-import { Play, Calendar, Filter } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Play, Filter, Database } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { agendamentos } from "@/lib/mock";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/session";
+import {
+  listConsultasDoMedico,
+  formatDataBR,
+  formatHora,
+  statusLabel,
+  type ConsultaDetalhada,
+} from "@/lib/clinico";
 
 type Periodo = "hoje" | "semana" | "todos";
 
@@ -16,32 +24,89 @@ const periodOptions: { key: Periodo; label: string }[] = [
 
 const statusOptions = ["todos", "confirmado", "em_andamento", "agendamento_criado", "concluido", "no_show"] as const;
 
+type Item = {
+  id: string;
+  data: string;
+  hora: string;
+  paciente: string;
+  esp: string;
+  modalidade: string;
+  canal: string;
+  status: string;
+};
+
 export default function MedicoAgenda() {
+  const { session } = useSession();
   const [periodo, setPeriodo] = useState<Periodo>("hoje");
   const [status, setStatus] = useState<(typeof statusOptions)[number]>("todos");
 
-  const meus = agendamentos.filter(a => a.medico === "Dr. Rafael Lasmar");
+  const [dbConsultas, setDbConsultas] = useState<ConsultaDetalhada[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!session) { setDbConsultas(null); return; }
+    setLoading(true);
+    listConsultasDoMedico().then((data) => {
+      setDbConsultas(data);
+      setLoading(false);
+    });
+  }, [session]);
+
+  // Origem dos dados: banco (sessão real) ou mock (demo)
+  const items: Item[] = useMemo(() => {
+    if (session && dbConsultas) {
+      return dbConsultas.map((c) => ({
+        id: c.id,
+        data: formatDataBR(c.inicio),
+        hora: formatHora(c.inicio),
+        paciente: c.paciente_nome ?? "Paciente",
+        esp: c.especialidade_nome ?? "—",
+        modalidade: c.modalidade,
+        canal: c.modalidade === "online" ? "telemedicina" : "presencial",
+        status: statusLabel(c.status),
+      }));
+    }
+    return agendamentos
+      .filter((a) => a.medico === "Dr. Rafael Lasmar")
+      .map((a) => ({
+        id: String(a.id),
+        data: a.data,
+        hora: a.hora,
+        paciente: a.paciente,
+        esp: a.esp,
+        modalidade: a.modalidade,
+        canal: a.canal,
+        status: a.status,
+      }));
+  }, [session, dbConsultas]);
 
   const filtered = useMemo(() => {
-    return meus.filter(a => {
+    return items.filter((a) => {
       if (periodo === "hoje" && a.data !== "Hoje") return false;
-      if (periodo === "semana" && !["Hoje", "28/Abr"].includes(a.data)) return false;
+      if (periodo === "semana" && !["Hoje", "28/Abr", "28 abr.", "29 abr.", "30 abr."].includes(a.data)) return false;
       if (status !== "todos" && a.status !== status) return false;
       return true;
     });
-  }, [meus, periodo, status]);
+  }, [items, periodo, status]);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Agenda"
         description="Sua agenda com filtros rápidos e ações de início direto."
+        actions={
+          session ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+              <Database className="h-3 w-3" /> Dados em tempo real
+            </span>
+          ) : undefined
+        }
       />
 
       {/* Filtros */}
       <div className="card-elevated flex flex-wrap items-center gap-3 p-4">
         <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-          {periodOptions.map(p => (
+          {periodOptions.map((p) => (
             <button
               key={p.key}
               onClick={() => setPeriodo(p.key)}
@@ -59,10 +124,10 @@ export default function MedicoAgenda() {
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={status}
-            onChange={e => setStatus(e.target.value as typeof status)}
+            onChange={(e) => setStatus(e.target.value as typeof status)}
             className="rounded-md border border-border bg-card px-3 py-1.5 text-xs"
           >
-            {statusOptions.map(s => (
+            {statusOptions.map((s) => (
               <option key={s} value={s}>{s === "todos" ? "Todos os status" : s.replace(/_/g, " ")}</option>
             ))}
           </select>
@@ -74,10 +139,17 @@ export default function MedicoAgenda() {
       {/* Lista */}
       <div className="card-elevated overflow-hidden">
         <div className="divide-y divide-border">
-          {filtered.length === 0 && (
-            <p className="p-10 text-center text-sm text-muted-foreground">Nada encontrado para o filtro atual.</p>
+          {loading && (
+            <p className="p-10 text-center text-sm text-muted-foreground">Carregando…</p>
           )}
-          {filtered.map(a => (
+          {!loading && filtered.length === 0 && (
+            <p className="p-10 text-center text-sm text-muted-foreground">
+              {session && dbConsultas?.length === 0
+                ? "Nenhuma consulta cadastrada ainda."
+                : "Nada encontrado para o filtro atual."}
+            </p>
+          )}
+          {!loading && filtered.map((a) => (
             <div key={a.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-4 p-4 hover:bg-muted/30">
               <div className="grid h-12 w-16 place-items-center rounded-lg bg-primary-soft text-primary">
                 <div className="text-center">
