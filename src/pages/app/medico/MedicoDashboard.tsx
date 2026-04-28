@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 const alertas = [
   { tone: "warning", icon: Calendar, titulo: "Próxima consulta em 12 min", desc: "Renata Lima · Empresarial · Construtora Horizonte" },
   { tone: "info", icon: Users, titulo: "2 pacientes aguardando pagamento", desc: "Confirmação automática após quitação" },
-  { tone: "destructive", icon: ExternalLink, titulo: "Feegow desconectado", desc: "Prontuário em modo offline · admin notificado" },
 ];
 
 const toneClasses = {
