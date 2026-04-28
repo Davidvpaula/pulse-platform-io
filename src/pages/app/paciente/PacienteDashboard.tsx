@@ -131,6 +131,17 @@ export default function PacienteDashboard() {
         </div>
       </div>
 
+      {/* Linha do tempo do paciente */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold">Minha linha do tempo</h3>
+          <span className="text-xs text-muted-foreground">Cronologia de eventos</span>
+        </div>
+        <div className="mt-5">
+          <Timeline events={timelinePaciente("P-1001")} />
+        </div>
+      </div>
+
       {/* Suporte */}
       <div className="card-elevated p-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
