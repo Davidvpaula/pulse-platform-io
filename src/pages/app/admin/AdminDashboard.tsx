@@ -1,22 +1,17 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Users, Stethoscope, Building2, Calendar, Wallet, Plug, ShieldCheck, TrendingUp,
-  AlertTriangle, Clock, Download,
+  AlertTriangle, Clock, Download, Activity, ArrowRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { integracoes, filaSecretaria } from "@/lib/mock";
+import { integracoes, filaSecretaria, pacientes } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
-const ultimosPacientes = [
-  { nome: "Marina Costa", plano: "Particular", criado: "há 12 min" },
-  { nome: "Bruno Carvalho", plano: "Construtora Horizonte", criado: "há 1h" },
-  { nome: "Sofia Mendes", plano: "Particular", criado: "há 3h" },
-  { nome: "Patrícia Nunes", plano: "Construtora Horizonte", criado: "ontem" },
-  { nome: "Eduardo Lopes", plano: "Construtora Horizonte", criado: "ontem" },
-];
+const ultimosPacientes = pacientes.slice(0, 5);
 
 const alertas = [
   { tone: "destructive", titulo: "Integração Feegow desconectada", desc: "Sincronização parada há 2h." },
