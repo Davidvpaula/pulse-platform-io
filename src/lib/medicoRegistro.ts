@@ -147,7 +147,7 @@ export async function getMedicoByUser(userId: string): Promise<MedicoRow | null>
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  return data as MedicoRow | null;
+  return data as unknown as MedicoRow | null;
 }
 
 export async function listMedicos(): Promise<MedicoRow[]> {
