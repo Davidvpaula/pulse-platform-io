@@ -23,6 +23,8 @@ export type Database = {
           medico_id: string
           modalidade: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes: string | null
+          reserva_expira_em: string | null
+          reservado_por_consulta_id: string | null
           status: Database["public"]["Enums"]["slot_status"]
           updated_at: string
         }
@@ -34,6 +36,8 @@ export type Database = {
           medico_id: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes?: string | null
+          reserva_expira_em?: string | null
+          reservado_por_consulta_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
           updated_at?: string
         }
@@ -45,6 +49,8 @@ export type Database = {
           medico_id?: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes?: string | null
+          reserva_expira_em?: string | null
+          reservado_por_consulta_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
           updated_at?: string
         }
@@ -436,49 +442,61 @@ export type Database = {
       pacientes: {
         Row: {
           alergias: string | null
+          cep: string | null
           condicoes_cronicas: string | null
           contato_emergencia_nome: string | null
           contato_emergencia_telefone: string | null
+          cpf: string | null
           created_at: string
           data_nascimento: string | null
           empresa_id: string | null
           id: string
           matricula_empresa: string | null
           medicamentos_uso: string | null
+          nome_completo: string | null
           observacoes_internas: string | null
           sexo: Database["public"]["Enums"]["sexo_biologico"]
+          telefone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           alergias?: string | null
+          cep?: string | null
           condicoes_cronicas?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_telefone?: string | null
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           empresa_id?: string | null
           id?: string
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
+          nome_completo?: string | null
           observacoes_internas?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
+          telefone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           alergias?: string | null
+          cep?: string | null
           condicoes_cronicas?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_telefone?: string | null
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           empresa_id?: string | null
           id?: string
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
+          nome_completo?: string | null
           observacoes_internas?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
+          telefone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -696,6 +714,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cpf_valido: { Args: { _cpf: string }; Returns: boolean }
+      criar_consulta_com_reserva: {
+        Args: {
+          _cep: string
+          _cpf: string
+          _data_nascimento: string
+          _especialidade_id: string
+          _motivo: string
+          _nome_completo: string
+          _sexo: Database["public"]["Enums"]["sexo_biologico"]
+          _slot_id: string
+          _telefone: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -711,6 +744,7 @@ export type Database = {
         Args: { _consulta_id: string }
         Returns: boolean
       }
+      liberar_reservas_expiradas: { Args: never; Returns: number }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
     }
     Enums: {
