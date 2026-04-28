@@ -134,6 +134,50 @@ export default function AdminConfiguracoes() {
         description="Especialidades disponíveis no site e parâmetros de Pronto Atendimento."
       />
 
+      {/* Pagamentos */}
+      <Section
+        icon={CreditCard}
+        title="Pagamentos"
+        action={
+          <span
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+              provider === "stripe"
+                ? "border-success/30 bg-success/10 text-success"
+                : "border-warning/30 bg-warning/10 text-warning",
+            )}
+          >
+            {provider === "stripe" ? "Stripe conectado" : "Modo simulado (dev)"}
+          </span>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-sm">
+              Provider atual: <strong className="capitalize">{provider}</strong>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {provider === "mock"
+                ? "Checkout simulado para desenvolvimento. Nenhum valor é cobrado e os pagamentos são confirmados localmente."
+                : "Pagamentos reais via Stripe. Webhooks confirmam o pagamento e liberam a consulta."}
+            </p>
+          </div>
+          <Button variant="outline" disabled title="Será habilitado quando ligarmos o Stripe">
+            Conectar Stripe (em breve)
+          </Button>
+        </div>
+        {provider === "mock" && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <span>
+              Toda a infraestrutura (tabela <code className="font-mono">pagamentos</code>, RLS,
+              fluxo de checkout/sucesso/cancelado) já está pronta. Para ativar o Stripe basta
+              conectar a chave e implementar a edge function de Checkout Session.
+            </span>
+          </div>
+        )}
+      </Section>
+
       {/* Pronto Atendimento */}
       <Section
         icon={Zap}
