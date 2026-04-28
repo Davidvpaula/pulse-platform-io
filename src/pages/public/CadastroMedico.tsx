@@ -146,6 +146,8 @@ export default function CadastroMedico() {
         crm: data.crm,
         crm_estado: data.ufCrm,
         especialidade: data.especialidade,
+        cpf: data.cpf,
+        data_nascimento: data.dataNascimento,
         documentos: uploaded,
       });
 
