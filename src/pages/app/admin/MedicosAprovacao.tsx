@@ -13,6 +13,22 @@ import {
   type MedicoRow, type MedicoStatus, type DocumentoMedico, type AuditoriaRow,
   type FeegowStatus,
 } from "@/lib/medicoRegistro";
+import { isValidCpf, formatCpf } from "@/lib/validation/cpf";
+
+/** Validação completa dos pré-requisitos para liberação na Feegow. */
+function validarFeegow(m: MedicoRow): { ok: boolean; motivo?: string } {
+  if (!m.cpf) return { ok: false, motivo: "CPF não informado" };
+  if (!isValidCpf(m.cpf)) return { ok: false, motivo: "CPF inválido (dígitos verificadores não conferem)" };
+  if (!m.data_nascimento) return { ok: false, motivo: "Data de nascimento não informada" };
+  const d = new Date(m.data_nascimento + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return { ok: false, motivo: "Data de nascimento em formato inválido" };
+  const hoje = new Date();
+  if (d > hoje) return { ok: false, motivo: "Data de nascimento no futuro" };
+  const idade = (hoje.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+  if (idade < 18) return { ok: false, motivo: "Médico deve ter pelo menos 18 anos" };
+  if (idade > 120) return { ok: false, motivo: "Data de nascimento implausível (> 120 anos)" };
+  return { ok: true };
+}
 
 const STATUS_ORDER: MedicoStatus[] = ["pendente", "em_analise", "aprovado", "reprovado"];
 
