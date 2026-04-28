@@ -234,21 +234,9 @@ export default function MedicoHorarios() {
     refresh();
   }
 
-  if (!session) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Meus horários"
-          description="Cadastre os horários disponíveis para os pacientes agendarem."
-        />
-        <div className="card-elevated p-10 text-center text-sm text-muted-foreground">
-          Faça login como médico para gerenciar seus horários.
-        </div>
-      </div>
-    );
-  }
-
+  const devMode = !session;
   const grouped = groupByDay(slots);
+
 
   return (
     <div className="space-y-6">
