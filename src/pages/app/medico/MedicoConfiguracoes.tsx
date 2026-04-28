@@ -47,7 +47,15 @@ type LinhaEsp = {
   duracao_minutos: number;
   preco_centavos: number;
   pronto_atendimento: boolean;
+  especialista: boolean;
+  rqe: string;
   dirty?: boolean;
+};
+
+const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
+  const s = (e.slug ?? "").toLowerCase();
+  if (s === "clinica-geral" || s === "clinico-geral") return true;
+  return /cl[ií]nic[ao]\s+geral/i.test(e.nome);
 };
 
 export default function MedicoConfiguracoes() {
