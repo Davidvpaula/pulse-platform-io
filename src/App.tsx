@@ -80,6 +80,7 @@ const App = () => (
               <Route path="medico/perfil" element={<Placeholder title="Perfil profissional" />} />
               <Route path="medico/configuracoes" element={<Placeholder title="Configurações" />} />
               <Route path="medico/integracoes" element={<Integracoes />} />
+              <Route path="medico/mensagens" element={<Conversas />} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
