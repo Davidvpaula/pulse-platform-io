@@ -42,7 +42,7 @@ export default function CadastroMedico() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [form, setForm] = useState({
-    nome: "", crm: "", ufCrm: "", especialidade: "",
+    nome: "", cpf: "", dataNascimento: "", crm: "", ufCrm: "", especialidade: "",
     telefone: "", email: "",
   });
   const [docs, setDocs] = useState<Record<DocKind, LocalDoc | undefined>>({
