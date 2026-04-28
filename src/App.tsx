@@ -32,6 +32,9 @@ import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
+import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
+import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
+import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 
 const queryClient = new QueryClient();
 
