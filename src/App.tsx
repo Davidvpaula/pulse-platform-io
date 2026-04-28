@@ -73,6 +73,7 @@ const App = () => (
               <Route path="/para-medicos" element={<ParaMedicos />} />
               <Route path="/faq" element={<Faq />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/cadastro/medico" element={<CadastroMedico />} />
             </Route>
 
             {/* APP */}
@@ -88,19 +89,20 @@ const App = () => (
               <Route path="paciente/perfil" element={<Placeholder title="Meu perfil" />} />
               <Route path="paciente/mensagens" element={<Placeholder title="Mensagens e suporte" />} />
 
-              {/* Médico */}
-              <Route path="medico/dashboard" element={<MedicoDashboard />} />
-              <Route path="medico/agenda" element={<MedicoAgenda />} />
-              <Route path="medico/consultas" element={<Placeholder title="Consultas" />} />
-              <Route path="medico/pacientes" element={<MedicoPacientes />} />
-              <Route path="medico/documentos" element={<Placeholder title="Documentos emitidos" />} />
-              <Route path="medico/financeiro" element={<Placeholder title="Financeiro" />} />
-              <Route path="medico/perfil" element={<Placeholder title="Perfil profissional" />} />
-              <Route path="medico/configuracoes" element={<MedicoConfiguracoes />} />
-              <Route path="medico/integracoes" element={<MedicoIntegracoes />} />
-              <Route path="medico/treinamento" element={<MedicoTreinamento />} />
-              <Route path="medico/mensagens" element={<Conversas />} />
-              <Route path="medico/comunicacao-interna" element={<ComunicacaoInterna />} />
+              {/* Médico — todas as rotas operacionais protegidas pelo MedicoGuard */}
+              <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
+              <Route path="medico/dashboard" element={<MedicoGuard><MedicoDashboard /></MedicoGuard>} />
+              <Route path="medico/agenda" element={<MedicoGuard><MedicoAgenda /></MedicoGuard>} />
+              <Route path="medico/consultas" element={<MedicoGuard><Placeholder title="Consultas" /></MedicoGuard>} />
+              <Route path="medico/pacientes" element={<MedicoGuard><MedicoPacientes /></MedicoGuard>} />
+              <Route path="medico/documentos" element={<MedicoGuard><Placeholder title="Documentos emitidos" /></MedicoGuard>} />
+              <Route path="medico/financeiro" element={<MedicoGuard><Placeholder title="Financeiro" /></MedicoGuard>} />
+              <Route path="medico/perfil" element={<MedicoGuard><Placeholder title="Perfil profissional" /></MedicoGuard>} />
+              <Route path="medico/configuracoes" element={<MedicoGuard><MedicoConfiguracoes /></MedicoGuard>} />
+              <Route path="medico/integracoes" element={<MedicoGuard><MedicoIntegracoes /></MedicoGuard>} />
+              <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
+              <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
+              <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
@@ -121,7 +123,7 @@ const App = () => (
               {/* Admin */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
               <Route path="admin/usuarios" element={<Placeholder title="Gestão de usuários" />} />
-              <Route path="admin/medicos" element={<Placeholder title="Gestão de médicos" />} />
+              <Route path="admin/medicos" element={<MedicosAprovacao />} />
               <Route path="admin/secretaria" element={<Placeholder title="Gestão de secretaria" />} />
               <Route path="admin/empresas" element={<Placeholder title="Gestão de empresas" />} />
               <Route path="admin/agendamentos" element={<Placeholder title="Todos os agendamentos" />} />
