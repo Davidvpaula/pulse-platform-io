@@ -181,6 +181,24 @@ export default function CadastroMedico() {
               <Field label="Nome completo" error={errors.nome}>
                 <input className="input" value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Dr. João da Silva" />
               </Field>
+              <Field label="CPF" error={errors.cpf}>
+                <input
+                  className="input"
+                  value={form.cpf}
+                  onChange={e => set("cpf", maskCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  maxLength={14}
+                />
+              </Field>
+              <Field label="Data de nascimento" error={errors.dataNascimento}>
+                <input
+                  type="date"
+                  className="input"
+                  value={form.dataNascimento}
+                  onChange={e => set("dataNascimento", e.target.value)}
+                />
+              </Field>
               <Field label="Especialidade" error={errors.especialidade}>
                 <select className="input" value={form.especialidade} onChange={e => set("especialidade", e.target.value)}>
                   <option value="">Selecione...</option>
