@@ -204,6 +204,15 @@ export const Faq = () => {
 export const Login = () => {
   const { setProfileKey } = useAuth();
   const navigate = useNavigate();
+  const isDev = import.meta.env.DEV;
+
+  // Em produção, /login redireciona para a página real de auth.
+  React.useEffect(() => {
+    if (!isDev) navigate("/auth", { replace: true });
+  }, [isDev, navigate]);
+
+  if (!isDev) return null;
+
   const enter = (k: Parameters<typeof setProfileKey>[0], to: string) => {
     setProfileKey(k);
     navigate(to);
@@ -218,13 +227,11 @@ export const Login = () => {
   return (
     <section className="container grid min-h-[80vh] place-items-center py-16">
       <div className="card-elevated w-full max-w-md p-8">
-        <h1 className="font-display text-2xl font-bold">Acessar plataforma</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Entre com seu e-mail e senha.</p>
-        <div className="mt-6 space-y-3">
-          <input className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="E-mail" />
-          <input type="password" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Senha" />
-          <Button className="w-full bg-gradient-primary hover:opacity-90">Entrar</Button>
-        </div>
+        <h1 className="font-display text-2xl font-bold">Acesso de demonstração</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Disponível apenas em desenvolvimento. Para entrar de verdade, use{" "}
+          <Link to="/auth" className="text-primary hover:underline">/auth</Link>.
+        </p>
         <div className="mt-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acesso rápido (demo)</p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
