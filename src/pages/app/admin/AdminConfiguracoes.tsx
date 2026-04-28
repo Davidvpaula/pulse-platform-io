@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Settings, Stethoscope, Zap, Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Settings, Stethoscope, Zap, Plus, Trash2, Save, Loader2, CreditCard, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getAppSetting, type Especialidade } from "@/lib/clinico";
+import { getProviderAtual, type PagamentoProvider } from "@/lib/pagamentos";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -53,6 +54,9 @@ export default function AdminConfiguracoes() {
   const [paValor, setPaValor] = useState<number>(0); // em reais
   const [savingPa, setSavingPa] = useState(false);
 
+  // Pagamentos
+  const [provider, setProvider] = useState<PagamentoProvider>("mock");
+
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -64,6 +68,7 @@ export default function AdminConfiguracoes() {
     const val = await getAppSetting<number>("pronto_atendimento_valor_centavos");
     setPaDuracao(typeof dur === "number" ? dur : 15);
     setPaValor(typeof val === "number" ? val / 100 : 0);
+    setProvider(await getProviderAtual());
     setLoading(false);
   };
 
