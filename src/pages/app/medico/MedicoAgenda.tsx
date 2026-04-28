@@ -33,7 +33,7 @@ type Item = {
   esp: string;
   modalidade: string;
   canal: string;
-  status: string;
+  status: Status;
 };
 
 export default function MedicoAgenda() {
@@ -64,7 +64,7 @@ export default function MedicoAgenda() {
         esp: c.especialidade_nome ?? "—",
         modalidade: c.modalidade,
         canal: c.modalidade === "online" ? "telemedicina" : "presencial",
-        status: statusLabel(c.status),
+        status: toStatusBadge(c.status),
       }));
     }
     return agendamentos
@@ -77,7 +77,7 @@ export default function MedicoAgenda() {
         esp: a.esp,
         modalidade: a.modalidade,
         canal: a.canal,
-        status: a.status,
+        status: a.status as Status,
       }));
   }, [session, dbConsultas]);
 
