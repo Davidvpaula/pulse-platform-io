@@ -107,6 +107,15 @@ function SidebarBody({
 }) {
   const profile = profiles[profileKey];
   const { pathname } = useLocation();
+  const { hasCapability } = useAuth();
+
+  const visibleNav = profile.nav.filter(item => {
+    if (item.requiresCapability && !hasCapability(item.requiresCapability as any)) return false;
+    return true;
+  }).map(item => ({
+    ...item,
+    children: item.children?.filter(c => !c.requiresCapability || hasCapability(c.requiresCapability as any)),
+  }));
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -151,7 +160,7 @@ function SidebarBody({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
-          {profile.nav.map((item) => {
+          {visibleNav.map((item) => {
             if (item.children?.length) {
               const open = item.children.some(c => pathname.startsWith(c.to));
               return (
