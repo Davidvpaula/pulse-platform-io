@@ -284,6 +284,8 @@ export async function upsertVinculoEspecialidade(input: {
   duracao_minutos: number;
   preco_centavos: number;
   pronto_atendimento: boolean;
+  especialista?: boolean;
+  rqe?: string | null;
   modalidades?: ConsultaModalidade[];
 }): Promise<{ ok: boolean; error?: string }> {
   const medicoId = await getMedicoAtualId();
@@ -296,13 +298,15 @@ export async function upsertVinculoEspecialidade(input: {
     .eq("especialidade_id", input.especialidade_id)
     .maybeSingle();
 
-  const payload = {
+  const payload: any = {
     medico_id: medicoId,
     especialidade_id: input.especialidade_id,
     ativo: input.ativo,
     duracao_minutos: input.duracao_minutos,
     preco_centavos: input.preco_centavos,
     pronto_atendimento: input.pronto_atendimento,
+    especialista: input.especialista ?? false,
+    rqe: input.rqe?.trim() || null,
     modalidades: input.modalidades ?? ["online" as ConsultaModalidade],
   };
 
