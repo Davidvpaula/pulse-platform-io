@@ -79,9 +79,39 @@ export default function MedicosAprovacao() {
         variant: status === "reprovado" ? "destructive" : "default",
       });
       reload();
+      // Se aprovou e ainda não foi liberado na Feegow, dispara automaticamente.
+      if (status === "aprovado" && m.feegow_status !== "liberado" && m.cpf && m.data_nascimento) {
+        liberarFeegow(m, true);
+      }
     } catch (err) {
       toast({ title: "Erro", description: err instanceof Error ? err.message : "Tente novamente.", variant: "destructive" });
     }
+  }
+
+  async function liberarFeegow(m: MedicoRow, silent = false) {
+    if (!m.cpf || !m.data_nascimento) {
+      toast({
+        title: "Dados incompletos",
+        description: "CPF e data de nascimento são obrigatórios para liberar acesso na Feegow.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!silent) toast({ title: "Enviando para a Feegow..." });
+    const res = await liberarAcessoFeegow(m.id);
+    if (res.ok) {
+      toast({
+        title: "Acesso Feegow liberado",
+        description: res.aviso ?? `ID profissional: ${res.professional_id ?? "—"}`,
+      });
+    } else {
+      toast({
+        title: "Falha ao liberar Feegow",
+        description: res.error ?? "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+    reload();
   }
 
   function handleAprovar(m: MedicoRow) { changeStatus(m, "aprovado"); }
