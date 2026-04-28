@@ -237,6 +237,104 @@ export async function criarSlot(input: {
   return { ok: true, slot: data };
 }
 
+/**
+ * Retorna a duração de consulta a usar para gerar slots:
+ * a MENOR `duracao_minutos` entre as especialidades ativas do médico.
+ * Se não houver vínculo, retorna null.
+ */
+export async function getDuracaoSlotMedico(): Promise<number | null> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return null;
+  const { data } = await supabase
+    .from("medico_especialidades")
+    .select("duracao_minutos, ativo")
+    .eq("medico_id", medicoId)
+    .eq("ativo", true);
+  if (!data || data.length === 0) return null;
+  return Math.min(...data.map((d) => d.duracao_minutos || 30));
+}
+
+export type FaixaHorario = { hi: string; hf: string }; // "HH:MM"
+
+/**
+ * Cria múltiplos slots de uma vez para um conjunto de datas e faixas.
+ * Cada faixa é dividida em slots de `duracaoMin`.
+ * Pula silenciosamente slots que conflitam com já existentes.
+ */
+export async function criarSlotsEmLote(input: {
+  datas: Date[];
+  faixas: FaixaHorario[];
+  duracaoMin: number;
+  modalidade: ConsultaModalidade;
+}): Promise<{ ok: boolean; criados: number; pulados: number; error?: string }> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return { ok: false, criados: 0, pulados: 0, error: "Médico não encontrado." };
+  if (input.duracaoMin <= 0) return { ok: false, criados: 0, pulados: 0, error: "Duração inválida." };
+
+  const agora = new Date();
+  type Row = { medico_id: string; inicio: string; fim: string; modalidade: ConsultaModalidade };
+  const rows: Row[] = [];
+
+  for (const dia of input.datas) {
+    for (const f of input.faixas) {
+      const [hi, mi] = f.hi.split(":").map(Number);
+      const [hf, mf] = f.hf.split(":").map(Number);
+      if ([hi, mi, hf, mf].some((n) => Number.isNaN(n))) continue;
+      const inicioFaixa = new Date(dia);
+      inicioFaixa.setHours(hi, mi, 0, 0);
+      const fimFaixa = new Date(dia);
+      fimFaixa.setHours(hf, mf, 0, 0);
+      if (fimFaixa <= inicioFaixa) continue;
+
+      let cursor = new Date(inicioFaixa);
+      while (cursor < fimFaixa) {
+        const next = new Date(cursor.getTime() + input.duracaoMin * 60_000);
+        if (next > fimFaixa) break;
+        if (cursor >= agora) {
+          rows.push({
+            medico_id: medicoId,
+            inicio: cursor.toISOString(),
+            fim: next.toISOString(),
+            modalidade: input.modalidade,
+          });
+        }
+        cursor = next;
+      }
+    }
+  }
+
+  if (rows.length === 0) {
+    return { ok: false, criados: 0, pulados: 0, error: "Nenhum horário válido para criar." };
+  }
+
+  // Busca slots existentes no intervalo total para evitar conflito.
+  const minIni = rows.reduce((m, r) => (r.inicio < m ? r.inicio : m), rows[0].inicio);
+  const maxFim = rows.reduce((m, r) => (r.fim > m ? r.fim : m), rows[0].fim);
+  const { data: existentes } = await supabase
+    .from("agenda_slots")
+    .select("inicio, fim")
+    .eq("medico_id", medicoId)
+    .lt("inicio", maxFim)
+    .gt("fim", minIni);
+
+  const conflita = (r: Row) =>
+    (existentes ?? []).some((e) => e.inicio < r.fim && e.fim > r.inicio);
+
+  const aInserir = rows.filter((r) => !conflita(r));
+  const pulados = rows.length - aInserir.length;
+
+  if (aInserir.length === 0) {
+    return { ok: true, criados: 0, pulados };
+  }
+
+  const { error } = await supabase.from("agenda_slots").insert(aInserir);
+  if (error) {
+    console.error("[clinico] criarSlotsEmLote:", error);
+    return { ok: false, criados: 0, pulados, error: error.message };
+  }
+  return { ok: true, criados: aInserir.length, pulados };
+}
+
 export async function excluirSlot(slotId: string): Promise<{ ok: boolean; error?: string }> {
   // Só permite excluir slot disponível (RLS já protege, mas reforçamos UX)
   const { data: slot } = await supabase
