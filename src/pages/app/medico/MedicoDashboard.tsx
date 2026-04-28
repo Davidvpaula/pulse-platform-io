@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  Video, Users, FileText, Wallet, ExternalLink, Play, Calendar, Stethoscope,
+  Video, Users, FileText, Wallet, Play, Calendar, Stethoscope,
   CheckCircle2, AlertTriangle, ArrowRight, Clock, BookOpen, Settings, Search,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 const alertas = [
   { tone: "warning", icon: Calendar, titulo: "Próxima consulta em 12 min", desc: "Renata Lima · Empresarial · Construtora Horizonte" },
   { tone: "info", icon: Users, titulo: "2 pacientes aguardando pagamento", desc: "Confirmação automática após quitação" },
-  { tone: "destructive", icon: ExternalLink, titulo: "Feegow desconectado", desc: "Prontuário em modo offline · admin notificado" },
 ];
 
 const toneClasses = {
@@ -49,17 +48,13 @@ export default function MedicoDashboard() {
           </div>
 
           {/* Sequência de ações */}
-          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
+          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
             <Button size="lg" className="bg-gradient-primary hover:opacity-90">
               <Play className="mr-2 h-4 w-4" /> 1. Iniciar consulta
             </Button>
             <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
             <Button size="lg" variant="outline">
-              <ExternalLink className="mr-2 h-4 w-4" /> 2. Abrir prontuário (Feegow)
-            </Button>
-            <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
-            <Button size="lg" variant="outline">
-              <CheckCircle2 className="mr-2 h-4 w-4" /> 3. Finalizar atendimento
+              <CheckCircle2 className="mr-2 h-4 w-4" /> 2. Finalizar atendimento
             </Button>
           </div>
         </div>
@@ -125,14 +120,6 @@ export default function MedicoDashboard() {
               <p className="font-semibold">Buscar paciente</p>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
-          </Link>
-
-          <Link to="/app/medico/integracoes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <ExternalLink className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Status Feegow</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Visualizar prontuários · sem permissão de configuração</p>
           </Link>
 
           <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">

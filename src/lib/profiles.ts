@@ -70,7 +70,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Comunicação interna", to: "/app/medico/comunicacao-interna", icon: MessageSquare },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Treinamento", to: "/app/medico/treinamento", icon: BookOpen },
-      { label: "Integrações", to: "/app/medico/integracoes", icon: Plug },
+      
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],

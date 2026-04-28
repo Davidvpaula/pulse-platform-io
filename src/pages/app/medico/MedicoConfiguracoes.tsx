@@ -543,7 +543,7 @@ export default function MedicoConfiguracoes() {
         <div className="grid gap-4 md:grid-cols-2">
           {Object.entries({
             lembretes: "Lembretes de consulta (10 min antes)",
-            alertas: "Alertas operacionais (Feegow, pagamentos)",
+            alertas: "Alertas operacionais (pagamentos, agenda)",
             resumoDiario: "Resumo diário por e-mail",
           }).map(([key, label]) => (
             <label key={key} className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">

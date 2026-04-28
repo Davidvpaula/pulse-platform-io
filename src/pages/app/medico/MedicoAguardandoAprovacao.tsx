@@ -111,7 +111,7 @@ export default function MedicoAguardandoAprovacao() {
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
             <li>Nossa equipe valida CRM, RQE e seus documentos.</li>
             <li>Você recebe a confirmação por e-mail.</li>
-            <li>Após a aprovação, agenda, prontuário Feegow e atendimentos são liberados.</li>
+            <li>Após a aprovação, o administrador libera o seu acesso ao prontuário e os atendimentos são liberados.</li>
           </ul>
         </div>
 
