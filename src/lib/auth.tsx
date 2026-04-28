@@ -106,7 +106,7 @@ import { supabase } from "@/integrations/supabase/client";
  * E o usuário tiver papel "medico" cadastrado mas não aprovado.
  */
 export function useMedicoAguardandoAprovacao(): boolean {
-  const [aguardando, setAguardando] = _useState(false);
+  const [aguardando, setAguardando] = useState(false);
 
   useEffect(() => {
     let active = true;
