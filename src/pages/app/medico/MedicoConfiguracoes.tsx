@@ -307,6 +307,61 @@ export default function MedicoConfiguracoes() {
             )}
           </div>
 
+          {/* Prévia: como fica quando preenchido */}
+          <div className="rounded-xl border border-primary/20 bg-primary-soft/30 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
+                Exemplo
+              </span>
+              <h4 className="text-sm font-semibold">Prévia: como sua consulta particular vai aparecer</h4>
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="grid grid-cols-12 gap-2 bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="col-span-5">Especialidade</div>
+                <div className="col-span-3">Duração</div>
+                <div className="col-span-3">Preço</div>
+                <div className="col-span-1 text-right">Status</div>
+              </div>
+              <div className="divide-y divide-border">
+                {[
+                  { nome: "Clínica Geral", duracao: 30, preco: 180 },
+                  { nome: "Psiquiatria", duracao: 50, preco: 350 },
+                  { nome: "Pediatria", duracao: 30, preco: 220 },
+                ].map((ex) => (
+                  <div key={ex.nome} className="grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm">
+                    <div className="col-span-5 font-medium">{ex.nome}</div>
+                    <div className="col-span-3 text-muted-foreground">{ex.duracao} min</div>
+                    <div className="col-span-3 text-muted-foreground">R$ {ex.preco.toFixed(2).replace(".", ",")}</div>
+                    <div className="col-span-1 flex justify-end">
+                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">Ativo</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {[
+                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00" },
+                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00" },
+                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00" },
+              ].map((c) => (
+                <div key={c.label} className="rounded-lg border border-border bg-card p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{c.label}</p>
+                  <div className="mt-1.5 flex items-baseline justify-between">
+                    <span className="font-display text-lg font-semibold">{c.preco}</span>
+                    <span className="text-[11px] text-muted-foreground">{c.duracao}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              ↑ Esses cards são <strong>exemplos visuais</strong>. Ao preencher a tabela acima e salvar, suas especialidades aparecerão no catálogo público com esses dados.
+            </p>
+          </div>
+
           {/* Modo Pronto Atendimento */}
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

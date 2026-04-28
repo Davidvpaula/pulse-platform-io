@@ -34,6 +34,7 @@ import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
+import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
 import EmpresaFuncionarios from "@/pages/app/empresa/EmpresaFuncionarios";
 import EmpresaAgendamentos from "@/pages/app/empresa/EmpresaAgendamentos";
@@ -143,7 +144,7 @@ const App = () => (
               <Route path="admin/comunicacao" element={<Conversas />} />
               <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
               <Route path="admin/integracoes" element={<Integracoes />} />
-              <Route path="admin/configuracoes" element={<Placeholder title="Configurações da plataforma" />} />
+              <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
               <Route path="admin/relatorios" element={<Placeholder title="Relatórios" />} />
               <Route path="admin/auditoria" element={<Placeholder title="Auditoria do sistema" description="Log de ações sensíveis (somente Superadmin)." />} />
