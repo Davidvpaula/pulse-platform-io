@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2, XCircle, FileText, Search, ShieldCheck, Eye, Download,
-  AlertTriangle, Clock, History,
+  AlertTriangle, Clock, History, Plug, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listMedicos, updateMedicoStatus, listAuditoria, getSignedUrl,
+  liberarAcessoFeegow, FEEGOW_STATUS_LABEL,
   STATUS_LABEL, DOC_LABEL,
   type MedicoRow, type MedicoStatus, type DocumentoMedico, type AuditoriaRow,
+  type FeegowStatus,
 } from "@/lib/medicoRegistro";
 
 const STATUS_ORDER: MedicoStatus[] = ["pendente", "em_analise", "aprovado", "reprovado"];
@@ -77,9 +79,39 @@ export default function MedicosAprovacao() {
         variant: status === "reprovado" ? "destructive" : "default",
       });
       reload();
+      // Se aprovou e ainda não foi liberado na Feegow, dispara automaticamente.
+      if (status === "aprovado" && m.feegow_status !== "liberado" && m.cpf && m.data_nascimento) {
+        liberarFeegow(m, true);
+      }
     } catch (err) {
       toast({ title: "Erro", description: err instanceof Error ? err.message : "Tente novamente.", variant: "destructive" });
     }
+  }
+
+  async function liberarFeegow(m: MedicoRow, silent = false) {
+    if (!m.cpf || !m.data_nascimento) {
+      toast({
+        title: "Dados incompletos",
+        description: "CPF e data de nascimento são obrigatórios para liberar acesso na Feegow.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!silent) toast({ title: "Enviando para a Feegow..." });
+    const res = await liberarAcessoFeegow(m.id);
+    if (res.ok) {
+      toast({
+        title: "Acesso Feegow liberado",
+        description: res.aviso ?? `ID profissional: ${res.professional_id ?? "—"}`,
+      });
+    } else {
+      toast({
+        title: "Falha ao liberar Feegow",
+        description: res.error ?? "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+    reload();
   }
 
   function handleAprovar(m: MedicoRow) { changeStatus(m, "aprovado"); }
@@ -196,6 +228,18 @@ export default function MedicosAprovacao() {
                 </div>
               )}
 
+              <section className="grid gap-3 sm:grid-cols-2">
+                <DataField label="CPF" value={fmtCpf(selected.cpf)} missing={!selected.cpf} />
+                <DataField label="Data de nascimento" value={fmtDate(selected.data_nascimento)} missing={!selected.data_nascimento} />
+                <DataField label="E-mail" value={selected.email} />
+                <DataField label="RQE" value={selected.rqe ?? "—"} />
+              </section>
+
+              <FeegowCard
+                medico={selected}
+                onLiberar={() => liberarFeegow(selected)}
+              />
+
               <section>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Documentos</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -283,4 +327,81 @@ function StatusBadge({ status }: { status: MedicoStatus }) {
     reprovado: "bg-destructive/10 text-destructive",
   };
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${map[status]}`}>{STATUS_LABEL[status]}</span>;
+}
+
+function DataField({ label, value, missing }: { label: string; value: string; missing?: boolean }) {
+  return (
+    <div className={`rounded-md border p-2 ${missing ? "border-warning/40 bg-warning/5" : "border-border"}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`text-sm ${missing ? "text-warning-foreground" : ""}`}>{value || "—"}</p>
+    </div>
+  );
+}
+
+function fmtCpf(cpf: string | null) {
+  if (!cpf) return "";
+  const d = cpf.replace(/\D/g, "");
+  if (d.length !== 11) return cpf;
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return "";
+  try { return new Date(d + "T00:00:00").toLocaleDateString("pt-BR"); } catch { return d; }
+}
+
+const FEEGOW_TONE: Record<FeegowStatus, { bar: string; chip: string }> = {
+  nao_enviado: { bar: "border-l-muted-foreground/40", chip: "bg-muted text-muted-foreground" },
+  pendente:    { bar: "border-l-info",                chip: "bg-info/10 text-info" },
+  liberado:    { bar: "border-l-success",             chip: "bg-success/10 text-success" },
+  erro:        { bar: "border-l-destructive",         chip: "bg-destructive/10 text-destructive" },
+};
+
+function FeegowCard({ medico, onLiberar }: { medico: MedicoRow; onLiberar: () => void }) {
+  const tone = FEEGOW_TONE[medico.feegow_status];
+  const aprovado = medico.status === "aprovado";
+  const semDados = !medico.cpf || !medico.data_nascimento;
+  return (
+    <section className={`rounded-md border border-border border-l-4 p-3 ${tone.bar}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Plug className="h-3.5 w-3.5" /> Acesso Feegow
+          </p>
+          <p className="mt-1 text-sm">
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone.chip}`}>
+              {FEEGOW_STATUS_LABEL[medico.feegow_status]}
+            </span>
+            {medico.feegow_professional_id && (
+              <span className="ml-2 text-xs text-muted-foreground">ID: {medico.feegow_professional_id}</span>
+            )}
+            {medico.feegow_liberado_em && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                em {new Date(medico.feegow_liberado_em).toLocaleString("pt-BR")}
+              </span>
+            )}
+          </p>
+          {medico.feegow_erro && (
+            <p className="mt-1 text-xs text-destructive">Erro: {medico.feegow_erro}</p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant={medico.feegow_status === "liberado" ? "outline" : "default"}
+          onClick={onLiberar}
+          disabled={!aprovado || semDados || medico.feegow_status === "pendente"}
+          title={
+            !aprovado ? "Aprove o cadastro antes de liberar." :
+            semDados ? "Faltam CPF / data de nascimento." : ""
+          }
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {medico.feegow_status === "liberado" ? "Reenviar" : "Liberar acesso"}
+        </Button>
+      </div>
+      {!aprovado && (
+        <p className="mt-2 text-[11px] text-muted-foreground">A liberação ocorre automaticamente ao aprovar o cadastro.</p>
+      )}
+    </section>
+  );
 }

@@ -22,7 +22,7 @@ export default function MedicoAguardandoAprovacao() {
       .select("*")
       .eq("user_id", uid)
       .maybeSingle();
-    setMed((data ?? null) as MedicoRow | null);
+    setMed((data ?? null) as unknown as MedicoRow | null);
     setLoading(false);
   }
 

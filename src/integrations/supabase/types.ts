@@ -347,12 +347,19 @@ export type Database = {
       medicos: {
         Row: {
           bio: string | null
+          cpf: string | null
           created_at: string
           crm: string
           crm_estado: string
+          data_nascimento: string | null
           documentos: Json
           email: string
           especialidade: string
+          feegow_erro: string | null
+          feegow_liberado_em: string | null
+          feegow_payload: Json | null
+          feegow_professional_id: string | null
+          feegow_status: Database["public"]["Enums"]["feegow_status"]
           id: string
           motivo_reprovacao: string | null
           nome: string
@@ -364,12 +371,19 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          cpf?: string | null
           created_at?: string
           crm: string
           crm_estado: string
+          data_nascimento?: string | null
           documentos?: Json
           email: string
           especialidade: string
+          feegow_erro?: string | null
+          feegow_liberado_em?: string | null
+          feegow_payload?: Json | null
+          feegow_professional_id?: string | null
+          feegow_status?: Database["public"]["Enums"]["feegow_status"]
           id?: string
           motivo_reprovacao?: string | null
           nome: string
@@ -381,12 +395,19 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          cpf?: string | null
           created_at?: string
           crm?: string
           crm_estado?: string
+          data_nascimento?: string | null
           documentos?: Json
           email?: string
           especialidade?: string
+          feegow_erro?: string | null
+          feegow_liberado_em?: string | null
+          feegow_payload?: Json | null
+          feegow_professional_id?: string | null
+          feegow_status?: Database["public"]["Enums"]["feegow_status"]
           id?: string
           motivo_reprovacao?: string | null
           nome?: string
@@ -729,6 +750,16 @@ export type Database = {
         }
         Returns: Json
       }
+      feegow_marcar_liberacao: {
+        Args: {
+          _erro: string
+          _medico_id: string
+          _payload: Json
+          _professional_id: string
+          _status: Database["public"]["Enums"]["feegow_status"]
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -758,6 +789,7 @@ export type Database = {
         | "concluida"
         | "cancelada"
         | "no_show"
+      feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       medico_status: "pendente" | "em_analise" | "aprovado" | "reprovado"
       pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
       pagamento_provider: "mock" | "stripe"
@@ -908,6 +940,7 @@ export const Constants = {
         "cancelada",
         "no_show",
       ],
+      feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       medico_status: ["pendente", "em_analise", "aprovado", "reprovado"],
       pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
       pagamento_provider: ["mock", "stripe"],

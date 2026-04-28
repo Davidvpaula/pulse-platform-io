@@ -21,6 +21,8 @@ export type DocumentoMedico = {
 
 export type MedicoStatus = "pendente" | "em_analise" | "aprovado" | "reprovado";
 
+export type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
+
 export type MedicoRow = {
   id: string;
   user_id: string;
@@ -31,10 +33,16 @@ export type MedicoRow = {
   crm_estado: string;
   especialidade: string;
   rqe: string | null;
+  cpf: string | null;
+  data_nascimento: string | null;
   bio: string | null;
   documentos: DocumentoMedico[];
   status: MedicoStatus;
   motivo_reprovacao: string | null;
+  feegow_status: FeegowStatus;
+  feegow_professional_id: string | null;
+  feegow_liberado_em: string | null;
+  feegow_erro: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -118,6 +126,8 @@ export async function createMedico(input: {
   crm_estado: string;
   especialidade: string;
   rqe?: string;
+  cpf?: string;
+  data_nascimento?: string;
   documentos: DocumentoMedico[];
 }): Promise<MedicoRow> {
   const { data, error } = await supabase
@@ -131,13 +141,15 @@ export async function createMedico(input: {
       crm_estado: input.crm_estado,
       especialidade: input.especialidade,
       rqe: input.rqe ?? null,
+      cpf: input.cpf ? input.cpf.replace(/\D/g, "") : null,
+      data_nascimento: input.data_nascimento ?? null,
       documentos: input.documentos as any,
       status: "pendente",
     })
     .select()
     .single();
   if (error) throw error;
-  return data as MedicoRow;
+  return data as unknown as MedicoRow;
 }
 
 export async function getMedicoByUser(userId: string): Promise<MedicoRow | null> {
@@ -147,7 +159,7 @@ export async function getMedicoByUser(userId: string): Promise<MedicoRow | null>
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  return data as MedicoRow | null;
+  return data as unknown as MedicoRow | null;
 }
 
 export async function listMedicos(): Promise<MedicoRow[]> {
@@ -156,7 +168,7 @@ export async function listMedicos(): Promise<MedicoRow[]> {
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as MedicoRow[];
+  return (data ?? []) as unknown as MedicoRow[];
 }
 
 export async function updateMedicoStatus(
@@ -200,4 +212,29 @@ export async function listAuditoria(medicoId: string): Promise<AuditoriaRow[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as AuditoriaRow[];
+}
+
+export const FEEGOW_STATUS_LABEL: Record<FeegowStatus, string> = {
+  nao_enviado: "Não enviado",
+  pendente: "Enviando…",
+  liberado: "Acesso liberado",
+  erro: "Falhou",
+};
+
+export async function liberarAcessoFeegow(medicoId: string): Promise<{
+  ok: boolean;
+  modo?: string;
+  professional_id?: string;
+  aviso?: string;
+  error?: string;
+}> {
+  const { data, error } = await supabase.functions.invoke(
+    "feegow-liberar-medico",
+    { body: { medico_id: medicoId } },
+  );
+  if (error) {
+    const msg = error.message || "Falha ao chamar a função";
+    return { ok: false, error: msg };
+  }
+  return data as any;
 }

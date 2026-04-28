@@ -14,6 +14,14 @@ import {
 
 const schema = z.object({
   nome: z.string().trim().min(3, "Informe seu nome completo").max(120),
+  cpf: z.string().trim().refine(
+    v => v.replace(/\D/g, "").length === 11,
+    "CPF inválido (11 dígitos)",
+  ),
+  dataNascimento: z.string().refine(
+    v => !!v && !Number.isNaN(Date.parse(v + "T00:00:00")),
+    "Data de nascimento inválida",
+  ),
   crm: z.string().trim().min(3, "CRM inválido").max(20),
   ufCrm: z.string().refine(v => ESTADOS_BR.includes(v), "Selecione o estado"),
   especialidade: z.string().min(1, "Selecione a especialidade"),
@@ -34,7 +42,7 @@ export default function CadastroMedico() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [form, setForm] = useState({
-    nome: "", crm: "", ufCrm: "", especialidade: "",
+    nome: "", cpf: "", dataNascimento: "", crm: "", ufCrm: "", especialidade: "",
     telefone: "", email: "",
   });
   const [docs, setDocs] = useState<Record<DocKind, LocalDoc | undefined>>({
@@ -138,6 +146,8 @@ export default function CadastroMedico() {
         crm: data.crm,
         crm_estado: data.ufCrm,
         especialidade: data.especialidade,
+        cpf: data.cpf,
+        data_nascimento: data.dataNascimento,
         documentos: uploaded,
       });
 
@@ -170,6 +180,24 @@ export default function CadastroMedico() {
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <Field label="Nome completo" error={errors.nome}>
                 <input className="input" value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Dr. João da Silva" />
+              </Field>
+              <Field label="CPF" error={errors.cpf}>
+                <input
+                  className="input"
+                  value={form.cpf}
+                  onChange={e => set("cpf", maskCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  maxLength={14}
+                />
+              </Field>
+              <Field label="Data de nascimento" error={errors.dataNascimento}>
+                <input
+                  type="date"
+                  className="input"
+                  value={form.dataNascimento}
+                  onChange={e => set("dataNascimento", e.target.value)}
+                />
               </Field>
               <Field label="Especialidade" error={errors.especialidade}>
                 <select className="input" value={form.especialidade} onChange={e => set("especialidade", e.target.value)}>
@@ -298,4 +326,12 @@ function DocUpload({ kind, doc, onFile, required }: {
       </div>
     </div>
   );
+}
+
+function maskCpf(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  return d
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
