@@ -122,14 +122,6 @@ export default function MedicoDashboard() {
             <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
           </Link>
 
-          <Link to="/app/medico/integracoes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <ExternalLink className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Status Feegow</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Visualizar prontuários · sem permissão de configuração</p>
-          </Link>
-
           <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />
