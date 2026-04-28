@@ -14,6 +14,10 @@ import {
   Especialidades, Medicos, MedicoDetalhe, Agendar, Planos,
   Empresas, ParaMedicos, Faq, Login,
 } from "@/pages/public/PublicPages";
+import CadastroMedico from "@/pages/public/CadastroMedico";
+import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
+import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
+import MedicoGuard from "@/components/MedicoGuard";
 
 import Placeholder from "@/pages/app/_Placeholder";
 import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";

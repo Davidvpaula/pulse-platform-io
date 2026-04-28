@@ -97,3 +97,14 @@ export function useCan() {
   const { profileKey } = useAuth();
   return (resource: Resource, action: Action = "view") => _can(profileKey, resource, action);
 }
+
+import { getCurrentMedicoId, getMedico } from "./medicoRegistro";
+/** True quando o médico atual ainda não foi aprovado pelo admin. */
+export function useMedicoAguardandoAprovacao(): boolean {
+  const { profileKey } = useAuth();
+  if (profileKey !== "medico") return false;
+  const id = getCurrentMedicoId();
+  if (!id) return false; // demo padrão (Dr. Rafael) — já considerado aprovado
+  const m = getMedico(id);
+  return !!m && m.status !== "aprovado";
+}
