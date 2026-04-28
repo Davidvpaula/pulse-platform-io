@@ -484,6 +484,68 @@ export type Database = {
         }
         Relationships: []
       }
+      pagamentos: {
+        Row: {
+          cancelled_at: string | null
+          checkout_url: string | null
+          consulta_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          metodo: Database["public"]["Enums"]["pagamento_metodo"]
+          moeda: string
+          paid_at: string | null
+          provider: Database["public"]["Enums"]["pagamento_provider"]
+          provider_payment_id: string | null
+          provider_session_id: string | null
+          status: Database["public"]["Enums"]["pagamento_status"]
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          consulta_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          metodo?: Database["public"]["Enums"]["pagamento_metodo"]
+          moeda?: string
+          paid_at?: string | null
+          provider?: Database["public"]["Enums"]["pagamento_provider"]
+          provider_payment_id?: string | null
+          provider_session_id?: string | null
+          status?: Database["public"]["Enums"]["pagamento_status"]
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          consulta_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          metodo?: Database["public"]["Enums"]["pagamento_metodo"]
+          moeda?: string
+          paid_at?: string | null
+          provider?: Database["public"]["Enums"]["pagamento_provider"]
+          provider_payment_id?: string | null
+          provider_session_id?: string | null
+          status?: Database["public"]["Enums"]["pagamento_status"]
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescricoes: {
         Row: {
           assinatura_digital: string | null
@@ -663,6 +725,15 @@ export type Database = {
         | "cancelada"
         | "no_show"
       medico_status: "pendente" | "em_analise" | "aprovado" | "reprovado"
+      pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
+      pagamento_provider: "mock" | "stripe"
+      pagamento_status:
+        | "pendente"
+        | "processando"
+        | "pago"
+        | "cancelado"
+        | "falhou"
+        | "reembolsado"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
     }
@@ -804,6 +875,16 @@ export const Constants = {
         "no_show",
       ],
       medico_status: ["pendente", "em_analise", "aprovado", "reprovado"],
+      pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
+      pagamento_provider: ["mock", "stripe"],
+      pagamento_status: [
+        "pendente",
+        "processando",
+        "pago",
+        "cancelado",
+        "falhou",
+        "reembolsado",
+      ],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
     },
