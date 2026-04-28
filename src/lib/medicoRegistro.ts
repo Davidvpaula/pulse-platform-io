@@ -209,3 +209,28 @@ export async function listAuditoria(medicoId: string): Promise<AuditoriaRow[]> {
   if (error) throw error;
   return (data ?? []) as AuditoriaRow[];
 }
+
+export const FEEGOW_STATUS_LABEL: Record<FeegowStatus, string> = {
+  nao_enviado: "Não enviado",
+  pendente: "Enviando…",
+  liberado: "Acesso liberado",
+  erro: "Falhou",
+};
+
+export async function liberarAcessoFeegow(medicoId: string): Promise<{
+  ok: boolean;
+  modo?: string;
+  professional_id?: string;
+  aviso?: string;
+  error?: string;
+}> {
+  const { data, error } = await supabase.functions.invoke(
+    "feegow-liberar-medico",
+    { body: { medico_id: medicoId } },
+  );
+  if (error) {
+    const msg = error.message || "Falha ao chamar a função";
+    return { ok: false, error: msg };
+  }
+  return data as any;
+}
