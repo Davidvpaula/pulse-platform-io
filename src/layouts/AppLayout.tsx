@@ -15,7 +15,7 @@ import {
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { GlobalSearch } from "@/components/GlobalSearch";
+
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
