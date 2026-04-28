@@ -386,7 +386,15 @@ const FEEGOW_TONE: Record<FeegowStatus, { bar: string; chip: string }> = {
 function FeegowCard({ medico, onLiberar }: { medico: MedicoRow; onLiberar: () => void }) {
   const tone = FEEGOW_TONE[medico.feegow_status];
   const aprovado = medico.status === "aprovado";
-  const semDados = !medico.cpf || !medico.data_nascimento;
+  const validacao = validarFeegow(medico);
+  const bloqueado = !aprovado || !validacao.ok || medico.feegow_status === "pendente";
+  const motivoBloqueio = !aprovado
+    ? "Aprove o cadastro antes de liberar."
+    : !validacao.ok
+      ? validacao.motivo!
+      : medico.feegow_status === "pendente"
+        ? "Liberação em andamento…"
+        : "";
   return (
     <section className={`rounded-md border border-border border-l-4 p-3 ${tone.bar}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -410,23 +418,25 @@ function FeegowCard({ medico, onLiberar }: { medico: MedicoRow; onLiberar: () =>
           {medico.feegow_erro && (
             <p className="mt-1 text-xs text-destructive">Erro: {medico.feegow_erro}</p>
           )}
+          {aprovado && !validacao.ok && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5" /> {validacao.motivo}
+            </p>
+          )}
         </div>
         <Button
           size="sm"
           variant={medico.feegow_status === "liberado" ? "outline" : "default"}
           onClick={onLiberar}
-          disabled={!aprovado || semDados || medico.feegow_status === "pendente"}
-          title={
-            !aprovado ? "Aprove o cadastro antes de liberar." :
-            semDados ? "Faltam CPF / data de nascimento." : ""
-          }
+          disabled={bloqueado}
+          title={motivoBloqueio}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           {medico.feegow_status === "liberado" ? "Reenviar" : "Liberar acesso"}
         </Button>
       </div>
       {!aprovado && (
-        <p className="mt-2 text-[11px] text-muted-foreground">A liberação ocorre automaticamente ao aprovar o cadastro.</p>
+        <p className="mt-2 text-[11px] text-muted-foreground">A liberação ocorre automaticamente ao aprovar o cadastro (se CPF e data de nascimento forem válidos).</p>
       )}
     </section>
   );
