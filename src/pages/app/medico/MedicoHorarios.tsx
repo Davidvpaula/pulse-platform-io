@@ -54,7 +54,6 @@ function statusLabel(s: AgendaSlot["status"]) {
   const m: Record<AgendaSlot["status"], { label: string; cls: string }> = {
     disponivel: { label: "Disponível", cls: "bg-success/10 text-success" },
     reservado: { label: "Reservado", cls: "bg-warning/10 text-warning" },
-    ocupado: { label: "Ocupado", cls: "bg-primary-soft text-primary" },
     bloqueado: { label: "Bloqueado", cls: "bg-muted text-muted-foreground" },
   };
   return m[s];
