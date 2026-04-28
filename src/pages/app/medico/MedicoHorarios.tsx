@@ -1,18 +1,23 @@
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus, Trash2, Database, Clock, Video, MapPin } from "lucide-react";
+import {
+  CalendarIcon,
+  Plus,
+  Trash2,
+  Database,
+  Clock,
+  Video,
+  MapPin,
+  X,
+  Info,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -20,14 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +38,26 @@ import {
 import { useSession } from "@/lib/session";
 import {
   listSlotsDoMedico,
-  criarSlot,
+  criarSlotsEmLote,
   excluirSlot,
+  getDuracaoSlotMedico,
   type AgendaSlot,
+  type FaixaHorario,
 } from "@/lib/clinico";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Modalidade = "online" | "presencial";
+
+const DIAS_SEMANA = [
+  { idx: 1, label: "Seg" },
+  { idx: 2, label: "Ter" },
+  { idx: 3, label: "Qua" },
+  { idx: 4, label: "Qui" },
+  { idx: 5, label: "Sex" },
+  { idx: 6, label: "Sáb" },
+  { idx: 0, label: "Dom" },
+];
 
 function statusLabel(s: AgendaSlot["status"]) {
   const m: Record<AgendaSlot["status"], { label: string; cls: string }> = {
@@ -63,25 +72,48 @@ function fmtDataHora(iso: string) {
   return format(new Date(iso), "EEE, dd 'de' MMM · HH:mm", { locale: ptBR });
 }
 
+/** Agrupa slots por dia (chave: yyyy-MM-dd) */
+function groupByDay(slots: AgendaSlot[]) {
+  const map = new Map<string, AgendaSlot[]>();
+  for (const s of slots) {
+    const k = format(new Date(s.inicio), "yyyy-MM-dd");
+    if (!map.has(k)) map.set(k, []);
+    map.get(k)!.push(s);
+  }
+  return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
 export default function MedicoHorarios() {
   const { session } = useSession();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openCreate, setOpenCreate] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
-
-  // Form state
-  const [data, setData] = useState<Date | undefined>();
-  const [horaInicio, setHoraInicio] = useState("09:00");
-  const [horaFim, setHoraFim] = useState("09:30");
+  const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
-  const [observacoes, setObservacoes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+
+  // ── Aba semanal
+  const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [semanas, setSemanas] = useState(4);
+  const [faixasSemana, setFaixasSemana] = useState<FaixaHorario[]>([
+    { hi: "08:00", hf: "12:00" },
+  ]);
+  const [savingSemana, setSavingSemana] = useState(false);
+
+  // ── Aba por dia
+  const [dataSel, setDataSel] = useState<Date | undefined>();
+  const [faixasDia, setFaixasDia] = useState<FaixaHorario[]>([
+    { hi: "09:00", hf: "10:00" },
+  ]);
+  const [savingDia, setSavingDia] = useState(false);
 
   async function refresh() {
     setLoading(true);
-    const list = await listSlotsDoMedico();
+    const [list, dur] = await Promise.all([
+      listSlotsDoMedico(),
+      getDuracaoSlotMedico(),
+    ]);
     setSlots(list);
+    setDuracao(dur);
     setLoading(false);
   }
 
@@ -94,37 +126,99 @@ export default function MedicoHorarios() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  function resetForm() {
-    setData(undefined);
-    setHoraInicio("09:00");
-    setHoraFim("09:30");
-    setModalidade("online");
-    setObservacoes("");
+  function toggleDia(idx: number) {
+    setDiasSel((prev) =>
+      prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx]
+    );
   }
 
-  async function onSubmit() {
-    if (!data) {
-      toast.error("Selecione uma data.");
+  function setFaixa(
+    list: FaixaHorario[],
+    setter: (f: FaixaHorario[]) => void,
+    i: number,
+    patch: Partial<FaixaHorario>
+  ) {
+    setter(list.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
+  }
+
+  // Pré-cálculo dos dias gerados na aba semanal
+  const datasSemana = useMemo(() => {
+    if (diasSel.length === 0) return [];
+    const out: Date[] = [];
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const inicioSemana = startOfWeek(hoje, { weekStartsOn: 0 });
+    for (let w = 0; w < semanas; w++) {
+      for (let d = 0; d < 7; d++) {
+        const dia = addDays(addWeeks(inicioSemana, w), d);
+        if (dia < hoje) continue;
+        if (diasSel.includes(dia.getDay())) out.push(dia);
+      }
+    }
+    return out;
+  }, [diasSel, semanas]);
+
+  async function gerarSemanal() {
+    if (!duracao) {
+      toast.error("Configure uma especialidade com duração antes de gerar horários.");
       return;
     }
-    const [hi, mi] = horaInicio.split(":").map(Number);
-    const [hf, mf] = horaFim.split(":").map(Number);
-    const inicio = new Date(data);
-    inicio.setHours(hi, mi, 0, 0);
-    const fim = new Date(data);
-    fim.setHours(hf, mf, 0, 0);
-
-    setSubmitting(true);
-    const res = await criarSlot({ inicio, fim, modalidade, observacoes: observacoes || undefined });
-    setSubmitting(false);
-
+    if (diasSel.length === 0) {
+      toast.error("Selecione ao menos um dia da semana.");
+      return;
+    }
+    if (faixasSemana.some((f) => !f.hi || !f.hf)) {
+      toast.error("Preencha todas as faixas de horário.");
+      return;
+    }
+    setSavingSemana(true);
+    const res = await criarSlotsEmLote({
+      datas: datasSemana,
+      faixas: faixasSemana,
+      duracaoMin: duracao,
+      modalidade,
+    });
+    setSavingSemana(false);
     if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível criar o horário.");
+      toast.error(res.error ?? "Não foi possível gerar.");
       return;
     }
-    toast.success("Horário cadastrado.");
-    setOpenCreate(false);
-    resetForm();
+    toast.success(
+      `${res.criados} horário(s) criado(s)` +
+        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+    );
+    refresh();
+  }
+
+  async function gerarDia() {
+    if (!duracao) {
+      toast.error("Configure uma especialidade com duração antes de gerar horários.");
+      return;
+    }
+    if (!dataSel) {
+      toast.error("Selecione uma data no calendário.");
+      return;
+    }
+    if (faixasDia.some((f) => !f.hi || !f.hf)) {
+      toast.error("Preencha todas as faixas de horário.");
+      return;
+    }
+    setSavingDia(true);
+    const res = await criarSlotsEmLote({
+      datas: [dataSel],
+      faixas: faixasDia,
+      duracaoMin: duracao,
+      modalidade,
+    });
+    setSavingDia(false);
+    if (!res.ok) {
+      toast.error(res.error ?? "Não foi possível gerar.");
+      return;
+    }
+    toast.success(
+      `${res.criados} horário(s) criado(s)` +
+        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+    );
     refresh();
   }
 
@@ -143,7 +237,10 @@ export default function MedicoHorarios() {
   if (!session) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Meus horários" description="Cadastre os horários disponíveis para os pacientes agendarem." />
+        <PageHeader
+          title="Meus horários"
+          description="Cadastre os horários disponíveis para os pacientes agendarem."
+        />
         <div className="card-elevated p-10 text-center text-sm text-muted-foreground">
           Faça login como médico para gerenciar seus horários.
         </div>
@@ -151,158 +248,376 @@ export default function MedicoHorarios() {
     );
   }
 
+  const grouped = groupByDay(slots);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Meus horários"
-        description="Cadastre os horários disponíveis para os pacientes agendarem online."
+        description="Configure sua disponibilidade e o sistema gera os slots automaticamente conforme a duração da consulta."
         actions={
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-              <Database className="h-3 w-3" /> Dados em tempo real
-            </span>
-            <Button onClick={() => setOpenCreate(true)} className="bg-gradient-primary hover:opacity-90">
-              <Plus className="mr-1.5 h-4 w-4" /> Adicionar horário
-            </Button>
-          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+            <Database className="h-3 w-3" /> Dados em tempo real
+          </span>
         }
       />
 
-      <div className="card-elevated overflow-hidden">
-        <div className="divide-y divide-border">
+      {/* Faixa de info de duração */}
+      <div className="card-elevated flex items-center gap-3 p-4">
+        <Clock className="h-5 w-5 text-primary" />
+        <div className="flex-1 text-sm">
+          {duracao ? (
+            <>
+              Duração de cada consulta:{" "}
+              <span className="font-semibold">{duracao} minutos</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · definida pela sua especialidade
+              </span>
+            </>
+          ) : (
+            <span className="text-warning-foreground">
+              Você ainda não tem especialidade com duração configurada. Configure em
+              <span className="font-semibold"> Configurações</span> antes de cadastrar
+              horários.
+            </span>
+          )}
+        </div>
+        <div className="w-44">
+          <Select
+            value={modalidade}
+            onValueChange={(v) => setModalidade(v as Modalidade)}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="presencial">Presencial</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Tabs defaultValue="semanal">
+        <TabsList>
+          <TabsTrigger value="semanal">Recorrência semanal</TabsTrigger>
+          <TabsTrigger value="dia">Por dia</TabsTrigger>
+        </TabsList>
+
+        {/* ───── Aba semanal ───── */}
+        <TabsContent value="semanal" className="mt-4">
+          <div className="card-elevated space-y-5 p-5">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Dias da semana
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DIAS_SEMANA.map((d) => {
+                  const on = diasSel.includes(d.idx);
+                  return (
+                    <button
+                      key={d.idx}
+                      type="button"
+                      onClick={() => toggleDia(d.idx)}
+                      className={cn(
+                        "h-9 min-w-[3.25rem] rounded-full px-4 text-sm font-medium transition",
+                        on
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "border border-border bg-background text-muted-foreground hover:border-primary/40"
+                      )}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Faixas de horário
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setFaixasSemana([...faixasSemana, { hi: "14:00", hf: "18:00" }])
+                  }
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar faixa
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {faixasSemana.map((f, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground">Início</Label>
+                      <Input
+                        type="time"
+                        value={f.hi}
+                        onChange={(e) =>
+                          setFaixa(faixasSemana, setFaixasSemana, i, {
+                            hi: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground">Fim</Label>
+                      <Input
+                        type="time"
+                        value={f.hf}
+                        onChange={(e) =>
+                          setFaixa(faixasSemana, setFaixasSemana, i, {
+                            hf: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        disabled={faixasSemana.length === 1}
+                        onClick={() =>
+                          setFaixasSemana(faixasSemana.filter((_, idx) => idx !== i))
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label className="text-[11px] text-muted-foreground">Repetir por</Label>
+                <Select
+                  value={String(semanas)}
+                  onValueChange={(v) => setSemanas(Number(v))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 semana</SelectItem>
+                    <SelectItem value="2">2 semanas</SelectItem>
+                    <SelectItem value="4">4 semanas</SelectItem>
+                    <SelectItem value="8">8 semanas</SelectItem>
+                    <SelectItem value="12">12 semanas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <div className="flex w-full items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5" />
+                  Serão geradas datas em <b className="mx-1">{datasSemana.length}</b> dia(s)
+                  {duracao ? ` · slots de ${duracao}min` : ""}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={gerarSemanal}
+                disabled={savingSemana || !duracao}
+                className="bg-gradient-primary hover:opacity-90"
+              >
+                {savingSemana ? "Gerando…" : "Gerar horários"}
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ───── Aba por dia ───── */}
+        <TabsContent value="dia" className="mt-4">
+          <div className="card-elevated grid grid-cols-1 gap-5 p-5 lg:grid-cols-[auto_1fr]">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Selecione o dia
+              </p>
+              <div className="rounded-lg border border-border">
+                <Calendar
+                  mode="single"
+                  selected={dataSel}
+                  onSelect={setDataSel}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Faixas{" "}
+                    {dataSel && (
+                      <span className="ml-1 normal-case text-foreground">
+                        · {format(dataSel, "EEEE, dd 'de' MMM", { locale: ptBR })}
+                      </span>
+                    )}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setFaixasDia([...faixasDia, { hi: "14:00", hf: "15:00" }])
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar faixa
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {faixasDia.map((f, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">Início</Label>
+                        <Input
+                          type="time"
+                          value={f.hi}
+                          onChange={(e) =>
+                            setFaixa(faixasDia, setFaixasDia, i, { hi: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">Fim</Label>
+                        <Input
+                          type="time"
+                          value={f.hf}
+                          onChange={(e) =>
+                            setFaixa(faixasDia, setFaixasDia, i, { hf: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          disabled={faixasDia.length === 1}
+                          onClick={() =>
+                            setFaixasDia(faixasDia.filter((_, idx) => idx !== i))
+                          }
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <Info className="h-3.5 w-3.5" />
+                {duracao
+                  ? `Cada faixa será dividida em slots de ${duracao} minutos.`
+                  : "Configure uma especialidade com duração."}
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={gerarDia}
+                  disabled={savingDia || !duracao || !dataSel}
+                  className="bg-gradient-primary hover:opacity-90"
+                >
+                  {savingDia ? "Gerando…" : "Adicionar ao dia"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Lista de horários cadastrados */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold">Horários cadastrados</h2>
+        <div className="card-elevated overflow-hidden">
           {loading && (
             <p className="p-10 text-center text-sm text-muted-foreground">Carregando…</p>
           )}
           {!loading && slots.length === 0 && (
             <div className="p-10 text-center">
-              <Clock className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
+              <CalendarIcon className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
               <p className="text-sm font-medium">Nenhum horário cadastrado</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Adicione horários para que pacientes possam agendar com você.
+                Use as abas acima para gerar sua disponibilidade.
               </p>
             </div>
           )}
-          {!loading &&
-            slots.map((s) => {
-              const st = statusLabel(s.status);
-              return (
-                <div key={s.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-4 p-4 hover:bg-muted/30">
-                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary-soft text-primary">
-                    {s.modalidade === "online" ? <Video className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
+          {!loading && grouped.length > 0 && (
+            <div className="divide-y divide-border">
+              {grouped.map(([dia, items]) => (
+                <div key={dia} className="p-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {format(new Date(dia + "T00:00:00"), "EEEE, dd 'de' MMMM", {
+                      locale: ptBR,
+                    })}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {items.map((s) => {
+                      const st = statusLabel(s.status);
+                      return (
+                        <div
+                          key={s.id}
+                          className="group relative flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs"
+                        >
+                          {s.modalidade === "online" ? (
+                            <Video className="h-3 w-3 text-primary" />
+                          ) : (
+                            <MapPin className="h-3 w-3 text-primary" />
+                          )}
+                          <span className="font-medium">
+                            {format(new Date(s.inicio), "HH:mm")}–
+                            {format(new Date(s.fim), "HH:mm")}
+                          </span>
+                          <span
+                            className={cn(
+                              "rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                              st.cls
+                            )}
+                          >
+                            {st.label}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={s.status !== "disponivel"}
+                            onClick={() => setConfirmDelete(s)}
+                            className="ml-1 text-muted-foreground hover:text-destructive disabled:opacity-30"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold capitalize">{fmtDataHora(s.inicio)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      até {format(new Date(s.fim), "HH:mm")} · {s.modalidade}
-                      {s.observacoes ? ` · ${s.observacoes}` : ""}
-                    </p>
-                    <span className={cn("mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium", st.cls)}>
-                      {st.label}
-                    </span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={s.status !== "disponivel"}
-                    onClick={() => setConfirmDelete(s)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Modal criar */}
-      <Dialog open={openCreate} onOpenChange={(o) => { setOpenCreate(o); if (!o) resetForm(); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Novo horário disponível</DialogTitle>
-            <DialogDescription>
-              Pacientes verão esse horário ao agendar consulta com você.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Data</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !data && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {data ? format(data, "PPP", { locale: ptBR }) : "Selecione a data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={data}
-                    onSelect={setData}
-                    disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
-                    initialFocus
-                    locale={ptBR}
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="hi">Início</Label>
-                <Input id="hi" type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="hf">Fim</Label>
-                <Input id="hf" type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Modalidade</Label>
-              <Select value={modalidade} onValueChange={(v) => setModalidade(v as Modalidade)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="online">Online (telemedicina)</SelectItem>
-                  <SelectItem value="presencial">Presencial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="obs">Observações (opcional)</Label>
-              <Textarea
-                id="obs"
-                value={observacoes}
-                onChange={(e) => setObservacoes(e.target.value)}
-                placeholder="Ex: atendimento prioritário para retorno"
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-            <Button onClick={onSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
-              {submitting ? "Salvando…" : "Salvar horário"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirmar exclusão */}
-      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(o) => !o && setConfirmDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir horário?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O horário deixará de aparecer para os pacientes.
+              {confirmDelete && (
+                <>Esse slot ({fmtDataHora(confirmDelete.inicio)}) deixará de aparecer para os pacientes.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
