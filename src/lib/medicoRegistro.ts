@@ -137,7 +137,7 @@ export async function createMedico(input: {
     .select()
     .single();
   if (error) throw error;
-  return data as MedicoRow;
+  return data as unknown as MedicoRow;
 }
 
 export async function getMedicoByUser(userId: string): Promise<MedicoRow | null> {
