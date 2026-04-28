@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { isValidCpf, maskCpf, onlyDigits } from "@/lib/validation/cpf";
 import {
   listFuncionarios, addFuncionario, setFuncionarioStatus, importFuncionariosCsv,
   SETORES_PADRAO,
