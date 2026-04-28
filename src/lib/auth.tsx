@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { profiles, type ProfileKey } from "./profiles";
 import { defaultCapabilities, type Capability } from "./abilities";
+import { useSession } from "./session";
 
 /**
  * Vínculo do paciente — não é um perfil separado, apenas metadado exibido
@@ -28,7 +29,20 @@ const STORAGE_KEY = "lasmar.profile";
 const CAPS_KEY = "lasmar.capabilities";
 const LINK_KEY = "lasmar.patientLink";
 
+// Prioridade quando o usuário tem múltiplos papéis no banco
+const ROLE_PRIORITY: ProfileKey[] = ["admin", "medico", "secretaria", "empresa", "paciente"];
+
+function rolesToProfileKey(roles: string[]): ProfileKey | null {
+  for (const p of ROLE_PRIORITY) {
+    if (roles.includes(p)) return p;
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { session, roles } = useSession();
+  const isDev = import.meta.env.DEV;
+
   const [profileKey, setProfileKeyState] = useState<ProfileKey>(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
     return (stored as ProfileKey) || "admin";
@@ -50,9 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { tipo: "particular" };
   });
 
+  // Quando há sessão real, o papel ativo vem do banco (sessão > demo).
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, profileKey);
-  }, [profileKey]);
+    if (!session) return;
+    const fromRoles = rolesToProfileKey(roles);
+    if (fromRoles && fromRoles !== profileKey) {
+      setProfileKeyState(fromRoles);
+      setCapabilities(defaultCapabilities[fromRoles] ?? []);
+    }
+  }, [session, roles]);
+
+  useEffect(() => {
+    if (session) return; // não persiste em sessão real
+    if (isDev) localStorage.setItem(STORAGE_KEY, profileKey);
+  }, [profileKey, session, isDev]);
 
   useEffect(() => {
     localStorage.setItem(CAPS_KEY, JSON.stringify(capabilities));
@@ -63,8 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [patientLink]);
 
   const setProfileKey = (k: ProfileKey) => {
+    // Em sessão real, ignora trocas manuais — banco é a fonte da verdade.
+    if (session) return;
     setProfileKeyState(k);
-    // ao trocar perfil, recarrega capabilities padrão
     setCapabilities(defaultCapabilities[k] ?? []);
   };
 
@@ -72,16 +98,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toggleCapability = (c: Capability) =>
     setCapabilities(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
+  const displayUser = useMemo(() => {
+    if (session?.user) {
+      const email = session.user.email ?? "";
+      const meta = (session.user.user_metadata ?? {}) as { nome?: string; full_name?: string };
+      const name = meta.nome || meta.full_name || email.split("@")[0] || "Usuário";
+      const initials = name.split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase() || "U";
+      return { name, role: profiles[profileKey].user.role, avatarInitials: initials };
+    }
+    return profiles[profileKey].user;
+  }, [session, profileKey]);
+
   const value = useMemo<AuthCtx>(() => ({
     profileKey,
     setProfileKey,
-    user: profiles[profileKey].user,
+    user: displayUser,
     capabilities,
     hasCapability,
     toggleCapability,
     patientLink,
     setPatientLink: setPatientLinkState,
-  }), [profileKey, capabilities, patientLink]);
+  }), [profileKey, capabilities, patientLink, displayUser, session]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
