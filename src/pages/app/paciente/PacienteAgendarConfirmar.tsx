@@ -61,11 +61,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 /* ─────────── Máscaras simples ─────────── */
-const maskCPF = (v: string) =>
-  onlyDigits(v).slice(0, 11)
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+const maskCPF = maskCpf;
 
 const maskFone = (v: string) => {
   const d = onlyDigits(v).slice(0, 11);
