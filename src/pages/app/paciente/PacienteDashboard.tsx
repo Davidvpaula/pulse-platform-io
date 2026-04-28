@@ -15,6 +15,9 @@ import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
+import { criarCheckoutSession } from "@/lib/pagamentos";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type AlertTone = "urgente" | "atencao" | "ok";
@@ -49,6 +52,7 @@ export default function PacienteDashboard() {
   const { patientLink, setPatientLink } = useAuth();
   const { session } = useSession();
   const empresarial = patientLink.tipo === "empresarial";
+  const navigate = useNavigate();
 
   const [dbConsultas, setDbConsultas] = useState<ConsultaItem[] | null>(null);
   useEffect(() => {
@@ -88,6 +92,27 @@ export default function PacienteDashboard() {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
                 <DbIcon className="h-3 w-3" /> Dados em tempo real
               </span>
+            )}
+            {session && dbConsultas && dbConsultas[0] && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const s = await criarCheckoutSession({
+                      consultaId: dbConsultas[0].id,
+                      valorCentavos: 22000,
+                      descricao: "Consulta de teste",
+                    });
+                    navigate(s.checkoutUrl);
+                  } catch (e: any) {
+                    toast.error(e.message ?? "Falha ao iniciar checkout");
+                  }
+                }}
+                title="Modo simulado para desenvolvimento"
+              >
+                <Wallet className="mr-1.5 h-3.5 w-3.5" /> Testar checkout
+              </Button>
             )}
             <Button asChild className="bg-gradient-primary hover:opacity-90">
               <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
