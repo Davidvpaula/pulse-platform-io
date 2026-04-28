@@ -17,13 +17,24 @@ import {
 } from "@/components/ui/collapsible";
 
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useSession } from "@/lib/session";
 
 export default function AppLayout() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { profileKey, setProfileKey, user } = useAuth();
+  const { session, signOut } = useSession();
   const profile = profiles[profileKey];
+  const isDev = import.meta.env.DEV;
+  const showDemoSwitcher = isDev && !session;
+
+  const handleLogout = async () => {
+    if (session) {
+      await signOut();
+    }
+    navigate("/");
+  };
 
   const switchProfile = (k: ProfileKey) => {
     setProfileKey(k);
@@ -70,16 +81,28 @@ export default function AppLayout() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuLabel>Trocar perfil (demo)</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-                <DropdownMenuItem key={k} onClick={() => switchProfile(k)} className="gap-2">
-                  {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-                  {profiles[k].label}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/")}>
+              {showDemoSwitcher && (
+                <>
+                  <DropdownMenuLabel>Trocar perfil (demo)</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {(Object.keys(profiles) as ProfileKey[]).map((k) => (
+                    <DropdownMenuItem key={k} onClick={() => switchProfile(k)} className="gap-2">
+                      {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
+                      {profiles[k].label}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {session && (
+                <>
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
+                    {session.user.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
