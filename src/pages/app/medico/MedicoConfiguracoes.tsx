@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { User, Stethoscope, Calendar, Video, Bell, Save, Zap, Loader2 } from "lucide-react";
+import { User, Stethoscope, Video, Bell, Save, Zap, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ import {
   type MedicoEspecialidade,
 } from "@/lib/clinico";
 
-const semana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -59,7 +59,6 @@ const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
 };
 
 export default function MedicoConfiguracoes() {
-  const [diasAtivos, setDiasAtivos] = useState(["Seg", "Ter", "Qua", "Qui", "Sex"]);
   const [notif, setNotif] = useState({ lembretes: true, alertas: true, resumoDiario: false });
 
   // Atendimento dinâmico
@@ -183,9 +182,6 @@ export default function MedicoConfiguracoes() {
       toast.error(`Falha ao salvar ${failCount} item(ns).`);
     }
   };
-
-  const toggleDia = (d: string) =>
-    setDiasAtivos(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
 
   return (
     <div className="space-y-6">
