@@ -1,9 +1,10 @@
 import { Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Send, Phone, RotateCcw, X, Activity, TrendingUp, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { filaSecretaria } from "@/lib/mock";
+import { filaSecretaria, inboxInterno } from "@/lib/mock";
 import { useAuth } from "@/lib/auth";
 
 export default function SecretariaDashboard() {
@@ -16,7 +17,9 @@ export default function SecretariaDashboard() {
         description="Gerencie a fila de atendimento, comunicação e financeiro do dia."
         actions={
           <>
-            <Button variant="outline"><MessageCircle className="mr-2 h-4 w-4" />Comunicação</Button>
+            <Button asChild variant="outline">
+              <Link to="/app/secretaria/comunicacao-interna"><MessageCircle className="mr-2 h-4 w-4" />Comunicação interna</Link>
+            </Button>
             <Button className="bg-gradient-primary hover:opacity-90"><Plus className="mr-2 h-4 w-4" />Novo agendamento</Button>
           </>
         }
