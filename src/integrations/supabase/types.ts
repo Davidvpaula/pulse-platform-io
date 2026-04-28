@@ -284,11 +284,13 @@ export type Database = {
           created_at: string
           duracao_minutos: number
           especialidade_id: string
+          especialista: boolean
           id: string
           medico_id: string
           modalidades: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos: number
           pronto_atendimento: boolean
+          rqe: string | null
           updated_at: string
         }
         Insert: {
@@ -296,11 +298,13 @@ export type Database = {
           created_at?: string
           duracao_minutos?: number
           especialidade_id: string
+          especialista?: boolean
           id?: string
           medico_id: string
           modalidades?: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos?: number
           pronto_atendimento?: boolean
+          rqe?: string | null
           updated_at?: string
         }
         Update: {
@@ -308,11 +312,13 @@ export type Database = {
           created_at?: string
           duracao_minutos?: number
           especialidade_id?: string
+          especialista?: boolean
           id?: string
           medico_id?: string
           modalidades?: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos?: number
           pronto_atendimento?: boolean
+          rqe?: string | null
           updated_at?: string
         }
         Relationships: [
