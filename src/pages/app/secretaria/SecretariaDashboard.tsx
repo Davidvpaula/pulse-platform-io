@@ -19,12 +19,31 @@ export default function SecretariaDashboard() {
         }
       />
 
+      {isSupervisor && (
+        <div className="card-elevated flex items-center gap-3 border-l-4 border-primary p-4">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">Permissão de supervisão ativa</p>
+            <p className="text-xs text-muted-foreground">Você tem acesso a indicadores da equipe, relatórios operacionais e aprovação de exceções.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Na fila hoje" value="14" icon={Calendar} hint="3 em andamento" />
         <StatCard label="Pacientes ativos" value="932" icon={Users} hint="+12 esta semana" />
         <StatCard label="Pendências WhatsApp" value="7" icon={MessageCircle} hint="2 sem resposta há +1h" />
         <StatCard label="Pagamentos pendentes" value="R$ 1.840" icon={Wallet} hint="4 cobranças abertas" />
       </div>
+
+      {isSupervisor && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Atendimentos hoje" value="142" icon={Activity} trend={{ value: "+12%", positive: true }} />
+          <StatCard label="Tempo médio" value="3min42" icon={Phone} trend={{ value: "-18s", positive: true }} />
+          <StatCard label="SLA < 5min" value="88%" icon={TrendingUp} hint="meta 90%" />
+          <StatCard label="Equipe online" value="6 / 8" icon={Users} hint="2 ausentes" />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Fila de atendimento */}
