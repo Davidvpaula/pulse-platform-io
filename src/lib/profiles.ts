@@ -89,7 +89,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         icon: MessageCircle,
         requiresCapability: "comunicacao.acessar",
         children: [
-          { label: "Conversas", to: "/app/comunicacao/conversas" },
+          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
+          { label: "Equipe (interna)", to: "/app/secretaria/comunicacao-interna" },
           { label: "Templates", to: "/app/comunicacao/templates" },
         ],
       },
@@ -115,6 +116,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     user: { name: "Carlos Mendes", role: "Admin", avatarInitials: "CM" },
     nav: [
       { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
+      { label: "Fluxo operacional", to: "/app/admin/fluxo", icon: Activity },
       {
         label: "Cadastros",
         icon: Users,
