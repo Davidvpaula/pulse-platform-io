@@ -10,9 +10,10 @@ import {
   listConsultasDoMedico,
   formatDataBR,
   formatHora,
-  statusLabel,
+  toStatusBadge,
   type ConsultaDetalhada,
 } from "@/lib/clinico";
+import type { Status } from "@/lib/mock";
 
 type Periodo = "hoje" | "semana" | "todos";
 
