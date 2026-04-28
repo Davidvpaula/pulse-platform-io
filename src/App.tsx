@@ -107,6 +107,7 @@ const App = () => (
               <Route path="paciente/checkout/:sessionId" element={<PacienteCheckout />} />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
+              <Route path="paciente/agendar/confirmar/:slotId" element={<PacienteAgendarConfirmar />} />
 
               {/* Médico — todas as rotas operacionais protegidas pelo MedicoGuard */}
               <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
