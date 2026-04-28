@@ -1,39 +1,51 @@
 import { useEffect, useState } from "react";
 import { Clock, FileText, MessageSquare, RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
-import {
-  getCurrentMedicoId, getMedico, STATUS_LABEL, DOC_LABEL,
-  type MedicoCadastro,
-} from "@/lib/medicoRegistro";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  STATUS_LABEL, DOC_LABEL,
+  type MedicoRow,
+} from "@/lib/medicoRegistro";
 
 export default function MedicoAguardandoAprovacao() {
-  const { setProfileKey } = useAuth();
   const navigate = useNavigate();
-  const [med, setMed] = useState<MedicoCadastro | undefined>();
+  const [med, setMed] = useState<MedicoRow | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function reload() {
+    const { data: s } = await supabase.auth.getSession();
+    const uid = s.session?.user.id;
+    if (!uid) { setMed(null); setLoading(false); return; }
+    const { data } = await supabase
+      .from("medicos")
+      .select("*")
+      .eq("user_id", uid)
+      .maybeSingle();
+    setMed((data ?? null) as MedicoRow | null);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    const reload = () => {
-      const id = getCurrentMedicoId();
-      setMed(id ? getMedico(id) : undefined);
-    };
     reload();
-    window.addEventListener("lasmar:medicos-changed", reload);
-    const t = setInterval(reload, 4000);
-    return () => {
-      window.removeEventListener("lasmar:medicos-changed", reload);
-      clearInterval(t);
-    };
+    // realtime: quando admin atualiza status, reflete aqui
+    const ch = supabase
+      .channel("medico-status")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "medicos" }, reload)
+      .subscribe();
+    const t = setInterval(reload, 8000);
+    return () => { supabase.removeChannel(ch); clearInterval(t); };
   }, []);
 
-  // Se foi aprovado, libera acesso ao dashboard
   useEffect(() => {
     if (med?.status === "aprovado") {
-      setProfileKey("medico");
       navigate("/app/medico/dashboard", { replace: true });
     }
-  }, [med?.status, setProfileKey, navigate]);
+  }, [med?.status, navigate]);
+
+  if (loading) {
+    return <div className="container max-w-2xl py-16 text-center text-sm text-muted-foreground">Carregando...</div>;
+  }
 
   if (!med) {
     return (
@@ -65,7 +77,7 @@ export default function MedicoAguardandoAprovacao() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Status do cadastro</p>
             <h1 className="mt-2 font-display text-3xl font-bold">{med.nome}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              CRM {med.crm}/{med.ufCrm} · {med.especialidade}
+              CRM {med.crm}/{med.crm_estado} · {med.especialidade}
             </p>
           </div>
           <span className={`inline-flex items-center gap-1.5 rounded-full bg-${tone}/10 px-3 py-1 text-xs font-semibold text-${tone}`}>
@@ -73,17 +85,10 @@ export default function MedicoAguardandoAprovacao() {
           </span>
         </div>
 
-        {med.status === "reprovado" && (
+        {med.status === "reprovado" && med.motivo_reprovacao && (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
             <p className="text-sm font-semibold text-destructive">Cadastro reprovado</p>
-            {med.motivoCorrecao && <p className="mt-1 text-sm">{med.motivoCorrecao}</p>}
-          </div>
-        )}
-
-        {med.status === "pendente" && med.motivoCorrecao && (
-          <div className="mt-6 rounded-lg border border-warning/30 bg-warning/5 p-4">
-            <p className="text-sm font-semibold text-warning-foreground">Correção solicitada</p>
-            <p className="mt-1 text-sm">{med.motivoCorrecao}</p>
+            <p className="mt-1 text-sm">{med.motivo_reprovacao}</p>
           </div>
         )}
 
@@ -111,7 +116,7 @@ export default function MedicoAguardandoAprovacao() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={() => window.location.reload()}>
+          <Button variant="outline" onClick={reload}>
             <RefreshCw className="mr-2 h-4 w-4" /> Atualizar status
           </Button>
           <Button variant="ghost" className="text-muted-foreground">

@@ -98,13 +98,34 @@ export function useCan() {
   return (resource: Resource, action: Action = "view") => _can(profileKey, resource, action);
 }
 
-import { getCurrentMedicoId, getMedico } from "./medicoRegistro";
-/** True quando o médico atual ainda não foi aprovado pelo admin. */
+import { useEffect, useState as _useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * True quando o médico logado (sessão real) ainda não foi aprovado.
+ * Não bloqueia o seletor de demo — só é true se houver sessão real
+ * E o usuário tiver papel "medico" cadastrado mas não aprovado.
+ */
 export function useMedicoAguardandoAprovacao(): boolean {
-  const { profileKey } = useAuth();
-  if (profileKey !== "medico") return false;
-  const id = getCurrentMedicoId();
-  if (!id) return false; // demo padrão (Dr. Rafael) — já considerado aprovado
-  const m = getMedico(id);
-  return !!m && m.status !== "aprovado";
+  const [aguardando, setAguardando] = _useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function check() {
+      const { data: s } = await supabase.auth.getSession();
+      const uid = s.session?.user.id;
+      if (!uid) { if (active) setAguardando(false); return; }
+      const { data } = await supabase
+        .from("medicos")
+        .select("status")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (active) setAguardando(!!data && data.status !== "aprovado");
+    }
+    check();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, []);
+
+  return aguardando;
 }
