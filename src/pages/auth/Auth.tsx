@@ -1,0 +1,217 @@
+import { useEffect, useState } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { Loader2, Stethoscope } from "lucide-react";
+
+const signupSchema = z.object({
+  nome: z.string().trim().min(2, "Nome muito curto").max(120),
+  email: z.string().trim().email("E-mail inválido").max(255),
+  telefone: z.string().trim().max(20).optional(),
+  senha: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  role: z.enum(["paciente", "medico"]),
+});
+
+const loginSchema = z.object({
+  email: z.string().trim().email("E-mail inválido"),
+  senha: z.string().min(1, "Informe a senha"),
+});
+
+export default function Auth() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<"login" | "cadastro">(
+    (params.get("modo") as "login" | "cadastro") ?? "login",
+  );
+  const [loading, setLoading] = useState(false);
+
+  // já logado? manda pro destino padrão
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/app/paciente/dashboard", { replace: true });
+    });
+  }, [navigate]);
+
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const parsed = loginSchema.safeParse({
+      email: fd.get("email"),
+      senha: fd.get("senha"),
+    });
+    if (!parsed.success) {
+      toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.senha,
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Não foi possível entrar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Bem-vindo!" });
+    navigate("/app/paciente/dashboard");
+  }
+
+  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const parsed = signupSchema.safeParse({
+      nome: fd.get("nome"),
+      email: fd.get("email"),
+      telefone: fd.get("telefone") || undefined,
+      senha: fd.get("senha"),
+      role: fd.get("role"),
+    });
+    if (!parsed.success) {
+      toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.senha,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          nome: parsed.data.nome,
+          telefone: parsed.data.telefone,
+          role: parsed.data.role,
+        },
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Não foi possível cadastrar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Conta criada com sucesso!",
+      description: parsed.data.role === "medico"
+        ? "Agora complete seu cadastro profissional para análise."
+        : "Você já pode acessar a plataforma.",
+    });
+    if (parsed.data.role === "medico") {
+      navigate("/cadastro/medico");
+    } else {
+      navigate("/app/paciente/dashboard");
+    }
+  }
+
+  async function handleGoogle() {
+    setLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    setLoading(false);
+    if (result.error) {
+      toast({ title: "Erro no Google", description: String(result.error), variant: "destructive" });
+      return;
+    }
+    if (result.redirected) return;
+    navigate("/app/paciente/dashboard");
+  }
+
+  return (
+    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted/30 px-4 py-10">
+      <div className="w-full max-w-md">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Stethoscope className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-lg font-bold tracking-tight">Lasmar</div>
+            <div className="text-xs text-muted-foreground -mt-1">TELEMED</div>
+          </div>
+        </Link>
+
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Entrar</TabsTrigger>
+              <TabsTrigger value="cadastro">Criar conta</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login" className="mt-6 space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input id="email" name="email" type="email" autoComplete="email" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="senha">Senha</Label>
+                  <Input id="senha" name="senha" type="password" autoComplete="current-password" required />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="cadastro" className="mt-6 space-y-4">
+              <form onSubmit={handleSignup} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="role">Eu sou</Label>
+                  <Select name="role" defaultValue="paciente">
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paciente">Paciente</SelectItem>
+                      <SelectItem value="medico">Médico</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome completo</Label>
+                  <Input id="nome" name="nome" required maxLength={120} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email-s">E-mail</Label>
+                  <Input id="email-s" name="email" type="email" autoComplete="email" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Telefone</Label>
+                  <Input id="telefone" name="telefone" type="tel" maxLength={20} placeholder="(opcional)" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="senha-s">Senha</Label>
+                  <Input id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required />
+                  <p className="text-xs text-muted-foreground">Mínimo 8 caracteres</p>
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">ou</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <Button variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
+            <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .55 4.1 1.6l3-3C17.2 1.7 14.7 0 12 0 7.3 0 3.3 2.7 1.3 6.6l3.5 2.7C5.7 6.7 8.6 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.5h6.5c-.3 1.5-1.2 2.7-2.5 3.6l3.8 3c2.2-2.1 3.7-5.2 3.7-8.8z"/><path fill="#FBBC05" d="M4.8 14.4l-3.5 2.7C3.3 21.3 7.3 24 12 24c2.7 0 5.2-.9 6.9-2.4l-3.8-3c-1 .7-2.4 1.1-3.1 1.1-3.4 0-6.3-1.7-7.2-5.3z"/><path fill="#34A853" d="M12 24c2.7 0 5.2-.9 6.9-2.4l-3.8-3c-1 .7-2.4 1.1-3.1 1.1-3.4 0-6.3-1.7-7.2-5.3l-3.5 2.7C3.3 21.3 7.3 24 12 24z"/></svg>
+            Continuar com Google
+          </Button>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Ao continuar, você aceita nossos termos de uso e política de privacidade.
+        </p>
+      </div>
+    </div>
+  );
+}
