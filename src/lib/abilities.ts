@@ -2,6 +2,14 @@ import type { ProfileKey } from "./profiles";
 
 /**
  * Sistema de permissões mockado.
+ *
+ * Modelo:
+ *   1. Cada PERFIL principal (paciente, medico, secretaria, admin, empresa) tem
+ *      uma matriz base de capacidades por recurso/ação.
+ *   2. Internamente, o Admin pode liberar CAPABILITIES adicionais a um usuário
+ *      (ex.: "secretaria.supervisor", "medico.comunicacao"). Essas capabilities
+ *      controlam menus, botões e telas extras dentro do mesmo dashboard.
+ *
  * Estrutura preparada para futura integração com backend real (claims/JWT).
  */
 
@@ -37,11 +45,6 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "consulta.cancel": ["view", "edit"],
     "financeiro.own": ["view"],
   },
-  paciente_empresa: {
-    "agenda.own": ["view", "create"],
-    "consulta.start": ["view"],
-    "consulta.cancel": ["view", "edit"],
-  },
   medico: {
     "agenda.own": ALL,
     "consulta.start": ALL,
@@ -57,32 +60,7 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "whatsapp.central": ["view", "edit"],
     "tarefas": ALL,
   },
-  supervisor: {
-    "agenda.own": ALL,
-    "agenda.others": ALL,
-    "consulta.cancel": ALL,
-    "whatsapp.central": ALL,
-    "tarefas": ALL,
-    "financeiro.platform": ["view"],
-    "relatorios.empresa": ["view"],
-  },
   admin: {
-    "agenda.own": ALL,
-    "agenda.others": ALL,
-    "consulta.start": ALL,
-    "prontuario.feegow": ["view"],
-    "consulta.cancel": ALL,
-    "usuarios": ALL,
-    "integracoes": ["view", "edit"],
-    "financeiro.platform": ALL,
-    "relatorios.empresa": ALL,
-    "whatsapp.central": ALL,
-    "permissoes": ["view", "edit"],
-    "tarefas": ALL,
-    "medico.dados.outros": ["view", "edit"],
-    "empresa.dados": ALL,
-  },
-  superadmin: {
     "agenda.own": "*",
     "agenda.others": "*",
     "consulta.start": "*",
@@ -107,10 +85,6 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "empresa.dados": ["view", "edit"],
     "financeiro.own": ["view"],
   },
-  comunicacao: {
-    "whatsapp.central": ALL,
-    "tarefas": ["view", "create", "edit"],
-  },
 };
 
 export function can(profile: ProfileKey, resource: Resource, action: Action = "view"): boolean {
@@ -123,14 +97,10 @@ export function can(profile: ProfileKey, resource: Resource, action: Action = "v
 /** Mapa de quais áreas (basePath) cada perfil pode acessar */
 export const allowedAreas: Record<ProfileKey, string[]> = {
   paciente: ["/app/paciente"],
-  paciente_empresa: ["/app/paciente"],
-  medico: ["/app/medico"],
+  medico: ["/app/medico", "/app/comunicacao"], // comunicação restrita por capability no menu
   secretaria: ["/app/secretaria", "/app/comunicacao"],
-  supervisor: ["/app/supervisor", "/app/secretaria", "/app/comunicacao"],
-  admin: ["/app/admin", "/app/comunicacao", "/app/secretaria", "/app/medico", "/app/empresa", "/app/paciente"],
-  superadmin: ["/app"],
+  admin: ["/app"], // acesso total
   empresa: ["/app/empresa"],
-  comunicacao: ["/app/comunicacao"],
 };
 
 export function canAccessPath(profile: ProfileKey, pathname: string): boolean {
@@ -138,3 +108,37 @@ export function canAccessPath(profile: ProfileKey, pathname: string): boolean {
   if (areas.includes("/app")) return pathname.startsWith("/app");
   return areas.some(a => pathname.startsWith(a));
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * CAPABILITIES — flags adicionais liberadas pelo Admin por usuário.
+ * Usadas para mostrar/ocultar módulos sem criar dashboards separados.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export type Capability =
+  // Secretaria
+  | "secretaria.supervisor"          // habilita módulos de supervisão (equipe, relatórios)
+  | "secretaria.financeiro"          // ver financeiro/cobranças
+  | "secretaria.reembolso"           // efetuar reembolsos
+  | "comunicacao.acessar"            // ver inbox de WhatsApp/conversas
+  | "comunicacao.todas_conversas"    // ver todas (não apenas as atribuídas)
+  // Médico
+  | "medico.comunicacao"             // mensagens vinculadas às próprias consultas
+  | "medico.feegow"                  // abrir prontuário Feegow
+  | "medico.financeiro"              // ver financeiro próprio
+  // Empresa
+  | "empresa.relatorios"
+  | "empresa.financeiro";
+
+/** Capabilities padrão por perfil — Admin pode customizar por usuário no futuro */
+export const defaultCapabilities: Record<ProfileKey, Capability[]> = {
+  paciente: [],
+  medico: ["medico.comunicacao", "medico.feegow", "medico.financeiro"],
+  secretaria: ["comunicacao.acessar", "secretaria.financeiro"],
+  admin: [
+    "secretaria.supervisor", "secretaria.financeiro", "secretaria.reembolso",
+    "comunicacao.acessar", "comunicacao.todas_conversas",
+    "medico.comunicacao", "medico.feegow", "medico.financeiro",
+    "empresa.relatorios", "empresa.financeiro",
+  ],
+  empresa: ["empresa.relatorios", "empresa.financeiro"],
+};
