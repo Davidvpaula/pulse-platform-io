@@ -169,6 +169,14 @@ export const ParaMedicos = () => (
         <div key={b.t} className="card-elevated p-6"><p className="font-semibold">{b.t}</p><p className="mt-1 text-sm text-muted-foreground">{b.d}</p></div>
       ))}
     </div>
+    <div className="mt-8 flex flex-wrap gap-3">
+      <Button asChild className="bg-gradient-primary hover:opacity-90">
+        <Link to="/cadastro/medico">Quero me cadastrar</Link>
+      </Button>
+      <Button asChild variant="outline">
+        <Link to="/login">Já tenho conta</Link>
+      </Button>
+    </div>
   </PageShell>
 );
 
@@ -227,6 +235,10 @@ export const Login = () => {
             ))}
           </div>
         </div>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          É médico e ainda não tem cadastro?{" "}
+          <Link to="/cadastro/medico" className="font-semibold text-primary hover:underline">Cadastre-se</Link>
+        </p>
       </div>
     </section>
   );
