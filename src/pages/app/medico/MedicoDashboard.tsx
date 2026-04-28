@@ -19,6 +19,37 @@ export default function MedicoDashboard() {
         }
       />
 
+      {/* Alertas de consulta */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="card-elevated flex items-start gap-3 border-l-4 border-l-warning p-4">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-warning/10 text-warning">
+            <Calendar className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold">Próxima consulta em 12 min</p>
+            <p className="text-xs text-muted-foreground">Renata Lima · Empresarial · Construtora Horizonte</p>
+          </div>
+        </div>
+        <div className="card-elevated flex items-start gap-3 border-l-4 border-l-info p-4">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-info/10 text-info">
+            <Users className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold">2 pacientes aguardando pagamento</p>
+            <p className="text-xs text-muted-foreground">Confirmação automática após quitação</p>
+          </div>
+        </div>
+        <div className="card-elevated flex items-start gap-3 border-l-4 border-l-destructive p-4">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive">
+            <ExternalLink className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold">Feegow desconectado</p>
+            <p className="text-xs text-muted-foreground">Prontuário em modo offline · admin notificado</p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Consultas hoje" value="6" icon={Calendar} hint="2 telemedicina" />
         <StatCard label="Pacientes ativos" value="184" icon={Users} hint="+8 este mês" trend={{ value: "+4.5%", positive: true }} />
