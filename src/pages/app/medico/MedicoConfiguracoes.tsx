@@ -539,6 +539,7 @@ export default function MedicoConfiguracoes() {
         </div>
       </Section>
 
+      <Section icon={Bell} title="Notificações">
         <div className="grid gap-4 md:grid-cols-2">
           {Object.entries({
             lembretes: "Lembretes de consulta (10 min antes)",
