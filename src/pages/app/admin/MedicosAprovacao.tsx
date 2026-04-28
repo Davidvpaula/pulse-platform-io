@@ -220,7 +220,7 @@ export default function MedicosAprovacao() {
                     <li key={i} className="flex items-start gap-3 rounded-md bg-muted/30 p-2">
                       <span className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full bg-primary" />
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold capitalize">{a.acao.replaceAll("_", " ")}</p>
+                        <p className="text-xs font-semibold capitalize">{a.acao.split("_").join(" ")}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {new Date(a.at).toLocaleString("pt-BR")} · {a.ator}
                         </p>

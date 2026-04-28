@@ -20,6 +20,7 @@ const schema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255),
   senha: z.string().min(8, "Senha precisa ter no mínimo 8 caracteres").max(72),
 });
+type FormData = z.infer<typeof schema>;
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
