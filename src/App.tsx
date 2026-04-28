@@ -144,7 +144,7 @@ const App = () => (
               <Route path="admin/comunicacao" element={<Conversas />} />
               <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
               <Route path="admin/integracoes" element={<Integracoes />} />
-              <Route path="admin/configuracoes" element={<Placeholder title="Configurações da plataforma" />} />
+              <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
               <Route path="admin/relatorios" element={<Placeholder title="Relatórios" />} />
               <Route path="admin/auditoria" element={<Placeholder title="Auditoria do sistema" description="Log de ações sensíveis (somente Superadmin)." />} />
