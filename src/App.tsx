@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/lib/auth";
+import { SessionProvider } from "@/lib/session";
+import Auth from "@/pages/auth/Auth";
 import PublicLayout from "@/layouts/PublicLayout";
 import AppLayout from "@/layouts/AppLayout";
 import NotFound from "./pages/NotFound";
@@ -63,6 +65,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SessionProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -79,6 +82,7 @@ const App = () => (
               <Route path="/faq" element={<Faq />} />
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro/medico" element={<CadastroMedico />} />
+              <Route path="/auth" element={<Auth />} />
             </Route>
 
             {/* APP */}
@@ -172,6 +176,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </SessionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
