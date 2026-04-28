@@ -32,6 +32,11 @@ import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
+import EmpresaFuncionarios from "@/pages/app/empresa/EmpresaFuncionarios";
+import EmpresaAgendamentos from "@/pages/app/empresa/EmpresaAgendamentos";
+import EmpresaRelatorios from "@/pages/app/empresa/EmpresaRelatorios";
+import EmpresaFinanceiro from "@/pages/app/empresa/EmpresaFinanceiro";
+import EmpresaPerfilPage from "@/pages/app/empresa/EmpresaPerfilPage";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
 import Templates from "@/pages/app/comunicacao/Templates";
@@ -147,11 +152,11 @@ const App = () => (
 
               {/* Empresa */}
               <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
-              <Route path="empresa/funcionarios" element={<Placeholder title="Funcionários" />} />
-              <Route path="empresa/agendamentos" element={<Placeholder title="Agendamentos da empresa" />} />
-              <Route path="empresa/relatorios" element={<Placeholder title="Relatórios liberados" description="A empresa só visualiza relatórios autorizados pelo paciente." />} />
-              <Route path="empresa/financeiro" element={<Placeholder title="Financeiro empresarial" />} />
-              <Route path="empresa/perfil" element={<Placeholder title="Perfil da empresa" />} />
+              <Route path="empresa/funcionarios" element={<EmpresaFuncionarios />} />
+              <Route path="empresa/agendamentos" element={<EmpresaAgendamentos />} />
+              <Route path="empresa/relatorios" element={<EmpresaRelatorios />} />
+              <Route path="empresa/financeiro" element={<EmpresaFinanceiro />} />
+              <Route path="empresa/perfil" element={<EmpresaPerfilPage />} />
 
               {/* Comunicação */}
               <Route path="comunicacao/dashboard" element={<ComunicacaoDashboard />} />
