@@ -95,9 +95,18 @@ export default function MedicosAprovacao() {
         variant: status === "reprovado" ? "destructive" : "default",
       });
       reload();
-      // Se aprovou e ainda não foi liberado na Feegow, dispara automaticamente.
-      if (status === "aprovado" && m.feegow_status !== "liberado" && m.cpf && m.data_nascimento) {
-        liberarFeegow(m, true);
+      // Se aprovou e ainda não foi liberado na Feegow, valida e dispara.
+      if (status === "aprovado" && m.feegow_status !== "liberado") {
+        const v = validarFeegow(m);
+        if (v.ok) {
+          liberarFeegow(m, true);
+        } else {
+          toast({
+            title: "Liberação Feegow não pôde ser disparada",
+            description: v.motivo,
+            variant: "destructive",
+          });
+        }
       }
     } catch (err) {
       toast({ title: "Erro", description: err instanceof Error ? err.message : "Tente novamente.", variant: "destructive" });
@@ -105,10 +114,11 @@ export default function MedicosAprovacao() {
   }
 
   async function liberarFeegow(m: MedicoRow, silent = false) {
-    if (!m.cpf || !m.data_nascimento) {
+    const v = validarFeegow(m);
+    if (!v.ok) {
       toast({
-        title: "Dados incompletos",
-        description: "CPF e data de nascimento são obrigatórios para liberar acesso na Feegow.",
+        title: "Não foi possível liberar na Feegow",
+        description: v.motivo,
         variant: "destructive",
       });
       return;
