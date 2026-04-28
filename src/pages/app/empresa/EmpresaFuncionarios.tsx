@@ -148,7 +148,11 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
       toast({ title: "Nome e e-mail são obrigatórios", variant: "destructive" });
       return;
     }
-    addFuncionario({ ...form, status: "ativo" });
+    if (form.cpf.trim() && !isValidCpf(form.cpf)) {
+      toast({ title: "CPF inválido", description: "Verifique os dígitos informados.", variant: "destructive" });
+      return;
+    }
+    addFuncionario({ ...form, cpf: onlyDigits(form.cpf), status: "ativo" });
     toast({ title: "Funcionário adicionado" });
     onClose();
   }
