@@ -11,13 +11,11 @@ import {
   createMedico, uploadDocumento,
   type DocKind, type DocumentoMedico,
 } from "@/lib/medicoRegistro";
+import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 
 const schema = z.object({
   nome: z.string().trim().min(3, "Informe seu nome completo").max(120),
-  cpf: z.string().trim().refine(
-    v => v.replace(/\D/g, "").length === 11,
-    "CPF inválido (11 dígitos)",
-  ),
+  cpf: cpfSchema(),
   dataNascimento: z.string().refine(
     v => !!v && !Number.isNaN(Date.parse(v + "T00:00:00")),
     "Data de nascimento inválida",
