@@ -145,17 +145,34 @@ export default function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Últimos pacientes */}
         <div className="card-elevated p-6 lg:col-span-2">
-          <h3 className="font-display text-lg font-semibold">Últimos pacientes cadastrados</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg font-semibold">Últimos pacientes cadastrados</h3>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/app/admin/fluxo"><Activity className="mr-1 h-3.5 w-3.5" />Ver fluxo</Link>
+            </Button>
+          </div>
           <table className="mt-4 w-full text-sm">
             <thead className="text-xs uppercase tracking-wider text-muted-foreground">
-              <tr><th className="text-left py-2">Nome</th><th className="text-left">Plano</th><th className="text-left">Criado</th></tr>
+              <tr>
+                <th className="text-left py-2">Nome</th>
+                <th className="text-left">Vínculo</th>
+                <th className="text-left">Status</th>
+                <th className="text-left">Criado</th>
+                <th className="text-right">Ações</th>
+              </tr>
             </thead>
             <tbody>
               {ultimosPacientes.map(p => (
-                <tr key={p.nome} className="border-t border-border">
+                <tr key={p.id} className="border-t border-border">
                   <td className="py-2.5 font-medium">{p.nome}</td>
-                  <td className="text-muted-foreground">{p.plano}</td>
-                  <td className="text-muted-foreground">{p.criado}</td>
+                  <td className="text-muted-foreground">{p.vinculo === "empresarial" ? p.empresa : "Particular"}</td>
+                  <td><StatusBadge status={p.status} /></td>
+                  <td className="text-muted-foreground">{p.criadoEm}</td>
+                  <td className="text-right">
+                    <Button asChild size="sm" variant="ghost">
+                      <Link to={`/app/admin/pacientes/${p.id}`}>Abrir <ArrowRight className="ml-1 h-3 w-3" /></Link>
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
