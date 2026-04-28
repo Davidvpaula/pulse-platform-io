@@ -23,6 +23,9 @@ import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
+import Templates from "@/pages/app/comunicacao/Templates";
+import Automacoes from "@/pages/app/comunicacao/Automacoes";
+import Metricas from "@/pages/app/comunicacao/Metricas";
 import BotConfig from "@/pages/app/comunicacao/BotConfig";
 import Integracoes from "@/pages/app/shared/Integracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
@@ -123,8 +126,9 @@ const App = () => (
               <Route path="comunicacao/conversas" element={<Conversas />} />
               <Route path="comunicacao/whatsapp" element={<WhatsAppCentral />} />
               <Route path="comunicacao/bot" element={<BotConfig />} />
-              <Route path="comunicacao/templates" element={<Placeholder title="Templates de mensagem" />} />
-              <Route path="comunicacao/metricas" element={<Placeholder title="Métricas de atendimento" />} />
+              <Route path="comunicacao/templates" element={<Templates />} />
+              <Route path="comunicacao/automacoes" element={<Automacoes />} />
+              <Route path="comunicacao/metricas" element={<Metricas />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
