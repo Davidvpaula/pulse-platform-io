@@ -1,14 +1,32 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { profiles, type ProfileKey } from "./profiles";
+import { defaultCapabilities, type Capability } from "./abilities";
+
+/**
+ * Vínculo do paciente — não é um perfil separado, apenas metadado exibido
+ * dentro do dashboard único de Paciente.
+ */
+export type PatientLink = {
+  tipo: "particular" | "empresarial";
+  empresa?: string;
+  plano?: string;
+};
 
 type AuthCtx = {
   profileKey: ProfileKey;
   setProfileKey: (k: ProfileKey) => void;
   user: { name: string; role: string; avatarInitials: string };
+  capabilities: Capability[];
+  hasCapability: (c: Capability) => boolean;
+  toggleCapability: (c: Capability) => void;
+  patientLink: PatientLink;
+  setPatientLink: (l: PatientLink) => void;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 const STORAGE_KEY = "lasmar.profile";
+const CAPS_KEY = "lasmar.capabilities";
+const LINK_KEY = "lasmar.patientLink";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileKey, setProfileKeyState] = useState<ProfileKey>(() => {
@@ -16,17 +34,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (stored as ProfileKey) || "admin";
   });
 
+  const [capabilities, setCapabilities] = useState<Capability[]>(() => {
+    if (typeof window === "undefined") return defaultCapabilities[profileKey] ?? [];
+    const stored = localStorage.getItem(CAPS_KEY);
+    if (stored) {
+      try { return JSON.parse(stored); } catch { /* ignore */ }
+    }
+    return defaultCapabilities[profileKey] ?? [];
+  });
+
+  const [patientLink, setPatientLinkState] = useState<PatientLink>(() => {
+    if (typeof window === "undefined") return { tipo: "particular" };
+    const stored = localStorage.getItem(LINK_KEY);
+    if (stored) { try { return JSON.parse(stored); } catch { /* ignore */ } }
+    return { tipo: "particular" };
+  });
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, profileKey);
   }, [profileKey]);
 
-  const setProfileKey = (k: ProfileKey) => setProfileKeyState(k);
+  useEffect(() => {
+    localStorage.setItem(CAPS_KEY, JSON.stringify(capabilities));
+  }, [capabilities]);
 
-  return (
-    <Ctx.Provider value={{ profileKey, setProfileKey, user: profiles[profileKey].user }}>
-      {children}
-    </Ctx.Provider>
-  );
+  useEffect(() => {
+    localStorage.setItem(LINK_KEY, JSON.stringify(patientLink));
+  }, [patientLink]);
+
+  const setProfileKey = (k: ProfileKey) => {
+    setProfileKeyState(k);
+    // ao trocar perfil, recarrega capabilities padrão
+    setCapabilities(defaultCapabilities[k] ?? []);
+  };
+
+  const hasCapability = (c: Capability) => capabilities.includes(c);
+  const toggleCapability = (c: Capability) =>
+    setCapabilities(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+
+  const value = useMemo<AuthCtx>(() => ({
+    profileKey,
+    setProfileKey,
+    user: profiles[profileKey].user,
+    capabilities,
+    hasCapability,
+    toggleCapability,
+    patientLink,
+    setPatientLink: setPatientLinkState,
+  }), [profileKey, capabilities, patientLink]);
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
