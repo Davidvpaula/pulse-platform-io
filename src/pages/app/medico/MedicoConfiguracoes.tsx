@@ -92,6 +92,8 @@ export default function MedicoConfiguracoes() {
             duracao_minutos: 30,
             preco_centavos: 0,
             pronto_atendimento: false,
+            especialista: false,
+            rqe: "",
           };
         }
         setLinhas(mapa);
