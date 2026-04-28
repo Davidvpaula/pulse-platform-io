@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2, XCircle, FileText, Search, ShieldCheck, Eye, Download,
-  AlertTriangle, Clock, History,
+  AlertTriangle, Clock, History, Plug, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listMedicos, updateMedicoStatus, listAuditoria, getSignedUrl,
+  liberarAcessoFeegow, FEEGOW_STATUS_LABEL,
   STATUS_LABEL, DOC_LABEL,
   type MedicoRow, type MedicoStatus, type DocumentoMedico, type AuditoriaRow,
+  type FeegowStatus,
 } from "@/lib/medicoRegistro";
 
 const STATUS_ORDER: MedicoStatus[] = ["pendente", "em_analise", "aprovado", "reprovado"];
