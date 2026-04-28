@@ -1,3 +1,4 @@
+import React from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Star, Video, Calendar, MapPin, GraduationCap } from "lucide-react";
 import PageShell from "@/components/PageShell";
