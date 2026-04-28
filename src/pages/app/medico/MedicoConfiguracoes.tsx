@@ -222,8 +222,14 @@ export default function MedicoConfiguracoes() {
               <p className="mt-1 font-display text-2xl font-semibold">{paCount}</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Duração PA (Admin)</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Duração PA</p>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  somente leitura
+                </span>
+              </div>
               <p className="mt-1 font-display text-2xl font-semibold">{paDuracao} min</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Definido pelo Admin</p>
             </div>
           </div>
 
