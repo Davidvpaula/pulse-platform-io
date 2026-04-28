@@ -126,6 +126,8 @@ export async function createMedico(input: {
   crm_estado: string;
   especialidade: string;
   rqe?: string;
+  cpf?: string;
+  data_nascimento?: string;
   documentos: DocumentoMedico[];
 }): Promise<MedicoRow> {
   const { data, error } = await supabase
@@ -139,6 +141,8 @@ export async function createMedico(input: {
       crm_estado: input.crm_estado,
       especialidade: input.especialidade,
       rqe: input.rqe ?? null,
+      cpf: input.cpf ? input.cpf.replace(/\D/g, "") : null,
+      data_nascimento: input.data_nascimento ?? null,
       documentos: input.documentos as any,
       status: "pendente",
     })
