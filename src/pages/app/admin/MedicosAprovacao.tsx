@@ -360,20 +360,15 @@ function StatusBadge({ status }: { status: MedicoStatus }) {
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${map[status]}`}>{STATUS_LABEL[status]}</span>;
 }
 
-function DataField({ label, value, missing }: { label: string; value: string; missing?: boolean }) {
+function DataField({ label, value, missing, error }: { label: string; value: string; missing?: boolean; error?: string }) {
+  const flagged = missing || !!error;
   return (
-    <div className={`rounded-md border p-2 ${missing ? "border-warning/40 bg-warning/5" : "border-border"}`}>
+    <div className={`rounded-md border p-2 ${flagged ? (error ? "border-destructive/40 bg-destructive/5" : "border-warning/40 bg-warning/5") : "border-border"}`}>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-sm ${missing ? "text-warning-foreground" : ""}`}>{value || "—"}</p>
+      <p className={`text-sm ${flagged ? (error ? "text-destructive" : "text-warning-foreground") : ""}`}>{value || "—"}</p>
+      {error && <p className="mt-0.5 text-[11px] font-semibold text-destructive">{error}</p>}
     </div>
   );
-}
-
-function fmtCpf(cpf: string | null) {
-  if (!cpf) return "";
-  const d = cpf.replace(/\D/g, "");
-  if (d.length !== 11) return cpf;
-  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
 }
 
 function fmtDate(d: string | null) {
