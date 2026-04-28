@@ -164,7 +164,7 @@ export async function listMedicos(): Promise<MedicoRow[]> {
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as MedicoRow[];
+  return (data ?? []) as unknown as MedicoRow[];
 }
 
 export async function updateMedicoStatus(
