@@ -24,6 +24,8 @@ import MedicoIntegracoes from "@/pages/app/medico/MedicoIntegracoes";
 import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
 import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
+import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
+import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
@@ -98,8 +100,8 @@ const App = () => (
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
-              <Route path="secretaria/pacientes" element={<Placeholder title="Pacientes" />} />
-              <Route path="secretaria/agenda" element={<Placeholder title="Agenda por médico" />} />
+              <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
+              <Route path="secretaria/agenda" element={<SecretariaAgenda />} />
               <Route path="secretaria/agendamentos" element={<Placeholder title="Agendamentos" />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
               <Route path="secretaria/financeiro" element={<Placeholder title="Pagamentos pendentes" />} />
