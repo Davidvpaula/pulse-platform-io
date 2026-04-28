@@ -1,117 +1,157 @@
-import { Users, Calendar, FileBarChart, Wallet, Building2, Lock, Activity } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
-import { StatCard } from "@/components/StatCard";
-import { StatusBadge } from "@/components/StatusBadge";
+import {
+  Users, Calendar, TrendingUp, Wallet, UserCheck, Lock, AlertTriangle,
+  ArrowRight, Plus, FileBarChart,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { empresaFuncionarios, agendamentos } from "@/lib/mock";
+import {
+  getKpis, getAlertas, getStatsPorSetor, listAgendamentos, getPerfil,
+  STATUS_AGEND_LABEL, brl,
+  type DashboardKpis, type SetorStats, type Alerta, type AgendamentoCorporativo,
+} from "@/lib/empresa";
 
 export default function EmpresaDashboard() {
+  const [kpis, setKpis] = useState<DashboardKpis>(() => getKpis());
+  const [alertas, setAlertas] = useState<Alerta[]>(() => getAlertas());
+  const [setores, setSetores] = useState<SetorStats[]>(() => getStatsPorSetor());
+  const [proximos, setProximos] = useState<AgendamentoCorporativo[]>([]);
+  const perfil = getPerfil();
+
+  useEffect(() => {
+    const reload = () => {
+      setKpis(getKpis()); setAlertas(getAlertas()); setSetores(getStatsPorSetor());
+      setProximos(listAgendamentos().filter(a => a.status !== "cancelado").slice(0, 5));
+    };
+    reload();
+    window.addEventListener("lasmar:empresa-changed", reload);
+    return () => window.removeEventListener("lasmar:empresa-changed", reload);
+  }, []);
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Construtora Horizonte"
-        description="Gestão de saúde corporativa · Plano Corporativo Premium"
-        actions={<Button className="bg-gradient-primary hover:opacity-90"><Users className="mr-2 h-4 w-4" />Adicionar funcionário</Button>}
-      />
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{perfil.plano}</p>
+          <h1 className="font-display text-2xl font-bold">{perfil.nomeFantasia}</h1>
+          <p className="text-sm text-muted-foreground">
+            Gestão estratégica de saúde corporativa · {perfil.vidasContratadas} vidas contratadas
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/app/empresa/relatorios"><FileBarChart className="mr-2 h-4 w-4" />Relatórios</Link>
+          </Button>
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/app/empresa/agendamentos"><Plus className="mr-2 h-4 w-4" />Agendar consulta</Link>
+          </Button>
+        </div>
+      </header>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Funcionários" value="86" icon={Users} hint="3 setores" />
-        <StatCard label="Consultas no mês" value="142" icon={Calendar} hint="média 1.6 / pessoa" />
-        <StatCard label="Relatórios liberados" value="38" icon={FileBarChart} hint="visíveis ao RH" />
-        <StatCard label="Investimento mensal" value="R$ 9.480" icon={Wallet} hint="Ciclo de Abril" />
+      {/* KPIs */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Kpi label="Funcionários" value={kpis.totalFuncionarios.toString()} hint={`${kpis.ativos} ativos`} icon={Users} to="/app/empresa/funcionarios" />
+        <Kpi label="Consultas no mês" value={kpis.consultasMes.toString()} hint="Mês corrente" icon={Calendar} to="/app/empresa/agendamentos" />
+        <Kpi label="Taxa de uso" value={`${kpis.taxaUso}%`} hint="consultas/ativo" icon={TrendingUp} to="/app/empresa/relatorios" />
+        <Kpi label="Custo mensal" value={brl(kpis.custoMensal)} hint={`Ciclo dia ${perfil.cicloFechamento}`} icon={Wallet} to="/app/empresa/financeiro" />
+        <Kpi label="Custo / colaborador" value={brl(kpis.custoMedioColaborador)} hint="Por ativo" icon={UserCheck} to="/app/empresa/financeiro" />
       </div>
 
-      <div className="card-elevated p-4 flex items-start gap-3 border-warning/30 bg-warning/5">
+      {/* Privacidade */}
+      <div className="card-elevated flex items-start gap-3 border-warning/30 bg-warning/5 p-4">
         <Lock className="mt-0.5 h-4 w-4 text-warning" />
-        <p className="text-sm text-warning-foreground">
-          <strong>Privacidade:</strong> a empresa não tem acesso ao prontuário completo dos funcionários — apenas a relatórios e documentos liberados com permissão.
+        <p className="text-sm">
+          <strong>Privacidade:</strong> a empresa <strong>não acessa o prontuário</strong> dos funcionários. Apenas relatórios agregados e documentos liberados ficam visíveis ao RH.
         </p>
       </div>
 
-      {/* Fluxo recente da empresa */}
-      <div className="card-elevated p-6">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />Fluxo recente
-          </h3>
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/app/admin/fluxo">Ver fluxo completo</Link>
-          </Button>
-        </div>
-        <ol className="mt-4 grid gap-3 md:grid-cols-3">
-          {agendamentos.filter(a => a.origem === "Construtora Horizonte").map(a => (
-            <li key={a.id} className="rounded-lg border border-border p-3">
-              <p className="text-sm font-semibold">{a.paciente}</p>
-              <p className="text-xs text-muted-foreground">{a.medico} · {a.data} {a.hora}</p>
-              <div className="mt-2"><StatusBadge status={a.status} /></div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="card-elevated p-6 lg:col-span-2">
+        {/* ALERTAS */}
+        <section className="card-elevated p-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Funcionários</h3>
-            <Button variant="ghost" size="sm">Ver todos</Button>
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning" /> Alertas
+            </h2>
           </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="pb-2 pr-4">Nome</th>
-                  <th className="pb-2 pr-4">Setor</th>
-                  <th className="pb-2 pr-4">Consultas</th>
-                  <th className="pb-2 pr-4">Status</th>
-                  <th className="pb-2 pr-4">Última</th>
-                  <th className="pb-2 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {empresaFuncionarios.map((f) => (
-                  <tr key={f.pacienteId} className="hover:bg-muted/50">
-                    <td className="py-3 pr-4 font-medium">{f.nome}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">{f.setor}</td>
-                    <td className="py-3 pr-4">{f.consultas}</td>
-                    <td className="py-3 pr-4"><StatusBadge status={f.status} /></td>
-                    <td className="py-3 pr-4 text-muted-foreground">{f.ultima}</td>
-                    <td className="py-3 text-right">
-                      <Button asChild size="sm" variant="ghost">
-                        <Link to={`/app/admin/pacientes/${f.pacienteId}`}>Histórico</Link>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <ul className="mt-4 space-y-3">
+            {alertas.length === 0 && <li className="text-sm text-muted-foreground">Nenhum alerta no momento.</li>}
+            {alertas.map(a => {
+              const tone = a.tone === "destructive" ? "destructive" : a.tone === "warning" ? "warning" : "primary";
+              return (
+                <li key={a.id} className={`rounded-lg border-l-4 border-${tone} bg-${tone}/5 p-3`}>
+                  <p className="text-sm font-semibold">{a.titulo}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
 
-        <div className="card-elevated p-6">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-lg font-semibold">Por unidade</h3>
+        {/* PRÓXIMAS CONSULTAS */}
+        <section className="card-elevated p-6 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold">Próximas consultas</h2>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/app/empresa/agendamentos">Ver tudo <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
           </div>
-          <ul className="mt-4 space-y-3 text-sm">
-            {[
-              { n: "Obra Centro", v: 32, p: 60 },
-              { n: "Obra Sul", v: 28, p: 45 },
-              { n: "Administrativo", v: 26, p: 40 },
-            ].map(u => (
-              <li key={u.n}>
-                <div className="flex justify-between text-xs">
-                  <span className="font-medium">{u.n}</span>
-                  <span className="text-muted-foreground">{u.v} consultas</span>
+          <ul className="mt-4 divide-y divide-border">
+            {proximos.length === 0 && <li className="py-8 text-center text-sm text-muted-foreground">Nenhum agendamento.</li>}
+            {proximos.map(a => (
+              <li key={a.id} className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-semibold">{a.funcionarioNome}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {a.especialidade} · {new Date(a.data).toLocaleDateString("pt-BR")}
+                  </p>
                 </div>
-                <div className="mt-1 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-gradient-primary" style={{ width: `${u.p}%` }} />
-                </div>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
+                  {STATUS_AGEND_LABEL[a.status]}
+                </span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       </div>
+
+      {/* SETORES */}
+      <section className="card-elevated p-6">
+        <h2 className="font-display text-lg font-semibold">Uso por setor</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {setores.map(s => (
+            <div key={s.setor} className="rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">{s.setor}</p>
+                <span className="text-xs text-muted-foreground">{s.funcionarios} pessoas</span>
+              </div>
+              <div className="mt-3 flex items-end justify-between">
+                <span className="text-2xl font-bold">{s.consultas}</span>
+                <span className="text-xs text-muted-foreground">consultas</span>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-gradient-primary" style={{ width: `${Math.min(s.taxaUso, 100)}%` }} />
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">{s.taxaUso}% uso · {brl(s.custo)} custo</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
+}
+
+function Kpi({ label, value, hint, icon: Icon, to }: {
+  label: string; value: string; hint?: string; icon: React.ElementType; to?: string;
+}) {
+  const inner = (
+    <div className="card-elevated p-4 transition hover:shadow-elegant">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <p className="mt-2 text-2xl font-bold">{value}</p>
+      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
+  );
+  return to ? <Link to={to}>{inner}</Link> : inner;
 }
