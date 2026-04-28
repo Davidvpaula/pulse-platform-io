@@ -255,7 +255,12 @@ export default function MedicosAprovacao() {
               )}
 
               <section className="grid gap-3 sm:grid-cols-2">
-                <DataField label="CPF" value={fmtCpf(selected.cpf)} missing={!selected.cpf} />
+                <DataField
+                  label="CPF"
+                  value={formatCpf(selected.cpf)}
+                  missing={!selected.cpf}
+                  error={!!selected.cpf && !isValidCpf(selected.cpf) ? "CPF inválido" : undefined}
+                />
                 <DataField label="Data de nascimento" value={fmtDate(selected.data_nascimento)} missing={!selected.data_nascimento} />
                 <DataField label="E-mail" value={selected.email} />
                 <DataField label="RQE" value={selected.rqe ?? "—"} />
