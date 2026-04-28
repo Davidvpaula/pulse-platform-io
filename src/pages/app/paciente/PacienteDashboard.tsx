@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { proximasConsultasPaciente, documentosPaciente } from "@/lib/mock";
+import { proximasConsultasPaciente, documentosPaciente, timelinePaciente } from "@/lib/mock";
+import { Timeline } from "@/components/Timeline";
 import { useAuth } from "@/lib/auth";
 
 export default function PacienteDashboard() {
