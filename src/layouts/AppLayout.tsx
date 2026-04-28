@@ -46,14 +46,14 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} />
+        <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
-            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} />
+            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
           </aside>
         </div>
       )}
@@ -120,11 +120,12 @@ export default function AppLayout() {
 }
 
 function SidebarBody({
-  profileKey, onNavigate, switchProfile,
+  profileKey, onNavigate, switchProfile, showDemoSwitcher,
 }: {
   profileKey: ProfileKey;
   onNavigate: () => void;
   switchProfile: (k: ProfileKey) => void;
+  showDemoSwitcher: boolean;
 }) {
   const profile = profiles[profileKey];
   const { pathname } = useLocation();
@@ -152,32 +153,42 @@ function SidebarBody({
         <Logo />
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-left hover:bg-sidebar-accent">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            <span className="flex-1">
-              <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil</span>
-              <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
-            </span>
-            <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>Mudar dashboard</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-            <DropdownMenuItem
-              key={k}
-              onClick={() => switchProfile(k)}
-              className="gap-2"
-            >
-              {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-              {profiles[k].label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {showDemoSwitcher ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-left hover:bg-sidebar-accent">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span className="flex-1">
+                <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil (demo)</span>
+                <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
+              </span>
+              <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel>Mudar dashboard</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {(Object.keys(profiles) as ProfileKey[]).map((k) => (
+              <DropdownMenuItem
+                key={k}
+                onClick={() => switchProfile(k)}
+                className="gap-2"
+              >
+                {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
+                {profiles[k].label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          <span className="flex-1">
+            <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil</span>
+            <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
+          </span>
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
