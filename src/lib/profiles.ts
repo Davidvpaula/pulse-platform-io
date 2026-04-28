@@ -66,6 +66,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
       { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle, requiresCapability: "medico.comunicacao" },
+      { label: "Comunicação interna", to: "/app/medico/comunicacao-interna", icon: MessageSquare },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Integrações", to: "/app/medico/integracoes", icon: Plug },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
