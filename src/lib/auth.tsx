@@ -98,7 +98,6 @@ export function useCan() {
   return (resource: Resource, action: Action = "view") => _can(profileKey, resource, action);
 }
 
-import { useEffect, useState as _useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
