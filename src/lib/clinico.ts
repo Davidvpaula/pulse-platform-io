@@ -510,3 +510,154 @@ export function toStatusBadge(s: ConsultaStatus): Status {
   };
   return map[s];
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * AGENDAMENTO PÚBLICO (slot disponível → consulta aguardando_pagamento)
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type SlotDisponivel = {
+  id: string;
+  medico_id: string;
+  inicio: string;
+  fim: string;
+  modalidade: ConsultaModalidade;
+  medico_nome: string;
+  especialidade_id: string;
+  especialidade_nome: string;
+  preco_centavos: number;
+  duracao_minutos: number;
+};
+
+/**
+ * Lista slots disponíveis com dados do médico/especialidade. Combinação simples para
+ * tela de agendamento — em produção pode virar uma view materializada.
+ */
+export async function listSlotsDisponiveisPorEspecialidade(
+  especialidadeId: string,
+): Promise<SlotDisponivel[]> {
+  // 1) vínculos médico ↔ especialidade ativos
+  const { data: vinculos } = await supabase
+    .from("medico_especialidades")
+    .select("medico_id, especialidade_id, preco_centavos, duracao_minutos")
+    .eq("especialidade_id", especialidadeId)
+    .eq("ativo", true);
+  if (!vinculos?.length) return [];
+
+  const medicoIds = [...new Set(vinculos.map((v) => v.medico_id))];
+
+  const [{ data: medicos }, { data: esp }, { data: slots }] = await Promise.all([
+    supabase.from("medicos").select("id, nome").in("id", medicoIds),
+    supabase.from("especialidades").select("id, nome").eq("id", especialidadeId).maybeSingle(),
+    supabase
+      .from("agenda_slots")
+      .select("id, medico_id, inicio, fim, modalidade, status")
+      .in("medico_id", medicoIds)
+      .eq("status", "disponivel")
+      .gte("inicio", new Date().toISOString())
+      .order("inicio", { ascending: true })
+      .limit(100),
+  ]);
+
+  const medicoMap = new Map((medicos ?? []).map((m) => [m.id, m.nome]));
+  const vincMap = new Map(vinculos.map((v) => [v.medico_id, v]));
+
+  return (slots ?? []).map((s) => {
+    const v = vincMap.get(s.medico_id)!;
+    return {
+      id: s.id,
+      medico_id: s.medico_id,
+      inicio: s.inicio,
+      fim: s.fim,
+      modalidade: s.modalidade,
+      medico_nome: medicoMap.get(s.medico_id) ?? "Médico",
+      especialidade_id: especialidadeId,
+      especialidade_nome: esp?.nome ?? "—",
+      preco_centavos: v.preco_centavos,
+      duracao_minutos: v.duracao_minutos,
+    };
+  });
+}
+
+export async function getSlotDisponivel(slotId: string): Promise<SlotDisponivel | null> {
+  const { data: slot } = await supabase
+    .from("agenda_slots")
+    .select("id, medico_id, inicio, fim, modalidade, status")
+    .eq("id", slotId)
+    .maybeSingle();
+  if (!slot || slot.status !== "disponivel") return null;
+
+  const [{ data: medico }, { data: vinculos }] = await Promise.all([
+    supabase.from("medicos").select("id, nome").eq("id", slot.medico_id).maybeSingle(),
+    supabase
+      .from("medico_especialidades")
+      .select("especialidade_id, preco_centavos, duracao_minutos")
+      .eq("medico_id", slot.medico_id)
+      .eq("ativo", true)
+      .limit(1),
+  ]);
+  const v = vinculos?.[0];
+  if (!v) return null;
+  const { data: esp } = await supabase
+    .from("especialidades")
+    .select("nome")
+    .eq("id", v.especialidade_id)
+    .maybeSingle();
+
+  return {
+    id: slot.id,
+    medico_id: slot.medico_id,
+    inicio: slot.inicio,
+    fim: slot.fim,
+    modalidade: slot.modalidade,
+    medico_nome: medico?.nome ?? "Médico",
+    especialidade_id: v.especialidade_id,
+    especialidade_nome: esp?.nome ?? "—",
+    preco_centavos: v.preco_centavos,
+    duracao_minutos: v.duracao_minutos,
+  };
+}
+
+export type DadosPaciente = {
+  nome_completo: string;
+  cpf: string;
+  telefone: string;
+  data_nascimento: string; // ISO yyyy-mm-dd
+  sexo: Database["public"]["Enums"]["sexo_biologico"];
+  cep: string;
+};
+
+export type CriarConsultaInput = DadosPaciente & {
+  slot_id: string;
+  especialidade_id: string;
+  motivo?: string;
+};
+
+export type CriarConsultaResult = {
+  consulta_id: string;
+  paciente_id: string;
+  valor_centavos: number;
+  reserva_expira_em: string;
+};
+
+/**
+ * Cria a consulta como aguardando_pagamento e reserva o slot por 15 minutos.
+ * Atualiza os dados do paciente atomicamente. Em caso de slot indisponível,
+ * lança erro com a mensagem do Postgres.
+ */
+export async function criarConsultaComReserva(
+  input: CriarConsultaInput,
+): Promise<CriarConsultaResult> {
+  const { data, error } = await supabase.rpc("criar_consulta_com_reserva", {
+    _slot_id: input.slot_id,
+    _especialidade_id: input.especialidade_id,
+    _motivo: input.motivo ?? null,
+    _nome_completo: input.nome_completo,
+    _cpf: input.cpf,
+    _telefone: input.telefone,
+    _data_nascimento: input.data_nascimento,
+    _sexo: input.sexo,
+    _cep: input.cep,
+  });
+  if (error) throw error;
+  return data as unknown as CriarConsultaResult;
+}

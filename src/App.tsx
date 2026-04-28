@@ -26,6 +26,7 @@ import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";
 import PacienteCheckout from "@/pages/app/paciente/PacienteCheckout";
 import PacientePagamentoSucesso from "@/pages/app/paciente/PacientePagamentoSucesso";
 import PacientePagamentoCancelado from "@/pages/app/paciente/PacientePagamentoCancelado";
+import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfirmar";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
@@ -106,6 +107,7 @@ const App = () => (
               <Route path="paciente/checkout/:sessionId" element={<PacienteCheckout />} />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
+              <Route path="paciente/agendar/confirmar/:slotId" element={<PacienteAgendarConfirmar />} />
 
               {/* Médico — todas as rotas operacionais protegidas pelo MedicoGuard */}
               <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
