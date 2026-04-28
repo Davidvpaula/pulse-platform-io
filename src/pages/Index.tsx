@@ -1,10 +1,3 @@
 import Home from "./public/Home";
-import PublicLayout from "@/layouts/PublicLayout";
-
-const Index = () => (
-  <PublicLayout>
-    <Home />
-  </PublicLayout>
-);
-
+const Index = () => <Home />;
 export default Index;
