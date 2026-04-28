@@ -1,8 +1,9 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Star, Video, Calendar, MapPin, GraduationCap } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { especialidades, medicos } from "@/lib/mock";
+import { useAuth } from "@/lib/auth";
 
 export const Especialidades = () => (
   <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
@@ -192,27 +193,45 @@ export const Faq = () => {
   );
 };
 
-export const Login = () => (
-  <section className="container grid min-h-[80vh] place-items-center py-16">
-    <div className="card-elevated w-full max-w-md p-8">
-      <h1 className="font-display text-2xl font-bold">Acessar plataforma</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Entre com seu e-mail e senha.</p>
-      <div className="mt-6 space-y-3">
-        <input className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="E-mail" />
-        <input type="password" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Senha" />
-        <Button className="w-full bg-gradient-primary hover:opacity-90">Entrar</Button>
-      </div>
-      <div className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acesso rápido (demo)</p>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-          <Link to="/app/paciente/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Paciente</Link>
-          <Link to="/app/medico/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Médico</Link>
-          <Link to="/app/secretaria/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Secretaria</Link>
-          <Link to="/app/admin/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Admin</Link>
-          <Link to="/app/empresa/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Empresa</Link>
-          <Link to="/app/comunicacao/dashboard" className="rounded-lg border border-border px-3 py-2 hover:bg-muted">Comunicação</Link>
+export const Login = () => {
+  const { setProfileKey } = useAuth();
+  const navigate = useNavigate();
+  const enter = (k: Parameters<typeof setProfileKey>[0], to: string) => {
+    setProfileKey(k);
+    navigate(to);
+  };
+  const demos: { k: Parameters<typeof setProfileKey>[0]; label: string; to: string }[] = [
+    { k: "paciente", label: "Paciente", to: "/app/paciente/dashboard" },
+    { k: "paciente_empresa", label: "Pac. Empresarial", to: "/app/paciente/dashboard" },
+    { k: "medico", label: "Médico", to: "/app/medico/dashboard" },
+    { k: "secretaria", label: "Secretaria", to: "/app/secretaria/dashboard" },
+    { k: "supervisor", label: "Supervisor", to: "/app/supervisor/dashboard" },
+    { k: "admin", label: "Admin", to: "/app/admin/dashboard" },
+    { k: "superadmin", label: "Superadmin", to: "/app/admin/dashboard" },
+    { k: "empresa", label: "Empresa", to: "/app/empresa/dashboard" },
+    { k: "comunicacao", label: "Comunicação", to: "/app/comunicacao/dashboard" },
+  ];
+  return (
+    <section className="container grid min-h-[80vh] place-items-center py-16">
+      <div className="card-elevated w-full max-w-md p-8">
+        <h1 className="font-display text-2xl font-bold">Acessar plataforma</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Entre com seu e-mail e senha.</p>
+        <div className="mt-6 space-y-3">
+          <input className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="E-mail" />
+          <input type="password" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Senha" />
+          <Button className="w-full bg-gradient-primary hover:opacity-90">Entrar</Button>
+        </div>
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acesso rápido (demo)</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            {demos.map(d => (
+              <button key={d.k} onClick={() => enter(d.k, d.to)} className="rounded-lg border border-border px-3 py-2 text-left hover:bg-muted">
+                {d.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};

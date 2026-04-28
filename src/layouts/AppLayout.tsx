@@ -1,82 +1,81 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Bell, Search, Menu, LogOut, ChevronsUpDown, Check, ShieldCheck } from "lucide-react";
+import {
+  Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { profiles, profileFromPath, type ProfileKey } from "@/lib/profiles";
+import { profiles, type ProfileKey } from "@/lib/profiles";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { GlobalSearch } from "@/components/GlobalSearch";
+import { NotificationsBell } from "@/components/NotificationsBell";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function AppLayout() {
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const profileKey = (profileFromPath(pathname) ?? "paciente") as ProfileKey;
+  const { profileKey, setProfileKey, user } = useAuth();
   const profile = profiles[profileKey];
+
+  const switchProfile = (k: ProfileKey) => {
+    setProfileKey(k);
+    setMobileOpen(false);
+    const first = profiles[k].nav.find(n => n.to)?.to ?? "/app";
+    navigate(first);
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
-      {/* Sidebar — desktop */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <SidebarBody profileKey={profileKey} onNavigate={() => {}} />
+        <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} />
       </aside>
 
-      {/* Sidebar — mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
-            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} />
+            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} />
           </aside>
         </div>
       )}
 
       <div className="flex flex-1 flex-col min-w-0">
-        {/* Header */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar pacientes, médicos, agendamentos…"
-              className="pl-9 bg-muted/60 border-transparent focus-visible:bg-background"
-            />
+          <div className="flex-1 max-w-md">
+            <GlobalSearch />
           </div>
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
-          </Button>
+          <NotificationsBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-muted">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
-                  {profile.user.avatarInitials}
+                  {user.avatarInitials}
                 </span>
                 <span className="hidden text-left sm:block">
-                  <span className="block text-sm font-medium leading-tight">{profile.user.name}</span>
-                  <span className="block text-[11px] text-muted-foreground leading-tight">{profile.user.role}</span>
+                  <span className="block text-sm font-medium leading-tight">{user.name}</span>
+                  <span className="block text-[11px] text-muted-foreground leading-tight">{user.role}</span>
                 </span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuLabel>Trocar perfil (demo)</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-                <DropdownMenuItem
-                  key={k}
-                  onClick={() => navigate(profiles[k].nav[0].to)}
-                  className="gap-2"
-                >
+                <DropdownMenuItem key={k} onClick={() => switchProfile(k)} className="gap-2">
                   {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
                   {profiles[k].label}
                 </DropdownMenuItem>
@@ -90,16 +89,32 @@ export default function AppLayout() {
         </header>
 
         <main className="flex-1 p-4 md:p-8">
-          <Outlet />
+          <ProtectedRoute>
+            <Outlet />
+          </ProtectedRoute>
         </main>
       </div>
     </div>
   );
 }
 
-function SidebarBody({ profileKey, onNavigate }: { profileKey: ProfileKey; onNavigate: () => void }) {
+function SidebarBody({
+  profileKey, onNavigate, switchProfile,
+}: {
+  profileKey: ProfileKey;
+  onNavigate: () => void;
+  switchProfile: (k: ProfileKey) => void;
+}) {
   const profile = profiles[profileKey];
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+      isActive
+        ? "bg-primary text-primary-foreground shadow-sm"
+        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+    );
 
   return (
     <>
@@ -124,7 +139,7 @@ function SidebarBody({ profileKey, onNavigate }: { profileKey: ProfileKey; onNav
           {(Object.keys(profiles) as ProfileKey[]).map((k) => (
             <DropdownMenuItem
               key={k}
-              onClick={() => { onNavigate(); navigate(profiles[k].nav[0].to); }}
+              onClick={() => switchProfile(k)}
               className="gap-2"
             >
               {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
@@ -136,25 +151,49 @@ function SidebarBody({ profileKey, onNavigate }: { profileKey: ProfileKey; onNav
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
-          {profile.nav.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                onClick={onNavigate}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
-              </NavLink>
-            </li>
-          ))}
+          {profile.nav.map((item) => {
+            if (item.children?.length) {
+              const open = item.children.some(c => pathname.startsWith(c.to));
+              return (
+                <li key={item.label}>
+                  <Collapsible defaultOpen={open}>
+                    <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 text-left truncate">{item.label}</span>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform data-[state=closed]:-rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-0.5 space-y-0.5 pl-7">
+                      {item.children.map(c => (
+                        <NavLink
+                          key={c.to}
+                          to={c.to}
+                          onClick={onNavigate}
+                          className={({ isActive }) =>
+                            cn(
+                              "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                              isActive
+                                ? "bg-primary-soft text-primary font-semibold"
+                                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                            )
+                          }
+                        >
+                          {c.label}
+                        </NavLink>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </li>
+              );
+            }
+            return (
+              <li key={item.to}>
+                <NavLink to={item.to!} onClick={onNavigate} className={linkClass}>
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

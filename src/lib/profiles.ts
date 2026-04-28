@@ -2,13 +2,27 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
+  Activity, Eye,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type ProfileKey =
-  | "paciente" | "medico" | "secretaria" | "admin" | "empresa" | "comunicacao";
+  | "paciente"
+  | "paciente_empresa"
+  | "medico"
+  | "secretaria"
+  | "supervisor"
+  | "admin"
+  | "superadmin"
+  | "empresa"
+  | "comunicacao";
 
-export type NavItem = { label: string; to: string; icon: LucideIcon };
+export type NavItem = {
+  label: string;
+  to?: string;
+  icon: LucideIcon;
+  children?: { label: string; to: string }[];
+};
 
 export type ProfileConfig = {
   key: ProfileKey;
@@ -36,6 +50,21 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Perfil", to: "/app/paciente/perfil", icon: User },
     ],
   },
+  paciente_empresa: {
+    key: "paciente_empresa",
+    label: "Paciente Empresarial",
+    basePath: "/app/paciente",
+    accent: "Plano Empresa",
+    user: { name: "Bruno Carvalho", role: "Paciente · Construtora Horizonte", avatarInitials: "BC" },
+    nav: [
+      { label: "Dashboard", to: "/app/paciente/dashboard", icon: LayoutDashboard },
+      { label: "Agendamentos", to: "/app/paciente/agendamentos", icon: Calendar },
+      { label: "Documentos", to: "/app/paciente/documentos", icon: FileText },
+      { label: "Meu Plano", to: "/app/paciente/plano", icon: BadgeCheck },
+      { label: "Mensagens", to: "/app/paciente/mensagens", icon: MessageSquare },
+      { label: "Perfil", to: "/app/paciente/perfil", icon: User },
+    ],
+  },
   medico: {
     key: "medico",
     label: "Médico",
@@ -59,7 +88,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     label: "Secretaria",
     basePath: "/app/secretaria",
     accent: "Operação",
-    user: { name: "Juliana Reis", role: "Secretária Supervisora", avatarInitials: "JR" },
+    user: { name: "Juliana Reis", role: "Secretária", avatarInitials: "JR" },
     nav: [
       { label: "Dashboard", to: "/app/secretaria/dashboard", icon: LayoutDashboard },
       { label: "Pacientes", to: "/app/secretaria/pacientes", icon: Users },
@@ -70,26 +99,81 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
     ],
   },
+  supervisor: {
+    key: "supervisor",
+    label: "Supervisor",
+    basePath: "/app/supervisor",
+    accent: "Liderança operacional",
+    user: { name: "Renata Albuquerque", role: "Supervisora", avatarInitials: "RA" },
+    nav: [
+      { label: "Dashboard", to: "/app/supervisor/dashboard", icon: LayoutDashboard },
+      {
+        label: "Operação",
+        icon: Activity,
+        children: [
+          { label: "Visão da equipe", to: "/app/supervisor/equipe" },
+          { label: "Monitoramento", to: "/app/supervisor/monitoramento" },
+          { label: "Relatórios operacionais", to: "/app/supervisor/relatorios" },
+        ],
+      },
+      { label: "Pacientes", to: "/app/secretaria/pacientes", icon: Users },
+      { label: "Agenda", to: "/app/secretaria/agenda", icon: Calendar },
+      { label: "Agendamentos", to: "/app/secretaria/agendamentos", icon: ClipboardList },
+      { label: "Comunicação", to: "/app/secretaria/comunicacao", icon: MessageCircle },
+      { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
+    ],
+  },
   admin: {
     key: "admin",
     label: "Administração",
     basePath: "/app/admin",
     accent: "Plataforma",
-    user: { name: "Carlos Mendes", role: "Superadmin", avatarInitials: "CM" },
+    user: { name: "Carlos Mendes", role: "Admin", avatarInitials: "CM" },
+    nav: [
+      { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
+      {
+        label: "Cadastros",
+        icon: Users,
+        children: [
+          { label: "Usuários", to: "/app/admin/usuarios" },
+          { label: "Médicos", to: "/app/admin/medicos" },
+          { label: "Secretaria", to: "/app/admin/secretaria" },
+          { label: "Empresas", to: "/app/admin/empresas" },
+        ],
+      },
+      { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
+      { label: "Financeiro", to: "/app/admin/financeiro", icon: Wallet },
+      { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck },
+      {
+        label: "Comunicação",
+        icon: MessageCircle,
+        children: [
+          { label: "Inbox", to: "/app/comunicacao/conversas" },
+          { label: "WhatsApp", to: "/app/admin/whatsapp" },
+          { label: "Bot", to: "/app/comunicacao/bot" },
+        ],
+      },
+      { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
+      { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
+      { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
+      { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
+    ],
+  },
+  superadmin: {
+    key: "superadmin",
+    label: "Superadmin",
+    basePath: "/app/admin",
+    accent: "Acesso total",
+    user: { name: "Fernanda Lasmar", role: "Superadmin", avatarInitials: "FL" },
     nav: [
       { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
       { label: "Usuários", to: "/app/admin/usuarios", icon: Users },
       { label: "Médicos", to: "/app/admin/medicos", icon: Stethoscope },
-      { label: "Secretaria", to: "/app/admin/secretaria", icon: UserCog },
       { label: "Empresas", to: "/app/admin/empresas", icon: Building2 },
-      { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
       { label: "Financeiro", to: "/app/admin/financeiro", icon: Wallet },
-      { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck },
-      { label: "Comunicação", to: "/app/admin/comunicacao", icon: MessageCircle },
-      { label: "WhatsApp", to: "/app/admin/whatsapp", icon: Phone },
-      { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
       { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
-      { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
+      { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
+      { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
   },
@@ -126,6 +210,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
 };
 
 export const profileFromPath = (pathname: string): ProfileKey | null => {
-  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|admin|empresa|comunicacao)/);
-  return (m?.[1] as ProfileKey) ?? null;
+  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|supervisor|admin|empresa|comunicacao)/);
+  if (!m) return null;
+  return m[1] as ProfileKey;
 };
