@@ -134,7 +134,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         label: "Comunicação",
         icon: MessageCircle,
         children: [
-          { label: "Inbox", to: "/app/comunicacao/conversas" },
+          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
+          { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
           { label: "WhatsApp", to: "/app/admin/whatsapp" },
           { label: "Bot", to: "/app/comunicacao/bot" },
           { label: "Templates", to: "/app/comunicacao/templates" },
