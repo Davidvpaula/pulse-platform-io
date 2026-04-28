@@ -237,6 +237,101 @@ export async function criarSlot(input: {
   return { ok: true, slot: data };
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * ESPECIALIDADES & VÍNCULOS DO MÉDICO
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type Especialidade = Database["public"]["Tables"]["especialidades"]["Row"];
+export type MedicoEspecialidade = Database["public"]["Tables"]["medico_especialidades"]["Row"];
+
+export async function listEspecialidades(): Promise<Especialidade[]> {
+  const { data, error } = await supabase
+    .from("especialidades")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome", { ascending: true });
+  if (error) {
+    console.error("[clinico] listEspecialidades:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function listVinculosDoMedico(): Promise<MedicoEspecialidade[]> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return [];
+  const { data, error } = await supabase
+    .from("medico_especialidades")
+    .select("*")
+    .eq("medico_id", medicoId);
+  if (error) {
+    console.error("[clinico] listVinculosDoMedico:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function upsertVinculoEspecialidade(input: {
+  especialidade_id: string;
+  ativo: boolean;
+  duracao_minutos: number;
+  preco_centavos: number;
+  pronto_atendimento: boolean;
+  modalidades?: ConsultaModalidade[];
+}): Promise<{ ok: boolean; error?: string }> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return { ok: false, error: "Médico não encontrado." };
+
+  const { data: existing } = await supabase
+    .from("medico_especialidades")
+    .select("id")
+    .eq("medico_id", medicoId)
+    .eq("especialidade_id", input.especialidade_id)
+    .maybeSingle();
+
+  const payload = {
+    medico_id: medicoId,
+    especialidade_id: input.especialidade_id,
+    ativo: input.ativo,
+    duracao_minutos: input.duracao_minutos,
+    preco_centavos: input.preco_centavos,
+    pronto_atendimento: input.pronto_atendimento,
+    modalidades: input.modalidades ?? ["online" as ConsultaModalidade],
+  };
+
+  const { error } = existing
+    ? await supabase.from("medico_especialidades").update(payload).eq("id", existing.id)
+    : await supabase.from("medico_especialidades").insert(payload);
+
+  if (error) {
+    console.error("[clinico] upsertVinculoEspecialidade:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * APP SETTINGS (configurações globais geridas pelo Admin)
+ * ────────────────────────────────────────────────────────────────────── */
+
+export async function getAppSetting<T = unknown>(key: string): Promise<T | null> {
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error) {
+    console.error("[clinico] getAppSetting:", error);
+    return null;
+  }
+  return (data?.value as T) ?? null;
+}
+
+export async function getProntoAtendimentoDuracao(): Promise<number> {
+  const v = await getAppSetting<number>("pronto_atendimento_duracao_min");
+  return typeof v === "number" && v > 0 ? v : 15;
+}
+
 /**
  * Retorna a duração de consulta a usar para gerar slots:
  * a MENOR `duracao_minutos` entre as especialidades ativas do médico.
