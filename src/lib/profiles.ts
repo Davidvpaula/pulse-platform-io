@@ -204,6 +204,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "WhatsApp", to: "/app/comunicacao/whatsapp", icon: Phone },
       { label: "Bot", to: "/app/comunicacao/bot", icon: Bot },
       { label: "Templates", to: "/app/comunicacao/templates", icon: FileText },
+      { label: "Automações", to: "/app/comunicacao/automacoes", icon: Activity },
       { label: "Métricas", to: "/app/comunicacao/metricas", icon: FileBarChart },
     ],
   },
