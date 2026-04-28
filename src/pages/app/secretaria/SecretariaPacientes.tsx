@@ -47,6 +47,10 @@ export default function SecretariaPacientes() {
       toast.error("Preencha nome, CPF, telefone e e-mail.");
       return;
     }
+    if (!isValidCpf(novo.cpf)) {
+      toast.error("CPF inválido", { description: "Verifique os dígitos informados." });
+      return;
+    }
     toast.success(`Paciente ${novo.nome} criado`, {
       description: "Status: aguardando sincronização com Feegow (mock).",
     });
