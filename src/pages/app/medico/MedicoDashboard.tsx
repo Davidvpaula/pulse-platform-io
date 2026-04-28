@@ -48,17 +48,13 @@ export default function MedicoDashboard() {
           </div>
 
           {/* Sequência de ações */}
-          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
+          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
             <Button size="lg" className="bg-gradient-primary hover:opacity-90">
               <Play className="mr-2 h-4 w-4" /> 1. Iniciar consulta
             </Button>
             <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
             <Button size="lg" variant="outline">
-              <ExternalLink className="mr-2 h-4 w-4" /> 2. Abrir prontuário (Feegow)
-            </Button>
-            <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
-            <Button size="lg" variant="outline">
-              <CheckCircle2 className="mr-2 h-4 w-4" /> 3. Finalizar atendimento
+              <CheckCircle2 className="mr-2 h-4 w-4" /> 2. Finalizar atendimento
             </Button>
           </div>
         </div>
