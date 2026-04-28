@@ -245,16 +245,23 @@ export type Especialidade = Database["public"]["Tables"]["especialidades"]["Row"
 export type MedicoEspecialidade = Database["public"]["Tables"]["medico_especialidades"]["Row"];
 
 export async function listEspecialidades(): Promise<Especialidade[]> {
-  const { data, error } = await supabase
-    .from("especialidades")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome", { ascending: true });
-  if (error) {
-    console.error("[clinico] listEspecialidades:", error);
-    return [];
+  // Retry para PGRST002 (schema cache reload após migração)
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    const { data, error } = await supabase
+      .from("especialidades")
+      .select("*")
+      .eq("ativo", true)
+      .order("nome", { ascending: true });
+    if (!error) return data ?? [];
+    if (error.code !== "PGRST002") {
+      console.error("[clinico] listEspecialidades:", error);
+      return [];
+    }
+    // schema cache reloading — espera e tenta de novo
+    await new Promise((r) => setTimeout(r, 500 * (tentativa + 1)));
   }
-  return data ?? [];
+  console.error("[clinico] listEspecialidades: schema cache não disponível após retries");
+  return [];
 }
 
 export async function listVinculosDoMedico(): Promise<MedicoEspecialidade[]> {
