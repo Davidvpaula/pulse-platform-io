@@ -222,8 +222,14 @@ export default function MedicoConfiguracoes() {
               <p className="mt-1 font-display text-2xl font-semibold">{paCount}</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Duração PA (Admin)</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Duração PA</p>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  somente leitura
+                </span>
+              </div>
               <p className="mt-1 font-display text-2xl font-semibold">{paDuracao} min</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Definido pelo Admin</p>
             </div>
           </div>
 
@@ -303,13 +309,40 @@ export default function MedicoConfiguracoes() {
 
           {/* Modo Pronto Atendimento */}
           <div>
-            <div className="mb-2 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-warning" />
-              <h4 className="text-sm font-semibold">Pronto Atendimento</h4>
-              <span className="text-[11px] text-muted-foreground">
-                Selecione as especialidades em que aceita atender no modo Pronto Atendimento.
-                Duração ({paDuracao} min) é definida pelo Admin.
-              </span>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-warning" />
+                <h4 className="text-sm font-semibold">Pronto Atendimento</h4>
+                <span className="text-[11px] text-muted-foreground">
+                  Marque as especialidades disponíveis em PA. Duração ({paDuracao} min) definida pelo Admin.
+                </span>
+              </div>
+              {especialidades.filter((e) => linhas[e.id]?.ativo).length > 0 && (
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      especialidades.forEach((e) => {
+                        if (linhas[e.id]?.ativo) updateLinha(e.id, { pronto_atendimento: true });
+                      });
+                    }}
+                    className="rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground hover:border-warning/40 hover:text-warning"
+                  >
+                    Selecionar todas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      especialidades.forEach((e) => {
+                        if (linhas[e.id]?.ativo) updateLinha(e.id, { pronto_atendimento: false });
+                      });
+                    }}
+                    className="rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              )}
             </div>
 
             {loadingAt ? null : (
