@@ -62,6 +62,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     nav: [
       { label: "Dashboard", to: "/app/medico/dashboard", icon: LayoutDashboard },
       { label: "Agenda", to: "/app/medico/agenda", icon: Calendar },
+      { label: "Meus horários", to: "/app/medico/horarios", icon: Clock },
       { label: "Consultas", to: "/app/medico/consultas", icon: Video },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },

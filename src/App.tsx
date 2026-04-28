@@ -24,6 +24,7 @@ import MedicoGuard from "@/components/MedicoGuard";
 import Placeholder from "@/pages/app/_Placeholder";
 import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
+import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
 import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
 import MedicoIntegracoes from "@/pages/app/medico/MedicoIntegracoes";
@@ -102,6 +103,7 @@ const App = () => (
               <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
               <Route path="medico/dashboard" element={<MedicoGuard><MedicoDashboard /></MedicoGuard>} />
               <Route path="medico/agenda" element={<MedicoGuard><MedicoAgenda /></MedicoGuard>} />
+              <Route path="medico/horarios" element={<MedicoGuard><MedicoHorarios /></MedicoGuard>} />
               <Route path="medico/consultas" element={<MedicoGuard><Placeholder title="Consultas" /></MedicoGuard>} />
               <Route path="medico/pacientes" element={<MedicoGuard><MedicoPacientes /></MedicoGuard>} />
               <Route path="medico/documentos" element={<MedicoGuard><Placeholder title="Documentos emitidos" /></MedicoGuard>} />
