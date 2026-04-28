@@ -202,14 +202,10 @@ export const Login = () => {
   };
   const demos: { k: Parameters<typeof setProfileKey>[0]; label: string; to: string }[] = [
     { k: "paciente", label: "Paciente", to: "/app/paciente/dashboard" },
-    { k: "paciente_empresa", label: "Pac. Empresarial", to: "/app/paciente/dashboard" },
     { k: "medico", label: "Médico", to: "/app/medico/dashboard" },
     { k: "secretaria", label: "Secretaria", to: "/app/secretaria/dashboard" },
-    { k: "supervisor", label: "Supervisor", to: "/app/supervisor/dashboard" },
     { k: "admin", label: "Admin", to: "/app/admin/dashboard" },
-    { k: "superadmin", label: "Superadmin", to: "/app/admin/dashboard" },
     { k: "empresa", label: "Empresa", to: "/app/empresa/dashboard" },
-    { k: "comunicacao", label: "Comunicação", to: "/app/comunicacao/dashboard" },
   ];
   return (
     <section className="container grid min-h-[80vh] place-items-center py-16">

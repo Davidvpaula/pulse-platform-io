@@ -6,22 +6,25 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+/**
+ * Perfis principais (login). Diferenças internas (ex.: Secretaria com supervisão,
+ * Médico com acesso à comunicação, Admin com módulos sensíveis) são tratadas via
+ * capabilities atribuídas pelo Admin — não como dashboards separados.
+ */
 export type ProfileKey =
   | "paciente"
-  | "paciente_empresa"
   | "medico"
   | "secretaria"
-  | "supervisor"
   | "admin"
-  | "superadmin"
-  | "empresa"
-  | "comunicacao";
+  | "empresa";
 
 export type NavItem = {
   label: string;
   to?: string;
   icon: LucideIcon;
-  children?: { label: string; to: string }[];
+  /** Quando preenchido, item só aparece se a capability estiver ativa */
+  requiresCapability?: string;
+  children?: { label: string; to: string; requiresCapability?: string }[];
 };
 
 export type ProfileConfig = {
@@ -50,21 +53,6 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Perfil", to: "/app/paciente/perfil", icon: User },
     ],
   },
-  paciente_empresa: {
-    key: "paciente_empresa",
-    label: "Paciente Empresarial",
-    basePath: "/app/paciente",
-    accent: "Plano Empresa",
-    user: { name: "Bruno Carvalho", role: "Paciente · Construtora Horizonte", avatarInitials: "BC" },
-    nav: [
-      { label: "Dashboard", to: "/app/paciente/dashboard", icon: LayoutDashboard },
-      { label: "Agendamentos", to: "/app/paciente/agendamentos", icon: Calendar },
-      { label: "Documentos", to: "/app/paciente/documentos", icon: FileText },
-      { label: "Meu Plano", to: "/app/paciente/plano", icon: BadgeCheck },
-      { label: "Mensagens", to: "/app/paciente/mensagens", icon: MessageSquare },
-      { label: "Perfil", to: "/app/paciente/perfil", icon: User },
-    ],
-  },
   medico: {
     key: "medico",
     label: "Médico",
@@ -77,6 +65,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Consultas", to: "/app/medico/consultas", icon: Video },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
+      { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle, requiresCapability: "medico.comunicacao" },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Integrações", to: "/app/medico/integracoes", icon: Plug },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
@@ -94,38 +83,32 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Pacientes", to: "/app/secretaria/pacientes", icon: Users },
       { label: "Agenda", to: "/app/secretaria/agenda", icon: Calendar },
       { label: "Agendamentos", to: "/app/secretaria/agendamentos", icon: ClipboardList },
-      { label: "Comunicação", to: "/app/secretaria/comunicacao", icon: MessageCircle },
-      { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet },
-      { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
-    ],
-  },
-  supervisor: {
-    key: "supervisor",
-    label: "Supervisor",
-    basePath: "/app/supervisor",
-    accent: "Liderança operacional",
-    user: { name: "Renata Albuquerque", role: "Supervisora", avatarInitials: "RA" },
-    nav: [
-      { label: "Dashboard", to: "/app/supervisor/dashboard", icon: LayoutDashboard },
       {
-        label: "Operação",
-        icon: Activity,
+        label: "Comunicação",
+        icon: MessageCircle,
+        requiresCapability: "comunicacao.acessar",
         children: [
-          { label: "Visão da equipe", to: "/app/supervisor/equipe" },
-          { label: "Monitoramento", to: "/app/supervisor/monitoramento" },
-          { label: "Relatórios operacionais", to: "/app/supervisor/relatorios" },
+          { label: "Conversas", to: "/app/comunicacao/conversas" },
+          { label: "Templates", to: "/app/comunicacao/templates" },
         ],
       },
-      { label: "Pacientes", to: "/app/secretaria/pacientes", icon: Users },
-      { label: "Agenda", to: "/app/secretaria/agenda", icon: Calendar },
-      { label: "Agendamentos", to: "/app/secretaria/agendamentos", icon: ClipboardList },
-      { label: "Comunicação", to: "/app/secretaria/comunicacao", icon: MessageCircle },
+      { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
       { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
+      // ─── módulos liberados ao perfil "Secretaria com supervisão"
+      {
+        label: "Supervisão",
+        icon: Activity,
+        requiresCapability: "secretaria.supervisor",
+        children: [
+          { label: "Visão da equipe", to: "/app/secretaria/equipe" },
+          { label: "Relatórios operacionais", to: "/app/secretaria/relatorios" },
+        ],
+      },
     ],
   },
   admin: {
     key: "admin",
-    label: "Administração",
+    label: "Admin",
     basePath: "/app/admin",
     accent: "Plataforma",
     user: { name: "Carlos Mendes", role: "Admin", avatarInitials: "CM" },
@@ -151,28 +134,14 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Inbox", to: "/app/comunicacao/conversas" },
           { label: "WhatsApp", to: "/app/admin/whatsapp" },
           { label: "Bot", to: "/app/comunicacao/bot" },
+          { label: "Templates", to: "/app/comunicacao/templates" },
+          { label: "Automações", to: "/app/comunicacao/automacoes" },
+          { label: "Métricas", to: "/app/comunicacao/metricas" },
         ],
       },
       { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
       { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
       { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
-      { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
-    ],
-  },
-  superadmin: {
-    key: "superadmin",
-    label: "Superadmin",
-    basePath: "/app/admin",
-    accent: "Acesso total",
-    user: { name: "Fernanda Lasmar", role: "Superadmin", avatarInitials: "FL" },
-    nav: [
-      { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
-      { label: "Usuários", to: "/app/admin/usuarios", icon: Users },
-      { label: "Médicos", to: "/app/admin/medicos", icon: Stethoscope },
-      { label: "Empresas", to: "/app/admin/empresas", icon: Building2 },
-      { label: "Financeiro", to: "/app/admin/financeiro", icon: Wallet },
-      { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
-      { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
@@ -192,26 +161,10 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Perfil", to: "/app/empresa/perfil", icon: Building2 },
     ],
   },
-  comunicacao: {
-    key: "comunicacao",
-    label: "Central de Comunicação",
-    basePath: "/app/comunicacao",
-    accent: "Atendimento",
-    user: { name: "Equipe de Atendimento", role: "Operador", avatarInitials: "AT" },
-    nav: [
-      { label: "Dashboard", to: "/app/comunicacao/dashboard", icon: LayoutDashboard },
-      { label: "Conversas", to: "/app/comunicacao/conversas", icon: MessageSquare },
-      { label: "WhatsApp", to: "/app/comunicacao/whatsapp", icon: Phone },
-      { label: "Bot", to: "/app/comunicacao/bot", icon: Bot },
-      { label: "Templates", to: "/app/comunicacao/templates", icon: FileText },
-      { label: "Automações", to: "/app/comunicacao/automacoes", icon: Activity },
-      { label: "Métricas", to: "/app/comunicacao/metricas", icon: FileBarChart },
-    ],
-  },
 };
 
 export const profileFromPath = (pathname: string): ProfileKey | null => {
-  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|supervisor|admin|empresa|comunicacao)/);
+  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|admin|empresa)/);
   if (!m) return null;
   return m[1] as ProfileKey;
 };

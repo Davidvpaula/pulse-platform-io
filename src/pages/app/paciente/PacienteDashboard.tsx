@@ -1,12 +1,16 @@
-import { Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download, ChevronRight } from "lucide-react";
+import { Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download, ChevronRight, Building2, User } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { proximasConsultasPaciente, documentosPaciente } from "@/lib/mock";
+import { useAuth } from "@/lib/auth";
 
 export default function PacienteDashboard() {
   const proxima = proximasConsultasPaciente[0];
+  const { patientLink, setPatientLink } = useAuth();
+  const empresarial = patientLink.tipo === "empresarial";
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -14,6 +18,41 @@ export default function PacienteDashboard() {
         description="Acompanhe suas consultas, documentos e plano em um só lugar."
         actions={<Button className="bg-gradient-primary hover:opacity-90"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Button>}
       />
+
+      {/* Vínculo do paciente — Particular ou Empresarial */}
+      <div className="card-elevated flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="flex items-center gap-3">
+          <span className={`grid h-10 w-10 place-items-center rounded-xl ${empresarial ? "bg-accent/15 text-accent" : "bg-primary-soft text-primary"}`}>
+            {empresarial ? <Building2 className="h-5 w-5" /> : <User className="h-5 w-5" />}
+          </span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo de vínculo</p>
+            <p className="font-semibold">
+              {empresarial ? "Empresarial" : "Particular"}
+              {empresarial && patientLink.empresa && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  · {patientLink.empresa}
+                  {patientLink.plano && <> · plano {patientLink.plano}</>}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={empresarial ? "outline" : "default"}
+            size="sm"
+            className={!empresarial ? "bg-gradient-primary hover:opacity-90" : ""}
+            onClick={() => setPatientLink({ tipo: "particular" })}
+          >Particular</Button>
+          <Button
+            variant={empresarial ? "default" : "outline"}
+            size="sm"
+            className={empresarial ? "bg-gradient-primary hover:opacity-90" : ""}
+            onClick={() => setPatientLink({ tipo: "empresarial", empresa: "Construtora Horizonte", plano: "Saúde Empresa" })}
+          >Empresarial</Button>
+        </div>
+      </div>
 
       {/* Próxima consulta — destaque */}
       <div className="card-elevated overflow-hidden">

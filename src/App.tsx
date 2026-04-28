@@ -31,7 +31,7 @@ import Integracoes from "@/pages/app/shared/Integracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
-import SupervisorDashboard from "@/pages/app/supervisor/SupervisorDashboard";
+import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -80,8 +80,9 @@ const App = () => (
               <Route path="medico/perfil" element={<Placeholder title="Perfil profissional" />} />
               <Route path="medico/configuracoes" element={<Placeholder title="Configurações" />} />
               <Route path="medico/integracoes" element={<Integracoes />} />
+              <Route path="medico/mensagens" element={<Conversas />} />
 
-              {/* Secretaria */}
+              {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
               <Route path="secretaria/pacientes" element={<Placeholder title="Pacientes" />} />
               <Route path="secretaria/agenda" element={<Placeholder title="Agenda por médico" />} />
@@ -89,12 +90,11 @@ const App = () => (
               <Route path="secretaria/comunicacao" element={<Conversas />} />
               <Route path="secretaria/financeiro" element={<Placeholder title="Pagamentos pendentes" />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />
+              <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
+              <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
 
-              {/* Supervisor */}
-              <Route path="supervisor/dashboard" element={<SupervisorDashboard />} />
-              <Route path="supervisor/equipe" element={<SupervisorDashboard />} />
-              <Route path="supervisor/monitoramento" element={<Placeholder title="Monitoramento ao vivo" description="Painel de fila, SLA e atendimentos em curso." />} />
-              <Route path="supervisor/relatorios" element={<Placeholder title="Relatórios operacionais" />} />
+              {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
+              <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
 
               {/* Admin */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
