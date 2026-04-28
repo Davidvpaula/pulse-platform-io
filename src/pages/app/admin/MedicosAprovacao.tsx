@@ -228,6 +228,18 @@ export default function MedicosAprovacao() {
                 </div>
               )}
 
+              <section className="grid gap-3 sm:grid-cols-2">
+                <DataField label="CPF" value={fmtCpf(selected.cpf)} missing={!selected.cpf} />
+                <DataField label="Data de nascimento" value={fmtDate(selected.data_nascimento)} missing={!selected.data_nascimento} />
+                <DataField label="E-mail" value={selected.email} />
+                <DataField label="RQE" value={selected.rqe ?? "—"} />
+              </section>
+
+              <FeegowCard
+                medico={selected}
+                onLiberar={() => liberarFeegow(selected)}
+              />
+
               <section>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Documentos</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
