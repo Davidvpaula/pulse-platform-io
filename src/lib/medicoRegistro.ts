@@ -21,6 +21,8 @@ export type DocumentoMedico = {
 
 export type MedicoStatus = "pendente" | "em_analise" | "aprovado" | "reprovado";
 
+export type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
+
 export type MedicoRow = {
   id: string;
   user_id: string;
@@ -31,10 +33,16 @@ export type MedicoRow = {
   crm_estado: string;
   especialidade: string;
   rqe: string | null;
+  cpf: string | null;
+  data_nascimento: string | null;
   bio: string | null;
   documentos: DocumentoMedico[];
   status: MedicoStatus;
   motivo_reprovacao: string | null;
+  feegow_status: FeegowStatus;
+  feegow_professional_id: string | null;
+  feegow_liberado_em: string | null;
+  feegow_erro: string | null;
   created_at: string;
   updated_at: string;
 };
