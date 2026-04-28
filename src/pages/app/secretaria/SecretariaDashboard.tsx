@@ -1,11 +1,14 @@
-import { Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Send, Phone, RotateCcw, X } from "lucide-react";
+import { Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Send, Phone, RotateCcw, X, Activity, TrendingUp, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { filaSecretaria } from "@/lib/mock";
+import { useAuth } from "@/lib/auth";
 
 export default function SecretariaDashboard() {
+  const { hasCapability } = useAuth();
+  const isSupervisor = hasCapability("secretaria.supervisor");
   return (
     <div className="space-y-6">
       <PageHeader
