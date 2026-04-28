@@ -61,15 +61,8 @@ Deno.serve(async (req) => {
     if (medico.status !== "aprovado") {
       return json({ error: "Médico ainda não aprovado" }, 400);
     }
-    if (!medico.cpf || !medico.data_nascimento) {
-      return json(
-        {
-          error:
-            "Dados incompletos: CPF e Data de nascimento são obrigatórios para liberar acesso na Feegow.",
-        },
-        400,
-      );
-    }
+    const v = validarPreRequisitos(medico);
+    if (!v.ok) return json({ error: v.motivo }, 400);
 
     const FEEGOW_API_KEY = Deno.env.get("FEEGOW_API_KEY");
     const FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ??
