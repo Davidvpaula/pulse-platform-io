@@ -17,6 +17,11 @@ import {
 
 import Placeholder from "@/pages/app/_Placeholder";
 import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";
+import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
+import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
+import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
+import MedicoIntegracoes from "@/pages/app/medico/MedicoIntegracoes";
+import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
 import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
@@ -79,14 +84,15 @@ const App = () => (
 
               {/* Médico */}
               <Route path="medico/dashboard" element={<MedicoDashboard />} />
-              <Route path="medico/agenda" element={<Placeholder title="Agenda" />} />
+              <Route path="medico/agenda" element={<MedicoAgenda />} />
               <Route path="medico/consultas" element={<Placeholder title="Consultas" />} />
-              <Route path="medico/pacientes" element={<Placeholder title="Pacientes" />} />
+              <Route path="medico/pacientes" element={<MedicoPacientes />} />
               <Route path="medico/documentos" element={<Placeholder title="Documentos emitidos" />} />
               <Route path="medico/financeiro" element={<Placeholder title="Financeiro" />} />
               <Route path="medico/perfil" element={<Placeholder title="Perfil profissional" />} />
-              <Route path="medico/configuracoes" element={<Placeholder title="Configurações" />} />
-              <Route path="medico/integracoes" element={<Integracoes />} />
+              <Route path="medico/configuracoes" element={<MedicoConfiguracoes />} />
+              <Route path="medico/integracoes" element={<MedicoIntegracoes />} />
+              <Route path="medico/treinamento" element={<MedicoTreinamento />} />
               <Route path="medico/mensagens" element={<Conversas />} />
               <Route path="medico/comunicacao-interna" element={<ComunicacaoInterna />} />
 
