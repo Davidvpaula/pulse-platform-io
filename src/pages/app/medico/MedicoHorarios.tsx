@@ -244,11 +244,25 @@ export default function MedicoHorarios() {
         title="Meus horários"
         description="Configure sua disponibilidade e o sistema gera os slots automaticamente conforme a duração da consulta."
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-            <Database className="h-3 w-3" /> Dados em tempo real
-          </span>
+          devMode ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-medium text-warning">
+              <Info className="h-3 w-3" /> Visualização (sem login)
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+              <Database className="h-3 w-3" /> Dados em tempo real
+            </span>
+          )
         }
       />
+
+      {devMode && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-warning-foreground">
+          <b>Modo visualização de dev:</b> você não está logado como médico. A tela é
+          exibida pra inspecionar layout e fluxo, mas <b>gerar/excluir horários está
+          desabilitado</b>. Faça login como médico aprovado para usar de verdade.
+        </div>
+      )}
 
       {/* Faixa de info de duração */}
       <div className="card-elevated flex items-center gap-3 p-4">
