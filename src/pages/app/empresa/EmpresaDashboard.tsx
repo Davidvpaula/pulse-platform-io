@@ -1,8 +1,10 @@
-import { Users, Calendar, FileBarChart, Wallet, Building2, Lock } from "lucide-react";
+import { Users, Calendar, FileBarChart, Wallet, Building2, Lock, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { empresaFuncionarios } from "@/lib/mock";
+import { empresaFuncionarios, agendamentos } from "@/lib/mock";
 
 export default function EmpresaDashboard() {
   return (
