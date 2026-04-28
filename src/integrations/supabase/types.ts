@@ -102,6 +102,27 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       consulta_status_log: {
         Row: {
           actor_id: string | null
@@ -267,6 +288,7 @@ export type Database = {
           medico_id: string
           modalidades: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos: number
+          pronto_atendimento: boolean
           updated_at: string
         }
         Insert: {
@@ -278,6 +300,7 @@ export type Database = {
           medico_id: string
           modalidades?: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos?: number
+          pronto_atendimento?: boolean
           updated_at?: string
         }
         Update: {
@@ -289,6 +312,7 @@ export type Database = {
           medico_id?: string
           modalidades?: Database["public"]["Enums"]["consulta_modalidade"][]
           preco_centavos?: number
+          pronto_atendimento?: boolean
           updated_at?: string
         }
         Relationships: [
