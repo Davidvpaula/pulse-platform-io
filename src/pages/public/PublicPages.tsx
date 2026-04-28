@@ -1,8 +1,9 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Star, Video, Calendar, MapPin, GraduationCap } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { especialidades, medicos } from "@/lib/mock";
+import { useAuth } from "@/lib/auth";
 
 export const Especialidades = () => (
   <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
