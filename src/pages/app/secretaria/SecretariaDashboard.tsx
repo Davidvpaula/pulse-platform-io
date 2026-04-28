@@ -77,7 +77,11 @@ export default function SecretariaDashboard() {
                 {filaSecretaria.map((f, i) => (
                   <tr key={i} className="hover:bg-muted/50">
                     <td className="py-3 pr-4 font-mono text-xs">{f.hora}</td>
-                    <td className="py-3 pr-4 font-medium">{f.paciente}</td>
+                    <td className="py-3 pr-4 font-medium">
+                      <Link to={`/app/secretaria/pacientes/${f.pacienteId}`} className="hover:text-primary">
+                        {f.paciente}
+                      </Link>
+                    </td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.medico}</td>
                     <td className="py-3 pr-4"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{f.canal}</span></td>
                     <td className="py-3 pr-4"><StatusBadge status={f.status} /></td>
