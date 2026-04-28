@@ -15,7 +15,7 @@ import {
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { GlobalSearch } from "@/components/GlobalSearch";
+
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
@@ -53,9 +53,7 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex-1 max-w-md">
-            <GlobalSearch />
-          </div>
+          <div className="flex-1" />
 
           <NotificationsBell />
 
