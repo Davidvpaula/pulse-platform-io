@@ -1,8 +1,10 @@
-import { Users, Calendar, FileBarChart, Wallet, Building2, Lock } from "lucide-react";
+import { Users, Calendar, FileBarChart, Wallet, Building2, Lock, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { empresaFuncionarios } from "@/lib/mock";
+import { empresaFuncionarios, agendamentos } from "@/lib/mock";
 
 export default function EmpresaDashboard() {
   return (
@@ -27,6 +29,27 @@ export default function EmpresaDashboard() {
         </p>
       </div>
 
+      {/* Fluxo recente da empresa */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />Fluxo recente
+          </h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/admin/fluxo">Ver fluxo completo</Link>
+          </Button>
+        </div>
+        <ol className="mt-4 grid gap-3 md:grid-cols-3">
+          {agendamentos.filter(a => a.origem === "Construtora Horizonte").map(a => (
+            <li key={a.id} className="rounded-lg border border-border p-3">
+              <p className="text-sm font-semibold">{a.paciente}</p>
+              <p className="text-xs text-muted-foreground">{a.medico} · {a.data} {a.hora}</p>
+              <div className="mt-2"><StatusBadge status={a.status} /></div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card-elevated p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
@@ -40,16 +63,24 @@ export default function EmpresaDashboard() {
                   <th className="pb-2 pr-4">Nome</th>
                   <th className="pb-2 pr-4">Setor</th>
                   <th className="pb-2 pr-4">Consultas</th>
+                  <th className="pb-2 pr-4">Status</th>
                   <th className="pb-2 pr-4">Última</th>
+                  <th className="pb-2 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {empresaFuncionarios.map((f, i) => (
-                  <tr key={i} className="hover:bg-muted/50">
+                {empresaFuncionarios.map((f) => (
+                  <tr key={f.pacienteId} className="hover:bg-muted/50">
                     <td className="py-3 pr-4 font-medium">{f.nome}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.setor}</td>
                     <td className="py-3 pr-4">{f.consultas}</td>
+                    <td className="py-3 pr-4"><StatusBadge status={f.status} /></td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.ultima}</td>
+                    <td className="py-3 text-right">
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to={`/app/admin/pacientes/${f.pacienteId}`}>Histórico</Link>
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

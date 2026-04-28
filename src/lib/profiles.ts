@@ -66,6 +66,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
       { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle, requiresCapability: "medico.comunicacao" },
+      { label: "Comunicação interna", to: "/app/medico/comunicacao-interna", icon: MessageSquare },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Integrações", to: "/app/medico/integracoes", icon: Plug },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
@@ -88,7 +89,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         icon: MessageCircle,
         requiresCapability: "comunicacao.acessar",
         children: [
-          { label: "Conversas", to: "/app/comunicacao/conversas" },
+          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
+          { label: "Equipe (interna)", to: "/app/secretaria/comunicacao-interna" },
           { label: "Templates", to: "/app/comunicacao/templates" },
         ],
       },
@@ -114,6 +116,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     user: { name: "Carlos Mendes", role: "Admin", avatarInitials: "CM" },
     nav: [
       { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
+      { label: "Fluxo operacional", to: "/app/admin/fluxo", icon: Activity },
       {
         label: "Cadastros",
         icon: Users,
@@ -131,7 +134,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         label: "Comunicação",
         icon: MessageCircle,
         children: [
-          { label: "Inbox", to: "/app/comunicacao/conversas" },
+          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
+          { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
           { label: "WhatsApp", to: "/app/admin/whatsapp" },
           { label: "Bot", to: "/app/comunicacao/bot" },
           { label: "Templates", to: "/app/comunicacao/templates" },

@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { proximasConsultasPaciente, documentosPaciente } from "@/lib/mock";
+import { proximasConsultasPaciente, documentosPaciente, timelinePaciente } from "@/lib/mock";
+import { Timeline } from "@/components/Timeline";
 import { useAuth } from "@/lib/auth";
 
 export default function PacienteDashboard() {
@@ -127,6 +128,17 @@ export default function PacienteDashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Linha do tempo do paciente */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold">Minha linha do tempo</h3>
+          <span className="text-xs text-muted-foreground">Cronologia de eventos</span>
+        </div>
+        <div className="mt-5">
+          <Timeline events={timelinePaciente("P-1001")} />
         </div>
       </div>
 

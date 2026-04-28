@@ -1,9 +1,10 @@
 import { Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Send, Phone, RotateCcw, X, Activity, TrendingUp, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { filaSecretaria } from "@/lib/mock";
+import { filaSecretaria, inboxInterno } from "@/lib/mock";
 import { useAuth } from "@/lib/auth";
 
 export default function SecretariaDashboard() {
@@ -16,7 +17,9 @@ export default function SecretariaDashboard() {
         description="Gerencie a fila de atendimento, comunicação e financeiro do dia."
         actions={
           <>
-            <Button variant="outline"><MessageCircle className="mr-2 h-4 w-4" />Comunicação</Button>
+            <Button asChild variant="outline">
+              <Link to="/app/secretaria/comunicacao-interna"><MessageCircle className="mr-2 h-4 w-4" />Comunicação interna</Link>
+            </Button>
             <Button className="bg-gradient-primary hover:opacity-90"><Plus className="mr-2 h-4 w-4" />Novo agendamento</Button>
           </>
         }
@@ -74,7 +77,11 @@ export default function SecretariaDashboard() {
                 {filaSecretaria.map((f, i) => (
                   <tr key={i} className="hover:bg-muted/50">
                     <td className="py-3 pr-4 font-mono text-xs">{f.hora}</td>
-                    <td className="py-3 pr-4 font-medium">{f.paciente}</td>
+                    <td className="py-3 pr-4 font-medium">
+                      <Link to={`/app/secretaria/pacientes/${f.pacienteId}`} className="hover:text-primary">
+                        {f.paciente}
+                      </Link>
+                    </td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.medico}</td>
                     <td className="py-3 pr-4"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{f.canal}</span></td>
                     <td className="py-3 pr-4"><StatusBadge status={f.status} /></td>
@@ -116,6 +123,36 @@ export default function SecretariaDashboard() {
             ))}
           </ul>
         </div>
+      </div>
+
+      {/* Pendências internas (equipe) */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" /> Pendências da equipe
+          </h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/secretaria/comunicacao-interna">Ver todas</Link>
+          </Button>
+        </div>
+        <ul className="mt-4 grid gap-3 md:grid-cols-2">
+          {inboxInterno.filter(t => t.status !== "resolvida").slice(0, 4).map(t => (
+            <li key={t.id}>
+              <Link to="/app/secretaria/comunicacao-interna" className="block rounded-lg border border-border p-3 hover:bg-muted/40">
+                <div className="flex items-center gap-2">
+                  <p className="flex-1 truncate text-sm font-semibold">{t.assunto}</p>
+                  {t.nao_lidas > 0 && (
+                    <span className="rounded-full bg-destructive px-1.5 py-0 text-[10px] font-bold text-destructive-foreground">
+                      {t.nao_lidas}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{t.ultima}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{t.origem} · {t.data}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

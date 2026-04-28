@@ -32,6 +32,9 @@ import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
+import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
+import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
+import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +84,7 @@ const App = () => (
               <Route path="medico/configuracoes" element={<Placeholder title="Configurações" />} />
               <Route path="medico/integracoes" element={<Integracoes />} />
               <Route path="medico/mensagens" element={<Conversas />} />
+              <Route path="medico/comunicacao-interna" element={<ComunicacaoInterna />} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
@@ -92,6 +96,8 @@ const App = () => (
               <Route path="secretaria/tarefas" element={<Tarefas />} />
               <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
               <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
+              <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
 
               {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
               <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
@@ -112,6 +118,9 @@ const App = () => (
               <Route path="admin/permissoes" element={<Permissoes />} />
               <Route path="admin/relatorios" element={<Placeholder title="Relatórios" />} />
               <Route path="admin/auditoria" element={<Placeholder title="Auditoria do sistema" description="Log de ações sensíveis (somente Superadmin)." />} />
+              <Route path="admin/fluxo" element={<FluxoOperacional />} />
+              <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="admin/pacientes/:id" element={<PacientePerfil />} />
 
               {/* Empresa */}
               <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
