@@ -194,16 +194,17 @@ export function formatHora(iso: string): string {
   });
 }
 
-/** Converte status do banco para o label/variante visual usado no StatusBadge */
-export function statusLabel(s: ConsultaStatus): string {
-  const map: Record<ConsultaStatus, string> = {
+import type { Status } from "@/lib/mock";
+/** Converte status do banco para o tipo Status do StatusBadge. */
+export function toStatusBadge(s: ConsultaStatus): Status {
+  const map: Record<ConsultaStatus, Status> = {
     agendada: "agendamento_criado",
-    aguardando_pagamento: "aguardando_pagamento",
+    aguardando_pagamento: "aguardando",
     confirmada: "confirmado",
     em_andamento: "em_andamento",
     concluida: "concluido",
     cancelada: "cancelado",
     no_show: "no_show",
   };
-  return map[s] ?? s;
+  return map[s];
 }
