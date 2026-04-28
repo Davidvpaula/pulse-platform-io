@@ -29,6 +29,27 @@ export default function EmpresaDashboard() {
         </p>
       </div>
 
+      {/* Fluxo recente da empresa */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />Fluxo recente
+          </h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/admin/fluxo">Ver fluxo completo</Link>
+          </Button>
+        </div>
+        <ol className="mt-4 grid gap-3 md:grid-cols-3">
+          {agendamentos.filter(a => a.origem === "Construtora Horizonte").map(a => (
+            <li key={a.id} className="rounded-lg border border-border p-3">
+              <p className="text-sm font-semibold">{a.paciente}</p>
+              <p className="text-xs text-muted-foreground">{a.medico} · {a.data} {a.hora}</p>
+              <div className="mt-2"><StatusBadge status={a.status} /></div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card-elevated p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
