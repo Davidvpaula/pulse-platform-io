@@ -418,12 +418,23 @@ export default function MedicoConfiguracoes() {
               </div>
               <div className="divide-y divide-border">
                 {[
-                  { nome: "Clínica Geral", duracao: 30, preco: 180 },
-                  { nome: "Psiquiatria", duracao: 50, preco: 350 },
-                  { nome: "Pediatria", duracao: 30, preco: 220 },
+                  { nome: "Clínica Geral", duracao: 30, preco: 180, especialista: null as null | boolean, rqe: "" },
+                  { nome: "Psiquiatria", duracao: 50, preco: 350, especialista: true, rqe: "12345" },
+                  { nome: "Pediatria", duracao: 30, preco: 220, especialista: false, rqe: "" },
                 ].map((ex) => (
                   <div key={ex.nome} className="grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm">
-                    <div className="col-span-5 font-medium">{ex.nome}</div>
+                    <div className="col-span-5">
+                      <p className="font-medium">{ex.nome}</p>
+                      {ex.especialista === null ? null : ex.especialista ? (
+                        <span className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                          Especialista · RQE {ex.rqe}
+                        </span>
+                      ) : (
+                        <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          Não especialista
+                        </span>
+                      )}
+                    </div>
                     <div className="col-span-3 text-muted-foreground">{ex.duracao} min</div>
                     <div className="col-span-3 text-muted-foreground">R$ {ex.preco.toFixed(2).replace(".", ",")}</div>
                     <div className="col-span-1 flex justify-end">
@@ -436,9 +447,9 @@ export default function MedicoConfiguracoes() {
 
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {[
-                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00" },
-                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00" },
-                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00" },
+                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00", tag: null as null | string },
+                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00", tag: "Especialista · RQE 12345" },
+                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00", tag: "Não especialista" },
               ].map((c) => (
                 <div key={c.label} className="rounded-lg border border-border bg-card p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{c.label}</p>
@@ -446,12 +457,15 @@ export default function MedicoConfiguracoes() {
                     <span className="font-display text-lg font-semibold">{c.preco}</span>
                     <span className="text-[11px] text-muted-foreground">{c.duracao}</span>
                   </div>
+                  {c.tag && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">{c.tag}</p>
+                  )}
                 </div>
               ))}
             </div>
 
             <p className="mt-2 text-[11px] text-muted-foreground">
-              ↑ Esses cards são <strong>exemplos visuais</strong>. Ao preencher a tabela acima e salvar, suas especialidades aparecerão no catálogo público com esses dados.
+              ↑ Exemplos visuais conforme regra do <strong>CFM</strong>: Clínica Geral nunca exige RQE; demais especialidades mostram <em>"Especialista · RQE"</em> ou <em>"Não especialista"</em> no perfil público.
             </p>
           </div>
 
