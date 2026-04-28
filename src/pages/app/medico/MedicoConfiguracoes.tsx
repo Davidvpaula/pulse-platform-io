@@ -142,16 +142,31 @@ export default function MedicoConfiguracoes() {
       toast("Nenhuma alteração para salvar.");
       return;
     }
+    // Validação CFM: especialidades marcadas como "especialista" precisam de RQE
+    const espMap = new Map(especialidades.map((e) => [e.id, e]));
+    for (const l of dirties) {
+      const esp = espMap.get(l.especialidade_id);
+      if (!esp || !l.ativo) continue;
+      if (isClinicaGeral(esp)) continue;
+      if (l.especialista && !l.rqe.trim()) {
+        toast.error(`Informe o RQE para ${esp.nome} (especialista CFM).`);
+        return;
+      }
+    }
     setSavingAt(true);
     let okCount = 0;
     let failCount = 0;
     for (const l of dirties) {
+      const esp = espMap.get(l.especialidade_id);
+      const cg = esp ? isClinicaGeral(esp) : false;
       const r = await upsertVinculoEspecialidade({
         especialidade_id: l.especialidade_id,
         ativo: l.ativo,
         duracao_minutos: l.duracao_minutos,
         preco_centavos: l.preco_centavos,
         pronto_atendimento: l.pronto_atendimento && l.ativo,
+        especialista: cg ? false : l.especialista,
+        rqe: cg || !l.especialista ? null : l.rqe.trim(),
       });
       if (r.ok) okCount++;
       else failCount++;
