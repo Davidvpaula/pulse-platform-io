@@ -124,6 +124,36 @@ export default function SecretariaDashboard() {
           </ul>
         </div>
       </div>
+
+      {/* Pendências internas (equipe) */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" /> Pendências da equipe
+          </h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/secretaria/comunicacao-interna">Ver todas</Link>
+          </Button>
+        </div>
+        <ul className="mt-4 grid gap-3 md:grid-cols-2">
+          {inboxInterno.filter(t => t.status !== "resolvida").slice(0, 4).map(t => (
+            <li key={t.id}>
+              <Link to="/app/secretaria/comunicacao-interna" className="block rounded-lg border border-border p-3 hover:bg-muted/40">
+                <div className="flex items-center gap-2">
+                  <p className="flex-1 truncate text-sm font-semibold">{t.assunto}</p>
+                  {t.nao_lidas > 0 && (
+                    <span className="rounded-full bg-destructive px-1.5 py-0 text-[10px] font-bold text-destructive-foreground">
+                      {t.nao_lidas}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{t.ultima}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{t.origem} · {t.data}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
