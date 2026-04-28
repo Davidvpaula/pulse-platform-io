@@ -83,9 +83,16 @@ export default function PacienteDashboard() {
         title="Olá, Marina 👋"
         description="Sua central de saúde — ações rápidas, próximas consultas e suporte direto."
         actions={
-          <Button asChild className="bg-gradient-primary hover:opacity-90">
-            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {session && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+                <DbIcon className="h-3 w-3" /> Dados em tempo real
+              </span>
+            )}
+            <Button asChild className="bg-gradient-primary hover:opacity-90">
+              <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
+            </Button>
+          </div>
         }
       />
 
