@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Star, Video, Calendar, MapPin, GraduationCap } from "lucide-react";
+import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { especialidades, medicos } from "@/lib/mock";
 import { useAuth } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  listSlotsDisponiveisPorEspecialidade,
+  formatDataBR,
+  formatHora,
+  type SlotDisponivel,
+  type Especialidade,
+} from "@/lib/clinico";
 
 export const Especialidades = () => (
   <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
@@ -87,34 +96,102 @@ export const MedicoDetalhe = () => {
   );
 };
 
-export const Agendar = () => (
-  <PageShell title="Agendar consulta" subtitle="Escolha especialidade, médico e horário.">
-    <div className="card-elevated p-6 grid gap-4 md:grid-cols-3">
-      <Selector label="Especialidade" options={especialidades.map(e => e.nome)} />
-      <Selector label="Médico" options={medicos.map(m => m.nome)} />
-      <Selector label="Modalidade" options={["Telemedicina", "Pronto atendimento", "Retorno", "Empresarial"]} />
-    </div>
-    <div className="mt-6 grid gap-3 md:grid-cols-4">
-      {["08:00", "09:30", "11:00", "14:30", "15:00", "16:30", "17:00", "19:00"].map(h => (
-        <button key={h} className="card-elevated p-4 text-center hover:bg-primary hover:text-primary-foreground transition">
-          {h}
-        </button>
-      ))}
-    </div>
-    <div className="mt-6">
-      <Button className="bg-gradient-primary hover:opacity-90">Confirmar agendamento</Button>
-    </div>
-  </PageShell>
-);
+export const Agendar = () => {
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const [esps, setEsps] = useState<Especialidade[]>([]);
+  const [espId, setEspId] = useState<string>("");
+  const [slots, setSlots] = useState<SlotDisponivel[]>([]);
+  const [loadingEsps, setLoadingEsps] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
-const Selector = ({ label, options }: { label: string; options: string[] }) => (
-  <label className="flex flex-col gap-1.5">
-    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-    <select className="rounded-lg border border-input bg-background px-3 py-2 text-sm">
-      {options.map(o => <option key={o}>{o}</option>)}
-    </select>
-  </label>
-);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("especialidades")
+        .select("*")
+        .eq("ativo", true)
+        .order("nome", { ascending: true });
+      setEsps(data ?? []);
+      if (data?.[0]) setEspId(data[0].id);
+      setLoadingEsps(false);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!espId) return;
+    setLoadingSlots(true);
+    listSlotsDisponiveisPorEspecialidade(espId)
+      .then(setSlots)
+      .finally(() => setLoadingSlots(false));
+  }, [espId]);
+
+  const escolher = (slotId: string) => {
+    if (!session) {
+      navigate(`/auth?redirect=/app/paciente/agendar/confirmar/${slotId}`);
+      return;
+    }
+    navigate(`/app/paciente/agendar/confirmar/${slotId}`);
+  };
+
+  return (
+    <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o horário disponível.">
+      <div className="card-elevated p-6">
+        <label className="flex flex-col gap-1.5 max-w-md">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Especialidade</span>
+          <select
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            value={espId}
+            onChange={(e) => setEspId(e.target.value)}
+            disabled={loadingEsps}
+          >
+            {loadingEsps && <option>Carregando…</option>}
+            {esps.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-6">
+        {loadingSlots ? (
+          <div className="flex h-32 items-center justify-center text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando horários…
+          </div>
+        ) : slots.length === 0 ? (
+          <div className="card-elevated p-8 text-center text-sm text-muted-foreground">
+            Nenhum horário disponível nesta especialidade no momento.
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {slots.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => escolher(s.id)}
+                className="card-elevated p-4 text-left transition hover:-translate-y-0.5 hover:shadow-elegant"
+              >
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Stethoscope className="h-4 w-4 text-primary" /> {s.medico_nome}
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-sm">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> {formatDataBR(s.inicio)}
+                  <span className="mx-1 text-muted-foreground">·</span>
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" /> {formatHora(s.inicio)}
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                    {s.modalidade}
+                  </span>
+                  <span className="text-sm font-bold">
+                    {(s.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </PageShell>
+  );
+};
 
 export const Planos = () => {
   const planos = [
