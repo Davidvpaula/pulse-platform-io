@@ -42,16 +42,24 @@ export default function EmpresaDashboard() {
                   <th className="pb-2 pr-4">Nome</th>
                   <th className="pb-2 pr-4">Setor</th>
                   <th className="pb-2 pr-4">Consultas</th>
+                  <th className="pb-2 pr-4">Status</th>
                   <th className="pb-2 pr-4">Última</th>
+                  <th className="pb-2 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {empresaFuncionarios.map((f, i) => (
-                  <tr key={i} className="hover:bg-muted/50">
+                {empresaFuncionarios.map((f) => (
+                  <tr key={f.pacienteId} className="hover:bg-muted/50">
                     <td className="py-3 pr-4 font-medium">{f.nome}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.setor}</td>
                     <td className="py-3 pr-4">{f.consultas}</td>
+                    <td className="py-3 pr-4"><StatusBadge status={f.status} /></td>
                     <td className="py-3 pr-4 text-muted-foreground">{f.ultima}</td>
+                    <td className="py-3 text-right">
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to={`/app/admin/pacientes/${f.pacienteId}`}>Histórico</Link>
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
