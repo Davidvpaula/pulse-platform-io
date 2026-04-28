@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye,
+  Activity, Eye, AlertTriangle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -96,6 +96,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       },
       { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
       { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
+      { label: "Pendências Feegow", to: "/app/secretaria/pendencias-integracao", icon: AlertTriangle },
       // ─── módulos liberados ao perfil "Secretaria com supervisão"
       {
         label: "Supervisão",
@@ -143,7 +144,17 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Métricas", to: "/app/comunicacao/metricas" },
         ],
       },
-      { label: "Integrações", to: "/app/admin/integracoes", icon: Plug },
+      {
+        label: "Integrações",
+        icon: Plug,
+        children: [
+          { label: "Visão geral", to: "/app/admin/integracoes" },
+          { label: "Feegow", to: "/app/admin/feegow" },
+          { label: "Mapeamento de status", to: "/app/admin/feegow/mapeamento" },
+          { label: "Schema lógico", to: "/app/admin/feegow/schema" },
+          { label: "Pendências", to: "/app/admin/pendencias-integracao" },
+        ],
+      },
       { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
       { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye },

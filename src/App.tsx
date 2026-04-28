@@ -35,6 +35,10 @@ import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
+import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
+import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
+import FeegowSchema from "@/pages/app/admin/FeegowSchema";
+import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 
 const queryClient = new QueryClient();
 
@@ -121,6 +125,11 @@ const App = () => (
               <Route path="admin/fluxo" element={<FluxoOperacional />} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="admin/pacientes/:id" element={<PacientePerfil />} />
+              <Route path="admin/feegow" element={<FeegowIntegracao />} />
+              <Route path="admin/feegow/mapeamento" element={<FeegowMapeamento />} />
+              <Route path="admin/feegow/schema" element={<FeegowSchema />} />
+              <Route path="admin/pendencias-integracao" element={<PendenciasIntegracao />} />
+              <Route path="secretaria/pendencias-integracao" element={<PendenciasIntegracao />} />
 
               {/* Empresa */}
               <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
