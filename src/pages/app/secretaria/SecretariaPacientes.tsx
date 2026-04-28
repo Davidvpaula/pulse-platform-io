@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
 type StatusFilter = "todos" | "ativo" | "aguardando" | "inadimplente";
 
