@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen,
+  Activity, Eye, AlertTriangle, BookOpen, Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -62,6 +62,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     nav: [
       { label: "Dashboard", to: "/app/medico/dashboard", icon: LayoutDashboard },
       { label: "Agenda", to: "/app/medico/agenda", icon: Calendar },
+      { label: "Meus horários", to: "/app/medico/horarios", icon: Clock },
       { label: "Consultas", to: "/app/medico/consultas", icon: Video },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },

@@ -160,6 +160,104 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
   }));
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * AGENDA SLOTS (horários disponíveis do médico)
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type SlotStatus = Database["public"]["Enums"]["slot_status"];
+
+export async function listSlotsDoMedico(opts?: {
+  desde?: Date;
+  ate?: Date;
+}): Promise<AgendaSlot[]> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return [];
+
+  let q = supabase
+    .from("agenda_slots")
+    .select("*")
+    .eq("medico_id", medicoId)
+    .order("inicio", { ascending: true });
+
+  if (opts?.desde) q = q.gte("inicio", opts.desde.toISOString());
+  if (opts?.ate) q = q.lte("inicio", opts.ate.toISOString());
+
+  const { data, error } = await q;
+  if (error) {
+    console.error("[clinico] listSlotsDoMedico:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function criarSlot(input: {
+  inicio: Date;
+  fim: Date;
+  modalidade: ConsultaModalidade;
+  observacoes?: string;
+}): Promise<{ ok: boolean; error?: string; slot?: AgendaSlot }> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return { ok: false, error: "Médico não encontrado." };
+
+  if (input.fim <= input.inicio) {
+    return { ok: false, error: "O horário de fim deve ser posterior ao início." };
+  }
+  if (input.inicio < new Date()) {
+    return { ok: false, error: "Não é possível criar slots no passado." };
+  }
+
+  // Checa sobreposição com slots existentes do mesmo médico
+  const { data: overlaps } = await supabase
+    .from("agenda_slots")
+    .select("id, inicio, fim")
+    .eq("medico_id", medicoId)
+    .lt("inicio", input.fim.toISOString())
+    .gt("fim", input.inicio.toISOString());
+
+  if (overlaps && overlaps.length > 0) {
+    return { ok: false, error: "Já existe um horário cadastrado nesse intervalo." };
+  }
+
+  const { data, error } = await supabase
+    .from("agenda_slots")
+    .insert({
+      medico_id: medicoId,
+      inicio: input.inicio.toISOString(),
+      fim: input.fim.toISOString(),
+      modalidade: input.modalidade,
+      observacoes: input.observacoes,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[clinico] criarSlot:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, slot: data };
+}
+
+export async function excluirSlot(slotId: string): Promise<{ ok: boolean; error?: string }> {
+  // Só permite excluir slot disponível (RLS já protege, mas reforçamos UX)
+  const { data: slot } = await supabase
+    .from("agenda_slots")
+    .select("status")
+    .eq("id", slotId)
+    .maybeSingle();
+
+  if (!slot) return { ok: false, error: "Horário não encontrado." };
+  if (slot.status !== "disponivel") {
+    return { ok: false, error: "Só é possível excluir horários disponíveis." };
+  }
+
+  const { error } = await supabase.from("agenda_slots").delete().eq("id", slotId);
+  if (error) {
+    console.error("[clinico] excluirSlot:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function updateConsultaStatus(
   consultaId: string,
   status: ConsultaStatus
