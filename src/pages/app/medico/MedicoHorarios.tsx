@@ -331,6 +331,8 @@ export default function MedicoHorarios() {
         </div>
       )}
 
+      <Tabs defaultValue="semanal">
+        <TabsList>
           <TabsTrigger value="semanal">Recorrência semanal</TabsTrigger>
           <TabsTrigger value="dia">Por dia</TabsTrigger>
         </TabsList>
