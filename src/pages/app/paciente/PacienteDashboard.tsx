@@ -45,7 +45,7 @@ const messages = [
 
 type ConsultaItem = {
   id: string; medico: string; esp: string; data: string; hora: string;
-  modalidade: string; status: Status;
+  modalidade: string; status: Status; linkSala?: string | null;
 };
 
 export default function PacienteDashboard() {
@@ -66,6 +66,7 @@ export default function PacienteDashboard() {
         hora: formatHora(c.inicio),
         modalidade: c.modalidade,
         status: toStatusBadge(c.status),
+        linkSala: c.link_sala,
       })));
     });
   }, [session]);
