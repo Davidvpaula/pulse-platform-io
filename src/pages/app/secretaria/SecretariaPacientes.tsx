@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
 type StatusFilter = "todos" | "ativo" | "aguardando" | "inadimplente";
 
@@ -46,6 +47,10 @@ export default function SecretariaPacientes() {
       toast.error("Preencha nome, CPF, telefone e e-mail.");
       return;
     }
+    if (!isValidCpf(novo.cpf)) {
+      toast.error("CPF inválido", { description: "Verifique os dígitos informados." });
+      return;
+    }
     toast.success(`Paciente ${novo.nome} criado`, {
       description: "Status: aguardando sincronização com Feegow (mock).",
     });
@@ -76,7 +81,7 @@ export default function SecretariaPacientes() {
               <DialogHeader><DialogTitle>Novo paciente</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <Input placeholder="Nome completo *" value={novo.nome} onChange={e => setNovo(n => ({ ...n, nome: e.target.value }))} />
-                <Input placeholder="CPF *" value={novo.cpf} onChange={e => setNovo(n => ({ ...n, cpf: e.target.value }))} />
+                <Input placeholder="CPF *" value={novo.cpf} maxLength={14} onChange={e => setNovo(n => ({ ...n, cpf: maskCpf(e.target.value) }))} />
                 <Input placeholder="Telefone *" value={novo.telefone} onChange={e => setNovo(n => ({ ...n, telefone: e.target.value }))} />
                 <Input placeholder="E-mail *" value={novo.email} onChange={e => setNovo(n => ({ ...n, email: e.target.value }))} />
                 <div className="flex gap-2">

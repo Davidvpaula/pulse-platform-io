@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { isValidCpf, maskCpf, onlyDigits } from "@/lib/validation/cpf";
 import {
   listFuncionarios, addFuncionario, setFuncionarioStatus, importFuncionariosCsv,
   SETORES_PADRAO,
@@ -147,7 +148,11 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
       toast({ title: "Nome e e-mail são obrigatórios", variant: "destructive" });
       return;
     }
-    addFuncionario({ ...form, status: "ativo" });
+    if (form.cpf.trim() && !isValidCpf(form.cpf)) {
+      toast({ title: "CPF inválido", description: "Verifique os dígitos informados.", variant: "destructive" });
+      return;
+    }
+    addFuncionario({ ...form, cpf: onlyDigits(form.cpf), status: "ativo" });
     toast({ title: "Funcionário adicionado" });
     onClose();
   }
@@ -162,7 +167,7 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Field label="Nome completo *"><input className="input" value={form.nome} onChange={e => set("nome", e.target.value)} /></Field>
           <Field label="E-mail *"><input type="email" className="input" value={form.email} onChange={e => set("email", e.target.value)} /></Field>
-          <Field label="CPF"><input className="input" value={form.cpf} onChange={e => set("cpf", e.target.value)} /></Field>
+          <Field label="CPF"><input className="input" maxLength={14} value={form.cpf} onChange={e => set("cpf", maskCpf(e.target.value))} placeholder="000.000.000-00" /></Field>
           <Field label="Cargo"><input className="input" value={form.cargo} onChange={e => set("cargo", e.target.value)} /></Field>
           <Field label="Setor">
             <select className="input" value={form.setor} onChange={e => set("setor", e.target.value)}>

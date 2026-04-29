@@ -61,15 +61,8 @@ Deno.serve(async (req) => {
     if (medico.status !== "aprovado") {
       return json({ error: "Médico ainda não aprovado" }, 400);
     }
-    if (!medico.cpf || !medico.data_nascimento) {
-      return json(
-        {
-          error:
-            "Dados incompletos: CPF e Data de nascimento são obrigatórios para liberar acesso na Feegow.",
-        },
-        400,
-      );
-    }
+    const v = validarPreRequisitos(medico);
+    if (!v.ok) return json({ error: v.motivo }, 400);
 
     const FEEGOW_API_KEY = Deno.env.get("FEEGOW_API_KEY");
     const FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ??
@@ -173,4 +166,36 @@ function json(body: unknown, status = 200) {
 async function callRpc(client: any, name: string, args: Record<string, unknown>) {
   const { error } = await client.rpc(name, args);
   if (error) console.error("RPC error", name, error);
+}
+
+/** Validação dos dígitos verificadores do CPF (algoritmo da Receita). */
+function isValidCpf(v: string | null | undefined): boolean {
+  const cpf = (v ?? "").replace(/\D/g, "");
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  const d = cpf.split("").map(Number);
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += d[i] * (10 - i);
+  let dv1 = (s * 10) % 11;
+  if (dv1 === 10) dv1 = 0;
+  if (dv1 !== d[9]) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += d[i] * (11 - i);
+  let dv2 = (s * 10) % 11;
+  if (dv2 === 10) dv2 = 0;
+  return dv2 === d[10];
+}
+
+function validarPreRequisitos(m: any): { ok: boolean; motivo?: string } {
+  if (!m.cpf) return { ok: false, motivo: "CPF não informado" };
+  if (!isValidCpf(m.cpf)) return { ok: false, motivo: "CPF inválido (dígitos verificadores não conferem)" };
+  if (!m.data_nascimento) return { ok: false, motivo: "Data de nascimento não informada" };
+  const dt = new Date(String(m.data_nascimento) + "T00:00:00");
+  if (Number.isNaN(dt.getTime())) return { ok: false, motivo: "Data de nascimento em formato inválido" };
+  const hoje = new Date();
+  if (dt > hoje) return { ok: false, motivo: "Data de nascimento no futuro" };
+  const idade = (hoje.getTime() - dt.getTime()) / (365.25 * 24 * 3600 * 1000);
+  if (idade < 18) return { ok: false, motivo: "Médico deve ter pelo menos 18 anos" };
+  if (idade > 120) return { ok: false, motivo: "Data de nascimento implausível (> 120 anos)" };
+  return { ok: true };
 }

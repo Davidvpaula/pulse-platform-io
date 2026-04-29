@@ -25,6 +25,7 @@ import {
 } from "@/lib/clinico";
 import { criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
+import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 
 /* ─────────── Validação ─────────── */
 
@@ -37,10 +38,7 @@ const schema = z.object({
     .min(3, "Informe seu nome completo")
     .max(120, "Máx. 120 caracteres")
     .refine((s) => s.split(/\s+/).length >= 2, "Informe nome e sobrenome"),
-  cpf: z
-    .string()
-    .transform(onlyDigits)
-    .refine((s) => s.length === 11, "CPF deve ter 11 dígitos"),
+  cpf: cpfSchema(),
   telefone: z
     .string()
     .transform(onlyDigits)
@@ -63,11 +61,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 /* ─────────── Máscaras simples ─────────── */
-const maskCPF = (v: string) =>
-  onlyDigits(v).slice(0, 11)
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+const maskCPF = maskCpf;
 
 const maskFone = (v: string) => {
   const d = onlyDigits(v).slice(0, 11);
