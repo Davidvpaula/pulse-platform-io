@@ -776,6 +776,27 @@ export type Database = {
         Returns: boolean
       }
       liberar_reservas_expiradas: { Args: never; Returns: number }
+      marcar_pagamento_falho: {
+        Args: { _motivo: string; _provider_session_id: string }
+        Returns: undefined
+      }
+      marcar_pagamento_processando: {
+        Args: {
+          _checkout_url: string
+          _pagamento_id: string
+          _provider_session_id: string
+        }
+        Returns: undefined
+      }
+      processar_pagamento_confirmado: {
+        Args: {
+          _metodo: Database["public"]["Enums"]["pagamento_metodo"]
+          _payload: Json
+          _provider_payment_id: string
+          _provider_session_id: string
+        }
+        Returns: Json
+      }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
     }
     Enums: {

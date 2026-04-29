@@ -15,7 +15,7 @@ import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
-import { criarCheckoutSession } from "@/lib/pagamentos";
+import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,7 @@ export default function PacienteDashboard() {
                       valorCentavos: 22000,
                       descricao: "Consulta de teste",
                     });
-                    navigate(s.checkoutUrl);
+                    abrirCheckout(s, navigate);
                   } catch (e: any) {
                     toast.error(e.message ?? "Falha ao iniciar checkout");
                   }

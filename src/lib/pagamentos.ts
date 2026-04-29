@@ -32,6 +32,17 @@ export interface CheckoutSession {
   checkoutUrl: string;
   simulated: boolean;
   provider: PagamentoProvider;
+  /** True quando a URL deve ser aberta com window.location (Stripe hosted). */
+  external?: boolean;
+}
+
+/** Helper que abre o checkout — interno usa router; externo (Stripe) usa redirect. */
+export function abrirCheckout(session: CheckoutSession, navigate: (url: string) => void) {
+  if (session.external) {
+    window.location.href = session.checkoutUrl;
+  } else {
+    navigate(session.checkoutUrl);
+  }
 }
 
 /* ─────────── Provider: configuração ─────────── */
@@ -108,16 +119,35 @@ const mockProvider = {
 /* ─────────── Provider: STRIPE (placeholder) ─────────── */
 
 const stripeProvider = {
-  async criarCheckout(_input: CriarCheckoutInput): Promise<CheckoutSession> {
-    throw new Error(
-      "Provider Stripe ainda não está conectado. Use o modo simulado ou conecte o Stripe nas configurações de Admin.",
-    );
+  async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
+    const { data, error } = await supabase.functions.invoke("criar-checkout-stripe", {
+      body: { consulta_id: input.consultaId },
+    });
+    if (error) {
+      throw new Error(error.message ?? "Falha ao iniciar checkout Stripe");
+    }
+    const payload = data as
+      | { pagamento_id: string; checkout_url: string; session_id?: string }
+      | { error: string };
+    if ("error" in payload) throw new Error(payload.error);
+    return {
+      pagamentoId: payload.pagamento_id,
+      checkoutUrl: payload.checkout_url,
+      simulated: false,
+      provider: "stripe",
+      external: true,
+    };
   },
   async confirmar(_pagamentoId: string, _metodo: PagamentoMetodo): Promise<void> {
     throw new Error("Confirmação Stripe ocorre via webhook do servidor.");
   },
   async cancelar(_pagamentoId: string): Promise<void> {
-    throw new Error("Cancelamento Stripe ocorre via API do servidor.");
+    // Marca como cancelado localmente (sem revogar no Stripe — sessões expiram sozinhas)
+    const { error } = await supabase
+      .from("pagamentos")
+      .update({ status: "cancelado", cancelled_at: new Date().toISOString() })
+      .eq("id", _pagamentoId);
+    if (error) throw error;
   },
 };
 
