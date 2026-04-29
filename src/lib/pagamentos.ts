@@ -32,6 +32,17 @@ export interface CheckoutSession {
   checkoutUrl: string;
   simulated: boolean;
   provider: PagamentoProvider;
+  /** True quando a URL deve ser aberta com window.location (Stripe hosted). */
+  external?: boolean;
+}
+
+/** Helper que abre o checkout — interno usa router; externo (Stripe) usa redirect. */
+export function abrirCheckout(session: CheckoutSession, navigate: (url: string) => void) {
+  if (session.external) {
+    window.location.href = session.checkoutUrl;
+  } else {
+    navigate(session.checkoutUrl);
+  }
 }
 
 /* ─────────── Provider: configuração ─────────── */
