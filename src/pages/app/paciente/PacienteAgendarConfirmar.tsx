@@ -140,7 +140,7 @@ export default function PacienteAgendarConfirmar() {
         cep: values.cep,
       });
 
-      // Já dispara checkout (modo simulado por enquanto)
+      // Dispara checkout — Stripe (hosted) ou mock conforme app_settings
       const session = await criarCheckoutSession({
         consultaId: res.consulta_id,
         valorCentavos: res.valor_centavos,
@@ -148,7 +148,7 @@ export default function PacienteAgendarConfirmar() {
       });
 
       toast.success("Horário reservado por 15 minutos. Conclua o pagamento.");
-      navigate(session.checkoutUrl);
+      abrirCheckout(session, navigate);
     } catch (e: any) {
       toast.error(e?.message ?? "Não foi possível concluir o agendamento.");
     } finally {
