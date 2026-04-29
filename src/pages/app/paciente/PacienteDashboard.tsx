@@ -79,7 +79,12 @@ export default function PacienteDashboard() {
     }));
   }, [session, dbConsultas]);
 
-  const proxima = consultas[0] ?? proximasConsultasPaciente[0];
+  const proxima: ConsultaItem = consultas[0] ?? {
+    ...proximasConsultasPaciente[0],
+    id: String(proximasConsultasPaciente[0].id),
+    status: proximasConsultasPaciente[0].status as Status,
+    linkSala: null,
+  };
   const msgConsulta = `Olá, preciso de ajuda com minha consulta ${proxima?.id ?? ""}`.trim();
 
   return (
