@@ -306,8 +306,31 @@ export default function MedicoHorarios() {
         </div>
       </div>
 
-      <Tabs defaultValue="semanal">
-        <TabsList>
+      {/* Aviso: link da sala obrigatório p/ horários online */}
+      {session && modalidade === "online" && !linkSala && !loading && (
+        <div className="card-elevated border-warning/40 bg-warning/5 p-4">
+          <div className="flex items-start gap-3">
+            <Video className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-warning-foreground">
+                Configure o link da sala antes de criar horários online
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Toda consulta online precisa de um link de sala (Google Meet, Zoom, Jitsi…).
+                Configure em <b>Meu perfil → Sala de atendimento online</b> e o link será enviado
+                automaticamente ao paciente em cada consulta.
+              </p>
+              <Link
+                to="/app/medico/perfil"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+              >
+                Ir para Meu perfil →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
           <TabsTrigger value="semanal">Recorrência semanal</TabsTrigger>
           <TabsTrigger value="dia">Por dia</TabsTrigger>
         </TabsList>
