@@ -45,7 +45,7 @@ const messages = [
 
 type ConsultaItem = {
   id: string; medico: string; esp: string; data: string; hora: string;
-  modalidade: string; status: Status;
+  modalidade: string; status: Status; linkSala?: string | null;
 };
 
 export default function PacienteDashboard() {
@@ -66,6 +66,7 @@ export default function PacienteDashboard() {
         hora: formatHora(c.inicio),
         modalidade: c.modalidade,
         status: toStatusBadge(c.status),
+        linkSala: c.link_sala,
       })));
     });
   }, [session]);
@@ -78,7 +79,12 @@ export default function PacienteDashboard() {
     }));
   }, [session, dbConsultas]);
 
-  const proxima = consultas[0] ?? proximasConsultasPaciente[0];
+  const proxima: ConsultaItem = consultas[0] ?? {
+    ...proximasConsultasPaciente[0],
+    id: String(proximasConsultasPaciente[0].id),
+    status: proximasConsultasPaciente[0].status as Status,
+    linkSala: null,
+  };
   const msgConsulta = `Olá, preciso de ajuda com minha consulta ${proxima?.id ?? ""}`.trim();
 
   return (
@@ -164,9 +170,17 @@ export default function PacienteDashboard() {
             </div>
           </div>
           <div className="grid gap-2 md:justify-items-end">
-            <Button size="lg" className="bg-gradient-primary hover:opacity-90 w-full md:w-auto">
-              <Video className="mr-2 h-4 w-4" /> Entrar na consulta
-            </Button>
+            {proxima.linkSala ? (
+              <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 w-full md:w-auto">
+                <a href={proxima.linkSala} target="_blank" rel="noopener noreferrer">
+                  <Video className="mr-2 h-4 w-4" /> Entrar na consulta
+                </a>
+              </Button>
+            ) : (
+              <Button size="lg" disabled className="w-full md:w-auto" title="Sala ainda não disponível">
+                <Video className="mr-2 h-4 w-4" /> Sala em preparação
+              </Button>
+            )}
             <div className="flex gap-2 w-full md:w-auto">
               <Button variant="outline" size="sm" className="flex-1">
                 <Repeat className="mr-2 h-3.5 w-3.5" /> Remarcar
@@ -255,9 +269,17 @@ export default function PacienteDashboard() {
                 </div>
                 <StatusBadge status={c.status} />
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-                    <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                  </Button>
+                  {c.linkSala ? (
+                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                      <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
+                        <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button size="sm" disabled title="Sala em preparação">
+                      <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline">
                     <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
                   </Button>

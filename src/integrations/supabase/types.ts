@@ -361,6 +361,7 @@ export type Database = {
           feegow_professional_id: string | null
           feegow_status: Database["public"]["Enums"]["feegow_status"]
           id: string
+          link_sala_padrao: string | null
           motivo_reprovacao: string | null
           nome: string
           rqe: string | null
@@ -385,6 +386,7 @@ export type Database = {
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
           id?: string
+          link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome: string
           rqe?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
           id?: string
+          link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome?: string
           rqe?: string | null

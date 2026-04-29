@@ -41,11 +41,13 @@ import {
   criarSlotsEmLote,
   excluirSlot,
   getDuracaoSlotMedico,
+  getMedicoAtual,
   type AgendaSlot,
   type FaixaHorario,
 } from "@/lib/clinico";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 type Modalidade = "online" | "presencial";
 
@@ -90,6 +92,7 @@ export default function MedicoHorarios() {
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
+  const [linkSala, setLinkSala] = useState<string | null>(null);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -108,12 +111,14 @@ export default function MedicoHorarios() {
 
   async function refresh() {
     setLoading(true);
-    const [list, dur] = await Promise.all([
+    const [list, dur, med] = await Promise.all([
       listSlotsDoMedico(),
       getDuracaoSlotMedico(),
+      getMedicoAtual(),
     ]);
     setSlots(list);
     setDuracao(dur);
+    setLinkSala(med?.link_sala_padrao ?? null);
     setLoading(false);
   }
 
@@ -301,6 +306,31 @@ export default function MedicoHorarios() {
         </div>
       </div>
 
+      {/* Aviso: link da sala obrigatório p/ horários online */}
+      {session && modalidade === "online" && !linkSala && !loading && (
+        <div className="card-elevated border-warning/40 bg-warning/5 p-4">
+          <div className="flex items-start gap-3">
+            <Video className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-warning-foreground">
+                Configure o link da sala antes de criar horários online
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Toda consulta online precisa de um link de sala (Google Meet, Zoom, Jitsi…).
+                Configure em <b>Meu perfil → Sala de atendimento online</b> e o link será enviado
+                automaticamente ao paciente em cada consulta.
+              </p>
+              <Link
+                to="/app/medico/perfil"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+              >
+                Ir para Meu perfil →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="semanal">
         <TabsList>
           <TabsTrigger value="semanal">Recorrência semanal</TabsTrigger>
@@ -428,7 +458,7 @@ export default function MedicoHorarios() {
             <div className="flex justify-end">
               <Button
                 onClick={gerarSemanal}
-                disabled={savingSemana || !duracao || devMode}
+                disabled={savingSemana || !duracao || devMode || (modalidade === "online" && !linkSala && !!session)}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 {savingSemana ? "Gerando…" : "Gerar horários"}
@@ -529,7 +559,7 @@ export default function MedicoHorarios() {
               <div className="flex justify-end">
                 <Button
                   onClick={gerarDia}
-                  disabled={savingDia || !duracao || !dataSel || devMode}
+                  disabled={savingDia || !duracao || !dataSel || devMode || (modalidade === "online" && !linkSala && !!session)}
                   className="bg-gradient-primary hover:opacity-90"
                 >
                   {savingDia ? "Gerando…" : "Adicionar ao dia"}

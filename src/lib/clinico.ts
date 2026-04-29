@@ -78,6 +78,39 @@ export async function getMedicoAtualId(): Promise<string | null> {
   return data?.id ?? null;
 }
 
+export type MedicoRow = Database["public"]["Tables"]["medicos"]["Row"];
+
+/** Retorna o registro completo do médico logado. */
+export async function getMedicoAtual(): Promise<MedicoRow | null> {
+  const { data: s } = await supabase.auth.getSession();
+  const uid = s.session?.user.id;
+  if (!uid) return null;
+  const { data, error } = await supabase
+    .from("medicos")
+    .select("*")
+    .eq("user_id", uid)
+    .maybeSingle();
+  if (error) {
+    console.error("[clinico] getMedicoAtual:", error);
+    return null;
+  }
+  return data ?? null;
+}
+
+/** Atualiza campos editáveis do perfil do médico (nome, bio, telefone, link sala). */
+export async function updateMedicoPerfil(patch: {
+  nome?: string;
+  bio?: string | null;
+  telefone?: string | null;
+  link_sala_padrao?: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const id = await getMedicoAtualId();
+  if (!id) return { ok: false, error: "Médico não encontrado." };
+  const { error } = await supabase.from("medicos").update(patch).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
  * CONSULTAS
  * ────────────────────────────────────────────────────────────────────── */
