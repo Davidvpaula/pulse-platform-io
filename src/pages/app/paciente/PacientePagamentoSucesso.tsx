@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Calendar, FileText } from "lucide-react";
+import { CheckCircle2, Calendar, FileText, Loader2, Clock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { formatBRL, getPagamento, type Pagamento } from "@/lib/pagamentos";
@@ -9,25 +9,67 @@ export default function PacientePagamentoSucesso() {
   const [params] = useSearchParams();
   const id = params.get("p") ?? "";
   const [p, setP] = useState<Pagamento | null>(null);
+  const [polling, setPolling] = useState(true);
 
   useEffect(() => {
-    if (id) getPagamento(id).then(setP);
+    if (!id) return;
+    let cancelled = false;
+    let attempts = 0;
+    const tick = async () => {
+      const data = await getPagamento(id);
+      if (cancelled) return;
+      setP(data);
+      attempts += 1;
+      // Para de pollar quando pago/falhou ou após 12 tentativas (~36s)
+      if (data?.status === "pago" || data?.status === "falhou" || attempts >= 12) {
+        setPolling(false);
+        return;
+      }
+      setTimeout(tick, 3000);
+    };
+    tick();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  const pago = p?.status === "pago";
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pagamento confirmado" description="Sua consulta está garantida." />
+      <PageHeader
+        title={pago ? "Pagamento confirmado" : "Aguardando confirmação"}
+        description={pago ? "Sua consulta está garantida." : "Recebemos seu pagamento — confirmando com o provedor."}
+      />
 
       <div className="card-elevated overflow-hidden">
         <div className="gradient-soft flex flex-col items-center gap-3 p-8 text-center">
-          <div className="grid h-14 w-14 place-items-center rounded-full bg-success/15">
-            <CheckCircle2 className="h-8 w-8 text-success" />
+          <div
+            className={`grid h-14 w-14 place-items-center rounded-full ${
+              pago ? "bg-success/15" : "bg-warning/15"
+            }`}
+          >
+            {pago ? (
+              <CheckCircle2 className="h-8 w-8 text-success" />
+            ) : polling ? (
+              <Loader2 className="h-8 w-8 animate-spin text-warning" />
+            ) : (
+              <Clock className="h-8 w-8 text-warning" />
+            )}
           </div>
-          <h2 className="font-display text-2xl font-bold">Pagamento aprovado</h2>
+          <h2 className="font-display text-2xl font-bold">
+            {pago ? "Pagamento aprovado" : "Confirmando pagamento…"}
+          </h2>
           {p && (
             <p className="text-sm text-muted-foreground">
-              Valor pago: <strong>{formatBRL(p.valor_centavos)}</strong> · Método:{" "}
-              <strong className="capitalize">{p.metodo}</strong>
+              Valor: <strong>{formatBRL(p.valor_centavos)}</strong> · Status:{" "}
+              <strong className="capitalize">{p.status}</strong>
+            </p>
+          )}
+          {!pago && !polling && (
+            <p className="max-w-md text-xs text-muted-foreground">
+              A confirmação pode levar alguns segundos. Atualize esta página em instantes —
+              assim que o provedor confirmar, sua consulta aparecerá no painel.
             </p>
           )}
         </div>
