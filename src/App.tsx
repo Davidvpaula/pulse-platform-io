@@ -27,6 +27,8 @@ import PacienteCheckout from "@/pages/app/paciente/PacienteCheckout";
 import PacientePagamentoSucesso from "@/pages/app/paciente/PacientePagamentoSucesso";
 import PacientePagamentoCancelado from "@/pages/app/paciente/PacientePagamentoCancelado";
 import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfirmar";
+import PacienteAgendamentos from "@/pages/app/paciente/PacienteAgendamentos";
+import PacientePerfilPage from "@/pages/app/paciente/PacientePerfilPage";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
@@ -98,11 +100,11 @@ const App = () => (
 
               {/* Paciente */}
               <Route path="paciente/dashboard" element={<PacienteDashboard />} />
-              <Route path="paciente/agendamentos" element={<Placeholder title="Meus agendamentos" />} />
+              <Route path="paciente/agendamentos" element={<PacienteAgendamentos />} />
               <Route path="paciente/documentos" element={<Placeholder title="Carteira documental" description="Receitas, atestados, exames. Sincroniza futuramente com Feegow." />} />
               <Route path="paciente/plano" element={<Placeholder title="Meu plano" />} />
               <Route path="paciente/financeiro" element={<Placeholder title="Financeiro" />} />
-              <Route path="paciente/perfil" element={<Placeholder title="Meu perfil" />} />
+              <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<Placeholder title="Mensagens e suporte" />} />
               <Route path="paciente/checkout/:sessionId" element={<PacienteCheckout />} />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
