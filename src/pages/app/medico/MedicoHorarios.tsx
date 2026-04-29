@@ -92,6 +92,7 @@ export default function MedicoHorarios() {
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
+  const [linkSala, setLinkSala] = useState<string | null>(null);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -110,12 +111,14 @@ export default function MedicoHorarios() {
 
   async function refresh() {
     setLoading(true);
-    const [list, dur] = await Promise.all([
+    const [list, dur, med] = await Promise.all([
       listSlotsDoMedico(),
       getDuracaoSlotMedico(),
+      getMedicoAtual(),
     ]);
     setSlots(list);
     setDuracao(dur);
+    setLinkSala(med?.link_sala_padrao ?? null);
     setLoading(false);
   }
 
