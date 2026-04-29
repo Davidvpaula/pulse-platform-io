@@ -41,11 +41,13 @@ import {
   criarSlotsEmLote,
   excluirSlot,
   getDuracaoSlotMedico,
+  getMedicoAtual,
   type AgendaSlot,
   type FaixaHorario,
 } from "@/lib/clinico";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 type Modalidade = "online" | "presencial";
 
