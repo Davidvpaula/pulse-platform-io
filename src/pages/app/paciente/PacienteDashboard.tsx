@@ -269,9 +269,17 @@ export default function PacienteDashboard() {
                 </div>
                 <StatusBadge status={c.status} />
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-gradient-primary hover:opacity-90">
-                    <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                  </Button>
+                  {c.linkSala ? (
+                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                      <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
+                        <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button size="sm" disabled title="Sala em preparação">
+                      <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline">
                     <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
                   </Button>
