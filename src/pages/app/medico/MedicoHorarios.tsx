@@ -458,7 +458,7 @@ export default function MedicoHorarios() {
             <div className="flex justify-end">
               <Button
                 onClick={gerarSemanal}
-                disabled={savingSemana || !duracao || devMode}
+                disabled={savingSemana || !duracao || devMode || (modalidade === "online" && !linkSala && !!session)}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 {savingSemana ? "Gerando…" : "Gerar horários"}
