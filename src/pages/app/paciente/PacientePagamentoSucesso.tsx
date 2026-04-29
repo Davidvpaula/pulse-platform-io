@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Calendar, FileText, Loader2, Clock } from "lucide-react";
+import { CheckCircle2, Calendar, FileText, Loader2, Clock, Video, ExternalLink } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { formatBRL, getPagamento, type Pagamento } from "@/lib/pagamentos";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function PacientePagamentoSucesso() {
   const [params] = useSearchParams();
   const id = params.get("p") ?? "";
   const [p, setP] = useState<Pagamento | null>(null);
   const [polling, setPolling] = useState(true);
+  const [linkSala, setLinkSala] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +22,6 @@ export default function PacientePagamentoSucesso() {
       if (cancelled) return;
       setP(data);
       attempts += 1;
-      // Para de pollar quando pago/falhou ou após 12 tentativas (~36s)
       if (data?.status === "pago" || data?.status === "falhou" || attempts >= 12) {
         setPolling(false);
         return;
@@ -32,6 +33,17 @@ export default function PacientePagamentoSucesso() {
       cancelled = true;
     };
   }, [id]);
+
+  // Carrega o link da sala da consulta vinculada ao pagamento
+  useEffect(() => {
+    if (!p?.consulta_id) return;
+    supabase
+      .from("consultas")
+      .select("link_sala")
+      .eq("id", p.consulta_id)
+      .maybeSingle()
+      .then(({ data }) => setLinkSala(data?.link_sala ?? null));
+  }, [p?.consulta_id]);
 
   const pago = p?.status === "pago";
 
@@ -73,15 +85,48 @@ export default function PacientePagamentoSucesso() {
             </p>
           )}
         </div>
+
+        {/* Link da sala — quando consulta online já tem link */}
+        {pago && linkSala && (
+          <div className="border-t border-border bg-success/5 p-6">
+            <div className="flex items-start gap-3">
+              <Video className="mt-0.5 h-5 w-5 text-success shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold">Sua sala de atendimento</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Salve este link. Você também encontrará no seu painel.
+                </p>
+                <a
+                  href={linkSala}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate rounded-md bg-card px-3 py-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{linkSala}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-3 p-6 sm:grid-cols-2">
-          <Button asChild>
-            <Link to="/app/paciente/dashboard">
-              <Calendar className="mr-2 h-4 w-4" /> Ver minhas consultas
-            </Link>
-          </Button>
+          {pago && linkSala ? (
+            <Button asChild className="bg-gradient-primary hover:opacity-90">
+              <a href={linkSala} target="_blank" rel="noopener noreferrer">
+                <Video className="mr-2 h-4 w-4" /> Entrar na sala agora
+              </a>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to="/app/paciente/dashboard">
+                <Calendar className="mr-2 h-4 w-4" /> Ver minhas consultas
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link to="/app/paciente/dashboard">
-              <FileText className="mr-2 h-4 w-4" /> Recibo (em breve)
+              <FileText className="mr-2 h-4 w-4" /> Voltar ao painel
             </Link>
           </Button>
         </div>
