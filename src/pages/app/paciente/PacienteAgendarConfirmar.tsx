@@ -23,7 +23,7 @@ import {
   getSlotDisponivel,
   type SlotDisponivel,
 } from "@/lib/clinico";
-import { criarCheckoutSession } from "@/lib/pagamentos";
+import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 
