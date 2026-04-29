@@ -1,84 +1,157 @@
-## Onda 1 — Unificar Auth real (Supabase) com seletor demo como atalho de dev
 
-### Objetivo
+# Mapa de rotas + próximos passos
 
-Hoje o app vive com dois sistemas paralelos de identidade: `AuthProvider` (mock baseado em `localStorage`, decide qual menu/perfil aparece) e `SessionProvider` (sessão real Supabase, usado só por médicos). Isso cria risco de bug e impede ligar features reais (pagamento, prontuário, Feegow) com segurança. Vamos unificar mantendo o seletor de demo apenas em ambiente de desenvolvimento.
+## Parte 1 — Mapa completo das rotas atuais
 
-### O que muda para o usuário
+Legenda: **OK** = funcional com dados reais · **Parcial** = funciona com mock/placeholder leve · **Placeholder** = só título · **Mock** = UI pronta sem persistência
 
-- Em produção: ao acessar `/app/*` sem estar logado, vai para `/auth` (login/cadastro).
-- Cadastro público cria conta como **paciente** automaticamente. Médico continua com fluxo dedicado em `/cadastro/medico`. Secretaria/empresa/admin só por convite ou promoção manual (admin).
-- Em desenvolvimento (`import.meta.env.DEV`): o seletor de perfil continua aparecendo como atalho, **mas** se houver sessão real, ela tem prioridade sobre o mock.
-- Botão "Sair" no header faz logout real.
-- Médico não-aprovado continua sendo redirecionado para `/app/medico/aguardando-aprovacao`.
+### Públicas (`/`)
+| Rota | Status | Observação |
+|---|---|---|
+| `/` Home | OK | Landing |
+| `/especialidades` | Mock | Lista estática |
+| `/medicos` | Mock | Lista estática |
+| `/medicos/:slug` | Mock | Detalhe estático |
+| `/agendar` | Mock | Fluxo público de agendar |
+| `/planos` | Mock | |
+| `/empresas` | Mock | |
+| `/para-medicos` | Mock | |
+| `/faq` | Mock | |
+| `/login` | Redireciona p/ `/auth` | |
+| `/auth` | OK | Email+senha + Google |
+| `/cadastro/medico` | OK | Cria registro `medicos` pendente |
 
-### Arquitetura
-
-```text
-SessionProvider (real)            AuthProvider (papel ativo + UI)
-  - session / user                  - profileKey (deriva de roles reais
-  - roles[] do user_roles             quando logado, ou do localStorage
-  - loading                           apenas em DEV sem sessão)
-        │                              - capabilities
-        └──────────►  Único hook useAuth() consumido pelo app
-                       (mantém API atual: profileKey, user, capabilities)
-
-ProtectedRoute  ──► envolve <Route path="/app">
-  - se loading → splash
-  - se !session && !DEV → redirect /auth
-  - se session && roles vazias → /auth/escolher-perfil (raro)
-```
-
-### Banco de dados
-
-Pequena migração para destravar:
-
-1. `profiles.email` recebe trigger garantindo unicidade (já vem do auth, mas validar).
-2. RLS de `profiles`: adicionar policy `INSERT` (necessária para o trigger `handle_new_user` funcionar com `SECURITY DEFINER` — atualmente está bloqueado, mas o trigger passa por causa do definer; documentar).
-3. Função `promote_to_admin(_email text)` (`SECURITY DEFINER`, callable só por admin existente OU sem nenhum admin no sistema — bootstrap) para promover seu primeiro usuário sem precisar de SQL manual.
-4. Criar policy admin em `user_roles` permitindo que admin atribua/remova papéis.
-
-### Mudanças de código
-
-| Arquivo | O que faço |
+### Paciente (`/app/paciente`)
+| Rota | Status |
 |---|---|
-| `src/lib/session.tsx` | Já está OK. Adicionar helper `isDev = import.meta.env.DEV`. |
-| `src/lib/auth.tsx` | `AuthProvider` passa a consumir `useSession()`. Quando `session` existe, `profileKey` é derivado de `roles[0]` (com prioridade admin > medico > secretaria > empresa > paciente). Quando não existe e está em DEV, mantém o `localStorage` atual. Adicionar `signOut()`. |
-| `src/components/ProtectedRoute.tsx` | Novo. Splash enquanto `loading`; redirect `/auth` se sem sessão em produção. |
-| `src/App.tsx` | Envolver `<Route path="/app">` com `<ProtectedRoute>`. `SessionProvider` precisa estar **fora** de `AuthProvider` (já está). |
-| `src/pages/auth/Auth.tsx` | Já tem login email+senha e Google. Garantir que signup público sempre manda `role: 'paciente'` no `raw_user_meta_data`. Adicionar link "esqueci a senha" + página `/reset-password`. |
-| `src/pages/public/Login.tsx` (ou similar) | Redirecionar para `/auth`. |
-| `src/layouts/AppLayout.tsx` | Botão de logout real. Mostrar nome do usuário a partir de `profiles` quando logado. Seletor de perfil só renderiza se `import.meta.env.DEV && !session`. |
-| `src/components/MedicoGuard.tsx` | Usar `useSession()` (já indireto via `useMedicoAguardandoAprovacao`). Sem mudança grande. |
+| `/dashboard` | OK (lista consultas reais) |
+| `/agendar/confirmar/:slotId` | OK (cria consulta + Stripe) |
+| `/checkout/:sessionId` | OK |
+| `/pagamento/sucesso` | OK |
+| `/pagamento/cancelado` | OK |
+| `/agendamentos` | **Placeholder** |
+| `/documentos` | **Placeholder** |
+| `/plano` | **Placeholder** |
+| `/financeiro` | **Placeholder** |
+| `/mensagens` | **Placeholder** |
+| `/perfil` | **Placeholder** |
 
-### Contas de teste
+### Médico (`/app/medico`) — protegidas por `MedicoGuard`
+| Rota | Status |
+|---|---|
+| `/aguardando-aprovacao` | OK |
+| `/dashboard` | Parcial |
+| `/agenda` | OK (lista slots) |
+| `/horarios` | OK (CRUD slots) |
+| `/perfil` | OK |
+| `/configuracoes` | OK |
+| `/pacientes` | Mock |
+| `/treinamento` | Mock |
+| `/mensagens` | Mock (Conversas) |
+| `/comunicacao-interna` | Mock |
+| `/consultas` | **Placeholder** |
+| `/documentos` | **Placeholder** |
+| `/financeiro` | **Placeholder** |
 
-Não vou fazer seed automático (você pediu "manter como atalho de dev"). Em DEV o seletor continua disponível, então não precisa criar 5 contas. Em produção, depois do deploy, você cria sua conta admin e roda no SQL Editor:
+### Secretaria (`/app/secretaria`)
+| Rota | Status |
+|---|---|
+| `/dashboard` | Mock |
+| `/pacientes` + `/pacientes/:id` | Mock |
+| `/agenda` | Mock |
+| `/tarefas` | Mock |
+| `/equipe` | Mock |
+| `/comunicacao-interna` | Mock |
+| `/pendencias-integracao` | Mock |
+| `/agendamentos` | **Placeholder** |
+| `/comunicacao` | Mock (Conversas) |
+| `/financeiro` | **Placeholder** |
+| `/relatorios` | **Placeholder** |
 
-```sql
-SELECT public.promote_to_admin('seu-email@dominio.com');
-```
+### Admin (`/app/admin`)
+| Rota | Status |
+|---|---|
+| `/dashboard` | Mock |
+| `/medicos` (aprovação) | OK |
+| `/fluxo` | Mock |
+| `/permissoes` | Mock |
+| `/whatsapp` | Mock |
+| `/integracoes` | Mock |
+| `/configuracoes` | OK |
+| `/feegow` + `/mapeamento` + `/schema` | Mock |
+| `/pendencias-integracao` | Mock |
+| `/comunicacao-interna` | Mock |
+| `/pacientes/:id` | Mock |
+| `/usuarios` `/secretaria` `/empresas` `/agendamentos` `/financeiro` `/planos` `/relatorios` `/auditoria` | **Placeholder** |
 
-### Riscos e mitigação
+### Empresa (`/app/empresa`)
+Todas as 6 rotas (`dashboard`, `funcionarios`, `agendamentos`, `relatorios`, `financeiro`, `perfil`) → **Mock**
 
-- **Risco:** `AuthProvider` hoje é importado em ~30 lugares com `useAuth()`. **Mitigação:** mantenho a mesma API pública (`profileKey`, `user`, `capabilities`, `hasCapability`). Nenhuma página precisa mudar.
-- **Risco:** usuário logado real entra com role `paciente` mas `localStorage` tem `admin` salvo de uma sessão de demo anterior → vê menu de admin sem permissão. **Mitigação:** quando há sessão real, `localStorage` é ignorado (sessão > demo).
-- **Risco:** o trigger `handle_new_user` falha silenciosamente se `raw_user_meta_data` vier sem `nome`. **Mitigação:** o trigger atual já trata com `COALESCE`, mantém.
+### Comunicação (`/app/comunicacao`)
+Todas as 7 rotas (`dashboard`, `conversas`, `whatsapp`, `bot`, `templates`, `automacoes`, `metricas`) → **Mock**
 
-### Critérios de aceite
+---
 
-1. Acessar `/app/admin/dashboard` em produção sem login redireciona para `/auth`.
-2. Cadastro novo via `/auth` cria linha em `auth.users`, `profiles` e `user_roles` (role = paciente).
-3. Login → entra em `/app/paciente/dashboard` automaticamente.
-4. Em DEV, sem login, seletor de demo continua funcionando.
-5. Em DEV, com login real ativo, seletor fica oculto e o perfil vem do banco.
-6. Logout limpa sessão e devolve para `/auth`.
-7. `promote_to_admin('email')` funciona apenas para admin existente, ou para qualquer usuário enquanto não houver admin no sistema (bootstrap).
+## Parte 2 — Resumo do que falta para "fluxo end-to-end real"
 
-### Fora desta onda (próximas)
+**Pronto e real:** Auth, cadastro médico + aprovação, slots, agendamento, Stripe checkout, e-mail (em modo log).
 
-- Onda 2: tabelas clínicas (pacientes, agenda, consultas, prontuário) com RLS.
-- Onda 3: Stripe (Pix + cartão) + webhook libera consulta.
-- Onda 4: edge function proxy Feegow + sincronização.
-- Onda 5: empresa/colaboradores no banco.
-- Onda 6: audit_log global, rate-limit, HIBP.
+**Buracos no caminho crítico (paciente → consulta acontece):**
+1. **Paciente `/agendamentos`** — placeholder. Precisa listar consultas + ações (cancelar, ver detalhes, link da sala).
+2. **Paciente `/perfil`** — placeholder. Precisa formulário básico (nome, CPF, telefone, alergias).
+3. **Médico `/consultas`** — placeholder. Lista de consultas confirmadas + entrar na sala.
+4. **Sala da consulta** — não existe rota. Hoje `consultas.link_sala` é nullable e nunca preenchido.
+5. **Médico `/dashboard`** — só esqueleto, sem KPIs reais.
+6. **Paciente `/financeiro`** — placeholder. Histórico de pagamentos.
+
+**Não-críticos (podem esperar):** Documentos/prontuário, mensagens, dashboards admin/empresa/secretaria, comunicação WhatsApp.
+
+---
+
+## Parte 3 — Decisão Google Meet (Cenário A confirmado)
+
+Cada médico autoriza própria conta Google. Regra de negócio escolhida:
+
+> **Médico só pode publicar slots se: (a) tiver Google conectado OU (b) tiver cadastrado um link fixo de sala (Meet/Zoom/Jitsi pessoal).**
+
+Sem nenhum dos dois → bloqueio na criação de slots + aviso no dashboard.
+
+---
+
+## Parte 4 — Roadmap proposto (ordem)
+
+### Fase E.1 — Fechar o caminho crítico paciente↔consulta (PRÓXIMO)
+1. Página **Paciente / Agendamentos** real (lista + cancelar + ver link sala).
+2. Página **Paciente / Perfil** real (form + persistir em `pacientes`).
+3. Página **Médico / Consultas** real (lista + entrar sala + marcar como realizada).
+4. Página **Paciente / Financeiro** real (lista `pagamentos`).
+5. **Médico / Dashboard** com KPIs reais (próxima consulta, total semana, faturamento mês).
+
+### Fase E.2 — Sala da consulta (link genérico, sem Google ainda)
+6. Adicionar campo `medicos.link_sala_padrao` (texto livre).
+7. UI no perfil do médico para configurar link padrão.
+8. Trigger/edge function: ao confirmar consulta, preencher `consultas.link_sala` com o link padrão.
+9. Botão "Entrar na consulta" para paciente e médico.
+10. Bloqueio: médico não consegue criar slots se não tiver link padrão (preparação para Fase G).
+
+### Fase F — WhatsApp Cloud API (depende de Meta)
+Quando você liberar credenciais Meta: edge function de envio + templates aprovados + webhook.
+
+### Fase G — Google Meet por médico (Cenário A)
+11. Configurar OAuth Google (Calendar scope) no Google Cloud.
+12. Tabela `medico_google_tokens` (user_id, access_token, refresh_token, expires_at) — RLS só dono lê.
+13. Página **Médico / Configurações → Integrações** com botão "Conectar Google Calendar".
+14. Edge function `criar-evento-meet`: ao confirmar consulta, se médico tem Google → cria evento com Meet, salva link em `consultas.link_sala`. Se não → usa `link_sala_padrao`.
+15. Regra na criação de slot: exige Google conectado **OU** link padrão.
+16. Aviso visual no dashboard do médico se token Google expirou.
+
+### Fase H — Refino dos mocks restantes
+Empresas, Admin (financeiro, relatórios, auditoria), Secretaria (financeiro, relatórios), Comunicação interna real.
+
+---
+
+## Próximo passo concreto
+
+Começar **Fase E.1** — implementar as 5 páginas do caminho crítico, na ordem listada. Depois disso o app fica testável end-to-end (paciente cadastra → agenda → paga → médico vê → consulta acontece → paciente vê histórico).
+
+**Quer que eu inicie pela Fase E.1 (Paciente/Agendamentos primeiro) ou prefere fazer a Fase E.2 (sala da consulta + link padrão) antes para já testar o fluxo completo com link manual?**
