@@ -62,6 +62,48 @@ export async function getPacienteAtual(): Promise<Paciente | null> {
   return data ?? null;
 }
 
+/** Atualiza dados do paciente. Cria registro caso não exista. */
+export async function updatePacientePerfil(patch: {
+  nome_completo?: string | null;
+  cpf?: string | null;
+  telefone?: string | null;
+  data_nascimento?: string | null;
+  sexo?: Database["public"]["Enums"]["sexo_biologico"];
+  cep?: string | null;
+  alergias?: string | null;
+  condicoes_cronicas?: string | null;
+  medicamentos_uso?: string | null;
+  contato_emergencia_nome?: string | null;
+  contato_emergencia_telefone?: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { data: s } = await supabase.auth.getSession();
+  const uid = s.session?.user.id;
+  if (!uid) return { ok: false, error: "Não autenticado." };
+
+  const existing = await getPacienteAtual();
+  if (existing) {
+    const { error } = await supabase.from("pacientes").update(patch).eq("id", existing.id);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  }
+  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/** Atualiza nome/telefone no profile (espelho user). */
+export async function updateProfileBasico(patch: {
+  nome?: string;
+  telefone?: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { data: s } = await supabase.auth.getSession();
+  const uid = s.session?.user.id;
+  if (!uid) return { ok: false, error: "Não autenticado." };
+  const { error } = await supabase.from("profiles").update(patch).eq("id", uid);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
  * MÉDICO
  * ────────────────────────────────────────────────────────────────────── */
