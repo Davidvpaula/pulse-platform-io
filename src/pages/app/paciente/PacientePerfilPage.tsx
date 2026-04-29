@@ -15,7 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type Sexo = "masculino" | "feminino" | "outro" | "nao_informado";
+type Sexo = "masculino" | "feminino" | "intersexo" | "nao_informado";
 
 type FormState = {
   nome_completo: string;
@@ -184,7 +184,7 @@ export default function PacientePerfilPage() {
                   <SelectContent>
                     <SelectItem value="feminino">Feminino</SelectItem>
                     <SelectItem value="masculino">Masculino</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
+                    <SelectItem value="intersexo">Intersexo</SelectItem>
                     <SelectItem value="nao_informado">Não informado</SelectItem>
                   </SelectContent>
                 </Select>
