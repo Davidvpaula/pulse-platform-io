@@ -259,6 +259,9 @@ export default function AdminFinanceiroCentral() {
         </TabsContent>
 
         <TabsContent value="links" className="space-y-2">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
+          </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
