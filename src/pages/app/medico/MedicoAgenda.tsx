@@ -365,6 +365,13 @@ export default function MedicoAgenda() {
         open={!!historicoId}
         onOpenChange={(o) => !o && setHistoricoId(null)}
       />
+
+      <FinalizarAtendimentoDialog
+        consulta={finalizar}
+        open={!!finalizar}
+        onOpenChange={(o) => !o && setFinalizar(null)}
+        onFinalizado={() => void carregar()}
+      />
     </div>
   );
 }
