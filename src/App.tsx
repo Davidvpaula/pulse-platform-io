@@ -78,6 +78,7 @@ import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
+import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
