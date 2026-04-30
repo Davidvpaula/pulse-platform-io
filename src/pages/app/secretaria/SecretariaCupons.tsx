@@ -81,11 +81,12 @@ export default function SecretariaCupons() {
       <PageHeader
         title="Cupons de desconto"
         description="Crie cupons globais ou restritos a um médico/especialidade."
-      >
-        <Button onClick={() => setCriar(true)} className="bg-gradient-primary hover:opacity-90">
-          <Plus className="mr-2 h-4 w-4" /> Novo cupom
-        </Button>
-      </PageHeader>
+        actions={
+          <Button onClick={() => setCriar(true)} className="bg-gradient-primary hover:opacity-90">
+            <Plus className="mr-2 h-4 w-4" /> Novo cupom
+          </Button>
+        }
+      />
 
       <div className="rounded-lg border bg-card">
         <div className="flex items-center gap-2 border-b p-3">
