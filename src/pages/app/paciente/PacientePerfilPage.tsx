@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import {
   User, Save, Loader2, Database as DbIcon, ShieldCheck, Heart,
   MapPin, KeyRound, Mail, FileText,
@@ -19,6 +20,42 @@ import {
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+
+const perfilSchema = z.object({
+  nome_completo: z.string().trim().min(3, "Nome completo deve ter ao menos 3 caracteres").max(120, "Nome muito longo"),
+  cpf: z.string().trim().refine(
+    (v) => v === "" || onlyDigits(v).length === 11,
+    "CPF deve ter 11 dígitos",
+  ),
+  telefone: z.string().trim().refine(
+    (v) => v === "" || onlyDigits(v).length >= 10,
+    "Telefone inválido (mín. 10 dígitos)",
+  ),
+  data_nascimento: z.string().refine(
+    (v) => v === "" || (!isNaN(Date.parse(v)) && new Date(v) <= new Date()),
+    "Data de nascimento inválida",
+  ),
+  cep: z.string().trim().refine(
+    (v) => v === "" || onlyDigits(v).length === 8,
+    "CEP deve ter 8 dígitos",
+  ),
+  uf: z.string().refine((v) => v === "" || /^[A-Z]{2}$/.test(v), "UF inválida"),
+  contato_emergencia_telefone: z.string().trim().refine(
+    (v) => v === "" || onlyDigits(v).length >= 10,
+    "Telefone de emergência inválido",
+  ),
+  logradouro: z.string().max(200).optional(),
+  numero: z.string().max(20).optional(),
+  complemento: z.string().max(120).optional(),
+  bairro: z.string().max(120).optional(),
+  cidade: z.string().max(120).optional(),
+  alergias: z.string().max(1000).optional(),
+  condicoes_cronicas: z.string().max(1000).optional(),
+  medicamentos_uso: z.string().max(1000).optional(),
+  contato_emergencia_nome: z.string().max(120).optional(),
+});
 
 type Sexo = "masculino" | "feminino" | "intersexo" | "nao_informado";
 
@@ -119,7 +156,11 @@ export default function PacientePerfilPage() {
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) { toast.error("Faça login para salvar seu perfil."); return; }
-    if (form.nome_completo.trim().length < 3) { toast.error("Informe seu nome completo."); return; }
+    const parsed = perfilSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos.");
+      return;
+    }
     setSaving(true);
     const r1 = await updatePacientePerfil({
       nome_completo: form.nome_completo.trim(),
