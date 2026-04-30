@@ -190,7 +190,7 @@ const App = () => (
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
               <Route path="admin/empresas" element={<AdminEmpresas />} />
               <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
-              <Route path="admin/financeiro" element={<Placeholder title="Financeiro plataforma" />} />
+              <Route path="admin/financeiro" element={<AdminFinanceiroCentral />} />
               <Route path="admin/planos" element={<Placeholder title="Planos e assinaturas" />} />
               <Route path="admin/comunicacao" element={<Conversas />} />
               <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
