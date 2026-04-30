@@ -33,6 +33,12 @@ import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
 import PacientePlano from "@/pages/app/paciente/PacientePlano";
 import PacienteMensagens from "@/pages/app/paciente/PacienteMensagens";
 import PacienteFinanceiro from "@/pages/app/paciente/PacienteFinanceiro";
+import PacienteRotaNaoEncontrada from "@/pages/app/paciente/PacienteRotaNaoEncontrada";
+import {
+  PacienteParamGuard,
+  UUID_RE,
+  CHECKOUT_SESSION_RE,
+} from "@/pages/app/paciente/PacienteParamGuard";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
@@ -114,10 +120,26 @@ const App = () => (
               <Route path="paciente/financeiro" element={<PacienteFinanceiro />} />
               <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<PacienteMensagens />} />
-              <Route path="paciente/checkout/:sessionId" element={<PacienteCheckout />} />
+              <Route
+                path="paciente/checkout/:sessionId"
+                element={
+                  <PacienteParamGuard param="sessionId" pattern={CHECKOUT_SESSION_RE}>
+                    <PacienteCheckout />
+                  </PacienteParamGuard>
+                }
+              />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
-              <Route path="paciente/agendar/confirmar/:slotId" element={<PacienteAgendarConfirmar />} />
+              <Route
+                path="paciente/agendar/confirmar/:slotId"
+                element={
+                  <PacienteParamGuard param="slotId" pattern={UUID_RE}>
+                    <PacienteAgendarConfirmar />
+                  </PacienteParamGuard>
+                }
+              />
+              {/* Catch-all do paciente: qualquer /app/paciente/* desconhecido */}
+              <Route path="paciente/*" element={<PacienteRotaNaoEncontrada />} />
 
               {/* Médico — todas as rotas operacionais protegidas pelo MedicoGuard */}
               <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
