@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power } from "lucide-react";
+import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power, Filter } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -33,6 +36,8 @@ export default function SecretariaCupons() {
   const [editar, setEditar] = useState<CupomDetalhado | null>(null);
   const [criar, setCriar] = useState(false);
   const [excluir, setExcluir] = useState<CupomDetalhado | null>(null);
+  const [filtroEscopo, setFiltroEscopo] = useState<"todos" | "global" | "medico" | "especialidade">("todos");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "inativos" | "expirados" | "esgotados">("todos");
 
   const carregar = async () => {
     if (!session) { setRows([]); return; }
@@ -45,15 +50,39 @@ export default function SecretariaCupons() {
   const lista = useMemo(() => {
     const arr = rows ?? [];
     const q = busca.trim().toLowerCase();
-    if (!q) return arr;
-    return arr.filter(
-      (c) =>
+    const agora = Date.now();
+    return arr.filter((c) => {
+      if (filtroEscopo !== "todos" && c.escopo !== filtroEscopo) return false;
+      const expirado = !!c.valido_ate && new Date(c.valido_ate).getTime() < agora;
+      const esgotado = !!c.uso_maximo && c.uso_atual >= c.uso_maximo;
+      if (filtroStatus === "ativos" && (!c.ativo || expirado || esgotado)) return false;
+      if (filtroStatus === "inativos" && c.ativo) return false;
+      if (filtroStatus === "expirados" && !expirado) return false;
+      if (filtroStatus === "esgotados" && !esgotado) return false;
+      if (!q) return true;
+      return (
         c.codigo.toLowerCase().includes(q) ||
         c.nome.toLowerCase().includes(q) ||
         (c.medico_nome ?? "").toLowerCase().includes(q) ||
-        (c.especialidade_nome ?? "").toLowerCase().includes(q),
-    );
-  }, [rows, busca]);
+        (c.especialidade_nome ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [rows, busca, filtroEscopo, filtroStatus]);
+
+  const contadores = useMemo(() => {
+    const arr = rows ?? [];
+    const agora = Date.now();
+    let ativos = 0, inativos = 0, expirados = 0, esgotados = 0;
+    for (const c of arr) {
+      const expirado = !!c.valido_ate && new Date(c.valido_ate).getTime() < agora;
+      const esgotado = !!c.uso_maximo && c.uso_atual >= c.uso_maximo;
+      if (expirado) expirados++;
+      if (esgotado) esgotados++;
+      if (!c.ativo) inativos++;
+      else if (!expirado && !esgotado) ativos++;
+    }
+    return { total: arr.length, ativos, inativos, expirados, esgotados };
+  }, [rows]);
 
   async function confirmarExcluir() {
     if (!excluir) return;
@@ -88,15 +117,61 @@ export default function SecretariaCupons() {
         }
       />
 
+      {/* Cards de contagem por status */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { key: "todos", label: "Total", value: contadores.total },
+          { key: "ativos", label: "Ativos", value: contadores.ativos },
+          { key: "inativos", label: "Inativos", value: contadores.inativos },
+          { key: "expirados", label: "Expirados", value: contadores.expirados },
+          { key: "esgotados", label: "Esgotados", value: contadores.esgotados },
+        ].map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setFiltroStatus(c.key as typeof filtroStatus)}
+            className={`rounded-lg border bg-card p-3 text-left transition hover:border-primary/40 ${
+              filtroStatus === c.key ? "border-primary ring-2 ring-primary/20" : ""
+            }`}
+          >
+            <p className="text-xs text-muted-foreground">{c.label}</p>
+            <p className="text-2xl font-semibold">{c.value}</p>
+          </button>
+        ))}
+      </div>
+
       <div className="rounded-lg border bg-card">
-        <div className="flex items-center gap-2 border-b p-3">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por código, nome, médico ou especialidade..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="border-0 focus-visible:ring-0"
-          />
+        <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center">
+          <div className="flex flex-1 items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por código, nome, médico ou especialidade..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="border-0 focus-visible:ring-0"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filtroEscopo} onValueChange={(v) => setFiltroEscopo(v as typeof filtroEscopo)}>
+              <SelectTrigger className="h-9 w-[170px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os escopos</SelectItem>
+                <SelectItem value="global">Global</SelectItem>
+                <SelectItem value="medico">Por médico</SelectItem>
+                <SelectItem value="especialidade">Por especialidade</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filtroStatus} onValueChange={(v) => setFiltroStatus(v as typeof filtroStatus)}>
+              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos status</SelectItem>
+                <SelectItem value="ativos">Ativos</SelectItem>
+                <SelectItem value="inativos">Inativos</SelectItem>
+                <SelectItem value="expirados">Expirados</SelectItem>
+                <SelectItem value="esgotados">Esgotados</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {loading ? (
