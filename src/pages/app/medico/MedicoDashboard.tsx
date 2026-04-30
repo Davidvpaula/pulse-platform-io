@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
-  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink,
+  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -17,6 +17,7 @@ import {
   type ConsultaDetalhada,
 } from "@/lib/clinico";
 import { useSession } from "@/lib/session";
+import { useAuth, useCan } from "@/lib/auth";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
