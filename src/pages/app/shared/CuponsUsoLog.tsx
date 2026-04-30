@@ -3,7 +3,6 @@ import { Ticket, Search, Loader2, Calendar, User, Stethoscope, ShieldCheck, Down
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session";
-import { useAuth } from "@/lib/auth";
 import { listCuponsUso, type CupomUsoDetalhado } from "@/lib/cuponsUso";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +23,7 @@ const periodos = [
 ] as const;
 
 export default function CuponsUsoLog() {
-  const { session } = useSession();
-  const { roles } = useAuth();
+  const { session, roles } = useSession();
   const podeVer = roles.includes("admin") || roles.includes("secretaria");
 
   const [q, setQ] = useState("");
