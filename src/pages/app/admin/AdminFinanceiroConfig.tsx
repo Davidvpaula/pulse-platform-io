@@ -459,6 +459,7 @@ function ExcecaoModal({
   );
   const [motivo, setMotivo] = useState<string>(row?.motivo ?? "");
   const [ativo, setAtivo] = useState<boolean>(row?.ativo ?? true);
+  const [valid, setValid] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
 
   const plataformaPct = Math.round((100 - medicoPct) * 100) / 100;
