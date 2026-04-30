@@ -285,7 +285,7 @@ export default function AdminAgendamentos() {
     });
   }, [rows, busca, filtroStatus, filtroCanal]);
 
-  // Ações
+  // Ações — RPCs dedicadas (admin_consulta_*)
   async function forcarStatus() {
     if (!statusDialog.consulta || !statusDialog.novoStatus) return;
     if (motivoStatus.trim().length < 3) {
@@ -293,11 +293,27 @@ export default function AdminAgendamentos() {
       return;
     }
     setActing(true);
-    const { error } = await supabase.rpc("forcar_status_consulta", {
-      _consulta_id: statusDialog.consulta.id,
-      _novo_status: statusDialog.novoStatus,
-      _motivo: motivoStatus.trim(),
-    });
+    let error: any = null;
+    const consultaId = statusDialog.consulta.id;
+    const motivo = motivoStatus.trim();
+
+    if (statusDialog.novoStatus === "confirmada") {
+      ({ error } = await supabase.rpc("admin_consulta_forcar_confirmacao", {
+        _consulta_id: consultaId, _motivo: motivo,
+      }));
+    } else if (statusDialog.novoStatus === "concluida") {
+      ({ error } = await supabase.rpc("admin_consulta_marcar_realizada", {
+        _consulta_id: consultaId, _observacao: motivo,
+      }));
+    } else {
+      // no_show ou outros — usa RPC antiga genérica como fallback
+      ({ error } = await supabase.rpc("forcar_status_consulta", {
+        _consulta_id: consultaId,
+        _novo_status: statusDialog.novoStatus,
+        _motivo: motivo,
+      }));
+    }
+
     setActing(false);
     if (error) {
       toast({ title: "Não foi possível alterar", description: error.message, variant: "destructive" });
@@ -307,14 +323,14 @@ export default function AdminAgendamentos() {
     setStatusDialog({ open: false });
     setMotivoStatus("");
     carregar();
+    carregarOverview();
   }
 
   async function cancelarConsulta() {
     if (!cancelDialog.consulta) return;
     setActing(true);
-    const { error } = await supabase.rpc("forcar_status_consulta", {
+    const { error } = await supabase.rpc("admin_consulta_cancelar", {
       _consulta_id: cancelDialog.consulta.id,
-      _novo_status: "cancelada",
       _motivo: `${motivoCancel}${obsCancel ? " — " + obsCancel : ""}`,
     });
     setActing(false);
@@ -322,15 +338,16 @@ export default function AdminAgendamentos() {
       toast({ title: "Erro ao cancelar", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Consulta cancelada" });
+    toast({ title: "Consulta cancelada", description: "Slot liberado e auditoria registrada." });
     setCancelDialog({ open: false });
     setObsCancel("");
     carregar();
+    carregarOverview();
   }
 
   async function reenviarLink(c: ConsultaRow) {
-    const { error } = await supabase.rpc("marcar_reenvio_link_consulta", {
-      _consulta_id: c.id, _canal: "whatsapp",
+    const { error } = await supabase.rpc("admin_consulta_reenviar_link", {
+      _consulta_id: c.id,
     });
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
