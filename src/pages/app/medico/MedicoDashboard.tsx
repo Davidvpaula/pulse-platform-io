@@ -351,7 +351,7 @@ export default function MedicoDashboard() {
           label="Consultas hoje"
           value={String(stats.hoje)}
           icon={Calendar}
-          hint={`${stats.online} online`}
+          hint="por telemedicina"
         />
         <StatCard
           label="Pacientes (mês)"
