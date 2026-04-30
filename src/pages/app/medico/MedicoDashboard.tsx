@@ -216,7 +216,28 @@ export default function MedicoDashboard() {
       <PageHeader
         title={`${saudacao()}${medicoNome ? `, Dr(a). ${medicoNome.split(" ")[0]}` : ""}`}
         description="O que você precisa fazer agora — atendimentos, fila e alertas."
+        actions={
+          !podeAtuar ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              <Eye className="h-3 w-3" /> Modo somente leitura ({profileKey})
+            </span>
+          ) : undefined
+        }
       />
+
+      {/* Aviso para perfis não-médicos visualizando o painel */}
+      {!podeAtuar && (
+        <div className="card-elevated flex items-start gap-3 border-l-4 border-l-muted-foreground/40 p-4">
+          <Lock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+          <div className="text-sm">
+            <p className="font-semibold">Você não é o profissional desta agenda</p>
+            <p className="text-muted-foreground">
+              Ações como <strong>iniciar consulta</strong> e <strong>abrir sala virtual</strong> ficam visíveis apenas para o médico responsável.
+              {isAdmin ? " Como admin, você pode ver tudo, mas as ações ainda exigem que você seja o dono da consulta." : ""}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Onboarding / pendências */}
       {pendencias > 0 && (
