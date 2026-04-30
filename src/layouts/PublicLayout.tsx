@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
+  { to: "/atendimento-imediato", label: "Atendimento imediato", highlight: true },
   { to: "/especialidades", label: "Especialidades" },
+  { to: "/servicos", label: "Serviços" },
   { to: "/medicos", label: "Médicos" },
   { to: "/planos", label: "Planos" },
   { to: "/empresas", label: "Empresas" },
@@ -29,7 +31,11 @@ export default function PublicLayout() {
                 className={({ isActive }) =>
                   cn(
                     "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                    l.highlight
+                      ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                      : isActive
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground",
                   )
                 }
               >
