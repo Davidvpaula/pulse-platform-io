@@ -172,7 +172,7 @@ const App = () => (
               <Route path="admin/cupons" element={<SecretariaCupons />} />
               <Route path="admin/cupons/log" element={<CuponsUsoLog />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
-              <Route path="secretaria/financeiro" element={<Placeholder title="Pagamentos pendentes" />} />
+              <Route path="secretaria/financeiro" element={<SecretariaFinanceiro />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />
               <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
               <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
