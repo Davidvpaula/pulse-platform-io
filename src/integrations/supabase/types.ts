@@ -712,6 +712,51 @@ export type Database = {
           },
         ]
       }
+      retornos_gratuitos: {
+        Row: {
+          consulta_origem_id: string
+          consulta_uso_id: string | null
+          created_at: string
+          created_by: string | null
+          especialidade_id: string | null
+          id: string
+          medico_id: string
+          observacao: string | null
+          paciente_id: string
+          status: Database["public"]["Enums"]["retorno_status"]
+          updated_at: string
+          valido_ate: string
+        }
+        Insert: {
+          consulta_origem_id: string
+          consulta_uso_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          especialidade_id?: string | null
+          id?: string
+          medico_id: string
+          observacao?: string | null
+          paciente_id: string
+          status?: Database["public"]["Enums"]["retorno_status"]
+          updated_at?: string
+          valido_ate: string
+        }
+        Update: {
+          consulta_origem_id?: string
+          consulta_uso_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          especialidade_id?: string | null
+          id?: string
+          medico_id?: string
+          observacao?: string | null
+          paciente_id?: string
+          status?: Database["public"]["Enums"]["retorno_status"]
+          updated_at?: string
+          valido_ate?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -738,6 +783,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agendar_retorno_gratuito: {
+        Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
+        Returns: Json
+      }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
       criar_consulta_com_reserva: {
         Args: {
@@ -824,6 +873,7 @@ export type Database = {
         | "cancelado"
         | "falhou"
         | "reembolsado"
+      retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
     }
@@ -976,6 +1026,7 @@ export const Constants = {
         "falhou",
         "reembolsado",
       ],
+      retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
     },

@@ -19,6 +19,7 @@ import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
 
 type Filtro = "todas" | "hoje" | "futuras" | "passadas" | "canceladas";
 
@@ -29,6 +30,7 @@ export default function MedicoConsultas() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("hoje");
   const [acaoId, setAcaoId] = useState<string | null>(null);
+  const [retornoCtx, setRetornoCtx] = useState<{ id: string; nome?: string | null } | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); return; }
@@ -100,14 +102,13 @@ export default function MedicoConsultas() {
     }
   };
 
-  const concluir = async (id: string) => {
-    setAcaoId(id);
-    const ok = await updateConsultaStatus(id, "concluida");
+  const concluir = async (c: ConsultaDetalhada) => {
+    setAcaoId(c.id);
+    const ok = await updateConsultaStatus(c.id, "concluida");
     setAcaoId(null);
-    if (ok) {
-      toast.success("Consulta marcada como concluida");
-      void carregar();
-    } else toast.error("Erro ao concluir");
+    if (!ok) { toast.error("Erro ao concluir"); return; }
+    // Abre modal de retorno gratuito
+    setRetornoCtx({ id: c.id, nome: c.paciente_nome });
   };
 
   if (!session) {
@@ -239,7 +240,7 @@ export default function MedicoConsultas() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => concluir(c.id)}
+                      onClick={() => concluir(c)}
                       disabled={acaoId === c.id}
                     >
                       Concluir
@@ -286,6 +287,14 @@ export default function MedicoConsultas() {
           );
         })}
       </div>
+
+      <RetornoGratuitoDialog
+        open={!!retornoCtx}
+        onOpenChange={(v) => { if (!v) setRetornoCtx(null); }}
+        consultaId={retornoCtx?.id ?? null}
+        pacienteNome={retornoCtx?.nome}
+        onConcluido={() => { setRetornoCtx(null); void carregar(); }}
+      />
     </div>
   );
 }
