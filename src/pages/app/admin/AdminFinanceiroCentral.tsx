@@ -46,6 +46,49 @@ export default function AdminFinanceiroCentral() {
   const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
   const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
   const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [loteCancelOpen, setLoteCancelOpen] = useState(false);
+  const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
+  const [loteRunning, setLoteRunning] = useState(false);
+
+  const togglePagamento = (id: string) => setSelecionados(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const pendentes = pagamentos.filter(p => p.status === "pendente");
+  const todosPendentesSelecionados = pendentes.length > 0 && pendentes.every(p => selecionados.has(p.id));
+  const toggleTodos = () => setSelecionados(s => {
+    if (todosPendentesSelecionados) { const n = new Set(s); pendentes.forEach(p => n.delete(p.id)); return n; }
+    const n = new Set(s); pendentes.forEach(p => n.add(p.id)); return n;
+  });
+  const selecionadosPendentes = pagamentos.filter(p => selecionados.has(p.id) && p.status === "pendente");
+
+  async function aprovarLote() {
+    if (!selecionadosPendentes.length) return;
+    setLoteRunning(true);
+    let ok = 0, fail = 0;
+    for (const p of selecionadosPendentes) {
+      try { await supabase.rpc("financeiro_pagamento_confirmar" as any, { _pagamento_id: p.id }); ok++; }
+      catch { fail++; }
+    }
+    setLoteRunning(false);
+    setSelecionados(new Set());
+    toast.success(`${ok} aprovados${fail ? `, ${fail} com erro` : ""}`);
+    carregar();
+  }
+
+  async function cancelarLote() {
+    if (!selecionadosPendentes.length || !loteCancelMotivo.trim()) return;
+    setLoteRunning(true);
+    let ok = 0, fail = 0;
+    for (const p of selecionadosPendentes) {
+      try { await supabase.rpc("financeiro_pagamento_cancelar" as any, { _pagamento_id: p.id, _motivo: loteCancelMotivo }); ok++; }
+      catch { fail++; }
+    }
+    setLoteRunning(false);
+    setLoteCancelOpen(false);
+    setLoteCancelMotivo("");
+    setSelecionados(new Set());
+    toast.success(`${ok} cancelados${fail ? `, ${fail} com erro` : ""}`);
+    carregar();
+  }
 
   async function abrirDetalhe(p: any) {
     setDetalhe(p);
