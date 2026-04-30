@@ -211,7 +211,7 @@ export default function MedicoConsultas() {
                     {c.modalidade === "online" ? (
                       <><Video className="h-3.5 w-3.5" /> Online</>
                     ) : (
-                      <><MapPin className="h-3.5 w-3.5" /> Presencial</>
+                      <><Video className="h-3.5 w-3.5" /> Telemedicina</>
                     )}
                   </p>
                   {c.motivo && (

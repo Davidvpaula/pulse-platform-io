@@ -405,7 +405,7 @@ export default function MedicoDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{c.paciente_nome ?? "Paciente"}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {c.especialidade_nome ?? "Consulta"} · {c.modalidade === "online" ? "Telemedicina" : "Presencial"}
+                      {c.especialidade_nome ?? "Consulta"} · Telemedicina
                     </p>
                   </div>
                   <StatusBadge status={c.status as any} />
