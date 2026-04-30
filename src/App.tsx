@@ -203,7 +203,7 @@ const App = () => (
               <Route path="admin/integracoes" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
-              <Route path="admin/relatorios" element={<Placeholder title="Relatórios" />} />
+              <Route path="admin/relatorios" element={<AdminRelatorios />} />
               <Route path="admin/auditoria" element={<Placeholder title="Auditoria do sistema" description="Log de ações sensíveis (somente Superadmin)." />} />
               <Route path="admin/fluxo" element={<FluxoOperacional />} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
