@@ -223,7 +223,7 @@ export default function MedicoServicos() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOverrideOpen(null)}>Cancelar</Button>
-            <Button onClick={solicitarOverride} disabled={overrideMotivo.length < 10}>
+            <Button onClick={solicitarOverride} disabled={overrideMotivo.length < 10 || !overrideValid}>
               Enviar solicitação
             </Button>
           </DialogFooter>
