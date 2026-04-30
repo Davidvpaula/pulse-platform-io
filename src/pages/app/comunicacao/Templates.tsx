@@ -1,205 +1,159 @@
-import { useState } from "react";
-import { FileText, Plus, Pencil, Trash2, Copy, Tag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Trash2, FileEdit } from "lucide-react";
 import { toast } from "sonner";
-
-type Categoria =
-  | "Confirmação"
-  | "Lembrete"
-  | "Link Meet"
-  | "Pós-consulta"
-  | "Financeiro";
 
 type Template = {
   id: string;
-  nome: string;
-  categoria: Categoria;
-  body: string;
-  ativo: boolean;
+  name: string;
+  category: string;
+  content: string;
+  variables: string[];
+  whatsapp_status: string;
+  active: boolean;
 };
 
-const VARS = ["{nome}", "{data}", "{horario}", "{medico}", "{link_consulta}"];
-
-const initial: Template[] = [
-  { id: "T-01", nome: "Confirmação de consulta", categoria: "Confirmação", ativo: true,
-    body: "Olá {nome}! Sua consulta com {medico} está confirmada para {data} às {horario}. Aguardamos você 💙" },
-  { id: "T-02", nome: "Lembrete 24h antes", categoria: "Lembrete", ativo: true,
-    body: "Oi {nome}, lembrando que sua consulta com {medico} é amanhã ({data}) às {horario}." },
-  { id: "T-03", nome: "Lembrete 1h antes", categoria: "Lembrete", ativo: true,
-    body: "Olá {nome}! Sua consulta começa em 1 hora. Prepare-se 🩺" },
-  { id: "T-04", nome: "Link Google Meet", categoria: "Link Meet", ativo: true,
-    body: "Aqui está o link da sua videoconsulta com {medico}: {link_consulta}" },
-  { id: "T-05", nome: "Pós-consulta", categoria: "Pós-consulta", ativo: true,
-    body: "Olá {nome}! Como foi sua consulta com {medico}? Conte sua experiência 💚" },
-  { id: "T-06", nome: "Cobrança Pix", categoria: "Financeiro", ativo: true,
-    body: "Olá {nome}, segue o Pix da sua consulta de {data}. Qualquer dúvida, é só responder." },
+const VARIAVEIS = ["{nome}", "{data}", "{horario}", "{medico}", "{especialidade}", "{link_consulta}", "{valor}", "{empresa}", "{protocolo}"];
+const CATEGORIAS = [
+  "confirmacao", "lembrete_24h", "lembrete_1h", "link_meet", "cobranca",
+  "pos_consulta", "documento", "retorno", "empresa", "suporte", "outro",
 ];
 
-const catTone: Record<Categoria, string> = {
-  "Confirmação": "bg-success/10 text-success",
-  "Lembrete": "bg-warning/10 text-warning",
-  "Link Meet": "bg-info/10 text-info",
-  "Pós-consulta": "bg-accent/10 text-accent",
-  "Financeiro": "bg-primary-soft text-primary",
-};
-
 export default function Templates() {
-  const [items, setItems] = useState<Template[]>(initial);
-  const [filter, setFilter] = useState<Categoria | "Todos">("Todos");
+  const [items, setItems] = useState<Template[]>([]);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Template | null>(null);
+  const [edit, setEdit] = useState<Partial<Template>>({});
 
-  const filtered = items.filter(t => filter === "Todos" || t.categoria === filter);
+  async function load() {
+    const { data } = await supabase.from("message_templates").select("*").order("category").order("name");
+    setItems((data || []) as Template[]);
+  }
+  useEffect(() => { load(); }, []);
 
-  const startNew = () => {
-    setEditing({ id: `T-${String(items.length + 1).padStart(2, "0")}`, nome: "", categoria: "Confirmação", body: "", ativo: true });
+  function novo() {
+    setEdit({ name: "", category: "outro", content: "", variables: [], whatsapp_status: "rascunho", active: true });
     setOpen(true);
-  };
+  }
+  function editar(t: Template) { setEdit(t); setOpen(true); }
 
-  const startEdit = (t: Template) => { setEditing(t); setOpen(true); };
-
-  const save = () => {
-    if (!editing || !editing.nome.trim()) return;
-    setItems(its => its.some(i => i.id === editing.id)
-      ? its.map(i => i.id === editing.id ? editing : i)
-      : [editing, ...its]);
-    setOpen(false);
-    setEditing(null);
+  async function salvar() {
+    if (!edit.name?.trim() || !edit.content?.trim()) { toast.error("Nome e conteúdo obrigatórios"); return; }
+    const variaveis = VARIAVEIS.filter(v => edit.content!.includes(v));
+    const payload = {
+      name: edit.name,
+      category: edit.category as any || "outro",
+      content: edit.content,
+      variables: variaveis,
+      whatsapp_status: (edit.whatsapp_status as any) || "rascunho",
+      active: edit.active ?? true,
+    };
+    const { error } = edit.id
+      ? await supabase.from("message_templates").update(payload).eq("id", edit.id)
+      : await supabase.from("message_templates").insert(payload);
+    if (error) { toast.error(error.message); return; }
     toast.success("Template salvo");
-  };
+    setOpen(false);
+    load();
+  }
 
-  const insertVar = (v: string) => {
-    if (!editing) return;
-    setEditing({ ...editing, body: editing.body + " " + v });
-  };
-
-  const remove = (id: string) => {
-    setItems(its => its.filter(i => i.id !== id));
-    toast("Template removido");
-  };
-
-  const duplicate = (t: Template) => {
-    const id = `T-${String(items.length + 1).padStart(2, "0")}`;
-    setItems(its => [{ ...t, id, nome: t.nome + " (cópia)" }, ...its]);
-  };
+  async function remover(id: string) {
+    if (!confirm("Remover template?")) return;
+    await supabase.from("message_templates").delete().eq("id", id);
+    load();
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Templates de mensagem"
-        description="Mensagens prontas com variáveis dinâmicas. Aprovação para WhatsApp Business API será feita futuramente."
-        actions={<Button onClick={startNew}><Plus className="mr-2 h-4 w-4" />Novo template</Button>}
-      />
+      <PageHeader title="Templates" description="Mensagens reaproveitáveis para WhatsApp e automações." />
 
-      <div className="flex flex-wrap gap-1.5">
-        {(["Todos","Confirmação","Lembrete","Link Meet","Pós-consulta","Financeiro"] as const).map(c => (
-          <button
-            key={c}
-            onClick={() => setFilter(c)}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-              filter === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70",
-            )}
-          >{c}</button>
-        ))}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map(t => (
-          <div key={t.id} className="card-elevated flex flex-col p-5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-semibold truncate">{t.nome}</p>
-                <p className="text-[11px] text-muted-foreground">{t.id}</p>
-              </div>
-              <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", catTone[t.categoria])}>
-                {t.categoria}
-              </span>
-            </div>
-            <p className="mt-3 flex-1 rounded-lg bg-muted/40 p-3 text-sm text-foreground/80">
-              {t.body}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1">
-              {VARS.filter(v => t.body.includes(v)).map(v => (
-                <span key={v} className="rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-mono text-primary">{v}</span>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span className={cn("inline-flex items-center gap-1 text-xs", t.ativo ? "text-success" : "text-muted-foreground")}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", t.ativo ? "bg-success" : "bg-muted-foreground")} />
-                {t.ativo ? "Ativo" : "Inativo"}
-              </span>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => duplicate(t)}><Copy className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing && items.some(i => i.id === editing.id) ? "Editar template" : "Novo template"}</DialogTitle>
-          </DialogHeader>
-          {editing && (
-            <div className="space-y-3">
-              <Input
-                placeholder="Nome"
-                value={editing.nome}
-                onChange={e => setEditing({ ...editing, nome: e.target.value })}
-              />
-              <div className="flex flex-wrap gap-1.5">
-                {(["Confirmação","Lembrete","Link Meet","Pós-consulta","Financeiro"] as Categoria[]).map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setEditing({ ...editing, categoria: c })}
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-xs",
-                      editing.categoria === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-                    )}
-                  >{c}</button>
-                ))}
-              </div>
-              <Textarea
-                rows={5}
-                placeholder="Corpo da mensagem… use variáveis como {nome}, {data}, {medico}"
-                value={editing.body}
-                onChange={e => setEditing({ ...editing, body: e.target.value })}
-              />
+      <div className="flex justify-end">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button onClick={novo}><Plus className="mr-2 h-4 w-4" />Novo template</Button>
+          </SheetTrigger>
+          <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
+            <SheetHeader><SheetTitle>{edit.id ? "Editar" : "Novo"} template</SheetTitle></SheetHeader>
+            <div className="mt-6 space-y-4">
               <div>
-                <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-                  <Tag className="h-3 w-3" />Inserir variável
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {VARS.map(v => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => insertVar(v)}
-                      className="rounded border border-border bg-card px-2 py-0.5 font-mono text-xs hover:border-primary"
-                    >{v}</button>
+                <Label>Nome *</Label>
+                <Input value={edit.name || ""} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Select value={edit.category} onValueChange={(v) => setEdit({ ...edit, category: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Conteúdo *</Label>
+                <Textarea rows={6} value={edit.content || ""} onChange={(e) => setEdit({ ...edit, content: e.target.value })} placeholder="Olá {nome}, sua consulta com {medico} está confirmada para {data} às {horario}." />
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {VARIAVEIS.map(v => (
+                    <button key={v} type="button" onClick={() => setEdit({ ...edit, content: (edit.content || "") + " " + v })} className="text-[11px] rounded-md border px-2 py-0.5 hover:bg-muted">
+                      {v}
+                    </button>
                   ))}
                 </div>
               </div>
+              <div>
+                <Label>Status WhatsApp</Label>
+                <Select value={edit.whatsapp_status} onValueChange={(v) => setEdit({ ...edit, whatsapp_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rascunho">Rascunho</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="aprovado">Aprovado</SelectItem>
+                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={edit.active ?? true} onCheckedChange={(v) => setEdit({ ...edit, active: v })} />
+                <Label>Ativo</Label>
+              </div>
+              <Button className="w-full" onClick={salvar}>Salvar</Button>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={save}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.length === 0 && (
+          <Card className="md:col-span-3"><CardContent className="py-12 text-center text-muted-foreground">Nenhum template cadastrado.</CardContent></Card>
+        )}
+        {items.map(t => (
+          <Card key={t.id}>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="text-sm">{t.name}</CardTitle>
+                <Badge variant={t.whatsapp_status === "aprovado" ? "default" : "outline"} className="text-[10px]">{t.whatsapp_status}</Badge>
+              </div>
+              <Badge variant="secondary" className="text-[10px] w-fit">{t.category}</Badge>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-wrap">{t.content}</p>
+              <div className="mt-3 flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => editar(t)}><FileEdit className="h-3 w-3" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => remover(t.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                {!t.active && <Badge variant="outline" className="ml-auto text-[10px]">inativo</Badge>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
