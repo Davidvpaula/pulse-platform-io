@@ -74,6 +74,9 @@ import Integracoes from "@/pages/app/shared/Integracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
+import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
+import Inbox from "@/pages/app/comunicacao/Inbox";
+import IAAvatar from "@/pages/app/comunicacao/IAAvatar";
 import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
@@ -194,8 +197,9 @@ const App = () => (
               <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
               <Route path="admin/financeiro" element={<AdminFinanceiroCentral />} />
               <Route path="admin/planos" element={<AdminPlanos />} />
-              <Route path="admin/comunicacao" element={<Conversas />} />
-              <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
+              <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
+              <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
+              <Route path="admin/integracoes/whatsapp" element={<IntegracaoWhatsApp />} />
               <Route path="admin/integracoes" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
@@ -220,9 +224,11 @@ const App = () => (
 
               {/* Comunicação */}
               <Route path="comunicacao/dashboard" element={<ComunicacaoDashboard />} />
-              <Route path="comunicacao/conversas" element={<Conversas />} />
-              <Route path="comunicacao/whatsapp" element={<WhatsAppCentral />} />
+              <Route path="comunicacao/inbox" element={<Inbox />} />
+              <Route path="comunicacao/conversas" element={<Navigate to="/app/comunicacao/inbox" replace />} />
+              <Route path="comunicacao/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="comunicacao/bot" element={<BotConfig />} />
+              <Route path="comunicacao/ia" element={<IAAvatar />} />
               <Route path="comunicacao/templates" element={<Templates />} />
               <Route path="comunicacao/automacoes" element={<Automacoes />} />
               <Route path="comunicacao/metricas" element={<Metricas />} />

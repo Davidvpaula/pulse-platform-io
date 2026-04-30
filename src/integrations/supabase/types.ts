@@ -64,6 +64,107 @@ export type Database = {
           },
         ]
       }
+      ai_logs: {
+        Row: {
+          action_taken: string | null
+          conversation_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          latency_ms: number | null
+          model: string | null
+          prompt: string | null
+          provider: Database["public"]["Enums"]["ai_provider"] | null
+          response: string | null
+          tokens_in: number | null
+          tokens_out: number | null
+        }
+        Insert: {
+          action_taken?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"] | null
+          response?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Update: {
+          action_taken?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"] | null
+          response?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_settings: {
+        Row: {
+          active: boolean
+          base_prompt: string | null
+          created_at: string
+          created_by: string | null
+          handoff_keywords: string[]
+          id: string
+          knowledge_base: string | null
+          max_tokens: number | null
+          model: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          safety_rules: string | null
+          temperature: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          base_prompt?: string | null
+          created_at?: string
+          created_by?: string | null
+          handoff_keywords?: string[]
+          id?: string
+          knowledge_base?: string | null
+          max_tokens?: number | null
+          model?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          safety_rules?: string | null
+          temperature?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          base_prompt?: string | null
+          created_at?: string
+          created_by?: string | null
+          handoff_keywords?: string[]
+          id?: string
+          knowledge_base?: string | null
+          max_tokens?: number | null
+          model?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          safety_rules?: string | null
+          temperature?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       anexos_consulta: {
         Row: {
           consulta_id: string
@@ -241,6 +342,213 @@ export type Database = {
             columns: ["plano_id"]
             isOneToOne: false
             referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_logs: {
+        Row: {
+          appointment_id: string | null
+          automation_id: string | null
+          conversation_id: string | null
+          error_message: string | null
+          executed_at: string
+          id: string
+          patient_id: string | null
+          payload: Json
+          status: Database["public"]["Enums"]["automation_log_status"]
+        }
+        Insert: {
+          appointment_id?: string | null
+          automation_id?: string | null
+          conversation_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          patient_id?: string | null
+          payload?: Json
+          status: Database["public"]["Enums"]["automation_log_status"]
+        }
+        Update: {
+          appointment_id?: string | null
+          automation_id?: string | null
+          conversation_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          patient_id?: string | null
+          payload?: Json
+          status?: Database["public"]["Enums"]["automation_log_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          action_payload: Json
+          action_type: Database["public"]["Enums"]["automation_action_type"]
+          active: boolean
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          delay_seconds: number
+          description: string | null
+          failure_count: number
+          id: string
+          last_executed_at: string | null
+          name: string
+          success_count: number
+          template_id: string | null
+          trigger: Database["public"]["Enums"]["automation_trigger"]
+          updated_at: string
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: Database["public"]["Enums"]["automation_action_type"]
+          active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          delay_seconds?: number
+          description?: string | null
+          failure_count?: number
+          id?: string
+          last_executed_at?: string | null
+          name: string
+          success_count?: number
+          template_id?: string | null
+          trigger: Database["public"]["Enums"]["automation_trigger"]
+          updated_at?: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: Database["public"]["Enums"]["automation_action_type"]
+          active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          delay_seconds?: number
+          description?: string | null
+          failure_count?: number
+          id?: string
+          last_executed_at?: string | null
+          name?: string
+          success_count?: number
+          template_id?: string | null
+          trigger?: Database["public"]["Enums"]["automation_trigger"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_flows: {
+        Row: {
+          active: boolean
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          start_step_id: string | null
+          trigger_keywords: string[]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          start_step_id?: string | null
+          trigger_keywords?: string[]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          start_step_id?: string | null
+          trigger_keywords?: string[]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      bot_steps: {
+        Row: {
+          conditions: Json
+          content: string | null
+          created_at: string
+          flow_id: string
+          id: string
+          label: string | null
+          next_step_id: string | null
+          options: Json
+          order_index: number
+          type: Database["public"]["Enums"]["bot_step_type"]
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          content?: string | null
+          created_at?: string
+          flow_id: string
+          id?: string
+          label?: string | null
+          next_step_id?: string | null
+          options?: Json
+          order_index?: number
+          type: Database["public"]["Enums"]["bot_step_type"]
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          content?: string | null
+          created_at?: string
+          flow_id?: string
+          id?: string
+          label?: string | null
+          next_step_id?: string | null
+          options?: Json
+          order_index?: number
+          type?: Database["public"]["Enums"]["bot_step_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_steps_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
             referencedColumns: ["id"]
           },
         ]
@@ -439,6 +747,36 @@ export type Database = {
           payload?: Json | null
           valor_anterior?: string | null
           valor_novo?: string | null
+        }
+        Relationships: []
+      }
+      comunicacao_auditoria: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
         }
         Relationships: []
       }
@@ -689,6 +1027,194 @@ export type Database = {
           valor_plataforma_centavos?: number
         }
         Relationships: []
+      }
+      conversation_assignments: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          from_user_id: string | null
+          id: string
+          reason: string | null
+          to_sector: string | null
+          to_user_id: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          reason?: string | null
+          to_sector?: string | null
+          to_user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          reason?: string | null
+          to_sector?: string | null
+          to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_assignments_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_leads: {
+        Row: {
+          convertido_em: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          empresa_potencial: string | null
+          id: string
+          motivo_contato: string | null
+          nome: string | null
+          observacoes: string | null
+          origem: string | null
+          paciente_id: string | null
+          telefone: string
+          updated_at: string
+        }
+        Insert: {
+          convertido_em?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          empresa_potencial?: string | null
+          id?: string
+          motivo_contato?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          origem?: string | null
+          paciente_id?: string | null
+          telefone: string
+          updated_at?: string
+        }
+        Update: {
+          convertido_em?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          empresa_potencial?: string | null
+          id?: string
+          motivo_contato?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          origem?: string | null
+          paciente_id?: string | null
+          telefone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          empresa_id: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        Insert: {
+          ai_active?: boolean
+          assigned_sector?: string | null
+          assigned_to?: string | null
+          bot_active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          closed_at?: string | null
+          closed_by?: string | null
+          consulta_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          intent?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          lead_id?: string | null
+          medico_id?: string | null
+          origin?: Database["public"]["Enums"]["conversation_origin"]
+          patient_id?: string | null
+          priority?: Database["public"]["Enums"]["conversation_priority"]
+          status?: Database["public"]["Enums"]["conversation_status"]
+          tags?: string[]
+          unread_count?: number
+          updated_at?: string
+          whatsapp_instance_id?: string | null
+        }
+        Update: {
+          ai_active?: boolean
+          assigned_sector?: string | null
+          assigned_to?: string | null
+          bot_active?: boolean
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          closed_at?: string | null
+          closed_by?: string | null
+          consulta_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          intent?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          lead_id?: string | null
+          medico_id?: string | null
+          origin?: Database["public"]["Enums"]["conversation_origin"]
+          patient_id?: string | null
+          priority?: Database["public"]["Enums"]["conversation_priority"]
+          status?: Database["public"]["Enums"]["conversation_status"]
+          tags?: string[]
+          unread_count?: number
+          updated_at?: string
+          whatsapp_instance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_whatsapp_instance_id_fkey"
+            columns: ["whatsapp_instance_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cupons: {
         Row: {
@@ -1424,6 +1950,38 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_notes: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          note: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          note: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_notes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_comissao_override: {
         Row: {
           ativo: boolean
@@ -1713,6 +2271,113 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["template_category"]
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          language: string
+          name: string
+          updated_at: string
+          variables: string[]
+          whatsapp_status: Database["public"]["Enums"]["template_wa_status"]
+          whatsapp_template_name: string | null
+        }
+        Insert: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["template_category"]
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          name: string
+          updated_at?: string
+          variables?: string[]
+          whatsapp_status?: Database["public"]["Enums"]["template_wa_status"]
+          whatsapp_template_name?: string | null
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["template_category"]
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          name?: string
+          updated_at?: string
+          variables?: string[]
+          whatsapp_status?: Database["public"]["Enums"]["template_wa_status"]
+          whatsapp_template_name?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          failure_reason: string | null
+          id: string
+          media_mime: string | null
+          media_url: string | null
+          message_type: Database["public"]["Enums"]["message_type"]
+          metadata: Json
+          sender_id: string | null
+          sender_name: string | null
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          status: Database["public"]["Enums"]["message_status"]
+          template_id: string | null
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          media_mime?: string | null
+          media_url?: string | null
+          message_type?: Database["public"]["Enums"]["message_type"]
+          metadata?: Json
+          sender_id?: string | null
+          sender_name?: string | null
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          status?: Database["public"]["Enums"]["message_status"]
+          template_id?: string | null
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          media_mime?: string | null
+          media_url?: string | null
+          message_type?: Database["public"]["Enums"]["message_type"]
+          metadata?: Json
+          sender_id?: string | null
+          sender_name?: string | null
+          sender_type?: Database["public"]["Enums"]["message_sender_type"]
+          status?: Database["public"]["Enums"]["message_status"]
+          template_id?: string | null
+          whatsapp_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -2580,6 +3245,57 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_instances: {
+        Row: {
+          ativo: boolean
+          business_account_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string
+          numero: string | null
+          observacoes: string | null
+          phone_number_id: string | null
+          status: Database["public"]["Enums"]["whatsapp_instance_status"]
+          tipo: Database["public"]["Enums"]["whatsapp_instance_tipo"]
+          ultima_sincronizacao: string | null
+          updated_at: string
+          webhook_status: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          business_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome: string
+          numero?: string | null
+          observacoes?: string | null
+          phone_number_id?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          tipo?: Database["public"]["Enums"]["whatsapp_instance_tipo"]
+          ultima_sincronizacao?: string | null
+          updated_at?: string
+          webhook_status?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          business_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string
+          numero?: string | null
+          observacoes?: string | null
+          phone_number_id?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_instance_status"]
+          tipo?: Database["public"]["Enums"]["whatsapp_instance_tipo"]
+          ultima_sincronizacao?: string | null
+          updated_at?: string
+          webhook_status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2849,6 +3565,10 @@ export type Database = {
         Args: { _consulta_id: string }
         Returns: boolean
       }
+      is_medico_da_conversa: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
       is_paciente_da_consulta: {
         Args: { _consulta_id: string }
         Returns: boolean
@@ -2963,12 +3683,17 @@ export type Database = {
         Args: { _consulta_id: string; _motivo?: string; _novo_slot_id: string }
         Returns: Json
       }
+      user_can_view_conversation: {
+        Args: { _conv_id: string }
+        Returns: boolean
+      }
       validar_e_aplicar_cupom: {
         Args: { _codigo: string; _pagamento_id: string }
         Returns: Json
       }
     }
     Enums: {
+      ai_provider: "lovable" | "openai" | "anthropic" | "gemini" | "outro"
       app_role:
         | "paciente"
         | "medico"
@@ -2983,6 +3708,31 @@ export type Database = {
         | "pausada"
         | "cancelada"
         | "inadimplente"
+      automation_action_type:
+        | "send_template"
+        | "send_message"
+        | "assign_conversation"
+        | "transfer_sector"
+        | "create_task"
+        | "notify_user"
+        | "webhook"
+      automation_log_status: "sucesso" | "falha" | "pulado" | "agendado"
+      automation_trigger:
+        | "appointment.created"
+        | "appointment.confirmed"
+        | "appointment.payment_pending"
+        | "appointment.payment_approved"
+        | "appointment.starts_soon_24h"
+        | "appointment.starts_soon_1h"
+        | "appointment.starts_soon_30min"
+        | "appointment.starts_soon_5min"
+        | "appointment.finished"
+        | "appointment.no_show"
+        | "document.available"
+        | "payment.refunded"
+        | "conversation.received"
+        | "conversation.assigned"
+        | "conversation.closed"
       beneficio_periodo: "semanal" | "mensal" | "anual" | "total"
       beneficio_tipo:
         | "especialidade"
@@ -2990,6 +3740,17 @@ export type Database = {
         | "servico"
         | "categoria"
         | "desconto_geral"
+      bot_step_type:
+        | "mensagem"
+        | "escolha"
+        | "condicao"
+        | "delay"
+        | "coletar_dado"
+        | "validar_cpf"
+        | "consultar_agendamento"
+        | "enviar_link"
+        | "encaminhar_humano"
+        | "finalizar"
       cobranca_link_status: "ativo" | "pago" | "cancelado" | "expirado"
       consulta_canal:
         | "app"
@@ -3012,6 +3773,21 @@ export type Database = {
         | "concluida"
         | "cancelada"
         | "no_show"
+      conversation_channel: "whatsapp" | "site" | "interno" | "email"
+      conversation_origin:
+        | "comercial"
+        | "operacional"
+        | "site"
+        | "empresa"
+        | "medico"
+        | "sistema"
+      conversation_priority: "baixa" | "normal" | "alta" | "urgente"
+      conversation_status:
+        | "aberta"
+        | "em_atendimento"
+        | "pendente"
+        | "fechada"
+        | "arquivada"
       cupom_escopo: "global" | "medico" | "especialidade"
       cupom_tipo: "percentual" | "fixo"
       documento_paciente_tipo:
@@ -3067,6 +3843,30 @@ export type Database = {
         | "reprovado"
         | "suspenso"
         | "bloqueado"
+      message_sender_type:
+        | "paciente"
+        | "lead"
+        | "bot"
+        | "ia"
+        | "colaborador"
+        | "medico"
+        | "sistema"
+      message_status:
+        | "queued"
+        | "sent"
+        | "delivered"
+        | "read"
+        | "failed"
+        | "received"
+      message_type:
+        | "text"
+        | "template"
+        | "system"
+        | "media"
+        | "audio"
+        | "image"
+        | "document"
+        | "interactive"
       pagamento_forma:
         | "pix"
         | "cartao"
@@ -3131,6 +3931,25 @@ export type Database = {
         | "bloqueado"
         | "removido"
       status_conta_paciente: "ativo" | "suspenso" | "bloqueado"
+      template_category:
+        | "confirmacao"
+        | "lembrete_24h"
+        | "lembrete_1h"
+        | "link_meet"
+        | "cobranca"
+        | "pos_consulta"
+        | "documento"
+        | "retorno"
+        | "empresa"
+        | "suporte"
+        | "outro"
+      template_wa_status: "rascunho" | "pendente" | "aprovado" | "rejeitado"
+      whatsapp_instance_status:
+        | "conectado"
+        | "desconectado"
+        | "pendente"
+        | "erro"
+      whatsapp_instance_tipo: "comercial" | "operacional" | "suporte"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3258,6 +4077,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_provider: ["lovable", "openai", "anthropic", "gemini", "outro"],
       app_role: [
         "paciente",
         "medico",
@@ -3274,6 +4094,33 @@ export const Constants = {
         "cancelada",
         "inadimplente",
       ],
+      automation_action_type: [
+        "send_template",
+        "send_message",
+        "assign_conversation",
+        "transfer_sector",
+        "create_task",
+        "notify_user",
+        "webhook",
+      ],
+      automation_log_status: ["sucesso", "falha", "pulado", "agendado"],
+      automation_trigger: [
+        "appointment.created",
+        "appointment.confirmed",
+        "appointment.payment_pending",
+        "appointment.payment_approved",
+        "appointment.starts_soon_24h",
+        "appointment.starts_soon_1h",
+        "appointment.starts_soon_30min",
+        "appointment.starts_soon_5min",
+        "appointment.finished",
+        "appointment.no_show",
+        "document.available",
+        "payment.refunded",
+        "conversation.received",
+        "conversation.assigned",
+        "conversation.closed",
+      ],
       beneficio_periodo: ["semanal", "mensal", "anual", "total"],
       beneficio_tipo: [
         "especialidade",
@@ -3281,6 +4128,18 @@ export const Constants = {
         "servico",
         "categoria",
         "desconto_geral",
+      ],
+      bot_step_type: [
+        "mensagem",
+        "escolha",
+        "condicao",
+        "delay",
+        "coletar_dado",
+        "validar_cpf",
+        "consultar_agendamento",
+        "enviar_link",
+        "encaminhar_humano",
+        "finalizar",
       ],
       cobranca_link_status: ["ativo", "pago", "cancelado", "expirado"],
       consulta_canal: [
@@ -3306,6 +4165,23 @@ export const Constants = {
         "concluida",
         "cancelada",
         "no_show",
+      ],
+      conversation_channel: ["whatsapp", "site", "interno", "email"],
+      conversation_origin: [
+        "comercial",
+        "operacional",
+        "site",
+        "empresa",
+        "medico",
+        "sistema",
+      ],
+      conversation_priority: ["baixa", "normal", "alta", "urgente"],
+      conversation_status: [
+        "aberta",
+        "em_atendimento",
+        "pendente",
+        "fechada",
+        "arquivada",
       ],
       cupom_escopo: ["global", "medico", "especialidade"],
       cupom_tipo: ["percentual", "fixo"],
@@ -3368,6 +4244,33 @@ export const Constants = {
         "reprovado",
         "suspenso",
         "bloqueado",
+      ],
+      message_sender_type: [
+        "paciente",
+        "lead",
+        "bot",
+        "ia",
+        "colaborador",
+        "medico",
+        "sistema",
+      ],
+      message_status: [
+        "queued",
+        "sent",
+        "delivered",
+        "read",
+        "failed",
+        "received",
+      ],
+      message_type: [
+        "text",
+        "template",
+        "system",
+        "media",
+        "audio",
+        "image",
+        "document",
+        "interactive",
       ],
       pagamento_forma: [
         "pix",
@@ -3440,6 +4343,27 @@ export const Constants = {
         "removido",
       ],
       status_conta_paciente: ["ativo", "suspenso", "bloqueado"],
+      template_category: [
+        "confirmacao",
+        "lembrete_24h",
+        "lembrete_1h",
+        "link_meet",
+        "cobranca",
+        "pos_consulta",
+        "documento",
+        "retorno",
+        "empresa",
+        "suporte",
+        "outro",
+      ],
+      template_wa_status: ["rascunho", "pendente", "aprovado", "rejeitado"],
+      whatsapp_instance_status: [
+        "conectado",
+        "desconectado",
+        "pendente",
+        "erro",
+      ],
+      whatsapp_instance_tipo: ["comercial", "operacional", "suporte"],
     },
   },
 } as const
