@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2,
+  Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2, History,
 } from "lucide-react";
+import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -36,6 +37,7 @@ export default function SecretariaAgenda() {
   const [reais, setReais] = useState<ConsultaDetalhada[] | null>(null);
   const [loadingReais, setLoadingReais] = useState(false);
   const [trocando, setTrocando] = useState<ConsultaDetalhada | null>(null);
+  const [historicoCtx, setHistoricoCtx] = useState<{ id: string; resumo?: string } | null>(null);
 
   const carregar = async () => {
     if (!session) { setReais(null); return; }
@@ -141,6 +143,19 @@ export default function SecretariaAgenda() {
                     >
                       <UserCog className="mr-1.5 h-3.5 w-3.5" /> Trocar médico
                     </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        setHistoricoCtx({
+                          id: c.id,
+                          resumo: `${c.paciente_nome ?? "Paciente"} • ${formatHora(c.inicio)} • ${c.medico_nome ?? "—"}`,
+                        })
+                      }
+                      title="Histórico de mudanças"
+                    >
+                      <History className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="icon" variant="ghost" asChild title="WhatsApp">
                       <a
                         href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta às ${formatHora(c.inicio)}`)}
@@ -163,6 +178,13 @@ export default function SecretariaAgenda() {
           consultaInicio={trocando?.inicio}
           medicoAtualNome={trocando?.medico_nome}
           onTrocado={() => { setTrocando(null); void carregar(); }}
+        />
+
+        <ConsultaHistoricoDialog
+          open={!!historicoCtx}
+          onOpenChange={(v) => { if (!v) setHistoricoCtx(null); }}
+          consultaId={historicoCtx?.id ?? null}
+          consultaResumo={historicoCtx?.resumo}
         />
       </div>
     );

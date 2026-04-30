@@ -939,3 +939,55 @@ export async function criarConsultaComReserva(
   if (error) throw error;
   return data as unknown as CriarConsultaResult;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * HISTÓRICO DE STATUS
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type ConsultaStatusLogItem = {
+  id: string;
+  consulta_id: string;
+  status_anterior: ConsultaStatus | null;
+  status_novo: ConsultaStatus;
+  motivo: string | null;
+  actor_id: string | null;
+  actor_nome: string | null;
+  created_at: string;
+};
+
+/** Lista o histórico de mudanças de status de uma consulta (ordenado do mais recente). */
+export async function listConsultaStatusLog(
+  consultaId: string,
+): Promise<ConsultaStatusLogItem[]> {
+  const { data, error } = await supabase
+    .from("consulta_status_log")
+    .select("id, consulta_id, status_anterior, status_novo, motivo, actor_id, created_at")
+    .eq("consulta_id", consultaId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[clinico] listConsultaStatusLog:", error);
+    return [];
+  }
+
+  const rows = data ?? [];
+  const actorIds = Array.from(
+    new Set(rows.map((r) => r.actor_id).filter((v): v is string => !!v)),
+  );
+
+  let nomes = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, nome, email")
+      .in("id", actorIds);
+    nomes = new Map(
+      (profs ?? []).map((p) => [p.id, p.nome?.trim() || p.email || "Usuário"]),
+    );
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    actor_nome: r.actor_id ? nomes.get(r.actor_id) ?? "Usuário" : "Sistema",
+  })) as ConsultaStatusLogItem[];
+}
