@@ -550,6 +550,105 @@ export async function updateConsultaStatus(
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+ * RETORNOS GRATUITOS
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type RetornoGratuito = Database["public"]["Tables"]["retornos_gratuitos"]["Row"];
+export type RetornoComContexto = RetornoGratuito & {
+  medico_nome?: string | null;
+  especialidade_nome?: string | null;
+};
+
+export async function criarRetornoGratuito(input: {
+  consulta_id: string;
+  dias_validade: number;
+  observacao?: string;
+}): Promise<{ ok: boolean; error?: string; id?: string }> {
+  const { data: c, error: cErr } = await supabase
+    .from("consultas")
+    .select("id, paciente_id, medico_id, especialidade_id")
+    .eq("id", input.consulta_id)
+    .maybeSingle();
+  if (cErr || !c) return { ok: false, error: cErr?.message ?? "Consulta não encontrada" };
+
+  const validoAte = new Date();
+  validoAte.setDate(validoAte.getDate() + Math.max(1, Math.floor(input.dias_validade)));
+
+  const { data: s } = await supabase.auth.getSession();
+  const { data, error } = await supabase
+    .from("retornos_gratuitos")
+    .insert({
+      paciente_id: c.paciente_id,
+      medico_id: c.medico_id,
+      especialidade_id: c.especialidade_id,
+      consulta_origem_id: c.id,
+      valido_ate: validoAte.toISOString(),
+      observacao: input.observacao?.trim() || null,
+      created_by: s.session?.user.id,
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, id: data.id };
+}
+
+export async function getRetornoDaConsulta(consultaId: string): Promise<RetornoGratuito | null> {
+  const { data } = await supabase
+    .from("retornos_gratuitos")
+    .select("*")
+    .eq("consulta_origem_id", consultaId)
+    .maybeSingle();
+  return data ?? null;
+}
+
+export async function listRetornosDisponiveis(): Promise<RetornoComContexto[]> {
+  const paciente = await getPacienteAtual();
+  if (!paciente) return [];
+  const { data, error } = await supabase
+    .from("retornos_gratuitos")
+    .select(`*, medicos:medico_id ( nome ), especialidades:especialidade_id ( nome )`)
+    .eq("paciente_id", paciente.id)
+    .eq("status", "disponivel")
+    .gt("valido_ate", new Date().toISOString())
+    .order("valido_ate", { ascending: true });
+  if (error) { console.error("[clinico] listRetornosDisponiveis:", error); return []; }
+  return (data ?? []).map((r: any) => ({
+    ...r,
+    medico_nome: r.medicos?.nome ?? null,
+    especialidade_nome: r.especialidades?.nome ?? null,
+  }));
+}
+
+export async function agendarRetornoGratuito(input: {
+  slot_id: string;
+  voucher_id: string;
+  motivo?: string;
+}): Promise<{ consulta_id: string; voucher_id: string }> {
+  const { data, error } = await supabase.rpc("agendar_retorno_gratuito", {
+    _slot_id: input.slot_id,
+    _voucher_id: input.voucher_id,
+    _motivo: input.motivo ?? null,
+  });
+  if (error) throw error;
+  return data as unknown as { consulta_id: string; voucher_id: string };
+}
+
+/** Lista slots disponíveis de UM médico específico (para usar voucher de retorno). */
+export async function listSlotsDisponiveisDoMedico(medicoId: string): Promise<AgendaSlot[]> {
+  const agora = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("agenda_slots")
+    .select("*")
+    .eq("medico_id", medicoId)
+    .eq("status", "disponivel")
+    .gte("inicio", agora)
+    .order("inicio", { ascending: true })
+    .limit(60);
+  if (error) { console.error("[clinico] listSlotsDisponiveisDoMedico:", error); return []; }
+  return data ?? [];
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
  * Helpers de UI
  * ────────────────────────────────────────────────────────────────────── */
 
