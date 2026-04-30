@@ -402,6 +402,9 @@ export default function AdminFinanceiroConfig() {
         </ol>
       </Section>
 
+      {/* ============= Card 4: Histórico/Auditoria ============= */}
+      <RepasseAuditoriaCard refreshKey={auditRefresh} />
+
       {/* Modal criar/editar */}
       {(creatingOpen || editing) && (
         <ExcecaoModal
@@ -414,9 +417,41 @@ export default function AdminFinanceiroConfig() {
             setCreatingOpen(false);
             setEditing(null);
             loadOverrides();
+            setAuditRefresh((n) => n + 1);
           }}
         />
       )}
+
+      {/* Diálogos com motivo (auditoria) */}
+      <MotivoDialog
+        open={pendingGlobal}
+        title="Confirmar novo repasse global"
+        description={`Médico passa a receber ${medicoPct.toFixed(2)}% (plataforma fica com ${plataformaPct.toFixed(2)}%). Aplica-se apenas a NOVAS consultas particulares.`}
+        confirmLabel={savingGlobal ? "Salvando…" : "Confirmar e salvar"}
+        onCancel={() => !savingGlobal && setPendingGlobal(false)}
+        onConfirm={confirmarGlobal}
+      />
+      <MotivoDialog
+        open={!!pendingDelete}
+        title={`Remover exceção de ${pendingDelete?.medico_nome ?? "médico"}`}
+        description="O médico voltará a seguir a regra global de repasse em novas consultas."
+        confirmLabel="Remover"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmarRemover}
+      />
+      <MotivoDialog
+        open={!!pendingToggle}
+        title={`${pendingToggle?.ativo ? "Desativar" : "Ativar"} exceção de ${pendingToggle?.medico_nome ?? "médico"}`}
+        description={
+          pendingToggle?.ativo
+            ? "Enquanto desativada, o médico segue a regra global em novas consultas."
+            : "Ao reativar, novas consultas voltarão a usar o % específico desta exceção."
+        }
+        confirmLabel={pendingToggle?.ativo ? "Desativar" : "Ativar"}
+        onCancel={() => setPendingToggle(null)}
+        onConfirm={confirmarToggle}
+      />
     </div>
   );
 }
