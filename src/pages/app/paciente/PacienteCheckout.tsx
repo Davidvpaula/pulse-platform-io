@@ -190,6 +190,17 @@ export default function PacienteCheckout() {
         }
       }
 
+      // analytics: conversão paga
+      try {
+        await trackConversion({
+          tipo: "pagamento",
+          valor: (pagamento.valor_centavos ?? 0) / 100,
+          consulta_id: pagamento.consulta_id,
+          pagamento_id: pagamento.id,
+          servico: "consulta",
+        });
+      } catch {}
+
       toast.success("Pagamento aprovado!");
       navigate(`/app/paciente/pagamento/sucesso?p=${pagamento.id}`);
     } catch (e: any) {
