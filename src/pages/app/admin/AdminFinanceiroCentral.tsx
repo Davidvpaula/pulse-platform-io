@@ -146,10 +146,25 @@ export default function AdminFinanceiroCentral() {
     catch (e: any) { toast.error(e.message); }
   }
 
+  const dentroPeriodo = (iso?: string | null) => {
+    if (!iso) return false;
+    const d = iso.slice(0, 10);
+    return d >= inicio && d <= fim;
+  };
   const exportarPagamentos = () => {
     const rows: (string | number)[][] = [["ID", "Status", "Valor", "Forma", "Data Pagamento", "Criado em"]];
-    pagamentos.forEach(p => rows.push([p.id, p.status, brl(p.valor_bruto_centavos || p.valor_centavos), p.metodo || p.forma || "", fmtData(p.data_pagamento || p.paid_at), fmtData(p.created_at)]));
+    pagamentos.filter(p => dentroPeriodo(p.created_at)).forEach(p => rows.push([p.id, p.status, brl(p.valor_bruto_centavos || p.valor_centavos), p.metodo || p.forma || "", fmtData(p.data_pagamento || p.paid_at), fmtData(p.created_at)]));
     downloadCSV(`pagamentos_${inicio}_${fim}.csv`, rows);
+  };
+  const exportarReembolsos = () => {
+    const rows: (string | number)[][] = [["ID", "Tipo", "Valor", "Status", "Motivo", "Criado em"]];
+    reembolsos.filter(r => dentroPeriodo(r.created_at)).forEach(r => rows.push([r.id, r.tipo, brl(r.valor_centavos), r.status, r.motivo || "", fmtData(r.created_at)]));
+    downloadCSV(`reembolsos_${inicio}_${fim}.csv`, rows);
+  };
+  const exportarLinks = () => {
+    const rows: (string | number)[][] = [["ID", "Descrição", "Valor", "Vencimento", "Status", "Criado em"]];
+    links.filter(l => dentroPeriodo(l.created_at)).forEach(l => rows.push([l.id, l.descricao, brl(l.valor_centavos), l.vencimento || "", l.status, fmtData(l.created_at)]));
+    downloadCSV(`links_${inicio}_${fim}.csv`, rows);
   };
 
   const StatusBadge = ({ s }: { s: string }) => {
@@ -175,7 +190,9 @@ export default function AdminFinanceiroCentral() {
         <div><Label>Início</Label><Input type="date" value={inicio} onChange={e => setInicio(e.target.value)} /></div>
         <div><Label>Fim</Label><Input type="date" value={fim} onChange={e => setFim(e.target.value)} /></div>
         <Button onClick={carregar} disabled={loading}>{loading ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />}Atualizar</Button>
-        <Button variant="outline" onClick={exportarPagamentos}><Download className="h-4 w-4 mr-2" />CSV</Button>
+        <Button variant="outline" onClick={exportarPagamentos}><Download className="h-4 w-4 mr-2" />Pagamentos</Button>
+        <Button variant="outline" onClick={exportarReembolsos}><Download className="h-4 w-4 mr-2" />Reembolsos</Button>
+        <Button variant="outline" onClick={exportarLinks}><Download className="h-4 w-4 mr-2" />Links</Button>
       </div>
 
       {/* KPIs */}
