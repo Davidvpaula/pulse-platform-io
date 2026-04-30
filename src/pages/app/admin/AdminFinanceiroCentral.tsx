@@ -190,7 +190,9 @@ export default function AdminFinanceiroCentral() {
         <div><Label>Início</Label><Input type="date" value={inicio} onChange={e => setInicio(e.target.value)} /></div>
         <div><Label>Fim</Label><Input type="date" value={fim} onChange={e => setFim(e.target.value)} /></div>
         <Button onClick={carregar} disabled={loading}>{loading ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />}Atualizar</Button>
-        <Button variant="outline" onClick={exportarPagamentos}><Download className="h-4 w-4 mr-2" />CSV</Button>
+        <Button variant="outline" onClick={exportarPagamentos}><Download className="h-4 w-4 mr-2" />Pagamentos</Button>
+        <Button variant="outline" onClick={exportarReembolsos}><Download className="h-4 w-4 mr-2" />Reembolsos</Button>
+        <Button variant="outline" onClick={exportarLinks}><Download className="h-4 w-4 mr-2" />Links</Button>
       </div>
 
       {/* KPIs */}
