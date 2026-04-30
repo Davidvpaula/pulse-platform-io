@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Settings, Stethoscope, Zap, Plus, Trash2, Save, Loader2, CreditCard, AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Settings, Stethoscope, Zap, Plus, Trash2, Save, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -133,6 +134,25 @@ export default function AdminConfiguracoes() {
         title="Configurações da plataforma"
         description="Especialidades disponíveis no site e parâmetros de Pronto Atendimento."
       />
+
+      {/* Atalho: Repasse financeiro */}
+      <Link
+        to="/app/admin/financeiro/repasse"
+        className="card-elevated group flex items-center justify-between gap-4 p-5 transition hover:border-primary/40"
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-display text-base font-semibold">Repasse financeiro · Médicos</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Defina o % de repasse global das consultas particulares e configure exceções por médico.
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+      </Link>
 
       {/* Pagamentos */}
       <Section
