@@ -141,9 +141,11 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         children: [
           { label: "Visão geral", to: "/app/admin/financeiro", requiresCapability: "financeiro.ver" },
           { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse", requiresCapability: "financeiro.editar_comissao" },
+          { label: "Prévia de repasse", to: "/app/admin/financeiro/previa-repasse", requiresCapability: "financeiro.editar_comissao" },
         ],
       },
       { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
+      { label: "Atendimento imediato", to: "/app/admin/atendimento-imediato", icon: Activity, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Cupons", to: "/app/admin/cupons", icon: Tag, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck, requiresCapability: "financeiro.servicos_gerenciar" },
       {
@@ -171,7 +173,18 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Pendências", to: "/app/admin/pendencias-integracao" },
         ],
       },
-      { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
+      {
+        label: "Segurança & Acessos",
+        icon: ShieldCheck,
+        requiresCapability: "colaboradores.alterar_permissoes",
+        children: [
+          { label: "Permissões", to: "/app/admin/permissoes" },
+          { label: "Log de permissões", to: "/app/admin/permissoes/log" },
+          { label: "Sessões ativas", to: "/app/admin/sessoes" },
+          { label: "Alertas de segurança", to: "/app/admin/seguranca" },
+          { label: "Impersonar usuário", to: "/app/admin/impersonar" },
+        ],
+      },
       {
         label: "Análises",
         icon: TrendingUp,
@@ -186,8 +199,17 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Comparativo", to: "/app/admin/analises/comparativo" },
         ],
       },
-      { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
-      { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye },
+      {
+        label: "Relatórios",
+        icon: FileBarChart,
+        requiresCapability: "relatorios.ver",
+        children: [
+          { label: "Visão geral", to: "/app/admin/relatorios" },
+          { label: "Financeiro", to: "/app/admin/relatorios/financeiro" },
+          { label: "Auditoria", to: "/app/admin/relatorios/auditoria", requiresCapability: "auditoria.ver" },
+        ],
+      },
+      { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye, requiresCapability: "auditoria.ver" },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
   },
