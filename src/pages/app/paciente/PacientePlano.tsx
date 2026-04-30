@@ -1,11 +1,17 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import {
   BadgeCheck, CheckCircle2, XCircle, Calendar, CreditCard, Users,
   Stethoscope, Video, FileText, Repeat, ChevronRight, Sparkles, Building2,
-  AlertTriangle, Download, Wallet, TrendingUp, Receipt,
+  AlertTriangle, Download, Wallet, TrendingUp, Receipt, Loader2,
+  ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
   cobrancasMock,
