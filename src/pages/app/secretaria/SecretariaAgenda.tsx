@@ -125,7 +125,7 @@ export default function SecretariaAgenda() {
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                       <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">
-                        {c.modalidade}
+                        Telemedicina
                       </span>
                       {c.especialidade_nome && (
                         <span className="rounded-full bg-muted px-2 py-0.5">{c.especialidade_nome}</span>
@@ -259,7 +259,7 @@ function SecretariaAgendaDemo({
                       </p>
                       <div className="mt-1 flex items-center gap-2 text-xs">
                         <span className="rounded-full bg-muted px-2 py-0.5">{slot.canal}</span>
-                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">{slot.modalidade}</span>
+                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-primary">Telemedicina</span>
                         <StatusBadge status={slot.status} />
                       </div>
                     </div>
