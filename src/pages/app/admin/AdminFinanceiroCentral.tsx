@@ -72,17 +72,22 @@ export default function AdminFinanceiroCentral() {
   }
 
   async function criarCobranca() {
-    const valorNum = Number(novaCobranca.valor.replace(",", "."));
-    if (!novaCobranca.descricao.trim() || !valorNum || valorNum <= 0) {
-      toast.error("Preencha descrição e valor válido"); return;
-    }
+    const r = validarCobranca({
+      descricao: novaCobranca.descricao,
+      valor: novaCobranca.valor,
+      vencimento: novaCobranca.vencimento,
+      observacao: novaCobranca.observacao,
+      paciente_id: novaCobranca.paciente_id,
+      empresa_id: novaCobranca.empresa_id,
+    });
+    if (!r.ok) { toast.error(r.erro); return; }
     try {
       const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: novaCobranca.descricao,
-        valor_centavos: Math.round(valorNum * 100),
+        descricao: novaCobranca.descricao.trim(),
+        valor_centavos: r.valor_centavos,
         vencimento: novaCobranca.vencimento || null,
         paciente_id: novaCobranca.paciente_id || null,
-        observacao: novaCobranca.observacao || null,
+        observacao: novaCobranca.observacao?.trim() || null,
         status: "ativo",
       } as any);
       if (error) throw error;
