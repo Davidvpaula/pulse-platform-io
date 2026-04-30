@@ -4382,6 +4382,7 @@ export type Database = {
         Args: { _consulta_id: string }
         Returns: undefined
       }
+      _get_audit_motivo: { Args: never; Returns: string }
       _log_consulta_audit: {
         Args: {
           _acao: string
@@ -4984,6 +4985,7 @@ export type Database = {
         Args: { _reason?: string; _session_id: string }
         Returns: boolean
       }
+      set_audit_motivo: { Args: { p_motivo: string }; Returns: undefined }
       set_force_status_transition: {
         Args: { _motivo: string }
         Returns: undefined

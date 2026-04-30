@@ -25,6 +25,8 @@ import {
   type ComissaoOverrideRow,
   type MedicoOption,
 } from "@/lib/financeiroConfig";
+import { MotivoDialog } from "@/components/financeiro/MotivoDialog";
+import { RepasseAuditoriaCard } from "@/components/financeiro/RepasseAuditoriaCard";
 
 const Section = ({
   icon: Icon,
@@ -90,19 +92,27 @@ export default function AdminFinanceiroConfig() {
     }
   };
 
-  const salvarGlobal = async () => {
+  // Estado de diálogos com motivo (auditoria)
+  const [pendingGlobal, setPendingGlobal] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<ComissaoOverrideRow | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<ComissaoOverrideRow | null>(null);
+  const [auditRefresh, setAuditRefresh] = useState(0);
+
+  const salvarGlobal = () => {
     if (medicoPct < 0 || medicoPct > 100) {
       toast.error("Use um valor entre 0 e 100.");
       return;
     }
-    if (!confirm(
-      `Confirmar repasse global de ${medicoPct}% para o médico (plataforma fica com ${plataformaPct}%)?\n\n` +
-      `Aplica-se apenas a NOVAS consultas particulares. Consultas já criadas mantêm o snapshot original.`,
-    )) return;
+    setPendingGlobal(true);
+  };
+
+  const confirmarGlobal = async (motivo: string) => {
     setSavingGlobal(true);
     try {
-      await setRepasseGlobal(medicoPct);
+      await setRepasseGlobal(medicoPct, motivo || null);
       toast.success("Repasse global atualizado.");
+      setPendingGlobal(false);
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao salvar.");
     } finally {
@@ -133,22 +143,32 @@ export default function AdminFinanceiroConfig() {
     loadOverrides();
   }, []);
 
-  const removerOverride = async (row: ComissaoOverrideRow) => {
-    if (!confirm(`Remover exceção de ${row.medico_nome ?? "médico"}?`)) return;
+  const removerOverride = (row: ComissaoOverrideRow) => setPendingDelete(row);
+
+  const confirmarRemover = async (motivo: string) => {
+    if (!pendingDelete) return;
     try {
-      await deleteOverride(row.id);
+      await deleteOverride(pendingDelete.id, motivo || null);
       toast.success("Exceção removida.");
+      setPendingDelete(null);
       loadOverrides();
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao remover.");
     }
   };
 
-  const togglar = async (row: ComissaoOverrideRow) => {
+  const togglar = (row: ComissaoOverrideRow) => setPendingToggle(row);
+
+  const confirmarToggle = async (motivo: string) => {
+    if (!pendingToggle) return;
+    const novoAtivo = !pendingToggle.ativo;
     try {
-      await toggleOverrideAtivo(row.id, !row.ativo);
-      toast.success(`Exceção ${!row.ativo ? "ativada" : "desativada"}.`);
+      await toggleOverrideAtivo(pendingToggle.id, novoAtivo, motivo || null);
+      toast.success(`Exceção ${novoAtivo ? "ativada" : "desativada"}.`);
+      setPendingToggle(null);
       loadOverrides();
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao alterar.");
     }
@@ -382,6 +402,9 @@ export default function AdminFinanceiroConfig() {
         </ol>
       </Section>
 
+      {/* ============= Card 4: Histórico/Auditoria ============= */}
+      <RepasseAuditoriaCard refreshKey={auditRefresh} />
+
       {/* Modal criar/editar */}
       {(creatingOpen || editing) && (
         <ExcecaoModal
@@ -394,9 +417,41 @@ export default function AdminFinanceiroConfig() {
             setCreatingOpen(false);
             setEditing(null);
             loadOverrides();
+            setAuditRefresh((n) => n + 1);
           }}
         />
       )}
+
+      {/* Diálogos com motivo (auditoria) */}
+      <MotivoDialog
+        open={pendingGlobal}
+        title="Confirmar novo repasse global"
+        description={`Médico passa a receber ${medicoPct.toFixed(2)}% (plataforma fica com ${plataformaPct.toFixed(2)}%). Aplica-se apenas a NOVAS consultas particulares.`}
+        confirmLabel={savingGlobal ? "Salvando…" : "Confirmar e salvar"}
+        onCancel={() => !savingGlobal && setPendingGlobal(false)}
+        onConfirm={confirmarGlobal}
+      />
+      <MotivoDialog
+        open={!!pendingDelete}
+        title={`Remover exceção de ${pendingDelete?.medico_nome ?? "médico"}`}
+        description="O médico voltará a seguir a regra global de repasse em novas consultas."
+        confirmLabel="Remover"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmarRemover}
+      />
+      <MotivoDialog
+        open={!!pendingToggle}
+        title={`${pendingToggle?.ativo ? "Desativar" : "Ativar"} exceção de ${pendingToggle?.medico_nome ?? "médico"}`}
+        description={
+          pendingToggle?.ativo
+            ? "Enquanto desativada, o médico segue a regra global em novas consultas."
+            : "Ao reativar, novas consultas voltarão a usar o % específico desta exceção."
+        }
+        confirmLabel={pendingToggle?.ativo ? "Desativar" : "Ativar"}
+        onCancel={() => setPendingToggle(null)}
+        onConfirm={confirmarToggle}
+      />
     </div>
   );
 }
