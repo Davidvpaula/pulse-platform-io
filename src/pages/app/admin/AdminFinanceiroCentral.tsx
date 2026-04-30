@@ -81,7 +81,7 @@ export default function AdminFinanceiroCentral() {
       paciente_id: novaCobranca.paciente_id,
       empresa_id: novaCobranca.empresa_id,
     });
-    if (!r.ok) { toast.error(r.erro); return; }
+    if (r.ok === false) { toast.error(r.erro); return; }
     try {
       const { error } = await supabase.from("cobrancas_links").insert({
         descricao: novaCobranca.descricao.trim(),
