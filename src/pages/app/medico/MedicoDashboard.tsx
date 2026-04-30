@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
-  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink,
+  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -17,6 +17,7 @@ import {
   type ConsultaDetalhada,
 } from "@/lib/clinico";
 import { useSession } from "@/lib/session";
+import { useAuth, useCan } from "@/lib/auth";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -42,6 +43,16 @@ type Onboarding = {
 
 export default function MedicoDashboard() {
   const { session } = useSession();
+  const { profileKey, hasCapability } = useAuth();
+  const can = useCan();
+
+  // Permissões finas
+  const isMedico = profileKey === "medico";
+  const isAdmin = profileKey === "admin";
+  const podeAtuar = isMedico || isAdmin; // só esses iniciam/concluem consulta
+  const podeIniciar = can("consulta.start", "edit"); // mutativo
+  const podeVerFinanceiro = isMedico ? hasCapability("medico.financeiro") : isAdmin;
+  const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
   const [loading, setLoading] = useState(true);
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
@@ -143,6 +154,10 @@ export default function MedicoDashboard() {
   const minutosProx = useMemo(() => proxima ? diffMin(proxima.inicio) : null, [proxima]);
 
   async function iniciarConsulta(c: ConsultaDetalhada) {
+    if (!podeIniciar) {
+      toast.error("Você não tem permissão para iniciar consultas.");
+      return;
+    }
     setIniciandoId(c.id);
     try {
       const { error } = await supabase
@@ -201,7 +216,28 @@ export default function MedicoDashboard() {
       <PageHeader
         title={`${saudacao()}${medicoNome ? `, Dr(a). ${medicoNome.split(" ")[0]}` : ""}`}
         description="O que você precisa fazer agora — atendimentos, fila e alertas."
+        actions={
+          !podeAtuar ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              <Eye className="h-3 w-3" /> Modo somente leitura ({profileKey})
+            </span>
+          ) : undefined
+        }
       />
+
+      {/* Aviso para perfis não-médicos visualizando o painel */}
+      {!podeAtuar && (
+        <div className="card-elevated flex items-start gap-3 border-l-4 border-l-muted-foreground/40 p-4">
+          <Lock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+          <div className="text-sm">
+            <p className="font-semibold">Você não é o profissional desta agenda</p>
+            <p className="text-muted-foreground">
+              Ações como <strong>iniciar consulta</strong> e <strong>abrir sala virtual</strong> ficam visíveis apenas para o médico responsável.
+              {isAdmin ? " Como admin, você pode ver tudo, mas as ações ainda exigem que você seja o dono da consulta." : ""}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Onboarding / pendências */}
       {pendencias > 0 && (
@@ -270,19 +306,27 @@ export default function MedicoDashboard() {
 
           {proxima && (
             <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-              <Button
-                size="lg"
-                className="bg-gradient-primary hover:opacity-90"
-                disabled={iniciandoId === proxima.id}
-                onClick={() => iniciarConsulta(proxima)}
-              >
-                {iniciandoId === proxima.id
-                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  : <Play className="mr-2 h-4 w-4" />}
-                {proxima.status === "em_andamento" ? "Continuar consulta" : "Iniciar consulta"}
-              </Button>
+              {podeIniciar ? (
+                <Button
+                  size="lg"
+                  className="bg-gradient-primary hover:opacity-90"
+                  disabled={iniciandoId === proxima.id}
+                  onClick={() => iniciarConsulta(proxima)}
+                >
+                  {iniciandoId === proxima.id
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <Play className="mr-2 h-4 w-4" />}
+                  {proxima.status === "em_andamento" ? "Continuar consulta" : "Iniciar consulta"}
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/app/medico/agenda">
+                    <Eye className="mr-2 h-4 w-4" /> Ver detalhes
+                  </Link>
+                </Button>
+              )}
               <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
-              {proxima.modalidade === "online" && proxima.link_sala ? (
+              {proxima.modalidade === "online" && proxima.link_sala && podeAtuar ? (
                 <Button size="lg" variant="outline" asChild>
                   <a href={proxima.link_sala} target="_blank" rel="noopener noreferrer">
                     <Video className="mr-2 h-4 w-4" /> Abrir sala
@@ -321,12 +365,21 @@ export default function MedicoDashboard() {
           icon={FileText}
           hint="Prescrições do mês"
         />
-        <StatCard
-          label="Receita do mês"
-          value={formatBRL(stats.receitaMes)}
-          icon={Wallet}
-          hint={stats.pagPendentes > 0 ? `${stats.pagPendentes} pagamento(s) pendente(s)` : "Consultas concluídas"}
-        />
+        {podeVerFinanceiro ? (
+          <StatCard
+            label="Receita do mês"
+            value={formatBRL(stats.receitaMes)}
+            icon={Wallet}
+            hint={stats.pagPendentes > 0 ? `${stats.pagPendentes} pagamento(s) pendente(s)` : "Consultas concluídas"}
+          />
+        ) : (
+          <StatCard
+            label="Receita do mês"
+            value="—"
+            icon={Lock}
+            hint="Sem permissão financeira"
+          />
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -356,49 +409,70 @@ export default function MedicoDashboard() {
                     </p>
                   </div>
                   <StatusBadge status={c.status as any} />
-                  <Button
-                    size="sm"
-                    variant={c.status === "em_andamento" ? "default" : "outline"}
-                    className={c.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}
-                    disabled={iniciandoId === c.id}
-                    onClick={() => iniciarConsulta(c)}
-                  >
-                    {iniciandoId === c.id
-                      ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      : <Play className="mr-1.5 h-3.5 w-3.5" />}
-                    {c.status === "em_andamento" ? "Continuar" : "Iniciar"}
-                  </Button>
+                  {podeIniciar ? (
+                    <Button
+                      size="sm"
+                      variant={c.status === "em_andamento" ? "default" : "outline"}
+                      className={c.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}
+                      disabled={iniciandoId === c.id}
+                      onClick={() => iniciarConsulta(c)}
+                    >
+                      {iniciandoId === c.id
+                        ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        : <Play className="mr-1.5 h-3.5 w-3.5" />}
+                      {c.status === "em_andamento" ? "Continuar" : "Iniciar"}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link to="/app/medico/agenda">
+                        <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Atalhos */}
+        {/* Atalhos — visíveis conforme perfil/permissões */}
         <div className="space-y-4">
-          <Link to="/app/medico/pacientes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Buscar paciente</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
-          </Link>
+          {podeVerPacientes && (
+            <Link to="/app/medico/pacientes" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Buscar paciente</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
+            </Link>
+          )}
 
-          <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Treinamento</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Vídeos e boas práticas</p>
-          </Link>
+          {isMedico && (
+            <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Treinamento</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Vídeos e boas práticas</p>
+            </Link>
+          )}
 
-          <Link to="/app/medico/configuracoes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Configurações</p>
+          {isMedico && (
+            <Link to="/app/medico/configuracoes" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Configurações</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, sala virtual</p>
+            </Link>
+          )}
+
+          {!isMedico && (
+            <div className="card-elevated p-5 text-sm text-muted-foreground">
+              <Lock className="mb-2 h-4 w-4" />
+              Atalhos administrativos (perfil, treinamento, configurações da sala) só ficam disponíveis para o próprio médico.
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, sala virtual</p>
-          </Link>
+          )}
         </div>
       </div>
     </div>
