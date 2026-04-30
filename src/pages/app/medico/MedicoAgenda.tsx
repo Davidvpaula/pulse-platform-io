@@ -83,6 +83,7 @@ export default function MedicoAgenda() {
   const [loading, setLoading] = useState(false);
   const [acaoId, setAcaoId] = useState<string | null>(null);
   const [historicoId, setHistoricoId] = useState<string | null>(null);
+  const [finalizar, setFinalizar] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setDbConsultas(null); return; }
