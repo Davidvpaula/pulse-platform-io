@@ -229,6 +229,17 @@ export default function AtendimentoImediato() {
                 <Users className="mr-1 inline h-3.5 w-3.5" />
                 {medicosNoPlantao} médicos no plantão · <strong>{totalLivres}</strong> horários livres hoje
               </p>
+              {cfgLoaded && cfg && (
+                <p className="mt-1 text-sm font-medium">
+                  Valor por atendimento: <span className="tabular-nums">{brl(cfg.preco_centavos)}</span>{" "}
+                  · Duração: <span className="tabular-nums">{cfg.duracao_min} min</span>
+                </p>
+              )}
+              {cfgLoaded && !cfg && (
+                <p className="mt-1 text-xs text-warning">
+                  Porta pública desativada pelo admin — exibindo calendário de demonstração.
+                </p>
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
                 Sessão: <code className="rounded bg-muted px-1 py-0.5">{pacienteId}</code> ·
                 Abra outra aba anônima ou use{" "}
@@ -266,6 +277,7 @@ export default function AtendimentoImediato() {
             slot={slotMinhaReserva}
             medico={medicoMinhaReserva}
             msRestantes={minhaReserva.expiresAt - agora}
+            precoCentavos={cfg?.preco_centavos}
             onCancelar={cancelar}
             onConfirmar={confirmar}
           />
