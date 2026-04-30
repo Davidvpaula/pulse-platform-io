@@ -163,8 +163,8 @@ export default function PacienteFinanceiro() {
     setPagandoId(l.id);
     try {
       const sess = await criarCheckoutSession({
-        consulta_id: l.consulta_id,
-        valor_centavos: l.valor_centavos,
+        consultaId: l.consulta_id,
+        valorCentavos: l.valor_centavos,
       });
       abrirCheckout(sess, (url) => navigate(url));
     } catch (e: any) {
