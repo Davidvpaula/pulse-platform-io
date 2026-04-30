@@ -56,6 +56,7 @@ import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
+import AdminUsuarios from "@/pages/app/admin/AdminUsuarios";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
 import EmpresaFuncionarios from "@/pages/app/empresa/EmpresaFuncionarios";
 import EmpresaAgendamentos from "@/pages/app/empresa/EmpresaAgendamentos";
@@ -179,7 +180,7 @@ const App = () => (
 
               {/* Admin */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
-              <Route path="admin/usuarios" element={<Placeholder title="Gestão de usuários" />} />
+              <Route path="admin/usuarios" element={<AdminUsuarios />} />
               <Route path="admin/medicos" element={<MedicosAprovacao />} />
               <Route path="admin/secretaria" element={<Placeholder title="Gestão de secretaria" />} />
               <Route path="admin/empresas" element={<Placeholder title="Gestão de empresas" />} />

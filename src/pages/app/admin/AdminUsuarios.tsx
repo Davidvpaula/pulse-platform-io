@@ -1,0 +1,479 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Users, Search, Plus, Filter, MoreHorizontal, Eye, Pencil, Calendar,
+  MessageSquare, History, Pause, Ban, Play, AlertCircle, Loader2, Shield,
+} from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+type StatusConta = "ativo" | "suspenso" | "bloqueado";
+type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
+
+type PacienteRow = {
+  id: string;
+  nome_completo: string | null;
+  cpf: string | null;
+  telefone: string | null;
+  email: string | null;
+  empresa_id: string | null;
+  status_conta: StatusConta;
+  status_motivo: string | null;
+  feegow_status: FeegowStatus;
+  created_at: string;
+  ultima_consulta?: string | null;
+  proxima_consulta?: string | null;
+  tem_pagamento_pendente?: boolean;
+};
+
+const filtrosPrincipais = [
+  { key: "todos", label: "Todos" },
+  { key: "ativo", label: "Ativos" },
+  { key: "suspenso", label: "Suspensos" },
+  { key: "bloqueado", label: "Bloqueados" },
+  { key: "particular", label: "Particular" },
+  { key: "empresarial", label: "Empresarial" },
+  { key: "feegow_ok", label: "Sincronizado Feegow" },
+  { key: "feegow_pendente", label: "Pendente Feegow" },
+  { key: "pgto_pendente", label: "Com pagamento pendente" },
+] as const;
+
+const motivosSugeridos = [
+  "Quebra de contrato",
+  "Quebra de confidencialidade",
+  "Uso indevido da plataforma",
+  "Fraude ou suspeita de fraude",
+  "Comportamento inadequado",
+  "Pendência administrativa grave",
+  "Solicitação jurídica",
+  "Outro",
+];
+
+function statusContaBadge(s: StatusConta) {
+  if (s === "ativo")
+    return <Badge variant="outline" className="border-success/40 text-success">Ativo</Badge>;
+  if (s === "suspenso")
+    return <Badge variant="outline" className="border-warning/40 text-warning">Suspenso</Badge>;
+  return <Badge variant="outline" className="border-destructive/40 text-destructive">Bloqueado</Badge>;
+}
+
+function feegowBadge(s: FeegowStatus) {
+  const map: Record<FeegowStatus, { label: string; cls: string }> = {
+    nao_enviado: { label: "Não enviado", cls: "border-muted-foreground/30 text-muted-foreground" },
+    pendente:    { label: "Pendente",    cls: "border-warning/40 text-warning" },
+    liberado:    { label: "Sincronizado", cls: "border-success/40 text-success" },
+    erro:        { label: "Erro",        cls: "border-destructive/40 text-destructive" },
+  };
+  const c = map[s] ?? map.nao_enviado;
+  return <Badge variant="outline" className={c.cls}>{c.label}</Badge>;
+}
+
+function formatDate(d?: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("pt-BR");
+}
+
+export default function AdminUsuarios() {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<PacienteRow[]>([]);
+  const [busca, setBusca] = useState("");
+  const [filtro, setFiltro] = useState<typeof filtrosPrincipais[number]["key"]>("todos");
+
+  // diálogo de status
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [acao, setAcao] = useState<StatusConta>("suspenso");
+  const [pacienteAlvo, setPacienteAlvo] = useState<PacienteRow | null>(null);
+  const [motivoSel, setMotivoSel] = useState<string>(motivosSugeridos[0]);
+  const [motivoTxt, setMotivoTxt] = useState("");
+  const [observacao, setObservacao] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  async function carregar() {
+    setLoading(true);
+    const { data: pacientes, error } = await supabase
+      .from("pacientes")
+      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,feegow_status,created_at,user_id")
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (error) {
+      toast({ title: "Erro ao carregar", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    const ids = (pacientes ?? []).map(p => p.id);
+    const userIds = (pacientes ?? []).map(p => p.user_id).filter(Boolean) as string[];
+
+    // emails dos profiles (auth.users não acessível direto)
+    const emailsMap = new Map<string, string>();
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id,email")
+        .in("id", userIds);
+      profs?.forEach(p => p.email && emailsMap.set(p.id, p.email));
+    }
+
+    // última e próxima consulta + pagamentos pendentes
+    const ultimaMap = new Map<string, string>();
+    const proximaMap = new Map<string, string>();
+    const pgtoPend = new Set<string>();
+
+    if (ids.length) {
+      const { data: consultasPassadas } = await supabase
+        .from("consultas")
+        .select("paciente_id,inicio")
+        .in("paciente_id", ids)
+        .lte("inicio", new Date().toISOString())
+        .order("inicio", { ascending: false });
+      consultasPassadas?.forEach(c => {
+        if (!ultimaMap.has(c.paciente_id)) ultimaMap.set(c.paciente_id, c.inicio);
+      });
+
+      const { data: consultasFuturas } = await supabase
+        .from("consultas")
+        .select("paciente_id,inicio,status")
+        .in("paciente_id", ids)
+        .gt("inicio", new Date().toISOString())
+        .in("status", ["agendada", "confirmada"])
+        .order("inicio", { ascending: true });
+      consultasFuturas?.forEach(c => {
+        if (!proximaMap.has(c.paciente_id)) proximaMap.set(c.paciente_id, c.inicio);
+      });
+
+      const { data: pagPend } = await supabase
+        .from("pagamentos")
+        .select("consulta_id, status, consultas:consulta_id(paciente_id)")
+        .in("status", ["pendente", "processando"]);
+      pagPend?.forEach((p: any) => {
+        const pid = p.consultas?.paciente_id;
+        if (pid) pgtoPend.add(pid);
+      });
+    }
+
+    const rowsFull: PacienteRow[] = (pacientes ?? []).map(p => ({
+      id: p.id,
+      nome_completo: p.nome_completo,
+      cpf: p.cpf,
+      telefone: p.telefone,
+      email: p.user_id ? emailsMap.get(p.user_id) ?? null : null,
+      empresa_id: p.empresa_id,
+      status_conta: (p.status_conta ?? "ativo") as StatusConta,
+      status_motivo: p.status_motivo,
+      feegow_status: (p.feegow_status ?? "nao_enviado") as FeegowStatus,
+      created_at: p.created_at,
+      ultima_consulta: ultimaMap.get(p.id) ?? null,
+      proxima_consulta: proximaMap.get(p.id) ?? null,
+      tem_pagamento_pendente: pgtoPend.has(p.id),
+    }));
+
+    setRows(rowsFull);
+    setLoading(false);
+  }
+
+  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, []);
+
+  const filtradas = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    return rows.filter(r => {
+      // filtro principal
+      if (filtro === "ativo" && r.status_conta !== "ativo") return false;
+      if (filtro === "suspenso" && r.status_conta !== "suspenso") return false;
+      if (filtro === "bloqueado" && r.status_conta !== "bloqueado") return false;
+      if (filtro === "particular" && r.empresa_id) return false;
+      if (filtro === "empresarial" && !r.empresa_id) return false;
+      if (filtro === "feegow_ok" && r.feegow_status !== "liberado") return false;
+      if (filtro === "feegow_pendente" && !["pendente", "nao_enviado", "erro"].includes(r.feegow_status)) return false;
+      if (filtro === "pgto_pendente" && !r.tem_pagamento_pendente) return false;
+
+      if (!q) return true;
+      const cpfNum = (r.cpf ?? "").replace(/\D/g, "");
+      const telNum = (r.telefone ?? "").replace(/\D/g, "");
+      const qNum = q.replace(/\D/g, "");
+      return (
+        (r.nome_completo ?? "").toLowerCase().includes(q) ||
+        (r.email ?? "").toLowerCase().includes(q) ||
+        (qNum.length >= 3 && (cpfNum.includes(qNum) || telNum.includes(qNum)))
+      );
+    });
+  }, [rows, busca, filtro]);
+
+  function abrirDialog(p: PacienteRow, novoStatus: StatusConta) {
+    setPacienteAlvo(p);
+    setAcao(novoStatus);
+    setMotivoSel(motivosSugeridos[0]);
+    setMotivoTxt("");
+    setObservacao("");
+    setDialogOpen(true);
+  }
+
+  async function confirmar() {
+    if (!pacienteAlvo) return;
+    const motivo = motivoSel === "Outro" ? motivoTxt.trim() : motivoSel;
+    if (!motivo || motivo.length < 3) {
+      toast({ title: "Motivo obrigatório", description: "Descreva o motivo (mín. 3 caracteres).", variant: "destructive" });
+      return;
+    }
+    setSalvando(true);
+    const { error } = await supabase.rpc("alterar_status_conta_paciente", {
+      _paciente_id: pacienteAlvo.id,
+      _novo_status: acao,
+      _motivo: motivo,
+      _observacao: observacao.trim() || null,
+    });
+    setSalvando(false);
+    if (error) {
+      toast({ title: "Não foi possível alterar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Status atualizado", description: `Paciente ${acao === "ativo" ? "reativado" : acao}.` });
+    setDialogOpen(false);
+    carregar();
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Gestão de usuários/pacientes"
+        description="Cadastro, vínculo, integração Feegow e ações administrativas sobre contas de pacientes."
+        actions={
+          <Button asChild>
+            <Link to="/app/secretaria/pacientes-novo"><Plus className="mr-2 h-4 w-4" />Novo paciente</Link>
+          </Button>
+        }
+      />
+
+      <div className="card-elevated p-4 space-y-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, CPF, telefone ou e-mail…"
+              className="pl-9"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" />
+            {filtradas.length} de {rows.length}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {filtrosPrincipais.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setFiltro(f.key)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                filtro === f.key
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background hover:bg-muted",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-elevated overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center p-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Carregando pacientes…
+          </div>
+        ) : filtradas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-muted-foreground">
+            <Users className="h-8 w-8 opacity-40" />
+            <p className="text-sm">Nenhum paciente encontrado com os filtros atuais.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">Nome</th>
+                  <th className="px-4 py-2 text-left">CPF</th>
+                  <th className="px-4 py-2 text-left">Telefone</th>
+                  <th className="px-4 py-2 text-left">E-mail</th>
+                  <th className="px-4 py-2 text-left">Vínculo</th>
+                  <th className="px-4 py-2 text-left">Conta</th>
+                  <th className="px-4 py-2 text-left">Feegow</th>
+                  <th className="px-4 py-2 text-left">Última</th>
+                  <th className="px-4 py-2 text-left">Próxima</th>
+                  <th className="px-4 py-2 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtradas.map(p => (
+                  <tr key={p.id} className="border-t border-border hover:bg-muted/30">
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{p.nome_completo ?? "—"}</span>
+                        {p.tem_pagamento_pendente && (
+                          <span title="Pagamento pendente">
+                            <AlertCircle className="h-3.5 w-3.5 text-warning" />
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs">{p.cpf ?? "—"}</td>
+                    <td className="px-4 py-2.5">{p.telefone ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{p.email ?? "—"}</td>
+                    <td className="px-4 py-2.5">
+                      {p.empresa_id
+                        ? <Badge variant="secondary">Empresarial</Badge>
+                        : <Badge variant="outline">Particular</Badge>}
+                    </td>
+                    <td className="px-4 py-2.5">{statusContaBadge(p.status_conta)}</td>
+                    <td className="px-4 py-2.5">{feegowBadge(p.feegow_status)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.ultima_consulta)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.proxima_consulta)}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label="Ações">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Paciente</DropdownMenuLabel>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/app/admin/pacientes/${p.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />Ver perfil
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/app/admin/pacientes/${p.id}?tab=editar`}>
+                              <Pencil className="mr-2 h-4 w-4" />Editar
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/app/secretaria/agenda?paciente=${p.id}`}>
+                              <Calendar className="mr-2 h-4 w-4" />Agendar consulta
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/app/admin/whatsapp?to=${encodeURIComponent(p.telefone ?? "")}`}>
+                              <MessageSquare className="mr-2 h-4 w-4" />Abrir WhatsApp
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/app/admin/pacientes/${p.id}?tab=timeline`}>
+                              <History className="mr-2 h-4 w-4" />Ver histórico
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="flex items-center gap-1">
+                            <Shield className="h-3.5 w-3.5" />Conta
+                          </DropdownMenuLabel>
+                          {p.status_conta !== "suspenso" && (
+                            <DropdownMenuItem onClick={() => abrirDialog(p, "suspenso")}>
+                              <Pause className="mr-2 h-4 w-4 text-warning" />Suspender
+                            </DropdownMenuItem>
+                          )}
+                          {p.status_conta !== "bloqueado" && (
+                            <DropdownMenuItem onClick={() => abrirDialog(p, "bloqueado")}>
+                              <Ban className="mr-2 h-4 w-4 text-destructive" />Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          {p.status_conta !== "ativo" && (
+                            <DropdownMenuItem onClick={() => abrirDialog(p, "ativo")}>
+                              <Play className="mr-2 h-4 w-4 text-success" />Reativar
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {acao === "suspenso" && "Suspender conta"}
+              {acao === "bloqueado" && "Bloquear conta"}
+              {acao === "ativo" && "Reativar conta"}
+            </DialogTitle>
+            <DialogDescription>
+              {pacienteAlvo?.nome_completo} — {pacienteAlvo?.cpf ?? "sem CPF"}.{" "}
+              {acao === "suspenso" && "Bloqueia novos agendamentos. Documentos e histórico permanecem acessíveis."}
+              {acao === "bloqueado" && "Impede login e novos agendamentos. Use apenas em casos graves."}
+              {acao === "ativo" && "Restaura o acesso completo do paciente à plataforma."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label>Motivo</Label>
+              <Select value={motivoSel} onValueChange={setMotivoSel}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {motivosSugeridos.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {motivoSel === "Outro" && (
+              <div>
+                <Label>Descreva o motivo</Label>
+                <Input value={motivoTxt} onChange={e => setMotivoTxt(e.target.value)} placeholder="Mínimo 3 caracteres" />
+              </div>
+            )}
+
+            <div>
+              <Label>Observação interna (opcional)</Label>
+              <Textarea
+                value={observacao}
+                onChange={e => setObservacao(e.target.value)}
+                rows={3}
+                placeholder="Notas visíveis apenas para a equipe administrativa."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={salvando}>Cancelar</Button>
+            <Button
+              onClick={confirmar}
+              disabled={salvando}
+              variant={acao === "bloqueado" ? "destructive" : "default"}
+            >
+              {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
