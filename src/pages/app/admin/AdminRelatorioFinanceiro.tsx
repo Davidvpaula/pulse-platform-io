@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import {
   Download, FileText, DollarSign, Wallet, Receipt, RotateCcw,
-  TrendingUp, TrendingDown, Users, ArrowLeft,
+  Users, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
