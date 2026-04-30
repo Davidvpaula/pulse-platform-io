@@ -118,6 +118,7 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <AnalyticsTracker />
+          <SecurityWatcher />
           <Routes>
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
