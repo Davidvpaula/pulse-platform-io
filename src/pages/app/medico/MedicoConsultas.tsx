@@ -240,7 +240,7 @@ export default function MedicoConsultas() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => concluir(c.id)}
+                      onClick={() => concluir(c)}
                       disabled={acaoId === c.id}
                     >
                       Concluir
