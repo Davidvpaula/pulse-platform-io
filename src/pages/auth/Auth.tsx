@@ -122,7 +122,7 @@ export default function Auth() {
       return;
     }
     // marca senha como recém-trocada (best-effort)
-    supabase.rpc("password_mark_changed").catch(() => {});
+    supabase.rpc("password_mark_changed").then(() => {}, () => {});
     toast({
       title: "Conta criada com sucesso!",
       description: parsed.data.role === "medico"
