@@ -200,8 +200,14 @@ export default function MedicoHorarios() {
   }, [diasSel, semanas]);
 
   async function gerarSemanal() {
-    if (!duracao) {
-      toast.error("Configure uma especialidade com duração antes de gerar horários.");
+    if (!duracaoEfetiva) {
+      toast.error(tipoSlot === "servico"
+        ? "Selecione um serviço antes de gerar horários."
+        : "Configure uma especialidade com duração antes de gerar horários.");
+      return;
+    }
+    if (tipoSlot === "servico" && !servicoSel) {
+      toast.error("Escolha o serviço da plataforma.");
       return;
     }
     if (diasSel.length === 0) {
@@ -216,10 +222,50 @@ export default function MedicoHorarios() {
     const res = await criarSlotsEmLote({
       datas: datasSemana,
       faixas: faixasSemana,
-      duracaoMin: duracao,
+      duracaoMin: duracaoEfetiva,
       modalidade,
+      servicoId: tipoSlot === "servico" ? servicoSel : null,
     });
     setSavingSemana(false);
+    if (!res.ok) {
+      toast.error(res.error ?? "Não foi possível gerar.");
+      return;
+    }
+    toast.success(
+      `${res.criados} horário(s) criado(s)` +
+        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+    );
+    refresh();
+  }
+
+  async function gerarDia() {
+    if (!duracaoEfetiva) {
+      toast.error(tipoSlot === "servico"
+        ? "Selecione um serviço antes de gerar horários."
+        : "Configure uma especialidade com duração antes de gerar horários.");
+      return;
+    }
+    if (tipoSlot === "servico" && !servicoSel) {
+      toast.error("Escolha o serviço da plataforma.");
+      return;
+    }
+    if (!dataSel) {
+      toast.error("Selecione uma data no calendário.");
+      return;
+    }
+    if (faixasDia.some((f) => !f.hi || !f.hf)) {
+      toast.error("Preencha todas as faixas de horário.");
+      return;
+    }
+    setSavingDia(true);
+    const res = await criarSlotsEmLote({
+      datas: [dataSel],
+      faixas: faixasDia,
+      duracaoMin: duracaoEfetiva,
+      modalidade,
+      servicoId: tipoSlot === "servico" ? servicoSel : null,
+    });
+    setSavingDia(false);
     if (!res.ok) {
       toast.error(res.error ?? "Não foi possível gerar.");
       return;
