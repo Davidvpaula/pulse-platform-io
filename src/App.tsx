@@ -77,6 +77,7 @@ import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
+import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
