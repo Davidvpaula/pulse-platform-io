@@ -487,6 +487,10 @@ function ExcecaoModal({
       toast.error("Selecione um médico.");
       return;
     }
+    if (!valid) {
+      toast.error("Corrija o repasse antes de salvar.");
+      return;
+    }
     if (medicoPct < 0 || medicoPct > 100) {
       toast.error("Use um valor entre 0 e 100.");
       return;
