@@ -121,6 +121,8 @@ export default function Auth() {
       toast({ title: "Não foi possível cadastrar", description: error.message, variant: "destructive" });
       return;
     }
+    // marca senha como recém-trocada (best-effort)
+    supabase.rpc("password_mark_changed").catch(() => {});
     toast({
       title: "Conta criada com sucesso!",
       description: parsed.data.role === "medico"
