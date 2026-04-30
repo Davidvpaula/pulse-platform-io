@@ -95,6 +95,7 @@ import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
+import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
 
