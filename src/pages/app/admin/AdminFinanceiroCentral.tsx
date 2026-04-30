@@ -273,12 +273,34 @@ export default function AdminFinanceiroCentral() {
         </TabsList>
 
         <TabsContent value="pagamentos" className="space-y-2">
+          {selecionadosPendentes.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg border bg-muted/40 p-2">
+              <span className="text-sm">{selecionadosPendentes.length} pagamento(s) pendente(s) selecionado(s)</span>
+              <div className="space-x-2">
+                <Button size="sm" variant="outline" onClick={() => setSelecionados(new Set())} disabled={loteRunning}>Limpar</Button>
+                <Button size="sm" onClick={aprovarLote} disabled={loteRunning}>
+                  {loteRunning ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Aprovar selecionados
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => setLoteCancelOpen(true)} disabled={loteRunning}>
+                  <XCircle className="h-3 w-3 mr-1" />Cancelar selecionados
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40"><tr><th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th></tr></thead>
+              <thead className="bg-muted/40"><tr>
+                <th className="p-2 w-8"><Checkbox checked={todosPendentesSelecionados} onCheckedChange={toggleTodos} aria-label="Selecionar todos pendentes" disabled={!pendentes.length} /></th>
+                <th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
+              </tr></thead>
               <tbody>
                 {pagamentos.map(p => (
                   <tr key={p.id} className="border-t">
+                    <td className="p-2">
+                      {p.status === "pendente" && (
+                        <Checkbox checked={selecionados.has(p.id)} onCheckedChange={() => togglePagamento(p.id)} aria-label={`Selecionar ${p.id}`} />
+                      )}
+                    </td>
                     <td className="p-2 font-mono text-xs">{p.id.slice(0, 8)}</td>
                     <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
                     <td className="p-2">{p.metodo || p.forma || "—"}</td>
@@ -293,7 +315,7 @@ export default function AdminFinanceiroCentral() {
                     </td>
                   </tr>
                 ))}
-                {!pagamentos.length && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
+                {!pagamentos.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
               </tbody>
             </table>
           </div>
