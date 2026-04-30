@@ -593,11 +593,7 @@ export default function MedicoHorarios() {
                           key={s.id}
                           className="group relative flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs"
                         >
-                          {s.modalidade === "online" ? (
-                            <Video className="h-3 w-3 text-primary" />
-                          ) : (
-                            <MapPin className="h-3 w-3 text-primary" />
-                          )}
+                          <Video className="h-3 w-3 text-primary" />
                           <span className="font-medium">
                             {format(new Date(s.inicio), "HH:mm")}–
                             {format(new Date(s.fim), "HH:mm")}
