@@ -90,7 +90,7 @@ export default function PacienteCheckout() {
         medicoId: consultaCtx.medico_id,
         especialidadeId: consultaCtx.especialidade_id,
       });
-      if (!r.ok) {
+      if (r.ok !== true) {
         toast.error(r.error);
         return;
       }
