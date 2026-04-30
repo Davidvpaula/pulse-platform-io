@@ -92,19 +92,27 @@ export default function AdminFinanceiroConfig() {
     }
   };
 
-  const salvarGlobal = async () => {
+  // Estado de diálogos com motivo (auditoria)
+  const [pendingGlobal, setPendingGlobal] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<ComissaoOverrideRow | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<ComissaoOverrideRow | null>(null);
+  const [auditRefresh, setAuditRefresh] = useState(0);
+
+  const salvarGlobal = () => {
     if (medicoPct < 0 || medicoPct > 100) {
       toast.error("Use um valor entre 0 e 100.");
       return;
     }
-    if (!confirm(
-      `Confirmar repasse global de ${medicoPct}% para o médico (plataforma fica com ${plataformaPct}%)?\n\n` +
-      `Aplica-se apenas a NOVAS consultas particulares. Consultas já criadas mantêm o snapshot original.`,
-    )) return;
+    setPendingGlobal(true);
+  };
+
+  const confirmarGlobal = async (motivo: string) => {
     setSavingGlobal(true);
     try {
-      await setRepasseGlobal(medicoPct);
+      await setRepasseGlobal(medicoPct, motivo || null);
       toast.success("Repasse global atualizado.");
+      setPendingGlobal(false);
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao salvar.");
     } finally {
@@ -135,22 +143,32 @@ export default function AdminFinanceiroConfig() {
     loadOverrides();
   }, []);
 
-  const removerOverride = async (row: ComissaoOverrideRow) => {
-    if (!confirm(`Remover exceção de ${row.medico_nome ?? "médico"}?`)) return;
+  const removerOverride = (row: ComissaoOverrideRow) => setPendingDelete(row);
+
+  const confirmarRemover = async (motivo: string) => {
+    if (!pendingDelete) return;
     try {
-      await deleteOverride(row.id);
+      await deleteOverride(pendingDelete.id, motivo || null);
       toast.success("Exceção removida.");
+      setPendingDelete(null);
       loadOverrides();
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao remover.");
     }
   };
 
-  const togglar = async (row: ComissaoOverrideRow) => {
+  const togglar = (row: ComissaoOverrideRow) => setPendingToggle(row);
+
+  const confirmarToggle = async (motivo: string) => {
+    if (!pendingToggle) return;
+    const novoAtivo = !pendingToggle.ativo;
     try {
-      await toggleOverrideAtivo(row.id, !row.ativo);
-      toast.success(`Exceção ${!row.ativo ? "ativada" : "desativada"}.`);
+      await toggleOverrideAtivo(pendingToggle.id, novoAtivo, motivo || null);
+      toast.success(`Exceção ${novoAtivo ? "ativada" : "desativada"}.`);
+      setPendingToggle(null);
       loadOverrides();
+      setAuditRefresh((n) => n + 1);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao alterar.");
     }
