@@ -1,271 +1,262 @@
-import { useState } from "react";
-import {
-  Bot, MessageSquare, ArrowDown, Sparkles, Plus, UserCog, GitBranch, Play, Pencil,
-  X, Send,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Plus, Trash2, ChevronRight, Bot, Copy, Play } from "lucide-react";
+import { toast } from "sonner";
 
-type BlockType = "mensagem" | "opcoes" | "auto" | "humano";
-type Block = {
-  id: number;
-  type: BlockType;
-  text: string;
-  options?: string[];
+type Flow = {
+  id: string;
+  name: string;
+  description: string | null;
+  channel: string;
+  active: boolean;
+  is_default: boolean;
+  version: number;
+  trigger_keywords: string[];
+};
+type Step = {
+  id: string;
+  flow_id: string;
+  type: string;
+  label: string | null;
+  content: string | null;
+  options: any;
+  next_step_id: string | null;
+  order_index: number;
 };
 
-const initial: Block[] = [
-  { id: 1, type: "mensagem", text: "Olá, como podemos ajudar? 👋" },
-  {
-    id: 2, type: "opcoes", text: "Escolha uma opção:",
-    options: ["Agendar consulta", "Remarcar consulta", "Falar com suporte", "Sou empresa", "Sou médico", "Financeiro"],
-  },
-  { id: 3, type: "auto", text: "Perfeito! Para qual especialidade você procura atendimento?" },
-  { id: 4, type: "humano", text: "Conectando você com um atendente humano…" },
+const TIPOS = [
+  "mensagem", "escolha", "condicao", "delay", "coletar_dado",
+  "validar_cpf", "consultar_agendamento", "enviar_link", "encaminhar_humano", "finalizar",
 ];
 
-const blockMeta: Record<BlockType, { label: string; tone: string; icon: typeof MessageSquare }> = {
-  mensagem: { label: "Mensagem inicial", tone: "border-primary/40 bg-primary-soft/40", icon: MessageSquare },
-  opcoes:   { label: "Escolha do usuário", tone: "border-info/30 bg-info/5", icon: GitBranch },
-  auto:     { label: "Resposta automática", tone: "border-accent/30 bg-accent/5", icon: Bot },
-  humano:   { label: "Encaminhar para humano", tone: "border-warning/30 bg-warning/5", icon: UserCog },
-};
-
-const simAnswers: Record<string, string> = {
-  "Agendar consulta": "Perfeito! Para qual especialidade você procura atendimento?",
-  "Remarcar consulta": "Me informe seu nome completo para localizar o agendamento.",
-  "Falar com suporte": "Conectando você com um atendente humano…",
-  "Sou empresa": "Bem-vindo! Você é RH da empresa ou funcionário?",
-  "Sou médico": "Vou te direcionar para o canal exclusivo de médicos.",
-  "Financeiro": "Posso te enviar a 2ª via do boleto ou Pix da última cobrança?",
-};
-
 export default function BotConfig() {
-  const [blocks, setBlocks] = useState<Block[]>(initial);
-  const [editing, setEditing] = useState<Block | null>(null);
-  const [simOpen, setSimOpen] = useState(false);
-  const [simHistory, setSimHistory] = useState<{ from: "bot" | "user"; text: string }[]>([]);
+  const [flows, setFlows] = useState<Flow[]>([]);
+  const [activeFlow, setActiveFlow] = useState<Flow | null>(null);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [openFlow, setOpenFlow] = useState(false);
+  const [openStep, setOpenStep] = useState(false);
+  const [editFlow, setEditFlow] = useState<Partial<Flow>>({});
+  const [editStep, setEditStep] = useState<Partial<Step>>({});
 
-  const addBlock = (type: BlockType) => {
-    const id = Math.max(0, ...blocks.map(b => b.id)) + 1;
-    setBlocks(b => [...b, {
-      id, type,
-      text: type === "humano" ? "Conectando você com um atendente…" : "Nova etapa",
-      options: type === "opcoes" ? ["Opção A", "Opção B"] : undefined,
-    }]);
-  };
+  async function loadFlows() {
+    const { data } = await supabase.from("bot_flows").select("*").order("name");
+    setFlows((data || []) as Flow[]);
+  }
+  async function loadSteps(flowId: string) {
+    const { data } = await supabase.from("bot_steps").select("*").eq("flow_id", flowId).order("order_index");
+    setSteps((data || []) as Step[]);
+  }
 
-  const removeBlock = (id: number) => setBlocks(b => b.filter(x => x.id !== id));
+  useEffect(() => { loadFlows(); }, []);
+  useEffect(() => { if (activeFlow) loadSteps(activeFlow.id); else setSteps([]); }, [activeFlow]);
 
-  const startSim = () => {
-    setSimHistory([{ from: "bot", text: blocks[0]?.text ?? "Olá!" }]);
-    if (blocks[1]?.type === "opcoes") {
-      setSimHistory(h => [...h, { from: "bot", text: blocks[1].text }]);
+  async function salvarFlow() {
+    if (!editFlow.name?.trim()) { toast.error("Nome obrigatório"); return; }
+    const payload = {
+      name: editFlow.name,
+      description: editFlow.description || null,
+      channel: (editFlow.channel as any) || "whatsapp",
+      active: editFlow.active ?? false,
+      trigger_keywords: editFlow.trigger_keywords || [],
+    };
+    const { error } = editFlow.id
+      ? await supabase.from("bot_flows").update(payload).eq("id", editFlow.id)
+      : await supabase.from("bot_flows").insert(payload);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Fluxo salvo");
+    setOpenFlow(false);
+    loadFlows();
+  }
+
+  async function duplicarFlow(f: Flow) {
+    const { data: novo, error } = await supabase.from("bot_flows").insert({
+      name: f.name + " (cópia)", description: f.description, channel: f.channel as any,
+      active: false, version: f.version + 1, trigger_keywords: f.trigger_keywords,
+    }).select().single();
+    if (error || !novo) { toast.error(error?.message || "Erro"); return; }
+    const { data: src } = await supabase.from("bot_steps").select("*").eq("flow_id", f.id);
+    if (src && src.length) {
+      await supabase.from("bot_steps").insert(src.map(s => ({
+        flow_id: novo.id, type: s.type, label: s.label, content: s.content,
+        options: s.options, conditions: s.conditions, order_index: s.order_index,
+      })));
     }
-    setSimOpen(true);
-  };
+    toast.success("Fluxo duplicado");
+    loadFlows();
+  }
 
-  const pickOption = (opt: string) => {
-    setSimHistory(h => [
-      ...h,
-      { from: "user", text: opt },
-      { from: "bot", text: simAnswers[opt] ?? "Entendi! Vou te ajudar com isso." },
-    ]);
-  };
+  async function removerFlow(id: string) {
+    if (!confirm("Remover fluxo e todos seus passos?")) return;
+    await supabase.from("bot_flows").delete().eq("id", id);
+    if (activeFlow?.id === id) setActiveFlow(null);
+    loadFlows();
+  }
+
+  async function salvarStep() {
+    if (!activeFlow) return;
+    const payload = {
+      flow_id: activeFlow.id,
+      type: (editStep.type as any) || "mensagem",
+      label: editStep.label || null,
+      content: editStep.content || null,
+      options: editStep.options || [],
+      order_index: editStep.order_index ?? steps.length,
+    };
+    const { error } = editStep.id
+      ? await supabase.from("bot_steps").update(payload).eq("id", editStep.id)
+      : await supabase.from("bot_steps").insert(payload);
+    if (error) { toast.error(error.message); return; }
+    setOpenStep(false);
+    loadSteps(activeFlow.id);
+  }
+
+  async function removerStep(id: string) {
+    await supabase.from("bot_steps").delete().eq("id", id);
+    if (activeFlow) loadSteps(activeFlow.id);
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Bot de atendimento"
-        description="Construtor visual de fluxo · base preparada para WhatsApp Business + IA."
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={startSim}><Play className="mr-2 h-4 w-4" />Simular conversa</Button>
-            <Button className="bg-gradient-primary hover:opacity-90" onClick={() => addBlock("mensagem")}>
-              <Plus className="mr-2 h-4 w-4" />Nova etapa
-            </Button>
-          </div>
-        }
-      />
+      <PageHeader title="Bot" description="Fluxos automáticos para responder pacientes via WhatsApp." />
 
-      <div className="card-elevated p-5 flex items-center gap-3 border-info/30 bg-info/5">
-        <Sparkles className="h-5 w-5 shrink-0 text-info" />
-        <p className="text-sm">
-          <strong>Em breve:</strong> integração com IA para classificação de intenção, respostas contextuais e handoff inteligente.
-        </p>
-        <Button size="sm" variant="outline" className="ml-auto shrink-0">Reservar API</Button>
-      </div>
+      <Tabs defaultValue="fluxos">
+        <TabsList>
+          <TabsTrigger value="fluxos">Fluxos</TabsTrigger>
+          <TabsTrigger value="config">Configuração geral</TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        {/* Canvas */}
-        <div className="card-elevated p-6">
-          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" /> Fluxo principal · WhatsApp
-          </h3>
-
-          <div className="mt-6 space-y-3">
-            {blocks.map((b, idx) => {
-              const M = blockMeta[b.type];
-              return (
-                <div key={b.id}>
-                  <div className={cn("group rounded-xl border-2 p-4 transition-all hover:shadow-md", M.tone)}>
-                    <div className="flex items-start gap-3">
-                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-background border border-border">
-                        <M.icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            #{idx + 1} · {M.label}
-                          </p>
-                        </div>
-                        <p className="mt-1 text-sm">{b.text}</p>
-                        {b.options && (
-                          <div className="mt-3 flex flex-wrap gap-1.5">
-                            {b.options.map(o => (
-                              <span key={o} className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs">
-                                {o}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditing(b)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeBlock(b.id)}>
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
+        <TabsContent value="fluxos" className="space-y-4">
+          <div className="flex justify-end">
+            <Sheet open={openFlow} onOpenChange={setOpenFlow}>
+              <SheetTrigger asChild>
+                <Button onClick={() => setEditFlow({ channel: "whatsapp", active: false, trigger_keywords: [] })}>
+                  <Plus className="mr-2 h-4 w-4" />Novo fluxo
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[480px] sm:max-w-[480px]">
+                <SheetHeader><SheetTitle>{editFlow.id ? "Editar" : "Novo"} fluxo</SheetTitle></SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <div><Label>Nome *</Label><Input value={editFlow.name || ""} onChange={(e) => setEditFlow({ ...editFlow, name: e.target.value })} /></div>
+                  <div><Label>Descrição</Label><Textarea value={editFlow.description || ""} onChange={(e) => setEditFlow({ ...editFlow, description: e.target.value })} /></div>
+                  <div><Label>Palavras-gatilho (separadas por vírgula)</Label>
+                    <Input value={(editFlow.trigger_keywords || []).join(", ")} onChange={(e) => setEditFlow({ ...editFlow, trigger_keywords: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} />
                   </div>
-                  {idx < blocks.length - 1 && (
-                    <div className="my-1 flex justify-center text-muted-foreground">
-                      <ArrowDown className="h-4 w-4" />
+                  <div className="flex items-center gap-2"><Switch checked={editFlow.active ?? false} onCheckedChange={(v) => setEditFlow({ ...editFlow, active: v })} /><Label>Ativo</Label></div>
+                  <Button className="w-full" onClick={salvarFlow}>Salvar</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-5 space-y-2">
+              {flows.length === 0 && <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Nenhum fluxo.</CardContent></Card>}
+              {flows.map(f => (
+                <Card key={f.id} className={`cursor-pointer transition-colors ${activeFlow?.id === f.id ? "border-primary" : ""}`} onClick={() => setActiveFlow(f)}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-sm flex items-center gap-2"><Bot className="h-4 w-4" />{f.name}</CardTitle>
+                        <CardDescription className="text-xs">v{f.version} · {f.channel}</CardDescription>
+                      </div>
+                      <Badge variant={f.active ? "default" : "outline"} className="text-[10px]">{f.active ? "ativo" : "inativo"}</Badge>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Paleta */}
-        <aside className="card-elevated h-fit p-5">
-          <h4 className="font-display text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Adicionar etapa
-          </h4>
-          <div className="mt-3 space-y-2">
-            {(Object.keys(blockMeta) as BlockType[]).map(t => {
-              const M = blockMeta[t];
-              return (
-                <button
-                  key={t}
-                  onClick={() => addBlock(t)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg border-2 p-3 text-left transition-all hover:shadow-sm",
-                    M.tone,
-                  )}
-                >
-                  <M.icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{M.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground">💡 Dica</p>
-            <p className="mt-1">Use blocos de <strong>Escolha</strong> para criar bifurcações, e finalize com <strong>Encaminhar para humano</strong> quando for necessário.</p>
-          </div>
-        </aside>
-      </div>
-
-      {/* Edit block */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar etapa</DialogTitle></DialogHeader>
-          {editing && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Texto</label>
-                <textarea
-                  className="mt-1 w-full rounded-lg border border-input bg-background p-2 text-sm"
-                  rows={3}
-                  value={editing.text}
-                  onChange={e => setEditing({ ...editing, text: e.target.value })}
-                />
-              </div>
-              {editing.type === "opcoes" && (
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Opções (uma por linha)</label>
-                  <textarea
-                    className="mt-1 w-full rounded-lg border border-input bg-background p-2 text-sm"
-                    rows={5}
-                    value={editing.options?.join("\n") ?? ""}
-                    onChange={e => setEditing({ ...editing, options: e.target.value.split("\n").filter(Boolean) })}
-                  />
-                </div>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
-                <Button onClick={() => {
-                  setBlocks(bs => bs.map(b => b.id === editing.id ? editing : b));
-                  setEditing(null);
-                }}>Salvar</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Simulator */}
-      <Dialog open={simOpen} onOpenChange={setSimOpen}>
-        <DialogContent className="max-w-md p-0">
-          <div className="flex items-center gap-2 border-b border-border bg-gradient-primary p-4 text-primary-foreground">
-            <Bot className="h-5 w-5" />
-            <div>
-              <p className="text-sm font-semibold">Lasmi Bot · Simulação</p>
-              <p className="text-xs opacity-80">Como o paciente verá no WhatsApp</p>
-            </div>
-          </div>
-          <div className="max-h-[400px] space-y-3 overflow-y-auto bg-muted/20 p-4">
-            {simHistory.map((m, i) => (
-              <div key={i} className={cn("flex", m.from === "user" ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                  m.from === "user" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card border border-border",
-                )}>
-                  {m.text}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-border p-3">
-            <p className="mb-2 text-xs font-semibold text-muted-foreground">Escolha uma opção:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {(blocks.find(b => b.type === "opcoes")?.options ?? []).map(o => (
-                <button
-                  key={o}
-                  onClick={() => pickOption(o)}
-                  className="rounded-full border border-primary/40 bg-primary-soft px-3 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  {o}
-                </button>
+                  </CardHeader>
+                  <CardContent className="pt-0 flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditFlow(f); setOpenFlow(true); }}>Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); duplicarFlow(f); }}><Copy className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); removerFlow(f.id); }}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-            <div className="mt-3 flex gap-2">
-              <input className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm" placeholder="Digite uma mensagem…" />
-              <Button size="sm"><Send className="h-3.5 w-3.5" /></Button>
+
+            <div className="lg:col-span-7">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">{activeFlow ? `Passos de "${activeFlow.name}"` : "Selecione um fluxo"}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {!activeFlow && <p className="text-sm text-muted-foreground">Selecione um fluxo à esquerda.</p>}
+                  {activeFlow && (
+                    <>
+                      <Sheet open={openStep} onOpenChange={setOpenStep}>
+                        <SheetTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={() => setEditStep({ type: "mensagem", order_index: steps.length })}>
+                            <Plus className="mr-2 h-3 w-3" />Adicionar passo
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-[480px] sm:max-w-[480px]">
+                          <SheetHeader><SheetTitle>{editStep.id ? "Editar" : "Novo"} passo</SheetTitle></SheetHeader>
+                          <div className="mt-6 space-y-4">
+                            <div><Label>Tipo</Label>
+                              <Select value={editStep.type} onValueChange={(v) => setEditStep({ ...editStep, type: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                            <div><Label>Rótulo interno</Label><Input value={editStep.label || ""} onChange={(e) => setEditStep({ ...editStep, label: e.target.value })} /></div>
+                            <div><Label>Conteúdo (mensagem ao paciente)</Label><Textarea rows={4} value={editStep.content || ""} onChange={(e) => setEditStep({ ...editStep, content: e.target.value })} /></div>
+                            <div><Label>Ordem</Label><Input type="number" value={editStep.order_index ?? 0} onChange={(e) => setEditStep({ ...editStep, order_index: Number(e.target.value) })} /></div>
+                            <Button className="w-full" onClick={salvarStep}>Salvar</Button>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+
+                      {steps.length === 0 && <p className="text-xs text-muted-foreground py-6 text-center">Sem passos ainda.</p>}
+                      <div className="space-y-1">
+                        {steps.map((s, i) => (
+                          <div key={s.id} className="flex items-start gap-2 rounded-md border p-2 text-sm">
+                            <span className="text-xs text-muted-foreground mt-0.5 w-5">{i + 1}.</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                                {s.label && <span className="text-xs font-medium">{s.label}</span>}
+                              </div>
+                              {s.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.content}</p>}
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => { setEditStep(s); setOpenStep(true); }}>Editar</Button>
+                            <Button variant="ghost" size="sm" onClick={() => removerStep(s.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pt-2 border-t mt-4">
+                        <Button variant="outline" size="sm" disabled><Play className="mr-2 h-3 w-3" />Simular conversa (em breve)</Button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+
+        <TabsContent value="config">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Regras gerais</CardTitle></CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <p className="text-muted-foreground">
+                ⚠️ Bot e IA Avatar nunca respondem ao mesmo tempo numa conversa. Quando a IA está ativa, o bot é pausado naquela conversa, e vice-versa.
+              </p>
+              <p className="text-muted-foreground">
+                Os fluxos padrão recomendados são: <strong>Agendar consulta</strong>, <strong>Remarcar</strong>, <strong>Financeiro</strong>, <strong>Documentos</strong>, <strong>Sou empresa</strong>, <strong>Sou médico</strong>, <strong>Falar com atendente</strong>.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
