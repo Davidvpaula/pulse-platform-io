@@ -314,6 +314,83 @@ export type Database = {
         }
         Relationships: []
       }
+      cupons_uso: {
+        Row: {
+          aplicado_por: string | null
+          codigo_snapshot: string
+          consulta_id: string | null
+          created_at: string
+          cupom_id: string
+          id: string
+          medico_id: string | null
+          observacao: string | null
+          paciente_id: string | null
+          tipo_snapshot: Database["public"]["Enums"]["cupom_tipo"]
+          valor_desconto_centavos: number
+          valor_final_centavos: number
+          valor_original_centavos: number
+        }
+        Insert: {
+          aplicado_por?: string | null
+          codigo_snapshot: string
+          consulta_id?: string | null
+          created_at?: string
+          cupom_id: string
+          id?: string
+          medico_id?: string | null
+          observacao?: string | null
+          paciente_id?: string | null
+          tipo_snapshot: Database["public"]["Enums"]["cupom_tipo"]
+          valor_desconto_centavos?: number
+          valor_final_centavos?: number
+          valor_original_centavos?: number
+        }
+        Update: {
+          aplicado_por?: string | null
+          codigo_snapshot?: string
+          consulta_id?: string | null
+          created_at?: string
+          cupom_id?: string
+          id?: string
+          medico_id?: string | null
+          observacao?: string | null
+          paciente_id?: string | null
+          tipo_snapshot?: Database["public"]["Enums"]["cupom_tipo"]
+          valor_desconto_centavos?: number
+          valor_final_centavos?: number
+          valor_original_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cupons_uso_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupons_uso_cupom_id_fkey"
+            columns: ["cupom_id"]
+            isOneToOne: false
+            referencedRelation: "cupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupons_uso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupons_uso_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       especialidades: {
         Row: {
           ativo: boolean
