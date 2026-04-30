@@ -74,17 +74,23 @@ function rng(seed: number) {
  * Gera os slots compartilhados do dia (08:00–21:00, passo de 30 min).
  * Para cada horário, sorteia quais médicos estão livres → forma a capacidade.
  */
-export function mockSlotsDoDia(date: Date): MockSlot[] {
+export function mockSlotsDoDia(date: Date, duracaoMin: number = MOCK_DURACAO_MIN): MockSlot[] {
+  const dur = Math.max(5, Math.round(duracaoMin / 5) * 5);
   const seed =
-    date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate() + dur;
   const rand = rng(seed);
 
   const slots: MockSlot[] = [];
-  for (let h = 8; h < 21; h++) {
-    for (const m of [0, 30]) {
+  // Gera horários de 08:00 até 21:00 com passo = duracao.
+  const startH = 8;
+  const endH = 21;
+  const totalMin = (endH - startH) * 60;
+  for (let offset = 0; offset < totalMin; offset += dur) {
+    {
       const inicio = new Date(date);
-      inicio.setHours(h, m, 0, 0);
-      const fim = new Date(inicio.getTime() + MOCK_DURACAO_MIN * 60_000);
+      inicio.setHours(startH, 0, 0, 0);
+      inicio.setMinutes(offset);
+      const fim = new Date(inicio.getTime() + dur * 60_000);
 
       // ~70% de chance de cada médico estar livre nesse horário
       const disponiveis = mockMedicos

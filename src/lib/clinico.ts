@@ -1454,3 +1454,72 @@ export async function emitirPrescricaoSimulada(consultaId: string): Promise<{ ok
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+// ============================================================
+// Atendimento Imediato — config dinâmica do serviço público
+// ============================================================
+export type AtendimentoImediatoConfig = {
+  servico_id: string;
+  nome: string;
+  preco_centavos: number;
+  duracao_min: number;
+  modelo: "percentual" | "valor_fixo";
+  comissao_pct: number | null;
+  valor_fixo_centavos: number | null;
+};
+
+export async function getServicoAtendimentoImediato(): Promise<AtendimentoImediatoConfig | null> {
+  const { data: cfg } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "atendimento_imediato.servico_id")
+    .maybeSingle();
+  const servicoId = (cfg?.value as string | null) ?? null;
+  if (!servicoId) return null;
+  const { data: svc, error } = await supabase
+    .from("servicos_financeiros")
+    .select("id, nome, valor_paciente_centavos, duracao_min, modelo, comissao_pct, valor_fixo_centavos")
+    .eq("id", servicoId)
+    .maybeSingle();
+  if (error || !svc) return null;
+  return {
+    servico_id: svc.id,
+    nome: svc.nome,
+    preco_centavos: svc.valor_paciente_centavos ?? 0,
+    duracao_min: svc.duracao_min ?? 30,
+    modelo: svc.modelo as "percentual" | "valor_fixo",
+    comissao_pct: svc.comissao_pct as number | null,
+    valor_fixo_centavos: svc.valor_fixo_centavos as number | null,
+  };
+}
+
+export async function updateServicoAtendimentoImediato(
+  servicoId: string,
+  patch: Partial<{
+    valor_paciente_centavos: number;
+    duracao_min: number;
+    modelo: "percentual" | "valor_fixo";
+    comissao_pct: number | null;
+    valor_fixo_centavos: number | null;
+  }>,
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("servicos_financeiros")
+    .update(patch as any)
+    .eq("id", servicoId);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/** Canal cross-tab para sinalizar mudanças do serviço de atendimento imediato. */
+export const ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL = "atendimento_imediato_config_v1";
+export function broadcastAtendimentoImediatoConfigChanged() {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return;
+  try {
+    const ch = new BroadcastChannel(ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL);
+    ch.postMessage({ t: "changed", at: Date.now() });
+    ch.close();
+  } catch {
+    // no-op
+  }
+}
