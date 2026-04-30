@@ -2601,6 +2601,33 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email_norm: string
+          id: number
+          ip_address: unknown
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email_norm: string
+          id?: number
+          ip_address?: unknown
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email_norm?: string
+          id?: number
+          ip_address?: unknown
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       marketing_campaigns: {
         Row: {
           ativo: boolean
@@ -3476,6 +3503,36 @@ export type Database = {
           },
         ]
       }
+      password_policy: {
+        Row: {
+          expiration_days: number
+          hibp_enabled: boolean
+          id: number
+          min_length: number
+          require_complexity: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          expiration_days?: number
+          hibp_enabled?: boolean
+          id?: number
+          min_length?: number
+          require_complexity?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          expiration_days?: number
+          hibp_enabled?: boolean
+          id?: number
+          min_length?: number
+          require_complexity?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       permission_audit_logs: {
         Row: {
           acao: string
@@ -4091,6 +4148,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_password_meta: {
+        Row: {
+          must_change: boolean
+          password_changed_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          must_change?: boolean
+          password_changed_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          must_change?: boolean
+          password_changed_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4108,6 +4186,48 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_label: string | null
+          id: string
+          ip_address: unknown
+          last_seen_at: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          session_token?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -4529,6 +4649,23 @@ export type Database = {
         Returns: boolean
       }
       liberar_reservas_expiradas: { Args: never; Returns: number }
+      login_attempt_check: {
+        Args: { _email: string; _ip?: string }
+        Returns: {
+          blocked: boolean
+          fails: number
+          retry_after_seconds: number
+        }[]
+      }
+      login_attempt_record: {
+        Args: {
+          _email: string
+          _ip?: string
+          _success: boolean
+          _user_agent?: string
+        }
+        Returns: undefined
+      }
       marcar_pagamento_falho: {
         Args: { _motivo: string; _provider_session_id: string }
         Returns: undefined
@@ -4579,6 +4716,17 @@ export type Database = {
           _observacao?: string
         }
         Returns: Json
+      }
+      password_mark_changed: { Args: never; Returns: undefined }
+      password_status: {
+        Args: never
+        Returns: {
+          days_remaining: number
+          expiration_days: number
+          expired: boolean
+          must_change: boolean
+          password_changed_at: string
+        }[]
       }
       permissoes_dashboard: { Args: never; Returns: Json }
       permissoes_efetivas: {
@@ -4731,6 +4879,22 @@ export type Database = {
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
+      }
+      session_heartbeat: {
+        Args: {
+          _device_label?: string
+          _ip?: string
+          _session_token: string
+          _user_agent?: string
+        }
+        Returns: {
+          revoked: boolean
+          session_id: string
+        }[]
+      }
+      session_revoke: {
+        Args: { _reason?: string; _session_id: string }
+        Returns: boolean
       }
       set_force_status_transition: {
         Args: { _motivo: string }
