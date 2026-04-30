@@ -134,6 +134,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       },
       { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
       { label: "Financeiro", to: "/app/admin/financeiro", icon: Wallet },
+      { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Cupons", to: "/app/admin/cupons", icon: Tag },
       { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck },
       {
