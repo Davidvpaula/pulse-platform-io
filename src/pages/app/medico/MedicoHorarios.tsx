@@ -85,6 +85,13 @@ function groupByDay(slots: AgendaSlot[]) {
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
+type ServicoOpc = {
+  id: string;
+  nome: string;
+  duracao_min: number;
+  valor_paciente_centavos: number;
+};
+
 export default function MedicoHorarios() {
   const { session } = useSession();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
@@ -93,6 +100,9 @@ export default function MedicoHorarios() {
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
+  const [tipoSlot, setTipoSlot] = useState<"particular" | "servico">("particular");
+  const [servicoSel, setServicoSel] = useState<string | null>(null);
+  const [servicosDisp, setServicosDisp] = useState<ServicoOpc[]>([]);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
