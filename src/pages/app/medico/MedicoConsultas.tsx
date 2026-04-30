@@ -287,6 +287,14 @@ export default function MedicoConsultas() {
           );
         })}
       </div>
+
+      <RetornoGratuitoDialog
+        open={!!retornoCtx}
+        onOpenChange={(v) => { if (!v) setRetornoCtx(null); }}
+        consultaId={retornoCtx?.id ?? null}
+        pacienteNome={retornoCtx?.nome}
+        onConcluido={() => { setRetornoCtx(null); void carregar(); }}
+      />
     </div>
   );
 }
