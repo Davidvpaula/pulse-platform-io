@@ -201,14 +201,14 @@ export default function AdminRelatorioFinanceiro() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            <KpiCard label="Receita bruta" value={brl(k.receita_bruta_centavos)} icon={DollarSign} variant="success" hint={<DeltaBadge now={k.receita_bruta_centavos || 0} prev={kp.receita_bruta_centavos || 0} />} />
-            <KpiCard label="Receita líquida" value={brl(k.receita_liquida_centavos)} icon={Wallet} variant="success" hint={<DeltaBadge now={k.receita_liquida_centavos || 0} prev={kp.receita_liquida_centavos || 0} />} />
-            <KpiCard label="Comissão plataforma" value={brl(k.comissao_plataforma_centavos)} icon={Receipt} hint={<DeltaBadge now={k.comissao_plataforma_centavos || 0} prev={kp.comissao_plataforma_centavos || 0} />} />
-            <KpiCard label="Repasse médicos" value={brl(k.repasse_medicos_centavos)} icon={Wallet} hint={<DeltaBadge now={k.repasse_medicos_centavos || 0} prev={kp.repasse_medicos_centavos || 0} />} />
+            <KpiCard label="Receita bruta" value={brl(k.receita_bruta_centavos)} icon={DollarSign} variant="success" hint={`vs ${brl(kp.receita_bruta_centavos)} · ${deltaPct(k.receita_bruta_centavos || 0, kp.receita_bruta_centavos || 0).label}`} />
+            <KpiCard label="Receita líquida" value={brl(k.receita_liquida_centavos)} icon={Wallet} variant="success" hint={`vs ${brl(kp.receita_liquida_centavos)} · ${deltaPct(k.receita_liquida_centavos || 0, kp.receita_liquida_centavos || 0).label}`} />
+            <KpiCard label="Comissão plataforma" value={brl(k.comissao_plataforma_centavos)} icon={Receipt} hint={`vs ${brl(kp.comissao_plataforma_centavos)} · ${deltaPct(k.comissao_plataforma_centavos || 0, kp.comissao_plataforma_centavos || 0).label}`} />
+            <KpiCard label="Repasse médicos" value={brl(k.repasse_medicos_centavos)} icon={Wallet} hint={`vs ${brl(kp.repasse_medicos_centavos)} · ${deltaPct(k.repasse_medicos_centavos || 0, kp.repasse_medicos_centavos || 0).label}`} />
             <KpiCard label="Taxas (gateway+imposto)" value={brl((k.taxa_gateway_centavos || 0) + (k.taxa_imposto_centavos || 0))} icon={Receipt} />
             <KpiCard label="Reembolsos" value={brl(k.reembolsos_centavos)} icon={RotateCcw} variant="warning" />
-            <KpiCard label="Consultas concluídas" value={num(k.consultas_concluidas)} icon={Users} hint={<DeltaBadge now={k.consultas_concluidas || 0} prev={kp.consultas_concluidas || 0} />} />
-            <KpiCard label="Ticket médio" value={brl(k.ticket_medio_centavos)} icon={DollarSign} hint={<DeltaBadge now={k.ticket_medio_centavos || 0} prev={kp.ticket_medio_centavos || 0} />} />
+            <KpiCard label="Consultas concluídas" value={num(k.consultas_concluidas)} icon={Users} hint={`vs ${num(kp.consultas_concluidas)} · ${deltaPct(k.consultas_concluidas || 0, kp.consultas_concluidas || 0).label}`} />
+            <KpiCard label="Ticket médio" value={brl(k.ticket_medio_centavos)} icon={DollarSign} hint={`vs ${brl(kp.ticket_medio_centavos)} · ${deltaPct(k.ticket_medio_centavos || 0, kp.ticket_medio_centavos || 0).label}`} />
           </div>
 
           <Card className="p-4">
