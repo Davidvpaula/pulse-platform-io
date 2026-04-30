@@ -514,6 +514,51 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          after_data: Json | null
+          before_data: Json | null
+          changed_fields: string[] | null
+          id: number
+          motivo: string | null
+          occurred_at: string
+          record_id: string | null
+          request_ctx: Json | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_fields?: string[] | null
+          id?: number
+          motivo?: string | null
+          occurred_at?: string
+          record_id?: string | null
+          request_ctx?: Json | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_fields?: string[] | null
+          id?: number
+          motivo?: string | null
+          occurred_at?: string
+          record_id?: string | null
+          request_ctx?: Json | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       audit_revisoes: {
         Row: {
           evento_id: string
@@ -1020,6 +1065,8 @@ export type Database = {
       consultas: {
         Row: {
           canal_origem: Database["public"]["Enums"]["consulta_canal"]
+          comissao_percentual_snapshot: number | null
+          comissao_snapshot_centavos: number | null
           confirmada_em: string | null
           confirmada_por: string | null
           created_at: string
@@ -1038,12 +1085,16 @@ export type Database = {
           responsavel_agendamento_id: string | null
           servico_id: string | null
           slot_id: string | null
+          snapshot_at: string | null
           status: Database["public"]["Enums"]["consulta_status"]
           updated_at: string
           valor_centavos: number
+          valor_snapshot_centavos: number | null
         }
         Insert: {
           canal_origem?: Database["public"]["Enums"]["consulta_canal"]
+          comissao_percentual_snapshot?: number | null
+          comissao_snapshot_centavos?: number | null
           confirmada_em?: string | null
           confirmada_por?: string | null
           created_at?: string
@@ -1062,12 +1113,16 @@ export type Database = {
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
           slot_id?: string | null
+          snapshot_at?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
           valor_centavos?: number
+          valor_snapshot_centavos?: number | null
         }
         Update: {
           canal_origem?: Database["public"]["Enums"]["consulta_canal"]
+          comissao_percentual_snapshot?: number | null
+          comissao_snapshot_centavos?: number | null
           confirmada_em?: string | null
           confirmada_por?: string | null
           created_at?: string
@@ -1086,9 +1141,11 @@ export type Database = {
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
           slot_id?: string | null
+          snapshot_at?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
           valor_centavos?: number
+          valor_snapshot_centavos?: number | null
         }
         Relationships: [
           {
@@ -3272,13 +3329,18 @@ export type Database = {
           provider_session_id: string | null
           responsavel_cobranca: string | null
           servico_id: string | null
+          snapshot_at: string | null
           status: Database["public"]["Enums"]["pagamento_status"]
           taxa_gateway_centavos: number
+          taxa_gateway_snapshot: number | null
           taxa_imposto_centavos: number
+          taxa_imposto_snapshot: number | null
           updated_at: string
           valor_bruto_centavos: number
+          valor_bruto_snapshot: number | null
           valor_centavos: number
           valor_liquido_centavos: number
+          valor_liquido_snapshot: number | null
           valor_reembolsado_centavos: number
         }
         Insert: {
@@ -3306,13 +3368,18 @@ export type Database = {
           provider_session_id?: string | null
           responsavel_cobranca?: string | null
           servico_id?: string | null
+          snapshot_at?: string | null
           status?: Database["public"]["Enums"]["pagamento_status"]
           taxa_gateway_centavos?: number
+          taxa_gateway_snapshot?: number | null
           taxa_imposto_centavos?: number
+          taxa_imposto_snapshot?: number | null
           updated_at?: string
           valor_bruto_centavos?: number
+          valor_bruto_snapshot?: number | null
           valor_centavos: number
           valor_liquido_centavos?: number
+          valor_liquido_snapshot?: number | null
           valor_reembolsado_centavos?: number
         }
         Update: {
@@ -3340,13 +3407,18 @@ export type Database = {
           provider_session_id?: string | null
           responsavel_cobranca?: string | null
           servico_id?: string | null
+          snapshot_at?: string | null
           status?: Database["public"]["Enums"]["pagamento_status"]
           taxa_gateway_centavos?: number
+          taxa_gateway_snapshot?: number | null
           taxa_imposto_centavos?: number
+          taxa_imposto_snapshot?: number | null
           updated_at?: string
           valor_bruto_centavos?: number
+          valor_bruto_snapshot?: number | null
           valor_centavos?: number
           valor_liquido_centavos?: number
+          valor_liquido_snapshot?: number | null
           valor_reembolsado_centavos?: number
         }
         Relationships: [
@@ -4596,6 +4668,10 @@ export type Database = {
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
+      }
+      set_force_status_transition: {
+        Args: { _motivo: string }
+        Returns: undefined
       }
       trocar_medico_consulta: {
         Args: { _consulta_id: string; _motivo?: string; _novo_slot_id: string }
