@@ -178,7 +178,7 @@ export const Agendar = () => {
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                    {s.modalidade}
+                    Telemedicina
                   </span>
                   <span className="text-sm font-bold">
                     {(s.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
