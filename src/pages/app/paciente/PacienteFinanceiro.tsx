@@ -41,12 +41,16 @@ type Linha = {
 };
 
 const statusUI: Record<PagamentoStatus, { label: string; icon: typeof CheckCircle2; cls: string; dot: string }> = {
-  pago:        { label: "Pago",        icon: CheckCircle2, cls: "bg-success/10 text-success border-success/20",       dot: "bg-success" },
-  pendente:    { label: "Pendente",    icon: Clock,        cls: "bg-warning/10 text-warning border-warning/20",       dot: "bg-warning" },
-  processando: { label: "Processando", icon: Loader2,      cls: "bg-primary/10 text-primary border-primary/20",       dot: "bg-primary" },
-  falhou:      { label: "Falhou",      icon: XCircle,      cls: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive" },
-  reembolsado: { label: "Reembolsado", icon: RefreshCw,    cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
-  cancelado:   { label: "Cancelado",   icon: XCircle,      cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
+  pago:                { label: "Pago",        icon: CheckCircle2, cls: "bg-success/10 text-success border-success/20",       dot: "bg-success" },
+  aprovado:            { label: "Aprovado",    icon: CheckCircle2, cls: "bg-success/10 text-success border-success/20",       dot: "bg-success" },
+  pendente:            { label: "Pendente",    icon: Clock,        cls: "bg-warning/10 text-warning border-warning/20",       dot: "bg-warning" },
+  processando:         { label: "Processando", icon: Loader2,      cls: "bg-primary/10 text-primary border-primary/20",       dot: "bg-primary" },
+  falhou:              { label: "Falhou",      icon: XCircle,      cls: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive" },
+  recusado:            { label: "Recusado",    icon: XCircle,      cls: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive" },
+  expirado:            { label: "Expirado",    icon: XCircle,      cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
+  reembolsado:         { label: "Reembolsado", icon: RefreshCw,    cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
+  reembolsado_parcial: { label: "Reemb. parcial", icon: RefreshCw, cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
+  cancelado:           { label: "Cancelado",   icon: XCircle,      cls: "bg-muted text-muted-foreground border-border",       dot: "bg-muted-foreground" },
 };
 
 const metodoLabel: Record<string, string> = {
