@@ -396,6 +396,36 @@ export default function MedicoDashboard() {
         )}
       </div>
 
+      {/* Split de receita: Particular vs Serviços da plataforma */}
+      {podeVerFinanceiro && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="card-elevated p-5 border-l-4 border-l-primary">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Receita particular (mês)
+              </p>
+              <Wallet className="h-4 w-4 text-primary" />
+            </div>
+            <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaParticularMes)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Consultas com seu preço próprio (sem serviço da plataforma)
+            </p>
+          </div>
+          <div className="card-elevated p-5 border-l-4 border-l-emerald-500">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Receita serviços plataforma (mês)
+              </p>
+              <Stethoscope className="h-4 w-4 text-emerald-600" />
+            </div>
+            <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaServicosMes)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {stats.qtdServicos} consulta{stats.qtdServicos !== 1 ? "s" : ""} via serviços da plataforma · valor de repasse
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Próximas consultas reais */}
         <div className="card-elevated p-6 lg:col-span-2">
