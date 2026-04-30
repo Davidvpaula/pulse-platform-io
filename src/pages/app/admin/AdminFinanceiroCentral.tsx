@@ -409,7 +409,7 @@ export default function AdminFinanceiroCentral() {
             <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
             <div className="grid grid-cols-2 gap-2">
               <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
+              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
             </div>
             <div>
               <Label>Paciente (opcional)</Label>
