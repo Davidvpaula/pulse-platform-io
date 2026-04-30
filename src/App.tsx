@@ -221,7 +221,7 @@ const App = () => (
               <Route path="admin/analises/marketing" element={<G perm={["analises.ver","analises.marketing"]} all><AdminAnalises /></G>} />
               <Route path="admin/analises/comparativo" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/relatorios" element={<G perm="relatorios.ver"><AdminRelatorios /></G>} />
-              <Route path="admin/relatorios/financeiro" element={<G perm={["relatorios.ver","relatorios.ver_financeiro"]} all><AdminRelatorioFinanceiro /></G>} />
+              <Route path="admin/relatorios/financeiro" element={<G perm="relatorios.ver"><AdminRelatorioFinanceiro /></G>} />
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
