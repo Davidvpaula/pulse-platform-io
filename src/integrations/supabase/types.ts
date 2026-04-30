@@ -129,6 +129,71 @@ export type Database = {
         }
         Relationships: []
       }
+      cobrancas_links: {
+        Row: {
+          consulta_id: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string
+          enviado_canal: string | null
+          enviado_em: string | null
+          id: string
+          observacao: string | null
+          paciente_id: string | null
+          pagamento_id: string | null
+          servico_id: string | null
+          status: Database["public"]["Enums"]["cobranca_link_status"]
+          updated_at: string
+          url: string | null
+          valor_centavos: number
+          vencimento: string | null
+        }
+        Insert: {
+          consulta_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao: string
+          enviado_canal?: string | null
+          enviado_em?: string | null
+          id?: string
+          observacao?: string | null
+          paciente_id?: string | null
+          pagamento_id?: string | null
+          servico_id?: string | null
+          status?: Database["public"]["Enums"]["cobranca_link_status"]
+          updated_at?: string
+          url?: string | null
+          valor_centavos?: number
+          vencimento?: string | null
+        }
+        Update: {
+          consulta_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string
+          enviado_canal?: string | null
+          enviado_em?: string | null
+          id?: string
+          observacao?: string | null
+          paciente_id?: string | null
+          pagamento_id?: string | null
+          servico_id?: string | null
+          status?: Database["public"]["Enums"]["cobranca_link_status"]
+          updated_at?: string
+          url?: string | null
+          valor_centavos?: number
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobrancas_links_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colaboradores: {
         Row: {
           cargo_descricao: string | null
@@ -1107,6 +1172,9 @@ export type Database = {
       }
       fechamentos_mensais: {
         Row: {
+          bloqueado_em: string | null
+          bloqueado_por: string | null
+          bloqueio_motivo: string | null
           competencia_ano: number
           competencia_mes: number
           comprovante_url: string | null
@@ -1124,6 +1192,9 @@ export type Database = {
           valor_plataforma_centavos: number
         }
         Insert: {
+          bloqueado_em?: string | null
+          bloqueado_por?: string | null
+          bloqueio_motivo?: string | null
           competencia_ano: number
           competencia_mes: number
           comprovante_url?: string | null
@@ -1141,6 +1212,9 @@ export type Database = {
           valor_plataforma_centavos?: number
         }
         Update: {
+          bloqueado_em?: string | null
+          bloqueado_por?: string | null
+          bloqueio_motivo?: string | null
           competencia_ano?: number
           competencia_mes?: number
           comprovante_url?: string | null
@@ -1156,6 +1230,81 @@ export type Database = {
           valor_bruto_centavos?: number
           valor_medico_centavos?: number
           valor_plataforma_centavos?: number
+        }
+        Relationships: []
+      }
+      financeiro_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          created_at: string
+          entidade: string
+          entidade_id: string | null
+          id: string
+          motivo: string | null
+          observacao: string | null
+          payload: Json | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          created_at?: string
+          entidade: string
+          entidade_id?: string | null
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          created_at?: string
+          entidade?: string
+          entidade_id?: string | null
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: []
+      }
+      gateways_config: {
+        Row: {
+          ambiente: string
+          ativo: boolean
+          configuracao: Json
+          created_at: string
+          id: string
+          nome: string
+          tipo: Database["public"]["Enums"]["gateway_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          id?: string
+          nome: string
+          tipo: Database["public"]["Enums"]["gateway_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          id?: string
+          nome?: string
+          tipo?: Database["public"]["Enums"]["gateway_tipo"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1642,53 +1791,104 @@ export type Database = {
         Row: {
           cancelled_at: string | null
           checkout_url: string | null
+          comprovante_url: string | null
           consulta_id: string
           created_at: string
+          created_by: string | null
+          data_pagamento: string | null
+          data_vencimento: string | null
+          empresa_id: string | null
+          gateway: string | null
+          gateway_ref: string | null
           id: string
+          medico_id: string | null
           metadata: Json
           metodo: Database["public"]["Enums"]["pagamento_metodo"]
           moeda: string
+          observacoes_internas: string | null
+          paciente_id: string | null
           paid_at: string | null
           provider: Database["public"]["Enums"]["pagamento_provider"]
           provider_payment_id: string | null
           provider_session_id: string | null
+          responsavel_cobranca: string | null
+          servico_id: string | null
           status: Database["public"]["Enums"]["pagamento_status"]
+          taxa_gateway_centavos: number
+          taxa_imposto_centavos: number
           updated_at: string
+          valor_bruto_centavos: number
           valor_centavos: number
+          valor_liquido_centavos: number
+          valor_reembolsado_centavos: number
         }
         Insert: {
           cancelled_at?: string | null
           checkout_url?: string | null
+          comprovante_url?: string | null
           consulta_id: string
           created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          empresa_id?: string | null
+          gateway?: string | null
+          gateway_ref?: string | null
           id?: string
+          medico_id?: string | null
           metadata?: Json
           metodo?: Database["public"]["Enums"]["pagamento_metodo"]
           moeda?: string
+          observacoes_internas?: string | null
+          paciente_id?: string | null
           paid_at?: string | null
           provider?: Database["public"]["Enums"]["pagamento_provider"]
           provider_payment_id?: string | null
           provider_session_id?: string | null
+          responsavel_cobranca?: string | null
+          servico_id?: string | null
           status?: Database["public"]["Enums"]["pagamento_status"]
+          taxa_gateway_centavos?: number
+          taxa_imposto_centavos?: number
           updated_at?: string
+          valor_bruto_centavos?: number
           valor_centavos: number
+          valor_liquido_centavos?: number
+          valor_reembolsado_centavos?: number
         }
         Update: {
           cancelled_at?: string | null
           checkout_url?: string | null
+          comprovante_url?: string | null
           consulta_id?: string
           created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          empresa_id?: string | null
+          gateway?: string | null
+          gateway_ref?: string | null
           id?: string
+          medico_id?: string | null
           metadata?: Json
           metodo?: Database["public"]["Enums"]["pagamento_metodo"]
           moeda?: string
+          observacoes_internas?: string | null
+          paciente_id?: string | null
           paid_at?: string | null
           provider?: Database["public"]["Enums"]["pagamento_provider"]
           provider_payment_id?: string | null
           provider_session_id?: string | null
+          responsavel_cobranca?: string | null
+          servico_id?: string | null
           status?: Database["public"]["Enums"]["pagamento_status"]
+          taxa_gateway_centavos?: number
+          taxa_imposto_centavos?: number
           updated_at?: string
+          valor_bruto_centavos?: number
           valor_centavos?: number
+          valor_liquido_centavos?: number
+          valor_reembolsado_centavos?: number
         }
         Relationships: [
           {
@@ -1887,29 +2087,50 @@ export type Database = {
       reembolsos: {
         Row: {
           actor_id: string | null
+          analisado_por: string | null
           consulta_id: string
           created_at: string
+          decidido_em: string | null
           id: string
           motivo: string
           observacao: string | null
+          pagamento_id: string | null
+          snapshot_estornado: boolean
+          status: Database["public"]["Enums"]["reembolso_status"]
+          tipo: Database["public"]["Enums"]["reembolso_tipo"]
+          updated_at: string
           valor_centavos: number
         }
         Insert: {
           actor_id?: string | null
+          analisado_por?: string | null
           consulta_id: string
           created_at?: string
+          decidido_em?: string | null
           id?: string
           motivo: string
           observacao?: string | null
+          pagamento_id?: string | null
+          snapshot_estornado?: boolean
+          status?: Database["public"]["Enums"]["reembolso_status"]
+          tipo?: Database["public"]["Enums"]["reembolso_tipo"]
+          updated_at?: string
           valor_centavos?: number
         }
         Update: {
           actor_id?: string | null
+          analisado_por?: string | null
           consulta_id?: string
           created_at?: string
+          decidido_em?: string | null
           id?: string
           motivo?: string
           observacao?: string | null
+          pagamento_id?: string | null
+          snapshot_estornado?: boolean
+          status?: Database["public"]["Enums"]["reembolso_status"]
+          tipo?: Database["public"]["Enums"]["reembolso_tipo"]
+          updated_at?: string
           valor_centavos?: number
         }
         Relationships: []
@@ -2055,6 +2276,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      _log_financeiro: {
+        Args: {
+          _acao: string
+          _entidade: string
+          _entidade_id: string
+          _motivo?: string
+          _observacao?: string
+          _payload?: Json
+          _valor_ant?: string
+          _valor_novo?: string
+        }
+        Returns: undefined
+      }
       admin_agendamentos_overview: {
         Args: { _data?: string; _periodo?: string }
         Returns: Json
@@ -2165,6 +2399,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      financeiro_central_dashboard: {
+        Args: { _empresa_id?: string; _fim: string; _inicio: string }
+        Returns: Json
+      }
       financeiro_dashboard: {
         Args: { _empresa_id?: string; _fim: string; _inicio: string }
         Returns: Json
@@ -2177,6 +2415,22 @@ export type Database = {
         Args: { _consulta_id: string; _motivo: string }
         Returns: Json
       }
+      financeiro_link_cancelar: {
+        Args: { _link_id: string; _motivo: string }
+        Returns: string
+      }
+      financeiro_link_criar: {
+        Args: {
+          _consulta_id?: string
+          _descricao: string
+          _observacao?: string
+          _paciente_id: string
+          _servico_id?: string
+          _valor_centavos: number
+          _vencimento?: string
+        }
+        Returns: string
+      }
       financeiro_marcar_pago: {
         Args: {
           _ano: number
@@ -2186,9 +2440,56 @@ export type Database = {
         }
         Returns: Json
       }
+      financeiro_pagamento_cancelar: {
+        Args: { _motivo: string; _pagamento_id: string }
+        Returns: string
+      }
+      financeiro_pagamento_confirmar: {
+        Args: { _observacao?: string; _pagamento_id: string }
+        Returns: string
+      }
       financeiro_reembolsar_consulta: {
         Args: { _consulta_id: string; _motivo: string; _observacao?: string }
         Returns: Json
+      }
+      financeiro_reembolso_aprovar: {
+        Args: { _observacao?: string; _reembolso_id: string }
+        Returns: string
+      }
+      financeiro_reembolso_recusar: {
+        Args: { _motivo: string; _reembolso_id: string }
+        Returns: string
+      }
+      financeiro_reembolso_solicitar: {
+        Args: {
+          _consulta_id: string
+          _motivo: string
+          _observacao?: string
+          _pagamento_id: string
+          _tipo: Database["public"]["Enums"]["reembolso_tipo"]
+          _valor_centavos: number
+        }
+        Returns: string
+      }
+      financeiro_relatorio_periodo: {
+        Args: { _agrupar?: string; _fim: string; _inicio: string }
+        Returns: Json
+      }
+      financeiro_repasse_bloquear: {
+        Args: { _fechamento_id: string; _motivo: string }
+        Returns: string
+      }
+      financeiro_repasse_contestar: {
+        Args: { _fechamento_id: string; _motivo: string }
+        Returns: string
+      }
+      financeiro_repasse_marcar_pago: {
+        Args: {
+          _comprovante_url?: string
+          _fechamento_id: string
+          _observacao?: string
+        }
+        Returns: string
       }
       forcar_status_consulta: {
         Args: {
