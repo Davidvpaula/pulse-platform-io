@@ -987,8 +987,16 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      remover_cupom_pagamento: {
+        Args: { _pagamento_id: string }
+        Returns: Json
+      }
       trocar_medico_consulta: {
         Args: { _consulta_id: string; _motivo?: string; _novo_slot_id: string }
+        Returns: Json
+      }
+      validar_e_aplicar_cupom: {
+        Args: { _codigo: string; _pagamento_id: string }
         Returns: Json
       }
     }
