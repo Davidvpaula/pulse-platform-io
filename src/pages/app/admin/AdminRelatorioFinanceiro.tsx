@@ -31,18 +31,6 @@ function deltaPct(now: number, prev: number): { v: number; label: string } {
   return { v, label: `${v >= 0 ? "+" : ""}${v.toFixed(1)}%` };
 }
 
-function DeltaBadge({ now, prev }: { now: number; prev: number }) {
-  const { v, label } = deltaPct(now, prev);
-  if (label === "—") return <span className="text-xs text-muted-foreground">—</span>;
-  const Icon = v >= 0 ? TrendingUp : TrendingDown;
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${v >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-      <Icon className="h-3 w-3" />
-      {label}
-    </span>
-  );
-}
-
 export default function AdminRelatorioFinanceiro() {
   const inicial = periodoPreset("30d");
   const [inicio, setInicio] = useState(inicial.inicio);
