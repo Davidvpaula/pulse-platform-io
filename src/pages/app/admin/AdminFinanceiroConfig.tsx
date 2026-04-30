@@ -579,32 +579,11 @@ function ExcecaoModal({
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                % repasse médico
-              </label>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                step={0.01}
-                value={medicoPct}
-                onChange={(e) =>
-                  setMedicoPct(Math.max(0, Math.min(100, Number(e.target.value) || 0)))
-                }
-                className="mt-1.5"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                % plataforma
-              </label>
-              <div className="mt-1.5 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm font-medium">
-                {plataformaPct.toFixed(2)}%
-              </div>
-            </div>
-          </div>
+          <RepasseSplitInput
+            medicoPct={medicoPct}
+            onChange={setMedicoPct}
+            onValidityChange={setValid}
+          />
 
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
