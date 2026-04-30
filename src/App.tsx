@@ -80,6 +80,8 @@ import PermissoesLog from "@/pages/app/admin/PermissoesLog";
 import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
 import AdminSessoes from "@/pages/app/admin/AdminSessoes";
 import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
+import AdminServicos from "@/pages/app/admin/AdminServicos";
+import MedicoServicos from "@/pages/app/medico/MedicoServicos";
 import TrocarSenha from "@/pages/auth/TrocarSenha";
 import { SecurityWatcher } from "@/components/security/SecurityWatcher";
 import AdminAnalises from "@/pages/app/admin/AdminAnalises";
