@@ -102,14 +102,13 @@ export default function MedicoConsultas() {
     }
   };
 
-  const concluir = async (id: string) => {
-    setAcaoId(id);
-    const ok = await updateConsultaStatus(id, "concluida");
+  const concluir = async (c: ConsultaDetalhada) => {
+    setAcaoId(c.id);
+    const ok = await updateConsultaStatus(c.id, "concluida");
     setAcaoId(null);
-    if (ok) {
-      toast.success("Consulta marcada como concluida");
-      void carregar();
-    } else toast.error("Erro ao concluir");
+    if (!ok) { toast.error("Erro ao concluir"); return; }
+    // Abre modal de retorno gratuito
+    setRetornoCtx({ id: c.id, nome: c.paciente_nome });
   };
 
   if (!session) {
