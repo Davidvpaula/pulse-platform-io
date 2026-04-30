@@ -348,7 +348,44 @@ export default function MedicoHorarios() {
         </div>
       </div>
 
-      {/* Aviso: link da sala obrigatório p/ horários online */}
+      {/* Tipo de slot: Particular vs Serviço da plataforma */}
+      <div className="card-elevated p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Tipo de horário a gerar
+        </p>
+        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicoSel(null); }} className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <RadioGroupItem value="particular" id="t-part" />
+            <span className="text-sm">Particular (preço/duração da sua especialidade)</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <RadioGroupItem value="servico" id="t-srv" disabled={servicosDisp.length === 0} />
+            <span className="text-sm">
+              Serviço da plataforma {servicosDisp.length === 0 && <span className="text-xs text-muted-foreground">(adira em /app/medico/servicos)</span>}
+            </span>
+          </label>
+        </RadioGroup>
+        {tipoSlot === "servico" && (
+          <Select value={servicoSel ?? ""} onValueChange={(v) => setServicoSel(v)}>
+            <SelectTrigger className="w-full md:w-96">
+              <SelectValue placeholder="Escolha o serviço" />
+            </SelectTrigger>
+            <SelectContent>
+              {servicosDisp.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.nome} · {s.duracao_min}min · R$ {(s.valor_paciente_centavos / 100).toFixed(2)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {tipoSlot === "servico" && servicoAtual && (
+          <p className="text-xs text-muted-foreground">
+            Duração fixa de <b>{servicoAtual.duracao_min} min</b> definida pelo serviço (não editável).
+          </p>
+        )}
+      </div>
+
       {session && modalidade === "online" && !linkSala && !loading && (
         <div className="card-elevated border-warning/40 bg-warning/5 p-4">
           <div className="flex items-start gap-3">
