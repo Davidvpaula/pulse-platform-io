@@ -148,11 +148,11 @@ export default function AdminFinanceiroCentral() {
     try {
       const { data: d } = await supabase.rpc("financeiro_central_dashboard" as any, { _inicio: inicio, _fim: fim });
       setDash(d);
-      const { data: p } = await supabase.from("pagamentos").select("*").order("created_at", { ascending: false }).limit(200);
+      const { data: p } = await supabase.from("pagamentos").select("*, paciente:pacientes(id,nome), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500);
       setPagamentos(p || []);
-      const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(100);
+      const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(200);
       setReembolsos(r || []);
-      const { data: l } = await supabase.from("cobrancas_links").select("*").order("created_at", { ascending: false }).limit(100);
+      const { data: l } = await supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome)").order("created_at", { ascending: false }).limit(500);
       setLinks(l || []);
       const { data: f } = await supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100);
       setRepasses(f || []);
