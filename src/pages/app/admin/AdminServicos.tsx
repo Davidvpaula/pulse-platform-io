@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil } from "lucide-react";
+import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 type Tipo = "consulta" | "pronto_atendimento" | "pacote";
 type Modelo = "percentual" | "valor_fixo";
