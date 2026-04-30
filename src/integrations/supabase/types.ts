@@ -1769,6 +1769,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _log_consulta_audit: {
+        Args: {
+          _acao: string
+          _campo: string
+          _consulta_id: string
+          _motivo: string
+          _payload: Json
+          _val_ant: string
+          _val_novo: string
+        }
+        Returns: undefined
+      }
+      admin_agendamentos_overview: {
+        Args: { _data?: string; _periodo?: string }
+        Returns: Json
+      }
+      admin_consulta_cancelar: {
+        Args: { _consulta_id: string; _motivo: string }
+        Returns: Json
+      }
+      admin_consulta_forcar_confirmacao: {
+        Args: { _consulta_id: string; _motivo: string }
+        Returns: Json
+      }
+      admin_consulta_marcar_realizada: {
+        Args: { _consulta_id: string; _observacao: string }
+        Returns: Json
+      }
+      admin_consulta_reenviar_link: {
+        Args: { _consulta_id: string }
+        Returns: Json
+      }
+      admin_consulta_trocar_medico: {
+        Args: {
+          _consulta_id: string
+          _motivo: string
+          _novo_medico_id: string
+          _novo_slot_id: string
+        }
+        Returns: Json
+      }
       admin_empresas_overview: { Args: never; Returns: Json }
       admin_visao_geral: { Args: { _periodo?: string }; Returns: Json }
       agendar_retorno_gratuito: {
