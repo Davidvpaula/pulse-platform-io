@@ -1218,3 +1218,104 @@ export async function listEspecialidadesResumo(): Promise<{ id: string; nome: st
   const { data } = await supabase.from("especialidades").select("id, nome").eq("ativo", true).order("nome");
   return (data ?? []) as any;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * DOCUMENTOS / PRESCRIÇÕES (visão do médico)
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type DocumentoMedico = {
+  consulta_id: string;
+  consulta_inicio: string;
+  consulta_status: ConsultaStatus;
+  paciente_id: string;
+  paciente_nome: string | null;
+  especialidade_nome: string | null;
+  prescricao_id: string | null;
+  prescricao_emitida_em: string | null;
+  prescricao_validade_dias: number | null;
+  prescricao_qtd_medicamentos: number;
+  tem_prontuario: boolean;
+  qtd_anexos: number;
+};
+
+export type DocumentoFiltro = "todos" | "emitidas" | "pendentes" | "vencidas";
+
+/** Lista consultas do médico com info de prescrição/prontuário/anexos. */
+export async function listDocumentosDoMedico(): Promise<DocumentoMedico[]> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return [];
+
+  const consultas = await listConsultasDoMedico();
+  if (consultas.length === 0) return [];
+
+  const consultaIds = consultas.map((c) => c.id);
+
+  const [{ data: presc }, { data: pront }, { data: anex }] = await Promise.all([
+    supabase
+      .from("prescricoes")
+      .select("id, consulta_id, emitida_em, validade_dias, medicamentos")
+      .in("consulta_id", consultaIds),
+    supabase.from("prontuarios").select("consulta_id").in("consulta_id", consultaIds),
+    supabase.from("anexos_consulta").select("consulta_id").in("consulta_id", consultaIds),
+  ]);
+
+  const prescPorConsulta = new Map<string, any>();
+  (presc ?? []).forEach((p: any) => prescPorConsulta.set(p.consulta_id, p));
+  const prontSet = new Set((pront ?? []).map((p: any) => p.consulta_id));
+  const anexCount = new Map<string, number>();
+  (anex ?? []).forEach((a: any) => {
+    anexCount.set(a.consulta_id, (anexCount.get(a.consulta_id) ?? 0) + 1);
+  });
+
+  return consultas.map<DocumentoMedico>((c) => {
+    const p = prescPorConsulta.get(c.id);
+    const meds = Array.isArray(p?.medicamentos) ? p.medicamentos : [];
+    return {
+      consulta_id: c.id,
+      consulta_inicio: c.inicio,
+      consulta_status: c.status,
+      paciente_id: c.paciente_id,
+      paciente_nome: c.paciente_nome ?? null,
+      especialidade_nome: c.especialidade_nome ?? null,
+      prescricao_id: p?.id ?? null,
+      prescricao_emitida_em: p?.emitida_em ?? null,
+      prescricao_validade_dias: p?.validade_dias ?? null,
+      prescricao_qtd_medicamentos: meds.length,
+      tem_prontuario: prontSet.has(c.id),
+      qtd_anexos: anexCount.get(c.id) ?? 0,
+    };
+  });
+}
+
+/** Emite uma prescrição simulada para a consulta (apenas se ainda não houver). */
+export async function emitirPrescricaoSimulada(consultaId: string): Promise<{ ok: boolean; error?: string }> {
+  const { data: existente } = await supabase
+    .from("prescricoes")
+    .select("id")
+    .eq("consulta_id", consultaId)
+    .maybeSingle();
+  if (existente) return { ok: false, error: "Já existe uma prescrição para esta consulta." };
+
+  const medicamentos = [
+    {
+      nome: "Dipirona Sódica 500mg",
+      posologia: "1 comprimido a cada 6 horas se dor ou febre",
+      duracao: "5 dias",
+    },
+    {
+      nome: "Omeprazol 20mg",
+      posologia: "1 cápsula em jejum, uma vez ao dia",
+      duracao: "14 dias",
+    },
+  ];
+
+  const { error } = await supabase.from("prescricoes").insert({
+    consulta_id: consultaId,
+    medicamentos,
+    orientacoes:
+      "Prescrição simulada gerada automaticamente para fins de demonstração. Ingerir bastante líquido e retornar em caso de piora.",
+    validade_dias: 30,
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
