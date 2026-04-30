@@ -101,6 +101,10 @@ export default function AdminFinanceiroConfig() {
   const [auditRefresh, setAuditRefresh] = useState(0);
 
   const salvarGlobal = () => {
+    if (!globalValid) {
+      toast.error("Corrija o repasse antes de salvar.");
+      return;
+    }
     if (medicoPct < 0 || medicoPct > 100) {
       toast.error("Use um valor entre 0 e 100.");
       return;
