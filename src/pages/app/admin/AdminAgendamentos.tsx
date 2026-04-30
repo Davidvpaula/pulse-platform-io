@@ -358,7 +358,7 @@ export default function AdminAgendamentos() {
     <div className="space-y-6">
       <PageHeader
         title="Central de Agendamentos"
-        subtitle="Monitoramento, auditoria e otimização — não é uma agenda manual."
+        description="Monitoramento, auditoria e otimização — não é uma agenda manual."
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={carregar}>

@@ -76,6 +76,7 @@ import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
+import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
