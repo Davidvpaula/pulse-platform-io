@@ -4,6 +4,7 @@ import {
   Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
   AlertTriangle, Search, Inbox, Filter, Check, Trash2, Settings,
   Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock, Mail, MailOpen,
+  Send, Eye, UserCheck, XCircle, History, type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -168,6 +169,177 @@ function formatTempo(iso: string) {
 function formatDataCompleta(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+/* ─────────── Histórico de eventos por categoria ─────────── */
+
+type EventoTipo = "info" | "ok" | "warn" | "danger";
+
+type EventoTimeline = {
+  label: string;
+  hint?: string;
+  ts: string; // ISO
+  icon: LucideIcon;
+  tipo: EventoTipo;
+};
+
+const eventoToneUI: Record<EventoTipo, { ring: string; text: string; bg: string }> = {
+  info:   { ring: "ring-primary/30",     text: "text-primary",     bg: "bg-primary/10" },
+  ok:     { ring: "ring-success/30",     text: "text-success",     bg: "bg-success/10" },
+  warn:   { ring: "ring-warning/30",     text: "text-warning",     bg: "bg-warning/10" },
+  danger: { ring: "ring-destructive/30", text: "text-destructive", bg: "bg-destructive/10" },
+};
+
+/**
+ * Gera um histórico mockado de eventos para a mensagem, baseado na categoria.
+ * Quando o backend estiver pronto, basta substituir por uma leitura de
+ * `mensagem_eventos` (msg_id, tipo, label, ts).
+ */
+function eventosPorMensagem(m: Mensagem): EventoTimeline[] {
+  const baseTs = new Date(m.data).getTime();
+  const min = (n: number) => new Date(baseTs - n * 60_000).toISOString();
+  const after = (n: number) => new Date(baseTs + n * 60_000).toISOString();
+
+  const criada: EventoTimeline = {
+    label: "Mensagem criada",
+    hint: "Sistema gerou a notificação",
+    ts: min(2),
+    icon: Sparkles,
+    tipo: "info",
+  };
+  const enviada: EventoTimeline = {
+    label: "Enviada para você",
+    hint: "Push e e-mail disparados",
+    ts: min(1),
+    icon: Send,
+    tipo: "info",
+  };
+  const visualizada: EventoTimeline = {
+    label: m.lida ? "Visualizada" : "Aguardando visualização",
+    hint: m.lida ? "Marcada como lida nesta sessão" : "Ainda não foi aberta",
+    ts: m.lida ? after(0) : m.data,
+    icon: Eye,
+    tipo: m.lida ? "ok" : "info",
+  };
+
+  switch (m.categoria) {
+    case "lembrete":
+      return [
+        criada,
+        enviada,
+        visualizada,
+        {
+          label: "Confirmação solicitada",
+          hint: "Aguardando ação do paciente",
+          ts: after(1),
+          icon: UserCheck,
+          tipo: "warn",
+        },
+      ];
+    case "alteracao":
+      return [
+        {
+          label: "Reagendamento solicitado",
+          hint: "Por: Secretaria · MedClin",
+          ts: min(15),
+          icon: Calendar,
+          tipo: "warn",
+        },
+        {
+          label: "Novo horário aplicado",
+          hint: "Agenda do médico atualizada",
+          ts: min(10),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "retorno":
+      return [
+        {
+          label: "Consulta concluída",
+          hint: "Origem do benefício de retorno",
+          ts: min(180),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        {
+          label: "Retorno gratuito gerado",
+          hint: "Validade de 15 dias",
+          ts: min(170),
+          icon: Repeat,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "pagamento":
+      return [
+        {
+          label: "Cobrança gerada",
+          hint: "Valor: R$ 220,00",
+          ts: min(60),
+          icon: CreditCard,
+          tipo: "info",
+        },
+        enviada,
+        visualizada,
+        {
+          label: "Pagamento pendente",
+          hint: "Aguardando confirmação",
+          ts: after(0),
+          icon: AlertTriangle,
+          tipo: "danger",
+        },
+      ];
+    case "documento":
+      return [
+        {
+          label: "Documento emitido",
+          hint: "Assinatura digital aplicada",
+          ts: min(20),
+          icon: FileText,
+          tipo: "ok",
+        },
+        {
+          label: "Disponibilizado no portal",
+          ts: min(15),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "telemedicina":
+      return [
+        {
+          label: "Sala criada",
+          hint: "Plataforma de vídeo configurada",
+          ts: min(30),
+          icon: Video,
+          tipo: "info",
+        },
+        {
+          label: "Link enviado",
+          hint: "Disponível no agendamento",
+          ts: min(25),
+          icon: Send,
+          tipo: "info",
+        },
+        visualizada,
+      ];
+    case "sistema":
+    default:
+      return [criada, enviada, visualizada];
+  }
+}
+
+function formatTimelineTs(iso: string) {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "2-digit",
     hour: "2-digit", minute: "2-digit",
   });
 }
@@ -421,6 +593,41 @@ export default function PacienteMensagens() {
                     </div>
                   </div>
                 )}
+
+                {/* Histórico de eventos da mensagem */}
+                <section className="mt-2 rounded-xl border border-border bg-background/40 p-4">
+                  <header className="mb-3 flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">Histórico desta notificação</h3>
+                  </header>
+                  <ol className="relative ml-2 space-y-3 border-l border-border pl-5">
+                    {eventosPorMensagem(selecionada).map((ev, i) => {
+                      const tone = eventoToneUI[ev.tipo];
+                      const Icon = ev.icon;
+                      return (
+                        <li key={`${ev.label}-${i}`} className="relative">
+                          <span
+                            className={cn(
+                              "absolute -left-[26px] top-0 flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-card",
+                              tone.bg,
+                            )}
+                          >
+                            <Icon className={cn("h-3 w-3", tone.text)} />
+                          </span>
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                            <p className="text-sm font-medium leading-tight">{ev.label}</p>
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatTimelineTs(ev.ts)}
+                            </span>
+                          </div>
+                          {ev.hint && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">{ev.hint}</p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
               </div>
 
               {/* Footer com CTA */}
