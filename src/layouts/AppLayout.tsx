@@ -19,6 +19,7 @@ import {
 import { NotificationsBell } from "@/components/NotificationsBell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useSession } from "@/lib/session";
+import { ImpersonationBanner } from "@/components/impersonation/ImpersonationBanner";
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <ImpersonationBanner />
+      <div className="flex flex-1 w-full">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
         <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
       </aside>
