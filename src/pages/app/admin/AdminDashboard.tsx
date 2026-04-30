@@ -43,10 +43,19 @@ const fmtHora = (iso: string) =>
 const fmtData = (iso: string) =>
   new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
+interface ServicosResumo {
+  total_ativos: number;
+  total_inativos: number;
+  medicos_vinculados: number;
+  overrides_pendentes: number;
+  ticket_medio_centavos: number;
+}
+
 export default function AdminDashboard() {
   const [periodo, setPeriodo] = useState<PeriodoKey>("mes");
   const [data, setData] = useState<VisaoGeral | null>(null);
   const [loading, setLoading] = useState(true);
+  const [servicos, setServicos] = useState<ServicosResumo | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -64,6 +73,31 @@ export default function AdminDashboard() {
     })();
     return () => { active = false; };
   }, [periodo]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const [{ data: srv }, { count: vinc }, { count: pend }] = await Promise.all([
+        supabase.from("servicos_financeiros").select("ativo,valor_paciente_centavos"),
+        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "ativo"),
+        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "pendente"),
+      ]);
+      if (!active) return;
+      const ativos = (srv ?? []).filter((s: any) => s.ativo);
+      const inativos = (srv ?? []).filter((s: any) => !s.ativo);
+      const valores = ativos.map((s: any) => s.valor_paciente_centavos ?? 0).filter((v: number) => v > 0);
+      const ticket = valores.length ? Math.round(valores.reduce((a: number, b: number) => a + b, 0) / valores.length) : 0;
+      setServicos({
+        total_ativos: ativos.length,
+        total_inativos: inativos.length,
+        medicos_vinculados: vinc ?? 0,
+        overrides_pendentes: pend ?? 0,
+        ticket_medio_centavos: ticket,
+      });
+    })();
+    return () => { active = false; };
+  }, []);
+
 
   const k = data?.kpis ?? {};
   const p = data?.pendencias ?? {};
@@ -107,6 +141,45 @@ export default function AdminDashboard() {
           hint={k.medicos_pendentes ? `${k.medicos_pendentes} pendentes` : "Nenhum pendente"} />
         <StatCard label="Empresas" value={fmtNum(k.empresas_total ?? 0)} icon={Building2} />
         <StatCard label="Agendamentos" value={fmtNum(k.agendamentos_periodo ?? 0)} icon={Calendar} hint={periodoLabel} />
+      </div>
+
+      {/* Serviços da plataforma */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-lg font-semibold">Serviços da plataforma</h3>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/app/admin/servicos">Gerenciar serviços <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Serviços ativos</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.total_ativos ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">{fmtNum(servicos?.total_inativos ?? 0)} inativos</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Vínculos médico↔serviço</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.medicos_vinculados ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">ativos na vitrine</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Overrides pendentes</p>
+            <p className={cn("mt-1 text-2xl font-semibold", (servicos?.overrides_pendentes ?? 0) > 0 && "text-warning")}>
+              {fmtNum(servicos?.overrides_pendentes ?? 0)}
+            </p>
+            <p className="text-xs text-muted-foreground">aguardando aprovação</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Ticket médio do catálogo</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtBRL(servicos?.ticket_medio_centavos ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">por atendimento</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
