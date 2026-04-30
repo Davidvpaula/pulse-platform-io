@@ -193,7 +193,7 @@ const App = () => (
               <Route path="admin/empresas" element={<AdminEmpresas />} />
               <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
               <Route path="admin/financeiro" element={<AdminFinanceiroCentral />} />
-              <Route path="admin/planos" element={<Placeholder title="Planos e assinaturas" />} />
+              <Route path="admin/planos" element={<AdminPlanos />} />
               <Route path="admin/comunicacao" element={<Conversas />} />
               <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
               <Route path="admin/integracoes" element={<Integracoes />} />
