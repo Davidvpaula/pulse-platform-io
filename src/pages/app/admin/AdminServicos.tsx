@@ -137,6 +137,9 @@ export default function AdminServicos() {
     if ((editing.duracao_min ?? 0) % 5 !== 0) {
       return toast({ title: "Duração deve ser múltiplo de 5", variant: "destructive" });
     }
+    if (editing.modelo === "percentual" && !pctValid) {
+      return toast({ title: "Corrija o percentual de repasse", variant: "destructive" });
+    }
     setSaving(true);
     const payload: any = {
       nome: editing.nome,
