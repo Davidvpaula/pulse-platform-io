@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { validarCobranca } from "@/lib/validation/cobranca";
 
 const brl = (c: number) => ((c || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
@@ -72,17 +73,22 @@ export default function AdminFinanceiroCentral() {
   }
 
   async function criarCobranca() {
-    const valorNum = Number(novaCobranca.valor.replace(",", "."));
-    if (!novaCobranca.descricao.trim() || !valorNum || valorNum <= 0) {
-      toast.error("Preencha descrição e valor válido"); return;
-    }
+    const r = validarCobranca({
+      descricao: novaCobranca.descricao,
+      valor: novaCobranca.valor,
+      vencimento: novaCobranca.vencimento,
+      observacao: novaCobranca.observacao,
+      paciente_id: novaCobranca.paciente_id,
+      empresa_id: novaCobranca.empresa_id,
+    });
+    if (r.ok === false) { toast.error(r.erro); return; }
     try {
       const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: novaCobranca.descricao,
-        valor_centavos: Math.round(valorNum * 100),
+        descricao: novaCobranca.descricao.trim(),
+        valor_centavos: r.valor_centavos,
         vencimento: novaCobranca.vencimento || null,
         paciente_id: novaCobranca.paciente_id || null,
-        observacao: novaCobranca.observacao || null,
+        observacao: novaCobranca.observacao?.trim() || null,
         status: "ativo",
       } as any);
       if (error) throw error;
@@ -403,7 +409,7 @@ export default function AdminFinanceiroCentral() {
             <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
             <div className="grid grid-cols-2 gap-2">
               <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
+              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
             </div>
             <div>
               <Label>Paciente (opcional)</Label>
