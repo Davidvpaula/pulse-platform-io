@@ -136,21 +136,9 @@ export default function MedicoAgenda() {
     }
   }
 
-  async function concluirConsulta(c: ConsultaDetalhada) {
-    setAcaoId(c.id);
-    try {
-      const { error } = await supabase
-        .from("consultas")
-        .update({ status: "concluida" })
-        .eq("id", c.id);
-      if (error) throw error;
-      toast.success("Consulta concluída");
-      void carregar();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível concluir a consulta");
-    } finally {
-      setAcaoId(null);
-    }
+  // Concluir abre o diálogo de finalização (prontuário/prescrição/pagamento)
+  function abrirFinalizar(c: ConsultaDetalhada) {
+    setFinalizar(c);
   }
 
   // Modo demo (sem sessão) — mantém comportamento anterior com mock
