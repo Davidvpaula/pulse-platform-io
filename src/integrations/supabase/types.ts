@@ -2409,6 +2409,13 @@ export type Database = {
         | "reprovado"
         | "suspenso"
         | "bloqueado"
+      pagamento_forma:
+        | "pix"
+        | "cartao"
+        | "boleto"
+        | "manual"
+        | "transferencia"
+        | "outro"
       pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
       pagamento_provider: "mock" | "stripe"
       pagamento_status:
@@ -2643,6 +2650,14 @@ export const Constants = {
         "reprovado",
         "suspenso",
         "bloqueado",
+      ],
+      pagamento_forma: [
+        "pix",
+        "cartao",
+        "boleto",
+        "manual",
+        "transferencia",
+        "outro",
       ],
       pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
       pagamento_provider: ["mock", "stripe"],
