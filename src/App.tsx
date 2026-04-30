@@ -197,8 +197,9 @@ const App = () => (
               <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
               <Route path="admin/financeiro" element={<AdminFinanceiroCentral />} />
               <Route path="admin/planos" element={<AdminPlanos />} />
-              <Route path="admin/comunicacao" element={<Conversas />} />
-              <Route path="admin/whatsapp" element={<WhatsAppCentral />} />
+              <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
+              <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
+              <Route path="admin/integracoes/whatsapp" element={<IntegracaoWhatsApp />} />
               <Route path="admin/integracoes" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
