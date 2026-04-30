@@ -105,11 +105,7 @@ export default function MedicoDocumentos() {
     <div className="space-y-6">
       <PageHeader
         title="Documentos & Prescrições"
-        subtitle="Histórico de prescrições, prontuários e anexos por consulta."
-        breadcrumbs={[
-          { label: "Painel", to: "/app/medico/dashboard" },
-          { label: "Documentos" },
-        ]}
+        description="Histórico de prescrições, prontuários e anexos por consulta."
       />
 
       {!session && (
