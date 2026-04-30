@@ -33,12 +33,18 @@ export default function PacienteAgendamentos() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("futuras");
   const [cancelando, setCancelando] = useState<string | null>(null);
+  const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
+  const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
 
   const carregar = async () => {
-    if (!session) { setRows(null); return; }
+    if (!session) { setRows(null); setVouchers([]); return; }
     setLoading(true);
-    const data = await listConsultasDoPaciente();
+    const [data, vs] = await Promise.all([
+      listConsultasDoPaciente(),
+      listRetornosDisponiveis(),
+    ]);
     setRows(data);
+    setVouchers(vs);
     setLoading(false);
   };
 
