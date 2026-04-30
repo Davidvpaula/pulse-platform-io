@@ -140,13 +140,13 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         label: "Comunicação",
         icon: MessageCircle,
         children: [
-          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
-          { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
-          { label: "WhatsApp", to: "/app/admin/whatsapp" },
+          { label: "Inbox", to: "/app/comunicacao/inbox" },
           { label: "Bot", to: "/app/comunicacao/bot" },
+          { label: "IA Avatar", to: "/app/comunicacao/ia" },
           { label: "Templates", to: "/app/comunicacao/templates" },
           { label: "Automações", to: "/app/comunicacao/automacoes" },
           { label: "Métricas", to: "/app/comunicacao/metricas" },
+          { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
         ],
       },
       {
@@ -154,6 +154,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         icon: Plug,
         children: [
           { label: "Visão geral", to: "/app/admin/integracoes" },
+          { label: "WhatsApp Business API", to: "/app/admin/integracoes/whatsapp" },
           { label: "Feegow", to: "/app/admin/feegow" },
           { label: "Mapeamento de status", to: "/app/admin/feegow/mapeamento" },
           { label: "Schema lógico", to: "/app/admin/feegow/schema" },
