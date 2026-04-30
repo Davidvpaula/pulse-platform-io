@@ -310,6 +310,13 @@ export default function MedicoConsultas() {
         pacienteNome={retornoCtx?.nome}
         onConcluido={() => { setRetornoCtx(null); void carregar(); }}
       />
+
+      <ConsultaHistoricoDialog
+        open={!!historicoCtx}
+        onOpenChange={(v) => { if (!v) setHistoricoCtx(null); }}
+        consultaId={historicoCtx?.id ?? null}
+        consultaResumo={historicoCtx?.resumo}
+      />
     </div>
   );
 }
