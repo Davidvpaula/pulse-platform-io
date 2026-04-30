@@ -231,6 +231,7 @@ const App = () => (
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
               <Route path="admin/sessoes" element={<G perm="colaboradores.alterar_permissoes"><AdminSessoes /></G>} />
               <Route path="admin/seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminSeguranca /></G>} />
+              <Route path="admin/servicos" element={<G perm="financeiro.servicos_gerenciar"><AdminServicos /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
