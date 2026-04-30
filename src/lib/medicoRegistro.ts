@@ -270,3 +270,61 @@ export async function liberarAcessoFeegow(medicoId: string): Promise<{
   }
   return data as any;
 }
+
+// =========================================
+// Ações de status (RPCs novas, com auditoria server-side)
+// =========================================
+export async function medicoColocarEmAnalise(id: string, observacao?: string) {
+  const { error } = await supabase.rpc("medico_colocar_em_analise", { _id: id, _observacao: observacao ?? null });
+  if (error) throw error;
+}
+
+export async function medicoAprovar(id: string, observacao?: string) {
+  const { error } = await supabase.rpc("medico_aprovar", { _id: id, _observacao: observacao ?? null });
+  if (error) throw error;
+}
+
+export async function medicoReprovar(id: string, motivo: string, observacao?: string) {
+  const { error } = await supabase.rpc("medico_reprovar", {
+    _id: id, _motivo: motivo, _observacao: observacao ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function medicoSuspender(args: {
+  id: string; motivo: string; observacao?: string;
+  ate?: string | null; indeterminado?: boolean;
+}) {
+  const { error } = await supabase.rpc("medico_suspender", {
+    _id: args.id,
+    _motivo: args.motivo,
+    _observacao: args.observacao ?? null,
+    _ate: args.ate ?? null,
+    _indeterminado: !!args.indeterminado,
+  });
+  if (error) throw error;
+}
+
+export async function medicoBloquear(id: string, motivo: string, observacao?: string) {
+  const { error } = await supabase.rpc("medico_bloquear", {
+    _id: id, _motivo: motivo, _observacao: observacao ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function medicoReativar(id: string, justificativa: string) {
+  const { error } = await supabase.rpc("medico_reativar", { _id: id, _justificativa: justificativa });
+  if (error) throw error;
+}
+
+/** Conta consultas futuras (agendada/confirmada/aguardando_pagamento) de um médico. */
+export async function contarConsultasFuturas(medicoId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("consultas")
+    .select("id", { count: "exact", head: true })
+    .eq("medico_id", medicoId)
+    .gte("inicio", new Date().toISOString())
+    .in("status", ["agendada", "confirmada", "aguardando_pagamento"]);
+  if (error) return 0;
+  return count ?? 0;
+}
