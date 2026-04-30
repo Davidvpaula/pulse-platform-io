@@ -290,19 +290,9 @@ export default function MedicoHorarios() {
             </span>
           )}
         </div>
-        <div className="w-44">
-          <Select
-            value={modalidade}
-            onValueChange={(v) => setModalidade(v as Modalidade)}
-          >
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="online">Online</SelectItem>
-              <SelectItem value="presencial">Presencial</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-xs text-muted-foreground">
+          <Video className="h-3.5 w-3.5 text-primary" />
+          Telemedicina (online)
         </div>
       </div>
 
