@@ -4,6 +4,7 @@ import {
   Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
   AlertTriangle, Search, Inbox, Filter, Check, Trash2, Settings,
   Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock, Mail, MailOpen,
+  Send, Eye, UserCheck, XCircle, History, type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
