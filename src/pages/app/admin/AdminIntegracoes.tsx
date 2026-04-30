@@ -487,7 +487,7 @@ function SheetConfig({ integracao, onClose, onSaved, onTestar }: {
   const salvar = async () => {
     const { error } = await supabase
       .from("integracoes_config")
-      .update({ config, ambiente, modo_simulado: modoSimulado, ativo })
+      .update({ config: config as never, ambiente, modo_simulado: modoSimulado, ativo })
       .eq("id", integracao.id);
     if (error) toast.error(error.message);
     else { toast.success("Configuração salva"); onSaved(); onClose(); }
