@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
   AlertTriangle, Search, Inbox, Filter, Check, Trash2, Settings,
-  Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock,
+  Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock, Mail, MailOpen,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
