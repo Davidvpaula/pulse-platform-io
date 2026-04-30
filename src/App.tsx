@@ -218,6 +218,7 @@ const App = () => (
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
+              <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
@@ -264,6 +265,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </ImpersonationProvider>
       </AuthProvider>
       </SessionProvider>
     </TooltipProvider>
