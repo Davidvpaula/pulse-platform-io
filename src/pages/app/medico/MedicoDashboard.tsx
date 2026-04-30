@@ -63,6 +63,9 @@ export default function MedicoDashboard() {
     semana: 0,
     pacientesUnicos: 0,
     receitaMes: 0,
+    receitaParticularMes: 0,
+    receitaServicosMes: 0,
+    qtdServicos: 0,
     pagPendentes: 0,
     docsMes: 0,
   });
@@ -115,9 +118,17 @@ export default function MedicoDashboard() {
 
     // Mês (concluídas → receita; aguardando_pagamento → pendentes)
     const mes = await listConsultasDoMedico({ desde: inicioMes, ate: fimMes });
-    const receitaMes = mes
-      .filter((c) => c.status === "concluida")
-      .reduce((acc, c) => acc + (c.valor_centavos ?? 0), 0);
+    const concluidas = mes.filter((c) => c.status === "concluida");
+    // valor que o médico recebe = comissao_snapshot quando existe, senão valor_centavos (fallback)
+    const valorMedico = (c: any) =>
+      (c.comissao_snapshot_centavos ?? c.valor_centavos ?? 0) as number;
+    const receitaMes = concluidas.reduce((acc, c) => acc + valorMedico(c), 0);
+    const receitaParticularMes = concluidas
+      .filter((c: any) => !c.servico_id)
+      .reduce((acc, c) => acc + valorMedico(c), 0);
+    const consultasServico = concluidas.filter((c: any) => !!c.servico_id);
+    const receitaServicosMes = consultasServico.reduce((acc, c) => acc + valorMedico(c), 0);
+    const qtdServicos = consultasServico.length;
     const pagPendentes = mes.filter((c) => c.status === "aguardando_pagamento").length;
 
     // Pacientes únicos (mês)
@@ -141,6 +152,9 @@ export default function MedicoDashboard() {
       semana: semanaTodas.length,
       pacientesUnicos,
       receitaMes,
+      receitaParticularMes,
+      receitaServicosMes,
+      qtdServicos,
       pagPendentes,
       docsMes,
     });
