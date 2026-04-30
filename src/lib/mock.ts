@@ -109,7 +109,7 @@ export type Agendamento = {
   esp: string;
   data: string;
   hora: string;
-  modalidade: "Telemedicina" | "Presencial" | "Empresarial" | "Pronto atendimento" | "Retorno";
+  modalidade: "Telemedicina" | "Empresarial" | "Pronto atendimento" | "Retorno";
   canal: "App" | "WhatsApp" | "Site" | "Empresa";
   status: Status;
   origem?: string;
