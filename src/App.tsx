@@ -95,6 +95,7 @@ import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
+import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
 
@@ -193,40 +194,42 @@ const App = () => (
               {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
               <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
 
-              {/* Admin */}
+              {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
-              <Route path="admin/usuarios" element={<AdminUsuarios />} />
-              <Route path="admin/medicos" element={<MedicosAprovacao />} />
-              <Route path="admin/colaboradores" element={<AdminColaboradores />} />
+              <Route path="admin/usuarios" element={<G perm="pacientes.ver"><AdminUsuarios /></G>} />
+              <Route path="admin/medicos" element={<G perm={["medicos.ver","medicos.aprovar"]}><MedicosAprovacao /></G>} />
+              <Route path="admin/colaboradores" element={<G perm="colaboradores.ver"><AdminColaboradores /></G>} />
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
-              <Route path="admin/empresas" element={<AdminEmpresas />} />
-              <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
-              <Route path="admin/financeiro" element={<AdminFinanceiroCentral />} />
-              <Route path="admin/planos" element={<AdminPlanos />} />
+              <Route path="admin/empresas" element={<G perm="empresas.ver"><AdminEmpresas /></G>} />
+              <Route path="admin/agendamentos" element={<G perm="agenda.ver_todas"><AdminAgendamentos /></G>} />
+              <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
+              <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
-              <Route path="admin/integracoes/whatsapp" element={<IntegracaoWhatsApp />} />
-              <Route path="admin/integracoes" element={<AdminIntegracoes />} />
-              <Route path="admin/integracoes-legado" element={<Integracoes />} />
-              <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
-              <Route path="admin/permissoes" element={<Permissoes />} />
-              <Route path="admin/analises" element={<AdminAnalises />} />
-              <Route path="admin/analises/tempo-real" element={<AdminAnalises />} />
-              <Route path="admin/analises/trafego" element={<AdminAnalises />} />
-              <Route path="admin/analises/comportamento" element={<AdminAnalises />} />
-              <Route path="admin/analises/conversao" element={<AdminAnalises />} />
-              <Route path="admin/analises/financeiro" element={<AdminAnalises />} />
-              <Route path="admin/analises/marketing" element={<AdminAnalises />} />
-              <Route path="admin/analises/comparativo" element={<AdminAnalises />} />
-              <Route path="admin/relatorios" element={<AdminRelatorios />} />
-              <Route path="admin/auditoria" element={<AdminAuditoria />} />
-              <Route path="admin/fluxo" element={<FluxoOperacional />} />
+              <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />
+              <Route path="admin/integracoes" element={<G perm="integracoes.ver"><AdminIntegracoes /></G>} />
+              <Route path="admin/integracoes-legado" element={<G perm="integracoes.ver"><Integracoes /></G>} />
+              <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
+              <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
+              <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/analises/comportamento" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/analises/conversao" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/analises/financeiro" element={<G perm={["analises.ver","analises.financeiro"]} all><AdminAnalises /></G>} />
+              <Route path="admin/analises/marketing" element={<G perm={["analises.ver","analises.marketing"]} all><AdminAnalises /></G>} />
+              <Route path="admin/analises/comparativo" element={<G perm="analises.ver"><AdminAnalises /></G>} />
+              <Route path="admin/relatorios" element={<G perm="relatorios.ver"><AdminRelatorios /></G>} />
+              <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
+              <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
-              <Route path="admin/pacientes/:id" element={<PacientePerfil />} />
-              <Route path="admin/feegow" element={<FeegowIntegracao />} />
-              <Route path="admin/feegow/mapeamento" element={<FeegowMapeamento />} />
-              <Route path="admin/feegow/schema" element={<FeegowSchema />} />
-              <Route path="admin/pendencias-integracao" element={<PendenciasIntegracao />} />
+              <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
+              <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
+              <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />
+              <Route path="admin/feegow/schema" element={<G perm="integracoes.configurar_feegow"><FeegowSchema /></G>} />
+              <Route path="admin/cupons" element={<G perm="financeiro.servicos_gerenciar"><SecretariaCupons /></G>} />
+              <Route path="admin/cupons/log" element={<G perm="financeiro.servicos_gerenciar"><CuponsUsoLog /></G>} />
+              <Route path="admin/pendencias-integracao" element={<G perm="integracoes.ver_logs"><PendenciasIntegracao /></G>} />
               <Route path="secretaria/pendencias-integracao" element={<PendenciasIntegracao />} />
 
               {/* Empresa */}
