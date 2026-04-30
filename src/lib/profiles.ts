@@ -64,6 +64,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Agenda", to: "/app/medico/agenda", icon: Calendar },
       { label: "Meus horários", to: "/app/medico/horarios", icon: Clock },
       { label: "Consultas", to: "/app/medico/consultas", icon: Video },
+      { label: "Serviços da plataforma", to: "/app/medico/servicos", icon: Stethoscope },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
       { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle, requiresCapability: "medico.comunicacao" },
