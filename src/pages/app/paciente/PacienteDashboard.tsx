@@ -317,6 +317,9 @@ export default function PacienteDashboard() {
         </div>
       </div>
 
+      {/* Comunicação — conversas e status com médico, secretaria e suporte */}
+      <ComunicacaoCanais proximaConsulta={proxima} mensagemConsulta={msgConsulta} />
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Mensagens & Suporte */}
         <div className="card-elevated p-6 lg:col-span-1">
