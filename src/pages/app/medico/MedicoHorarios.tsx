@@ -8,7 +8,7 @@ import {
   Database,
   Clock,
   Video,
-  MapPin,
+  
   X,
   Info,
 } from "lucide-react";
