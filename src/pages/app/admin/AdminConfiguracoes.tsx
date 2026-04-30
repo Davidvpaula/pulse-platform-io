@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getAppSetting, type Especialidade } from "@/lib/clinico";
 import { getProviderAtual, type PagamentoProvider } from "@/lib/pagamentos";
+import { useAuth } from "@/lib/auth";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
