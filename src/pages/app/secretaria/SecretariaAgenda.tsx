@@ -37,6 +37,7 @@ export default function SecretariaAgenda() {
   const [reais, setReais] = useState<ConsultaDetalhada[] | null>(null);
   const [loadingReais, setLoadingReais] = useState(false);
   const [trocando, setTrocando] = useState<ConsultaDetalhada | null>(null);
+  const [historicoCtx, setHistoricoCtx] = useState<{ id: string; resumo?: string } | null>(null);
 
   const carregar = async () => {
     if (!session) { setReais(null); return; }
