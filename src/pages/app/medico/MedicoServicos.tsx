@@ -206,10 +206,14 @@ export default function MedicoServicos() {
               Sua solicitação para <b>{overrideOpen?.nome}</b> será analisada pelo administrador.
             </p>
             <div className="space-y-2">
-              <Label>Percentual desejado (%)</Label>
-              <input type="number" min={0} max={100} step={0.01}
-                className="w-full border rounded px-3 py-2"
-                value={overridePct} onChange={(e) => setOverridePct(Number(e.target.value))} />
+              <Label>Divisão desejada</Label>
+              <RepasseSplitInput
+                medicoPct={overridePct}
+                onChange={setOverridePct}
+                onValidityChange={setOverrideValid}
+                size="sm"
+                labels={{ medico: "% que você quer receber", plataforma: "% plataforma" }}
+              />
             </div>
             <div className="space-y-2">
               <Label>Motivo</Label>
