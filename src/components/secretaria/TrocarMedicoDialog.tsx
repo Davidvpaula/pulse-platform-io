@@ -69,6 +69,21 @@ export default function TrocarMedicoDialog({
       toast.success(
         `Consulta reatribuída · novo valor ${formatBRL(r.novo_valor_centavos)}`,
       );
+
+      // Notificação WhatsApp ao paciente (best-effort, não bloqueia)
+      void supabase.functions
+        .invoke("notificar-troca-medico", { body: { consulta_id: consultaId } })
+        .then(({ data, error }) => {
+          if (error) {
+            console.warn("[notificar-troca-medico]", error);
+            toast.warning("Troca feita, mas WhatsApp não foi enviado.");
+          } else if (data?.skipped) {
+            toast.info("Paciente sem WhatsApp cadastrado — notificação não enviada.");
+          } else if (data?.ok) {
+            toast.success("Paciente notificado por WhatsApp.");
+          }
+        });
+
       onTrocado();
       onOpenChange(false);
     } catch (e: any) {
