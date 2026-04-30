@@ -141,9 +141,11 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         children: [
           { label: "Visão geral", to: "/app/admin/financeiro", requiresCapability: "financeiro.ver" },
           { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse", requiresCapability: "financeiro.editar_comissao" },
+          { label: "Prévia de repasse", to: "/app/admin/financeiro/previa-repasse", requiresCapability: "financeiro.editar_comissao" },
         ],
       },
       { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
+      { label: "Atendimento imediato", to: "/app/admin/atendimento-imediato", icon: Activity, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Cupons", to: "/app/admin/cupons", icon: Tag, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck, requiresCapability: "financeiro.servicos_gerenciar" },
       {
