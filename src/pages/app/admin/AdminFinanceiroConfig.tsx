@@ -74,6 +74,7 @@ const Input = (p: React.InputHTMLAttributes<HTMLInputElement>) => (
 export default function AdminFinanceiroConfig() {
   // ---------------- Repasse global ----------------
   const [medicoPct, setMedicoPct] = useState<number>(56);
+  const [globalValid, setGlobalValid] = useState<boolean>(true);
   const [loadingGlobal, setLoadingGlobal] = useState(true);
   const [savingGlobal, setSavingGlobal] = useState(false);
   const plataformaPct = useMemo(
