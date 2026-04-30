@@ -98,6 +98,7 @@ import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
 import AdminFinanceiroConfig from "@/pages/app/admin/AdminFinanceiroConfig";
+import AdminPreviaRepasse from "@/pages/app/admin/AdminPreviaRepasse";
 import AdminPlanos from "@/pages/app/admin/AdminPlanos";
 import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
 import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro";
@@ -227,6 +228,7 @@ const App = () => (
               <Route path="admin/agendamentos" element={<G perm="agenda.ver_todas"><AdminAgendamentos /></G>} />
               <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
+              <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />

@@ -9,6 +9,7 @@ import {
   Info,
   Pencil,
   Power,
+  Sparkles,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -185,6 +186,13 @@ export default function AdminFinanceiroConfig() {
       <PageHeader
         title="Repasse financeiro"
         description="Defina a divisão entre médico e plataforma para consultas particulares (especialidades). Serviços da plataforma usam regra própria."
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <a href="/app/admin/financeiro/previa-repasse">
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Prévia de impacto
+            </a>
+          </Button>
+        }
       />
 
       {/* ============= Card 1: Global ============= */}

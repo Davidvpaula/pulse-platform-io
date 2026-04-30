@@ -1,66 +1,79 @@
-# Validação automática de % de repasse (médico + plataforma = 100)
-
 ## Objetivo
 
-Garantir, em **três camadas**, que toda configuração de repasse no sistema sempre tenha plataforma + médico = 100%, com 2 casas decimais e sem brechas para valores fora de 0–100.
+Adicionar uma tela de **simulação somente-leitura** no painel financeiro do Admin que mostra, lado a lado, como o repasse seria calculado para uma lista de consultas particulares (`servico_id IS NULL`):
 
-## 1. Componente reutilizável `RepasseSplitInput`
+- **Coluna "Atual" (snapshot já gravado)** — exibe os valores que estão imutáveis na consulta (`valor_snapshot_centavos`, `comissao_snapshot_centavos`, `comissao_percentual_snapshot`). É o que o médico realmente vai receber.
+- **Coluna "Se fosse hoje" (recalculado)** — aplica a prioridade vigente (exceção do médico ativa > regra global) sobre o mesmo `valor_snapshot_centavos`, **sem gravar nada**.
+- **Coluna "Diferença"** — destaca onde a regra atual divergiria do snapshot, e em quanto.
 
-Novo componente em `src/components/financeiro/RepasseSplitInput.tsx` com dois inputs lado a lado (% médico / % plataforma) que se mantêm sincronizados:
+Isso responde à pergunta "se eu mudar o repasse global / criar uma exceção para o Dr. X, o que muda para consultas já agendadas vs. para as próximas?" — sem risco de alterar nenhuma consulta existente.
 
-- Editar **qualquer um dos dois** lados recalcula o outro automaticamente.
-- **Clamp** automático para `[0, 100]` (impede digitar 150 ou negativos).
-- **Arredondamento** para 2 casas, com badge laranja "Ajustado para 2 casas decimais" quando o valor digitado tinha mais.
-- **Erro inline** vermelho quando o valor é vazio, NaN ou fora do intervalo.
-- Badge verde **"Soma: 100,00%"** confirmando consistência.
-- Em `onBlur` com erro, **reverte** para o último valor válido.
-- Callback `onValidityChange(valid)` para o pai bloquear o botão Salvar enquanto inválido.
+## Onde fica
 
-Props: `medicoPct`, `onChange`, `disabled`, `size`, `labels`, `plataformaEditavel`, `onValidityChange`.
+- Nova rota: `/app/admin/financeiro/previa-repasse`
+- Card de acesso a partir de `AdminFinanceiroConfig.tsx` (botão "Abrir prévia de impacto").
+- Item correspondente no menu lateral do Admin (mesma seção do "Configuração de repasse").
 
-## 2. Substituir os inputs atuais pelo componente
+## Layout da tela
 
-### `src/pages/app/admin/AdminFinanceiroConfig.tsx`
-- **Card "Repasse global"** (linhas ~209–248): substitui o `Input` solitário do médico + caixa estática da plataforma pelo `RepasseSplitInput` com os dois lados editáveis.
-- **Modal `ExcecaoModal`** (linhas ~597–623): mesmo tratamento.
-- O botão "Salvar" / "Confirmar e salvar" (incluindo o `MotivoDialog`) fica `disabled` quando `valid === false`.
+```text
+┌─ Prévia de impacto do repasse (somente leitura) ──────────────┐
+│ Filtros: [Período ▾]  [Status ▾]  [Médico ▾]  [Buscar]        │
+│                                                                │
+│ Simulação:                                                     │
+│   ( ) Usar regras vigentes                                     │
+│   (•) Simular novo repasse global: [ 56 % médico ]             │
+│   [ ] Simular exceção para [Médico ▾] = [ 60 % médico ]        │
+│                                                                │
+│ Resumo:  N consultas | Σ snapshot médico R$ X | Σ simulado R$ Y│
+│          Diferença total: +R$ Z                                │
+│                                                                │
+│ Tabela:                                                        │
+│  Data | Médico | Status | Valor | % atual | R$ médico atual    │
+│       | % simulado | R$ médico simulado | Δ | Origem da regra  │
+└────────────────────────────────────────────────────────────────┘
+```
 
-### `src/pages/app/admin/AdminServicos.tsx`
-- Quando `modelo === "percentual"` (linhas ~419–425): troca o `Input` único por `RepasseSplitInput` (lado médico editável, plataforma editável), respeitando o cálculo `comissao_pct = % plataforma` que o backend espera. Os preços de preview (`preview.medico` / `preview.plataforma`) já refletem essa mudança automaticamente.
-- Botão "Salvar" do diálogo desabilitado quando inválido.
+Duas abas no topo:
 
-### `src/pages/app/medico/MedicoServicos.tsx`
-- Diálogo "Solicitar override de repasse" (linhas ~194–198): troca o input avulso por `RepasseSplitInput` (size `sm`). Preserva o estado `overridePct`.
-- Botão "Solicitar" desabilitado quando inválido.
+- **"Já agendadas"** — `consultas` particulares com `inicio >= hoje` (ou conforme filtro), status em `agendada / aguardando_pagamento / confirmada`. Mostra que o snapshot **não muda** mesmo simulando.
+- **"Novas (próximos slots)"** — slots particulares ainda livres dos médicos selecionados, simulando que valor o médico receberia se a consulta fosse criada agora com as regras simuladas.
 
-## 3. Defesa em profundidade no banco (rede de segurança)
+## Lógica (sem mutações)
 
-Migration nova (será aplicada via tool de migração quando você aprovar este plano):
+1. Carregar consultas particulares (`servico_id IS NULL`) com `medico_id`, `inicio`, `status`, `valor_snapshot_centavos`, `comissao_snapshot_centavos`, `comissao_percentual_snapshot` + nome do médico.
+2. Para cada consulta, resolver a "regra vigente" no cliente:
+   - Se houver `medico_comissao_override` ativo com `servico_id IS NULL` para o `medico_id` → **exceção do médico**.
+   - Senão → **regra global** (`getRepasseGlobal`).
+3. Aplicar a regra simulada (escolhida no formulário) sobre `valor_snapshot_centavos` para obter o "R$ médico simulado".
+4. Mostrar comparação. Nenhuma chamada de `update/insert/delete` em consultas, app_settings ou overrides.
 
-- **Trigger `BEFORE INSERT/UPDATE` em `app_settings`** (apenas `key='financeiro.comissao_padrao_pct'`):
-  - Rejeita valores não numéricos, fora de `[0,100]` ou nulos com erro `check_violation`.
-  - Arredonda para 2 casas e regrava `value` normalizado.
-- **Trigger `BEFORE INSERT/UPDATE` em `medico_comissao_override`**:
-  - Mesma validação + arredondamento (já existe `CHECK chk_override_pct`, mas a trigger garante o `round2`).
-- **Trigger `BEFORE INSERT/UPDATE` em `servicos_financeiros`**:
-  - Quando `modelo='percentual'`, valida `comissao_pct` ∈ `[0,100]` e arredonda.
+Para a aba **"Novas"**, usa-se `slots` futuros particulares + `medico_servicos`/preço-base do médico (já existente) como `valor_base_centavos` simulado.
 
-Todas com `SET search_path = public`. Sem custos extras de leitura.
+## Componentes/arquivos novos
 
-## Garantias resultantes
+- `src/pages/app/admin/AdminPreviaRepasse.tsx` — tela principal com abas, filtros, resumo e tabela.
+- `src/components/financeiro/PreviaRepasseTabela.tsx` — tabela comparativa (atual vs. simulado vs. diferença).
+- `src/components/financeiro/PreviaRepasseSimuladorForm.tsx` — formulário de simulação (reaproveita `RepasseSplitInput`).
+- `src/lib/financeiroPrevia.ts` — funções puras de leitura + cálculo de simulação:
+  - `listConsultasParticularesParaPrevia(filtros)`
+  - `listSlotsParticularesFuturosParaPrevia(filtros)`
+  - `simularRepasse({ valorCentavos, regraSimulada, regrasVigentesPorMedico })` — retorna `{ pctMedico, valorMedicoCentavos, origemRegra }`.
 
-| Camada | Garantia |
-|---|---|
-| **UI** | Impossível clicar "Salvar" com soma ≠ 100, valor < 0, > 100 ou NaN. Erro visível e auto-correção. |
-| **API client** | `setRepasseGlobal` / `upsertOverrideParticular` já fazem `clampPct` + `round2`. |
-| **Banco** | Triggers rejeitam qualquer escrita inválida vinda de SQL direto, edge function ou bug futuro. |
+## Edições
 
-## Arquivos afetados
+- `src/pages/app/admin/AdminFinanceiroConfig.tsx` — botão "Abrir prévia de impacto" linkando para a nova rota.
+- `src/App.tsx` (ou onde estão as rotas do Admin) — registrar a rota `/app/admin/financeiro/previa-repasse` protegida pelo mesmo guard de `AdminFinanceiroConfig`.
+- Menu lateral do Admin — adicionar item "Prévia de repasse".
 
-- **Novo**: `src/components/financeiro/RepasseSplitInput.tsx`
-- **Editado**: `src/pages/app/admin/AdminFinanceiroConfig.tsx`
-- **Editado**: `src/pages/app/admin/AdminServicos.tsx`
-- **Editado**: `src/pages/app/medico/MedicoServicos.tsx`
-- **Nova migration**: triggers `fn_validar_repasse_global`, `fn_validar_override_pct`, `fn_validar_servico_pct`.
+## Garantias
 
-Sem mudanças em snapshots já gravados, sem novos secrets, sem alterações em integrações externas.
+- **Read-only por construção:** `financeiroPrevia.ts` só faz `select`. Nenhuma mutação.
+- **Snapshot respeitado:** a coluna "Atual" mostra exatamente os campos `*_snapshot_*` da consulta — deixa claro ao Admin que consultas já agendadas não serão recalculadas mesmo se o repasse global mudar.
+- **Exportação CSV** opcional do comparativo, para o Admin levar para análise.
+
+## Fora de escopo
+
+- Não cria, altera ou apaga consultas, overrides ou `app_settings`.
+- Não dispara notificações para médicos.
+- Não toca em consultas com `servico_id` (serviços da plataforma) — fica como melhoria futura.
