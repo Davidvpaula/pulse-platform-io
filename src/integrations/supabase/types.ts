@@ -322,6 +322,7 @@ export type Database = {
           motivo: string | null
           paciente_id: string
           responsavel_agendamento_id: string | null
+          servico_id: string | null
           slot_id: string | null
           status: Database["public"]["Enums"]["consulta_status"]
           updated_at: string
@@ -345,6 +346,7 @@ export type Database = {
           motivo?: string | null
           paciente_id: string
           responsavel_agendamento_id?: string | null
+          servico_id?: string | null
           slot_id?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
@@ -368,6 +370,7 @@ export type Database = {
           motivo?: string | null
           paciente_id?: string
           responsavel_agendamento_id?: string | null
+          servico_id?: string | null
           slot_id?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
@@ -443,6 +446,66 @@ export type Database = {
           payload?: Json | null
           valor_anterior?: string | null
           valor_novo?: string | null
+        }
+        Relationships: []
+      }
+      consultas_financeiro: {
+        Row: {
+          comissao_pct_aplicada: number | null
+          consulta_id: string
+          created_at: string
+          data_consulta: string
+          empresa_id: string | null
+          id: string
+          medico_id: string
+          modelo_aplicado: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          origem_regra: string | null
+          paciente_id: string
+          servico_id: string | null
+          servico_nome_snapshot: string | null
+          status: Database["public"]["Enums"]["consulta_financeiro_status"]
+          updated_at: string
+          valor_bruto_centavos: number
+          valor_medico_centavos: number
+          valor_plataforma_centavos: number
+        }
+        Insert: {
+          comissao_pct_aplicada?: number | null
+          consulta_id: string
+          created_at?: string
+          data_consulta: string
+          empresa_id?: string | null
+          id?: string
+          medico_id: string
+          modelo_aplicado?: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          origem_regra?: string | null
+          paciente_id: string
+          servico_id?: string | null
+          servico_nome_snapshot?: string | null
+          status?: Database["public"]["Enums"]["consulta_financeiro_status"]
+          updated_at?: string
+          valor_bruto_centavos?: number
+          valor_medico_centavos?: number
+          valor_plataforma_centavos?: number
+        }
+        Update: {
+          comissao_pct_aplicada?: number | null
+          consulta_id?: string
+          created_at?: string
+          data_consulta?: string
+          empresa_id?: string | null
+          id?: string
+          medico_id?: string
+          modelo_aplicado?: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          origem_regra?: string | null
+          paciente_id?: string
+          servico_id?: string | null
+          servico_nome_snapshot?: string | null
+          status?: Database["public"]["Enums"]["consulta_financeiro_status"]
+          updated_at?: string
+          valor_bruto_centavos?: number
+          valor_medico_centavos?: number
+          valor_plataforma_centavos?: number
         }
         Relationships: []
       }
@@ -1042,6 +1105,96 @@ export type Database = {
         }
         Relationships: []
       }
+      fechamentos_mensais: {
+        Row: {
+          competencia_ano: number
+          competencia_mes: number
+          comprovante_url: string | null
+          created_at: string
+          id: string
+          medico_id: string
+          observacao: string | null
+          pago_em: string | null
+          pago_por: string | null
+          qtd_consultas: number
+          status: Database["public"]["Enums"]["fechamento_status"]
+          updated_at: string
+          valor_bruto_centavos: number
+          valor_medico_centavos: number
+          valor_plataforma_centavos: number
+        }
+        Insert: {
+          competencia_ano: number
+          competencia_mes: number
+          comprovante_url?: string | null
+          created_at?: string
+          id?: string
+          medico_id: string
+          observacao?: string | null
+          pago_em?: string | null
+          pago_por?: string | null
+          qtd_consultas?: number
+          status?: Database["public"]["Enums"]["fechamento_status"]
+          updated_at?: string
+          valor_bruto_centavos?: number
+          valor_medico_centavos?: number
+          valor_plataforma_centavos?: number
+        }
+        Update: {
+          competencia_ano?: number
+          competencia_mes?: number
+          comprovante_url?: string | null
+          created_at?: string
+          id?: string
+          medico_id?: string
+          observacao?: string | null
+          pago_em?: string | null
+          pago_por?: string | null
+          qtd_consultas?: number
+          status?: Database["public"]["Enums"]["fechamento_status"]
+          updated_at?: string
+          valor_bruto_centavos?: number
+          valor_medico_centavos?: number
+          valor_plataforma_centavos?: number
+        }
+        Relationships: []
+      }
+      medico_comissao_override: {
+        Row: {
+          ativo: boolean
+          comissao_pct: number
+          created_at: string
+          created_by: string | null
+          id: string
+          medico_id: string
+          motivo: string | null
+          servico_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          comissao_pct: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          medico_id: string
+          motivo?: string | null
+          servico_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          comissao_pct?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          medico_id?: string
+          motivo?: string | null
+          servico_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medico_especialidades: {
         Row: {
           ativo: boolean
@@ -1101,6 +1254,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      medico_servicos: {
+        Row: {
+          aderido_em: string
+          ativo: boolean
+          created_at: string
+          desativado_em: string | null
+          id: string
+          medico_id: string
+          servico_id: string
+          updated_at: string
+        }
+        Insert: {
+          aderido_em?: string
+          ativo?: boolean
+          created_at?: string
+          desativado_em?: string | null
+          id?: string
+          medico_id: string
+          servico_id: string
+          updated_at?: string
+        }
+        Update: {
+          aderido_em?: string
+          ativo?: boolean
+          created_at?: string
+          desativado_em?: string | null
+          id?: string
+          medico_id?: string
+          servico_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       medicos: {
         Row: {
@@ -1698,6 +1884,36 @@ export type Database = {
           },
         ]
       }
+      reembolsos: {
+        Row: {
+          actor_id: string | null
+          consulta_id: string
+          created_at: string
+          id: string
+          motivo: string
+          observacao: string | null
+          valor_centavos: number
+        }
+        Insert: {
+          actor_id?: string | null
+          consulta_id: string
+          created_at?: string
+          id?: string
+          motivo: string
+          observacao?: string | null
+          valor_centavos?: number
+        }
+        Update: {
+          actor_id?: string | null
+          consulta_id?: string
+          created_at?: string
+          id?: string
+          motivo?: string
+          observacao?: string | null
+          valor_centavos?: number
+        }
+        Relationships: []
+      }
       retornos_gratuitos: {
         Row: {
           consulta_origem_id: string
@@ -1743,6 +1959,51 @@ export type Database = {
         }
         Relationships: []
       }
+      servicos_financeiros: {
+        Row: {
+          ativo: boolean
+          comissao_pct: number | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          modelo: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          nome: string
+          ordem: number
+          tipo: Database["public"]["Enums"]["servico_financeiro_tipo"]
+          updated_at: string
+          valor_fixo_centavos: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          comissao_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          nome: string
+          ordem?: number
+          tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
+          updated_at?: string
+          valor_fixo_centavos?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          comissao_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          nome?: string
+          ordem?: number
+          tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
+          updated_at?: string
+          valor_fixo_centavos?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1769,6 +2030,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _financeiro_calc_comissao: {
+        Args: { _medico_id: string; _servico_id: string }
+        Returns: {
+          modelo: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          origem: string
+          pct: number
+          valor_fixo: number
+        }[]
+      }
+      _financeiro_gerar_snapshot: {
+        Args: { _consulta_id: string }
+        Returns: undefined
+      }
       _log_consulta_audit: {
         Args: {
           _acao: string
@@ -1891,6 +2165,31 @@ export type Database = {
         }
         Returns: undefined
       }
+      financeiro_dashboard: {
+        Args: { _empresa_id?: string; _fim: string; _inicio: string }
+        Returns: Json
+      }
+      financeiro_fechamento_mensal: {
+        Args: { _ano: number; _mes: number }
+        Returns: Json
+      }
+      financeiro_invalidar_consulta: {
+        Args: { _consulta_id: string; _motivo: string }
+        Returns: Json
+      }
+      financeiro_marcar_pago: {
+        Args: {
+          _ano: number
+          _medico_id: string
+          _mes: number
+          _observacao?: string
+        }
+        Returns: Json
+      }
+      financeiro_reembolsar_consulta: {
+        Args: { _consulta_id: string; _motivo: string; _observacao?: string }
+        Returns: Json
+      }
       forcar_status_consulta: {
         Args: {
           _consulta_id: string
@@ -1955,6 +2254,10 @@ export type Database = {
       }
       medico_reprovar: {
         Args: { _id: string; _motivo: string; _observacao?: string }
+        Returns: Json
+      }
+      medico_servico_toggle: {
+        Args: { _ativo: boolean; _servico_id: string }
         Returns: Json
       }
       medico_suspender: {
@@ -2044,6 +2347,7 @@ export type Database = {
         | "manual_secretaria"
         | "retorno"
         | "api"
+      consulta_financeiro_status: "valido" | "invalidado" | "reembolsado"
       consulta_modalidade: "online" | "presencial"
       consulta_status:
         | "agendada"
@@ -2078,6 +2382,7 @@ export type Database = {
         | "saude_ocupacional"
         | "indicadora"
         | "hibrida"
+      fechamento_status: "em_aberto" | "pago"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       funcao_interna:
         | "secretaria"
@@ -2106,6 +2411,8 @@ export type Database = {
         | "reembolsado"
       permissao_efeito: "grant" | "revoke"
       retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
+      servico_financeiro_modelo: "percentual" | "valor_fixo"
+      servico_financeiro_tipo: "consulta" | "pronto_atendimento" | "pacote"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
       status_colaborador:
@@ -2258,6 +2565,7 @@ export const Constants = {
         "retorno",
         "api",
       ],
+      consulta_financeiro_status: ["valido", "invalidado", "reembolsado"],
       consulta_modalidade: ["online", "presencial"],
       consulta_status: [
         "agendada",
@@ -2296,6 +2604,7 @@ export const Constants = {
         "indicadora",
         "hibrida",
       ],
+      fechamento_status: ["em_aberto", "pago"],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       funcao_interna: [
         "secretaria",
@@ -2327,6 +2636,8 @@ export const Constants = {
       ],
       permissao_efeito: ["grant", "revoke"],
       retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
+      servico_financeiro_modelo: ["percentual", "valor_fixo"],
+      servico_financeiro_tipo: ["consulta", "pronto_atendimento", "pacote"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
       status_colaborador: [
