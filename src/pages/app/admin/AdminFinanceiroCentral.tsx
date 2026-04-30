@@ -396,6 +396,21 @@ export default function AdminFinanceiroCentral() {
         </TabsContent>
       </Tabs>
 
+      {/* Modal cancelamento em lote */}
+      <Dialog open={loteCancelOpen} onOpenChange={o => { if (!loteRunning) { setLoteCancelOpen(o); if (!o) setLoteCancelMotivo(""); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Cancelar {selecionadosPendentes.length} cobranças</DialogTitle></DialogHeader>
+          <Label>Motivo (aplicado a todas)</Label>
+          <Textarea value={loteCancelMotivo} onChange={e => setLoteCancelMotivo(e.target.value)} placeholder="Informe o motivo do cancelamento em lote" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLoteCancelOpen(false)} disabled={loteRunning}>Voltar</Button>
+            <Button variant="destructive" onClick={cancelarLote} disabled={loteRunning || !loteCancelMotivo.trim()}>
+              {loteRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Cancelar todos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal cancelar */}
       <Dialog open={!!cancelId} onOpenChange={o => !o && setCancelId(null)}>
         <DialogContent>
