@@ -106,7 +106,7 @@ export default function PacientePlano() {
     <div className="space-y-6">
       <PageHeader
         title="Meu plano"
-        subtitle="Veja sua cobertura, validade e benefícios contratados"
+        description="Veja sua cobertura, validade e benefícios contratados"
       />
 
       {/* Card principal do plano */}
