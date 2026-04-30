@@ -41,6 +41,7 @@ import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
+import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
