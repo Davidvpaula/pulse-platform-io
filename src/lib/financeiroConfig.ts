@@ -133,8 +133,8 @@ export type MedicoOption = { id: string; nome: string; crm: string | null };
 export async function searchMedicosAtivos(q: string): Promise<MedicoOption[]> {
   let query = supabase
     .from("medicos")
-    .select("id, nome_completo, crm, ativo")
-    .eq("ativo", true)
+    .select("id, nome_completo, crm, status")
+    .eq("status", "aprovado")
     .order("nome_completo", { ascending: true })
     .limit(20);
   if (q.trim()) {
