@@ -1,82 +1,80 @@
-## Objetivo
+## Implementação dos "Serviços da Plataforma"
 
-Criar a tela `/app/admin/relatorios/auditoria` como visão analítica do `audit_log` (via view unificada `audit_eventos_unificado`), no mesmo padrão do relatório financeiro recém-criado. Foco em **consulta/relatório**, sem fluxo de revisão (que já existe em `/app/admin/auditoria`).
+Estou em modo plano (somente leitura) — preciso da sua aprovação para executar. Tudo abaixo será feito sem novas perguntas após o "Approve".
 
-Filtros pedidos: **entidade**, **usuário (ator)**, **data**, **severidade**. Aproveitar RPC `auditoria_listar` e `auditoria_dashboard` que já existem e já validam permissão `auditoria.ver`.
+---
 
-## Escopo
+### Etapa 1 — Migração SQL (1 arquivo)
 
-### 1. Nova página `src/pages/app/admin/AdminRelatorioAuditoria.tsx`
+**Estende `servicos_financeiros`**: `duracao_min`, `valor_paciente_centavos`, `prioridade`, `especialidade_id`, `slug` (único), `requer_aprovacao_medico`, `descricao_publica`, `icone`. Vitrine pública: SELECT liberado para anon quando `ativo=true`.
 
-Layout em três blocos:
+**Estende `agenda_slots`**: coluna `servico_id` (NULL = particular).
 
-**a) Barra de filtros (sticky no topo)**
-- Período (date range com presets 7d / 30d / 90d / customizado) — reutiliza `FiltrosGlobaisBar` ou recria leve
-- Severidade (multi: baixo / médio / alto / crítico)
-- Módulo / Entidade tipo (select: consultas, colaboradores, planos, comunicação, financeiro, permissões — derivado dos valores existentes na view)
-- Entidade ID (input UUID opcional, com placeholder)
-- Usuário (ator) — combobox com busca por nome (carrega top atores via `auditoria_dashboard.top_atores` + permite digitar UUID)
-- Ação (input texto livre, busca parcial)
-- Origem (manual / sistema)
-- Botão "Aplicar" e "Limpar"
+**Estende `medico_servicos`**: enum `medico_servico_status` (`ativo|pendente|recusado|desativado`).
 
-**b) KPIs e gráficos** (via `auditoria_dashboard`)
-- Cards: Total no período, Hoje, Críticos, Altos, Não revisados sensíveis, Financeiro, Permissões, Integração, Bloqueios
-- Gráfico de linha "Eventos por dia" (Recharts, `por_dia`)
-- Gráfico de barras "Top 10 atores" (`top_atores`)
-- Donut "Por módulo" (`por_modulo`)
+**Estende `medicos`**: `prioridade_atendimento int default 100`.
 
-**c) Tabela de eventos** (via `auditoria_listar`)
-- Colunas: Data/hora, Severidade (badge colorida), Módulo, Ação, Ator, Entidade (tipo + id curto), Campo, Valor anterior → novo, Origem
-- Paginação server-side (50 por página) usando `total_count` que a RPC já retorna
-- Click na linha abre `Sheet` lateral com payload completo (JSON formatado), motivo, observação, contexto de revisão se houver — somente leitura
-- Ordenação por data desc
+**Estende `consultas`**: `avaliacao_paciente_nota` (1–5), `avaliacao_paciente_em`, `avaliacao_paciente_comentario`.
 
-### 2. Exportação
+**`app_settings`**: insere chave `ranking.pesos = {disponibilidade:0.40, avaliacao:0.25, espera:0.25, prioridade:0.10}`.
 
-- **CSV**: gera no cliente a partir do resultado atual filtrado (todos os eventos do filtro, não só a página — fazer fetch sem paginação até limite de 5000 com aviso)
-- **PDF**: novo helper `src/lib/relatorios/pdfAuditoria.ts` (mesmo padrão de `pdfFinanceiro.ts`, usando `jspdf` + `jspdf-autotable`):
-  - Capa com filtros aplicados, período e total de eventos
-  - Resumo de KPIs
-  - Tabela de eventos (truncada se > 1000, com nota)
-  - Rodapé com hash/timestamp da geração para rastreabilidade
+**Funções/triggers**:
+- `fn_resolver_comissao(medico, servico, valor)` → ordem override_servico → override_global_medico → servico → global
+- `fn_agenda_slot_servico_check` (BEFORE INSERT/UPDATE em `agenda_slots`): exige adesão ativa, força duração do serviço, bloqueia mudar de serviço para particular se já há consulta vinculada
+- `fn_consulta_snapshot_financeiro` (AFTER INSERT em `consultas`): grava snapshot completo em `consultas_financeiro` + `valor_snapshot_centavos`/`comissao_snapshot_centavos`/`snapshot_at` na consulta
+- `fn_consultas_financeiro_imutavel` (BEFORE UPDATE): bloqueia alteração de qualquer campo monetário, só permite mudar `status`
+- `fn_ranking_medico_servico(servico, modalidade, limit)` → score = pesos × (disp + aval + espera + prio), exclui médicos suspensos/inativos
 
-### 3. Roteamento e navegação
+---
 
-- `src/App.tsx`: registrar rota `admin/relatorios/auditoria` protegida por `RequireRoutePermission perm="auditoria.ver"` (mesma permissão usada na tela existente)
-- `src/pages/app/admin/AdminRelatorios.tsx`: substituir o placeholder da aba "auditoria" por um card com link "Abrir relatório completo de auditoria →" apontando para a nova rota (mantém consistência com aba financeiro)
+### Etapa 2 — Telas internas
 
-### 4. Diferenciação vs `/app/admin/auditoria` existente
+**`/app/admin/servicos`** (rota nova, perm `financeiro.servicos_gerenciar`):
+- Tabela: Nome · Tipo · Duração · Valor paciente · Repasse · Prioridade · Especialidade · #Médicos · Switch Ativo
+- Filtros: tipo, ativo, especialidade. Busca por nome.
+- Drawer "Novo/Editar serviço" com todos os campos + preview "Médico recebe R$ X · Plataforma R$ Y" em tempo real
+- Aba secundária "Médicos vinculados" no drawer (lista + override individual)
+- Validações: slug único, valor_fixo ≤ valor_paciente, duração 5–480 múltiplo de 5
 
-| Aspecto | `/admin/auditoria` (operacional) | `/admin/relatorios/auditoria` (analítico) |
-|---|---|---|
-| Foco | Revisar e marcar eventos | Consultar, analisar, exportar |
-| Ações | Botão "Marcar revisado", notas | Somente leitura |
-| Visual | Tabela densa | KPIs + gráficos + tabela |
-| Export | CSV simples | CSV + PDF rico |
+**`/app/medico/servicos`** (rota nova):
+- Cards por serviço ativo
+- Cada card mostra: nome, tipo, duração, valor paciente, **"Você recebe R$ X"** (chama `fn_resolver_comissao`)
+- Toggle "Atendo este serviço" (cria/desativa `medico_servicos`)
+- Se `requer_aprovacao_medico`, toggle vira "Solicitar adesão" → status pendente
+- Botão "Solicitar override de comissão" abre modal com motivo (não auto-aplica — vai para fila admin)
+- Banner topo: "Você atende N de M serviços"
 
-## Detalhes técnicos
+**Atualização da UI de criação de slot** (médico/secretaria):
+- Radio "Particular | Serviço da plataforma"
+- Se serviço: dropdown só com os aderidos; campo duração some (informativo)
 
-- Não há mudança de schema nem nova RPC: tudo vai pelas funções existentes `auditoria_listar` e `auditoria_dashboard`, que já têm `SECURITY DEFINER` validando `has_permission(auth.uid(), 'auditoria.ver')`.
-- `audit_log` cru tem 0 linhas hoje; a view `audit_eventos_unificado` agrega outras fontes (consultas, colaboradores, planos, comunicação) — a tela já vai funcionar com os dados reais existentes.
-- Tipagem dos eventos: copiar o type `Evento` de `AdminAuditoria.tsx` para um novo `src/lib/relatorios/typesAuditoria.ts` para reuso entre página e exportador PDF.
-- PDF renderiza em background via `jspdf` (já instalado na fase do relatório financeiro), portanto sem nova dependência.
-- Mantém i18n em pt-BR e segue tokens de cor do design system (badges de severidade: verde/amarelo/laranja/vermelho via `bg-*` semânticos do tailwind config).
+---
 
-## Arquivos
+### Etapa 3 — Site público
 
-**Novos**
-- `src/pages/app/admin/AdminRelatorioAuditoria.tsx`
-- `src/lib/relatorios/pdfAuditoria.ts`
-- `src/lib/relatorios/typesAuditoria.ts`
+**Home** — bloco hero "⚡ Atendimento imediato" abaixo do herói principal:
+- Componente `<ProntoAtendimentoCard />` consulta `fn_ranking_medico_servico` para serviço tipo `pronto_atendimento` (pega o de menor prioridade) e mostra melhor médico disponível agora + valor + tempo de espera
+- Se nenhum disponível: "Próximo horário: HH:MM"
+- CTA "Iniciar agora" → fluxo de agendamento direto
 
-**Editados**
-- `src/App.tsx` (nova rota)
-- `src/pages/app/admin/AdminRelatorios.tsx` (link na aba auditoria)
+**`/servicos`** (rota pública nova):
+- Grid de cards de serviços ativos ordenados por `prioridade`
+- Filtro por tipo
+- Cada card: nome, ícone, duração, valor, "X médicos disponíveis hoje"
 
-## Fora de escopo
+**`/servicos/[slug]`** (rota pública nova):
+- Header com nome/descrição/valor
+- Lista ranqueada de médicos (via `fn_ranking_medico_servico`) com slot mais próximo
+- Botão "Agendar com [Médico]" para cada item
 
-- Nenhuma migration SQL
-- Não mexer em `/app/admin/auditoria` existente
-- Não criar fluxo de revisão/marcação nesta tela (é só leitura/relatório)
-- Sem realtime (relatório é snapshot do filtro aplicado)
+**Menu público**: adicionar item "Serviços" entre "Especialidades" e "Para empresas".
+
+---
+
+### Resumo das decisões já confirmadas
+- Pesos ranking: 0.40 / 0.25 / 0.25 / 0.10 ✅
+- Adesão **manual** pelo médico ✅
+- Override sempre **percentual** ✅
+- Execução **sequencial sem pausa** Etapa 1 → 2 → 3 ✅
+
+**Aprovar para iniciar.**
