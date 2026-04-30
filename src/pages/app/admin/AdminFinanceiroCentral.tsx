@@ -413,24 +413,45 @@ export default function AdminFinanceiroCentral() {
         </TabsContent>
 
         <TabsContent value="links" className="space-y-2">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap gap-2 items-end">
+            <div className="flex-1 min-w-[220px]"><Label>Buscar</Label><Input placeholder="Paciente, descrição ou ID" value={lkBusca} onChange={e => { setLkBusca(e.target.value); setLkPage(1); }} /></div>
+            <div className="min-w-[180px]"><Label>Status</Label>
+              <Select value={lkStatus} onValueChange={v => { setLkStatus(v); setLkPage(1); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="expirado">Expirado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
+              <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Paciente</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
               <tbody>
-                {links.map(l => (
+                {linksPagina.map(l => (
                   <tr key={l.id} className="border-t">
                     <td className="p-2">{l.descricao}</td>
+                    <td className="p-2">{nomePaciente(l) || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2">{brl(l.valor_centavos)}</td>
                     <td className="p-2">{l.vencimento || "—"}</td>
                     <td className="p-2"><StatusBadge s={l.status} /></td>
                   </tr>
                 ))}
-                {!links.length && <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Nenhum link de cobrança ainda</td></tr>}
+                {!linksFiltrados.length && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhum link de cobrança ainda</td></tr>}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{linksFiltrados.length} resultado(s) · página {lkPageSafe}/{lkTotalPages}</span>
+            <div className="space-x-2">
+              <Button size="sm" variant="outline" disabled={lkPageSafe <= 1} onClick={() => setLkPage(p => Math.max(1, p - 1))}>Anterior</Button>
+              <Button size="sm" variant="outline" disabled={lkPageSafe >= lkTotalPages} onClick={() => setLkPage(p => p + 1)}>Próxima</Button>
+            </div>
           </div>
         </TabsContent>
 
