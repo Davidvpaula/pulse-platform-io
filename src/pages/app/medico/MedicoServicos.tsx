@@ -100,10 +100,15 @@ export default function MedicoServicos() {
 
   async function solicitarOverride() {
     if (!overrideOpen || !medicoId) return;
+    if (!overrideValid) {
+      return toast({ title: "Corrija o percentual antes de enviar", variant: "destructive" });
+    }
+    // overridePct é o % desejado pelo médico (UI). No banco gravamos % plataforma = 100 - médico.
+    const plataformaPct = Math.round((100 - overridePct) * 100) / 100;
     const { error } = await supabase.from("medico_comissao_override").insert({
       medico_id: medicoId,
       servico_id: overrideOpen.id,
-      comissao_pct: overridePct,
+      comissao_pct: plataformaPct,
       motivo: overrideMotivo,
       ativo: false, // Admin precisa ativar
     });
