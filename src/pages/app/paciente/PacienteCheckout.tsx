@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X } from "lucide-react";
+import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -44,6 +44,14 @@ export default function PacienteCheckout() {
   const [cupomAplicado, setCupomAplicado] = useState<CupomAplicado | null>(null);
   const [cupomLoading, setCupomLoading] = useState(false);
 
+  // Pré-validação (enquanto digita)
+  type Preview =
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "ok"; aplicado: CupomAplicado }
+    | { state: "error"; message: string };
+  const [preview, setPreview] = useState<Preview>({ state: "idle" });
+
   async function carregar() {
     const p = await getPagamento(sessionId);
     setPagamento(p);
@@ -79,6 +87,38 @@ export default function PacienteCheckout() {
   const valorOriginal = cupomAplicado?.valor_original_centavos ?? pagamento?.valor_centavos ?? 0;
   const desconto = cupomAplicado?.desconto_centavos ?? 0;
   const valorFinal = pagamento?.valor_centavos ?? 0;
+
+  // Pré-validação debounced enquanto digita o cupom
+  useEffect(() => {
+    if (cupomAplicado) return; // já há cupom aplicado
+    const codigo = codigoCupom.trim();
+    if (!codigo) {
+      setPreview({ state: "idle" });
+      return;
+    }
+    if (codigo.length < 3) {
+      setPreview({ state: "error", message: "Código muito curto." });
+      return;
+    }
+    if (!consultaCtx || !pagamento) return;
+
+    setPreview({ state: "checking" });
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const r = await validarCupomParaConsulta({
+        codigo,
+        valorCentavos: valorOriginal,
+        medicoId: consultaCtx.medico_id,
+        especialidadeId: consultaCtx.especialidade_id,
+      });
+      if (cancelled) return;
+      if (r.ok) setPreview({ state: "ok", aplicado: r.aplicado });
+      else setPreview({ state: "error", message: (r as { ok: false; error: string }).error });
+    }, 400);
+
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [codigoCupom, cupomAplicado, consultaCtx, pagamento, valorOriginal]);
+
 
   async function aplicarCupom() {
     if (!pagamento || !consultaCtx) return;
@@ -357,23 +397,57 @@ export default function PacienteCheckout() {
                   </button>
                 </div>
               ) : (
-                <div className="mt-2 flex gap-2">
-                  <Input
-                    value={codigoCupom}
-                    onChange={(e) => setCodigoCupom(e.target.value.toUpperCase())}
-                    placeholder="Ex.: PRIMEIRA10"
-                    className="h-9 text-sm"
-                    disabled={cupomLoading || processando}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={aplicarCupom}
-                    disabled={!codigoCupom || cupomLoading || processando}
-                  >
-                    {cupomLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Aplicar"}
-                  </Button>
+                <div className="mt-2 space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={codigoCupom}
+                      onChange={(e) => setCodigoCupom(e.target.value.toUpperCase())}
+                      placeholder="Ex.: PRIMEIRA10"
+                      maxLength={32}
+                      aria-invalid={preview.state === "error"}
+                      className={`h-9 text-sm ${
+                        preview.state === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : preview.state === "ok"
+                          ? "border-emerald-500 focus-visible:ring-emerald-500"
+                          : ""
+                      }`}
+                      disabled={cupomLoading || processando}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={aplicarCupom}
+                      disabled={
+                        !codigoCupom ||
+                        cupomLoading ||
+                        processando ||
+                        preview.state === "checking" ||
+                        preview.state === "error"
+                      }
+                    >
+                      {cupomLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Aplicar"}
+                    </Button>
+                  </div>
+
+                  {preview.state === "checking" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando cupom…
+                    </p>
+                  )}
+                  {preview.state === "error" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-destructive">
+                      <AlertCircle className="h-3 w-3" /> {preview.message}
+                    </p>
+                  )}
+                  {preview.state === "ok" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-emerald-600">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Cupom válido — desconto de {formatBRL(preview.aplicado.desconto_centavos)}
+                      {" "}({formatBRL(preview.aplicado.valor_final_centavos)} no total)
+                    </p>
+                  )}
                 </div>
               )}
             </div>
