@@ -179,6 +179,13 @@ export default function SecretariaAgenda() {
           medicoAtualNome={trocando?.medico_nome}
           onTrocado={() => { setTrocando(null); void carregar(); }}
         />
+
+        <ConsultaHistoricoDialog
+          open={!!historicoCtx}
+          onOpenChange={(v) => { if (!v) setHistoricoCtx(null); }}
+          consultaId={historicoCtx?.id ?? null}
+          consultaResumo={historicoCtx?.resumo}
+        />
       </div>
     );
   }
