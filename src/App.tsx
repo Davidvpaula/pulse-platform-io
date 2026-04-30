@@ -117,7 +117,7 @@ const App = () => (
               <Route path="medico/dashboard" element={<MedicoGuard><MedicoDashboard /></MedicoGuard>} />
               <Route path="medico/agenda" element={<MedicoGuard><MedicoAgenda /></MedicoGuard>} />
               <Route path="medico/horarios" element={<MedicoGuard><MedicoHorarios /></MedicoGuard>} />
-              <Route path="medico/consultas" element={<MedicoGuard><Placeholder title="Consultas" /></MedicoGuard>} />
+              <Route path="medico/consultas" element={<MedicoGuard><MedicoConsultas /></MedicoGuard>} />
               <Route path="medico/pacientes" element={<MedicoGuard><MedicoPacientes /></MedicoGuard>} />
               <Route path="medico/documentos" element={<MedicoGuard><Placeholder title="Documentos emitidos" /></MedicoGuard>} />
               <Route path="medico/financeiro" element={<MedicoGuard><Placeholder title="Financeiro" /></MedicoGuard>} />
