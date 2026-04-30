@@ -119,9 +119,13 @@ export default function MedicoDashboard() {
     // Mês (concluídas → receita; aguardando_pagamento → pendentes)
     const mes = await listConsultasDoMedico({ desde: inicioMes, ate: fimMes });
     const concluidas = mes.filter((c) => c.status === "concluida");
-    // valor que o médico recebe = comissao_snapshot quando existe, senão valor_centavos (fallback)
-    const valorMedico = (c: any) =>
-      (c.comissao_snapshot_centavos ?? c.valor_centavos ?? 0) as number;
+    // Valor que o médico recebe (repasse) = bruto - comissão da plataforma.
+    // Usa snapshot imutável quando disponível; fallback no valor_centavos.
+    const valorMedico = (c: any): number => {
+      const bruto = (c.valor_snapshot_centavos ?? c.valor_centavos ?? 0) as number;
+      const comissao = (c.comissao_snapshot_centavos ?? 0) as number;
+      return Math.max(0, bruto - comissao);
+    };
     const receitaMes = concluidas.reduce((acc, c) => acc + valorMedico(c), 0);
     const receitaParticularMes = concluidas
       .filter((c: any) => !c.servico_id)
