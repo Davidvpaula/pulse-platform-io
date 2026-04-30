@@ -1,115 +1,377 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Video, Users, FileText, Wallet, Play, Calendar, Stethoscope,
-  CheckCircle2, AlertTriangle, ArrowRight, Clock, BookOpen, Settings, Search,
+  Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
+  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { agendaMedico } from "@/lib/mock";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  getMedicoAtual,
+  listConsultasDoMedico,
+  type ConsultaDetalhada,
+} from "@/lib/clinico";
+import { useSession } from "@/lib/session";
 
-const alertas = [
-  { tone: "warning", icon: Calendar, titulo: "Próxima consulta em 12 min", desc: "Renata Lima · Empresarial · Construtora Horizonte" },
-  { tone: "info", icon: Users, titulo: "2 pacientes aguardando pagamento", desc: "Confirmação automática após quitação" },
-];
+function formatBRL(centavos: number) {
+  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function formatHora(iso: string) {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function diffMin(iso: string) {
+  return Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+}
+function saudacao() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
 
-const toneClasses = {
-  warning: { wrap: "border-l-warning", chip: "bg-warning/10 text-warning" },
-  info: { wrap: "border-l-info", chip: "bg-info/10 text-info" },
-  destructive: { wrap: "border-l-destructive", chip: "bg-destructive/10 text-destructive" },
-} as const;
+type Onboarding = {
+  semSala: boolean;
+  semEspecialidade: boolean;
+  pendente: boolean;
+};
 
 export default function MedicoDashboard() {
-  const proxima = agendaMedico[0];
+  const { session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [medicoNome, setMedicoNome] = useState<string>("");
+  const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
+  const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
+  const [stats, setStats] = useState({
+    hoje: 0,
+    online: 0,
+    semana: 0,
+    pacientesUnicos: 0,
+    receitaMes: 0,
+    pagPendentes: 0,
+    docsMes: 0,
+  });
+  const [iniciandoId, setIniciandoId] = useState<string | null>(null);
+
+  const carregar = async () => {
+    if (!session) { setLoading(false); return; }
+    setLoading(true);
+
+    const medico = await getMedicoAtual();
+    if (!medico) { setLoading(false); return; }
+    setMedicoNome(medico.nome ?? "");
+
+    // Onboarding: link de sala + ao menos 1 vínculo de especialidade ativo
+    const { count: vinculos } = await supabase
+      .from("medico_especialidades")
+      .select("id", { count: "exact", head: true })
+      .eq("medico_id", medico.id)
+      .eq("ativo", true);
+
+    setOnb({
+      semSala: !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0,
+      semEspecialidade: (vinculos ?? 0) === 0,
+      pendente: medico.status !== "aprovado",
+    });
+
+    // Janelas de tempo
+    const agora = new Date();
+    const inicioHoje = new Date(agora); inicioHoje.setHours(0, 0, 0, 0);
+    const fimHoje = new Date(agora); fimHoje.setHours(23, 59, 59, 999);
+    const inicioSemana = new Date(inicioHoje); inicioSemana.setDate(inicioHoje.getDate() - inicioHoje.getDay());
+    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Próximas consultas (a partir de agora) — agendadas/confirmadas/em_andamento
+    const todasFuturas = await listConsultasDoMedico({ desde: agora });
+    const ativas = todasFuturas.filter((c) =>
+      ["agendada", "confirmada", "em_andamento"].includes(c.status as string),
+    );
+    setProximas(ativas.slice(0, 6));
+
+    // Hoje
+    const consultasHoje = todasFuturas.filter(
+      (c) => new Date(c.inicio) >= inicioHoje && new Date(c.inicio) <= fimHoje,
+    );
+    const onlineHoje = consultasHoje.filter((c) => c.modalidade === "online").length;
+
+    // Semana (todas, incluindo passadas desta semana)
+    const semanaTodas = await listConsultasDoMedico({ desde: inicioSemana, ate: fimHoje });
+
+    // Mês (concluídas → receita; aguardando_pagamento → pendentes)
+    const mes = await listConsultasDoMedico({ desde: inicioMes, ate: fimMes });
+    const receitaMes = mes
+      .filter((c) => c.status === "concluida")
+      .reduce((acc, c) => acc + (c.valor_centavos ?? 0), 0);
+    const pagPendentes = mes.filter((c) => c.status === "aguardando_pagamento").length;
+
+    // Pacientes únicos (mês)
+    const pacientesUnicos = new Set(mes.map((c) => c.paciente_id)).size;
+
+    // Documentos emitidos no mês (prescrições das suas consultas)
+    let docsMes = 0;
+    const consIds = mes.map((c) => c.id);
+    if (consIds.length) {
+      const { count } = await supabase
+        .from("prescricoes")
+        .select("id", { count: "exact", head: true })
+        .in("consulta_id", consIds)
+        .gte("emitida_em", inicioMes.toISOString());
+      docsMes = count ?? 0;
+    }
+
+    setStats({
+      hoje: consultasHoje.length,
+      online: onlineHoje,
+      semana: semanaTodas.length,
+      pacientesUnicos,
+      receitaMes,
+      pagPendentes,
+      docsMes,
+    });
+
+    setLoading(false);
+  };
+
+  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session]);
+
+  const proxima = proximas[0];
+  const minutosProx = useMemo(() => proxima ? diffMin(proxima.inicio) : null, [proxima]);
+
+  async function iniciarConsulta(c: ConsultaDetalhada) {
+    setIniciandoId(c.id);
+    try {
+      const { error } = await supabase
+        .from("consultas")
+        .update({ status: "em_andamento" })
+        .eq("id", c.id);
+      if (error) throw error;
+      toast.success("Consulta iniciada");
+      if (c.modalidade === "online" && c.link_sala) {
+        window.open(c.link_sala, "_blank", "noopener,noreferrer");
+      }
+      void carregar();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível iniciar a consulta");
+    } finally {
+      setIniciandoId(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-20 text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando seu painel...
+      </div>
+    );
+  }
+
+  const checklistItems = [
+    {
+      ok: !onb.pendente,
+      titulo: "Cadastro aprovado",
+      desc: onb.pendente ? "Aguardando aprovação do administrador." : "Você já pode atender pacientes.",
+      link: onb.pendente ? "/app/medico/aguardando-aprovacao" : null,
+    },
+    {
+      ok: !onb.semSala,
+      titulo: "Link da sala virtual configurado",
+      desc: onb.semSala
+        ? "Configure o link padrão (Meet, Zoom...) para receber consultas online."
+        : "Sala configurada — slots online liberados.",
+      link: onb.semSala ? "/app/medico/configuracoes" : null,
+    },
+    {
+      ok: !onb.semEspecialidade,
+      titulo: "Especialidade e preço definidos",
+      desc: onb.semEspecialidade
+        ? "Vincule ao menos uma especialidade com preço para aparecer na busca."
+        : "Você está visível na busca de pacientes.",
+      link: onb.semEspecialidade ? "/app/medico/configuracoes" : null,
+    },
+  ];
+  const pendencias = checklistItems.filter((i) => !i.ok).length;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Bom dia, Dr. Rafael"
+        title={`${saudacao()}${medicoNome ? `, Dr(a). ${medicoNome.split(" ")[0]}` : ""}`}
         description="O que você precisa fazer agora — atendimentos, fila e alertas."
       />
 
-      {/* Fluxo de atendimento guiado */}
+      {/* Onboarding / pendências */}
+      {pendencias > 0 && (
+        <div className="card-elevated border-l-4 border-l-warning p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-warning/10 text-warning">
+              <AlertTriangle className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">Finalize sua configuração ({pendencias} pendência{pendencias > 1 ? "s" : ""})</p>
+              <p className="text-xs text-muted-foreground">
+                Conclua os passos abaixo para começar a receber agendamentos.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {checklistItems.map((it, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    {it.ok ? (
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                    ) : (
+                      <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-warning text-[10px] font-bold text-warning">!</span>
+                    )}
+                    <span className="flex-1">
+                      <span className={cn("font-medium", !it.ok && "text-foreground")}>{it.titulo}</span>
+                      <span className="block text-xs text-muted-foreground">{it.desc}</span>
+                    </span>
+                    {it.link && (
+                      <Link to={it.link} className="text-xs font-semibold text-primary hover:underline">
+                        Resolver →
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Próximo atendimento */}
       <div className="card-elevated overflow-hidden">
         <div className="gradient-soft p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">Próximo atendimento</p>
-              <h2 className="mt-1 font-display text-2xl font-bold">{proxima?.paciente ?? "Sem agendamento"}</h2>
-              <p className="text-sm text-muted-foreground">
-                {proxima?.hora} · {proxima?.tipo} · <StatusBadge status={proxima?.status ?? "confirmado"} />
-              </p>
+              <h2 className="mt-1 truncate font-display text-2xl font-bold">
+                {proxima?.paciente_nome ?? (proxima ? "Paciente" : "Sem agendamentos hoje")}
+              </h2>
+              {proxima ? (
+                <p className="text-sm text-muted-foreground">
+                  {formatHora(proxima.inicio)} · {proxima.especialidade_nome ?? "Consulta"} ·{" "}
+                  <StatusBadge status={proxima.status as any} />
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Sua agenda está livre. Configure horários para receber pacientes.
+                </p>
+              )}
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-xs font-semibold border border-border">
-              <Clock className="h-3.5 w-3.5 text-primary" /> em 12 min
-            </span>
+            {proxima && minutosProx !== null && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                {minutosProx <= 0 ? "Agora" : minutosProx < 60 ? `em ${minutosProx} min` : `em ${Math.round(minutosProx / 60)}h`}
+              </span>
+            )}
           </div>
 
-          {/* Sequência de ações */}
-          <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-            <Button size="lg" className="bg-gradient-primary hover:opacity-90">
-              <Play className="mr-2 h-4 w-4" /> 1. Iniciar consulta
-            </Button>
-            <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
-            <Button size="lg" variant="outline">
-              <CheckCircle2 className="mr-2 h-4 w-4" /> 2. Finalizar atendimento
-            </Button>
-          </div>
+          {proxima && (
+            <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+              <Button
+                size="lg"
+                className="bg-gradient-primary hover:opacity-90"
+                disabled={iniciandoId === proxima.id}
+                onClick={() => iniciarConsulta(proxima)}
+              >
+                {iniciandoId === proxima.id
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  : <Play className="mr-2 h-4 w-4" />}
+                {proxima.status === "em_andamento" ? "Continuar consulta" : "Iniciar consulta"}
+              </Button>
+              <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
+              {proxima.modalidade === "online" && proxima.link_sala ? (
+                <Button size="lg" variant="outline" asChild>
+                  <a href={proxima.link_sala} target="_blank" rel="noopener noreferrer">
+                    <Video className="mr-2 h-4 w-4" /> Abrir sala
+                    <ExternalLink className="ml-1 h-3 w-3" />
+                  </a>
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/app/medico/agenda">
+                    <Calendar className="mr-2 h-4 w-4" /> Ver agenda
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Alertas importantes */}
-      <div className="grid gap-3 md:grid-cols-3">
-        {alertas.map((a, i) => {
-          const t = toneClasses[a.tone as keyof typeof toneClasses];
-          const Icon = a.icon;
-          return (
-            <div key={i} className={cn("card-elevated flex items-start gap-3 border-l-4 p-4", t.wrap)}>
-              <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", t.chip)}>
-                <Icon className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{a.titulo}</p>
-                <p className="text-xs text-muted-foreground truncate">{a.desc}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
+      {/* Estatísticas reais */}
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Consultas hoje" value="6" icon={Calendar} hint="2 telemedicina" />
-        <StatCard label="Pacientes ativos" value="184" icon={Users} hint="+8 este mês" trend={{ value: "+4.5%", positive: true }} />
-        <StatCard label="Documentos emitidos" value="42" icon={FileText} hint="Mês atual" />
-        <StatCard label="Receita do mês" value="R$ 18.450" icon={Wallet} trend={{ value: "+12%", positive: true }} />
+        <StatCard
+          label="Consultas hoje"
+          value={String(stats.hoje)}
+          icon={Calendar}
+          hint={`${stats.online} online`}
+        />
+        <StatCard
+          label="Pacientes (mês)"
+          value={String(stats.pacientesUnicos)}
+          icon={Users}
+          hint={`${stats.semana} consultas na semana`}
+        />
+        <StatCard
+          label="Documentos emitidos"
+          value={String(stats.docsMes)}
+          icon={FileText}
+          hint="Prescrições do mês"
+        />
+        <StatCard
+          label="Receita do mês"
+          value={formatBRL(stats.receitaMes)}
+          icon={Wallet}
+          hint={stats.pagPendentes > 0 ? `${stats.pagPendentes} pagamento(s) pendente(s)` : "Consultas concluídas"}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Próximas consultas */}
+        {/* Próximas consultas reais */}
         <div className="card-elevated p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-semibold">Próximas consultas</h3>
-            <Link to="/app/medico/agenda" className="text-xs text-primary hover:underline">Ver agenda completa</Link>
+            <Link to="/app/medico/agenda" className="text-xs text-primary hover:underline">
+              Ver agenda completa
+            </Link>
           </div>
-          <div className="mt-4 divide-y divide-border">
-            {agendaMedico.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 py-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary font-mono text-xs font-semibold">
-                  {a.hora}
+          {proximas.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              Nenhuma consulta agendada nos próximos dias.
+            </div>
+          ) : (
+            <div className="mt-4 divide-y divide-border">
+              {proximas.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 py-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft font-mono text-xs font-semibold text-primary">
+                    {formatHora(c.inicio)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{c.paciente_nome ?? "Paciente"}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {c.especialidade_nome ?? "Consulta"} · {c.modalidade === "online" ? "Telemedicina" : "Presencial"}
+                    </p>
+                  </div>
+                  <StatusBadge status={c.status as any} />
+                  <Button
+                    size="sm"
+                    variant={c.status === "em_andamento" ? "default" : "outline"}
+                    className={c.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}
+                    disabled={iniciandoId === c.id}
+                    onClick={() => iniciarConsulta(c)}
+                  >
+                    {iniciandoId === c.id
+                      ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      : <Play className="mr-1.5 h-3.5 w-3.5" />}
+                    {c.status === "em_andamento" ? "Continuar" : "Iniciar"}
+                  </Button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{a.paciente}</p>
-                  <p className="truncate text-xs text-muted-foreground">{a.tipo}</p>
-                </div>
-                <StatusBadge status={a.status} />
-                <Button size="sm" variant={a.status === "em_andamento" ? "default" : "outline"} className={a.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}>
-                  <Play className="mr-1.5 h-3.5 w-3.5" /> {a.status === "em_andamento" ? "Continuar" : "Iniciar"}
-                </Button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Atalhos */}
@@ -135,7 +397,7 @@ export default function MedicoDashboard() {
               <Settings className="h-4 w-4 text-primary" />
               <p className="font-semibold">Configurações</p>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, Google Meet</p>
+            <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, sala virtual</p>
           </Link>
         </div>
       </div>
