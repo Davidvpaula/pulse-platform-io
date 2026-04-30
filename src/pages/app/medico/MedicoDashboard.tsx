@@ -43,6 +43,16 @@ type Onboarding = {
 
 export default function MedicoDashboard() {
   const { session } = useSession();
+  const { profileKey, hasCapability } = useAuth();
+  const can = useCan();
+
+  // Permissões finas
+  const isMedico = profileKey === "medico";
+  const isAdmin = profileKey === "admin";
+  const podeAtuar = isMedico || isAdmin; // só esses iniciam/concluem consulta
+  const podeIniciar = can("consulta.start", "edit"); // mutativo
+  const podeVerFinanceiro = isMedico ? hasCapability("medico.financeiro") : isAdmin;
+  const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
   const [loading, setLoading] = useState(true);
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
