@@ -9,6 +9,7 @@ import {
   Info,
   Pencil,
   Power,
+  Sparkles,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
