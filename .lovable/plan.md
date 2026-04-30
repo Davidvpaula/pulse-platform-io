@@ -1,80 +1,95 @@
-## Implementação dos "Serviços da Plataforma"
+## Validação da arquitetura — Particular do médico × Serviços da plataforma
 
-Estou em modo plano (somente leitura) — preciso da sua aprovação para executar. Tudo abaixo será feito sem novas perguntas após o "Approve".
+### Modelo final (confirmado)
 
----
+Existem duas dimensões independentes, com fontes de verdade distintas:
 
-### Etapa 1 — Migração SQL (1 arquivo)
+```text
+┌─────────────────────────────┬──────────────────────────────────────┐
+│ medico_especialidades       │ servicos_financeiros + medico_servicos│
+│ "Particular do médico"      │ "Serviços da plataforma"              │
+├─────────────────────────────┼──────────────────────────────────────┤
+│ Médico define preço/duração │ Admin define preço/duração (imutável)│
+│ Recebe 100% (- taxa global) │ Recebe via fn_resolver_comissao      │
+│ Slot.servico_id = NULL      │ Slot.servico_id = <uuid>             │
+└─────────────────────────────┴──────────────────────────────────────┘
+```
 
-**Estende `servicos_financeiros`**: `duracao_min`, `valor_paciente_centavos`, `prioridade`, `especialidade_id`, `slug` (único), `requer_aprovacao_medico`, `descricao_publica`, `icone`. Vitrine pública: SELECT liberado para anon quando `ativo=true`.
+Quem decide o caminho é `agenda_slots.servico_id`. O snapshot financeiro é gravado uma única vez na criação da consulta — nada é recalculado depois. **Essa parte está correta e já implementada.**
 
-**Estende `agenda_slots`**: coluna `servico_id` (NULL = particular).
+### Decisões fechadas agora
 
-**Estende `medico_servicos`**: enum `medico_servico_status` (`ativo|pendente|recusado|desativado`).
+1. **Atendimento imediato (PA público)** = página separada `/atendimento-imediato`
+   - Lista todos os médicos vinculados ao serviço de PA da plataforma (sem filtro/escolha pelo paciente)
+   - O Admin pode editar qual serviço da plataforma alimenta essa página
+   - Não usa mais o PA do `medico_especialidades` para a porta pública (esse fica só para agenda interna)
 
-**Estende `medicos`**: `prioridade_atendimento int default 100`.
+2. **Dashboard do médico** = dois cards separados de receita
+   - "Receita particular" (consultas com `servico_id = NULL`)
+   - "Receita serviços da plataforma" (consultas com `servico_id` preenchido, mostra repasse)
 
-**Estende `consultas`**: `avaliacao_paciente_nota` (1–5), `avaliacao_paciente_em`, `avaliacao_paciente_comentario`.
-
-**`app_settings`**: insere chave `ranking.pesos = {disponibilidade:0.40, avaliacao:0.25, espera:0.25, prioridade:0.10}`.
-
-**Funções/triggers**:
-- `fn_resolver_comissao(medico, servico, valor)` → ordem override_servico → override_global_medico → servico → global
-- `fn_agenda_slot_servico_check` (BEFORE INSERT/UPDATE em `agenda_slots`): exige adesão ativa, força duração do serviço, bloqueia mudar de serviço para particular se já há consulta vinculada
-- `fn_consulta_snapshot_financeiro` (AFTER INSERT em `consultas`): grava snapshot completo em `consultas_financeiro` + `valor_snapshot_centavos`/`comissao_snapshot_centavos`/`snapshot_at` na consulta
-- `fn_consultas_financeiro_imutavel` (BEFORE UPDATE): bloqueia alteração de qualquer campo monetário, só permite mudar `status`
-- `fn_ranking_medico_servico(servico, modalidade, limit)` → score = pesos × (disp + aval + espera + prio), exclui médicos suspensos/inativos
-
----
-
-### Etapa 2 — Telas internas
-
-**`/app/admin/servicos`** (rota nova, perm `financeiro.servicos_gerenciar`):
-- Tabela: Nome · Tipo · Duração · Valor paciente · Repasse · Prioridade · Especialidade · #Médicos · Switch Ativo
-- Filtros: tipo, ativo, especialidade. Busca por nome.
-- Drawer "Novo/Editar serviço" com todos os campos + preview "Médico recebe R$ X · Plataforma R$ Y" em tempo real
-- Aba secundária "Médicos vinculados" no drawer (lista + override individual)
-- Validações: slug único, valor_fixo ≤ valor_paciente, duração 5–480 múltiplo de 5
-
-**`/app/medico/servicos`** (rota nova):
-- Cards por serviço ativo
-- Cada card mostra: nome, tipo, duração, valor paciente, **"Você recebe R$ X"** (chama `fn_resolver_comissao`)
-- Toggle "Atendo este serviço" (cria/desativa `medico_servicos`)
-- Se `requer_aprovacao_medico`, toggle vira "Solicitar adesão" → status pendente
-- Botão "Solicitar override de comissão" abre modal com motivo (não auto-aplica — vai para fila admin)
-- Banner topo: "Você atende N de M serviços"
-
-**Atualização da UI de criação de slot** (médico/secretaria):
-- Radio "Particular | Serviço da plataforma"
-- Se serviço: dropdown só com os aderidos; campo duração some (informativo)
+3. **Criação manual de slot** = default Particular, Serviço opcional
+   - Radio "Particular | Serviço da plataforma"
+   - Particular já vem marcado; só vira serviço se selecionar explicitamente
 
 ---
 
-### Etapa 3 — Site público
+## O que será feito (Etapa 3 ajustada)
 
-**Home** — bloco hero "⚡ Atendimento imediato" abaixo do herói principal:
-- Componente `<ProntoAtendimentoCard />` consulta `fn_ranking_medico_servico` para serviço tipo `pronto_atendimento` (pega o de menor prioridade) e mostra melhor médico disponível agora + valor + tempo de espera
-- Se nenhum disponível: "Próximo horário: HH:MM"
-- CTA "Iniciar agora" → fluxo de agendamento direto
+### 3.1 Configuração admin do "Atendimento imediato"
+- Em `app_settings` adicionar chave `atendimento_imediato.servico_id` (uuid do serviço que alimenta a porta pública)
+- Em `/app/admin/servicos` adicionar seção "Atendimento imediato" com select dos serviços tipo `pronto_atendimento` ativos
+- Validação: só permite escolher serviço com pelo menos 1 médico aderido
 
-**`/servicos`** (rota pública nova):
-- Grid de cards de serviços ativos ordenados por `prioridade`
-- Filtro por tipo
-- Cada card: nome, ícone, duração, valor, "X médicos disponíveis hoje"
+### 3.2 Página pública `/atendimento-imediato`
+- Header explicativo + valor + duração do serviço configurado
+- Lista todos os médicos com adesão ativa naquele serviço (sem ranking visível ao paciente, sem filtro)
+- Indica quem está "Disponível agora" (slot livre nos próximos N min) vs "Próximo: HH:MM"
+- Botão "Iniciar atendimento" → entra na fila do primeiro médico disponível segundo `fn_ranking_medico_servico` internamente
+- Sem seleção manual de médico
 
-**`/servicos/[slug]`** (rota pública nova):
-- Header com nome/descrição/valor
-- Lista ranqueada de médicos (via `fn_ranking_medico_servico`) com slot mais próximo
-- Botão "Agendar com [Médico]" para cada item
+### 3.3 Bloco na Home
+- Card hero "⚡ Atendimento imediato" → CTA leva para `/atendimento-imediato`
+- Mostra valor + "X médicos disponíveis agora"
 
-**Menu público**: adicionar item "Serviços" entre "Especialidades" e "Para empresas".
+### 3.4 Vitrine `/servicos` e `/servicos/[slug]`
+- Grid de serviços ativos (exceto o de PA, que tem porta própria)
+- Detalhe do serviço lista médicos aderidos com ranking (aqui sim o paciente escolhe — diferente do PA)
+
+### 3.5 Menu público
+- Item "Serviços" entre "Especialidades" e "Para empresas"
+- Item "Atendimento imediato" em destaque (badge/cor diferente)
+
+### 3.6 Dashboard do médico — split de receita
+- Em `MedicoDashboard.tsx` adicionar dois cards:
+  - "Receita particular (mês)" — soma `consultas_financeiro.valor_medico_centavos` onde consulta tem `servico_id IS NULL`
+  - "Receita serviços plataforma (mês)" — mesma soma onde `servico_id IS NOT NULL`, com badge mostrando quantos serviços
+- Mantém o card total agregado por cima
+
+### 3.7 Criação manual de slot (médico/secretaria)
+- Em `MedicoHorarios.tsx` (e telas equivalentes da secretaria) adicionar radio:
+  - ⦿ Particular (default) → usa preço/duração de `medico_especialidades`
+  - ○ Serviço da plataforma → mostra select dos serviços que o médico aderiu; duração fica readonly
+- Validação client + trigger DB já bloqueiam inconsistência
 
 ---
 
-### Resumo das decisões já confirmadas
-- Pesos ranking: 0.40 / 0.25 / 0.25 / 0.10 ✅
-- Adesão **manual** pelo médico ✅
-- Override sempre **percentual** ✅
-- Execução **sequencial sem pausa** Etapa 1 → 2 → 3 ✅
+## Ordem de execução
+1. Migração: `app_settings.atendimento_imediato.servico_id`
+2. Admin: tela de configuração do PA público
+3. Páginas públicas: `/atendimento-imediato`, `/servicos`, `/servicos/[slug]` + Home + Menu
+4. Dashboard médico: split de receita
+5. Slot manual: radio Particular/Serviço
+
+Tudo sequencial sem pausa, conforme combinado.
+
+---
+
+## Detalhes técnicos
+
+- **`fn_ranking_medico_servico`** já existe e é usada internamente na página de PA para escolher médico — paciente nunca vê o ranking nessa porta
+- **Snapshot financeiro** continua imutável; nenhuma das mudanças mexe em `consultas_financeiro`
+- **`medico_especialidades.pronto_atendimento`** continua existindo mas só governa slots PA internos da agenda do médico (uso operacional, não mais a porta pública)
+- **Memória**: vou adicionar à memória do projeto a regra "Atendimento imediato público = sempre via servicos_financeiros configurado em app_settings, nunca via medico_especialidades" para não confundir em sessões futuras
 
 **Aprovar para iniciar.**
