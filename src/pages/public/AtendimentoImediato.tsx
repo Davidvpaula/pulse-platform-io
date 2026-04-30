@@ -19,12 +19,55 @@ import {
   type MockSlot,
   type Reserva,
 } from "@/lib/mocks/atendimentoImediatoMock";
+import {
+  getServicoAtendimentoImediato,
+  ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL,
+  type AtendimentoImediatoConfig,
+} from "@/lib/clinico";
+
+const brl = (c: number) =>
+  (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function AtendimentoImediato() {
   const hoje = useMemo(() => new Date(), []);
-  const slots = useMemo(() => mockSlotsDoDia(hoje), [hoje]);
+  const [cfg, setCfg] = useState<AtendimentoImediatoConfig | null>(null);
+  const [cfgLoaded, setCfgLoaded] = useState(false);
+  const duracao = cfg?.duracao_min ?? 30;
+  const slots = useMemo(() => mockSlotsDoDia(hoje, duracao), [hoje, duracao]);
   const pacienteId = useMemo(() => obterPacienteId(), []);
   const canalRef = useRef(criarCanalReservas());
+
+  // Carrega config + escuta mudanças vindas do admin
+  useEffect(() => {
+    let alive = true;
+    const refetch = () => {
+      getServicoAtendimentoImediato().then((c) => {
+        if (!alive) return;
+        setCfg(c);
+        setCfgLoaded(true);
+      });
+    };
+    refetch();
+    if (typeof BroadcastChannel !== "undefined") {
+      const ch = new BroadcastChannel(ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL);
+      ch.onmessage = (ev) => {
+        if (ev.data?.t === "changed") {
+          toast.message("Configuração atualizada", {
+            description: "Recarregando o calendário com os novos parâmetros…",
+          });
+          refetch();
+        }
+      };
+      return () => {
+        alive = false;
+        ch.close();
+      };
+    }
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [agora, setAgora] = useState(() => Date.now());
