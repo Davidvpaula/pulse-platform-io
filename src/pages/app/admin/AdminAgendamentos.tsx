@@ -223,6 +223,7 @@ export default function AdminAgendamentos() {
   }, [filtroData, toast]);
 
   useEffect(() => { carregar(); }, [carregar]);
+  useEffect(() => { carregarOverview(); }, [carregarOverview]);
 
   const carregarInsights = useCallback(async () => {
     setInsightsLoading(true);
