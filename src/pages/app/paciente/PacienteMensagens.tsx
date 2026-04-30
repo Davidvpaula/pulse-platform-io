@@ -286,11 +286,11 @@ export default function PacienteMensagens() {
               const Icon = Cat.icon;
               const ativa = m.id === selecionada?.id;
               return (
-                <li key={m.id}>
+                <li key={m.id} className="group relative">
                   <button
                     onClick={() => handleSelect(m.id)}
                     className={cn(
-                      "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-accent/30",
+                      "flex w-full items-start gap-3 px-4 py-3 pr-12 text-left transition hover:bg-accent/30",
                       ativa && "bg-accent/40",
                     )}
                   >
@@ -315,6 +315,20 @@ export default function PacienteMensagens() {
                         )}
                       </div>
                     </div>
+                  </button>
+                  {/* Toggle lida/não lida (não dispara seleção) */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleLida(m.id); }}
+                    title={m.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    aria-label={m.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    className={cn(
+                      "absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition",
+                      "opacity-0 group-hover:opacity-100 focus:opacity-100 hover:border-border hover:bg-background hover:text-foreground",
+                      !m.lida && "opacity-100",
+                    )}
+                  >
+                    {m.lida ? <Mail className="h-4 w-4" /> : <MailOpen className="h-4 w-4" />}
                   </button>
                 </li>
               );
