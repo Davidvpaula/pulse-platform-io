@@ -335,6 +335,81 @@ export default function AdminFinanceiroCentral() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Detalhe do pagamento */}
+      <Dialog open={!!detalhe} onOpenChange={o => !o && setDetalhe(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Detalhe do pagamento</DialogTitle></DialogHeader>
+          {detalhe && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div><span className="text-muted-foreground">ID</span><div className="font-mono text-xs break-all">{detalhe.id}</div></div>
+                <div><span className="text-muted-foreground">Status</span><div><StatusBadge s={detalhe.status} /></div></div>
+                <div><span className="text-muted-foreground">Forma de pagamento</span><div>{detalhe.metodo || detalhe.forma || "—"}</div></div>
+                <div><span className="text-muted-foreground">Pago em</span><div>{fmtData(detalhe.data_pagamento || detalhe.paid_at)}</div></div>
+                <div><span className="text-muted-foreground">Valor bruto</span><div className="font-semibold">{brl(detalhe.valor_bruto_centavos || detalhe.valor_centavos)}</div></div>
+                <div><span className="text-muted-foreground">Valor líquido</span><div className="font-semibold">{brl((detalhe.valor_bruto_centavos || detalhe.valor_centavos || 0) - (detalhe.valor_taxa_centavos || 0))}</div></div>
+                {detalheSnapshot && <>
+                  <div><span className="text-muted-foreground">Repasse médico</span><div>{brl(detalheSnapshot.valor_medico_centavos)}</div></div>
+                  <div><span className="text-muted-foreground">Plataforma</span><div>{brl(detalheSnapshot.valor_plataforma_centavos)} ({detalheSnapshot.comissao_pct_aplicada}%)</div></div>
+                  <div><span className="text-muted-foreground">Snapshot</span><div><StatusBadge s={detalheSnapshot.status} /></div></div>
+                </>}
+                {detalhe.consulta_id && <div className="col-span-2"><span className="text-muted-foreground">Consulta</span><div className="font-mono text-xs">{detalhe.consulta_id}</div></div>}
+              </div>
+              <div>
+                <div className="font-semibold mb-1">Histórico de estornos</div>
+                {detalheReembolsos.length ? (
+                  <ul className="space-y-1">
+                    {detalheReembolsos.map(r => (
+                      <li key={r.id} className="rounded border p-2 flex justify-between items-center">
+                        <div>
+                          <div className="text-xs text-muted-foreground">{fmtData(r.created_at)} · {r.tipo}</div>
+                          <div>{r.motivo}</div>
+                        </div>
+                        <div className="text-right"><div className="font-semibold">{brl(r.valor_centavos)}</div><StatusBadge s={r.status} /></div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <div className="text-muted-foreground text-xs">Sem estornos.</div>}
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button variant="outline" onClick={() => setDetalhe(null)}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Nova cobrança manual */}
+      <Dialog open={novaCobranca.open} onOpenChange={o => setNovaCobranca(s => ({ ...s, open: o }))}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Nova cobrança manual</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
+              <div><Label>Vencimento</Label><Input type="date" value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Paciente (opcional)</Label>
+              <Select value={novaCobranca.paciente_id} onValueChange={v => setNovaCobranca(s => ({ ...s, paciente_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Empresa (opcional)</Label>
+              <Select value={novaCobranca.empresa_id} onValueChange={v => setNovaCobranca(s => ({ ...s, empresa_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione uma empresa" /></SelectTrigger>
+                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Observação</Label><Textarea value={novaCobranca.observacao} onChange={e => setNovaCobranca(s => ({ ...s, observacao: e.target.value }))} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNovaCobranca(s => ({ ...s, open: false }))}>Cancelar</Button>
+            <Button onClick={criarCobranca}>Criar cobrança</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
