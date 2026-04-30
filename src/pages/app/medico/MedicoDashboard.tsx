@@ -435,31 +435,44 @@ export default function MedicoDashboard() {
           )}
         </div>
 
-        {/* Atalhos */}
+        {/* Atalhos — visíveis conforme perfil/permissões */}
         <div className="space-y-4">
-          <Link to="/app/medico/pacientes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Buscar paciente</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
-          </Link>
+          {podeVerPacientes && (
+            <Link to="/app/medico/pacientes" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Buscar paciente</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
+            </Link>
+          )}
 
-          <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Treinamento</p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Vídeos e boas práticas</p>
-          </Link>
+          {isMedico && (
+            <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Treinamento</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Vídeos e boas práticas</p>
+            </Link>
+          )}
 
-          <Link to="/app/medico/configuracoes" className="card-elevated block p-5 transition hover:border-primary/40">
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-primary" />
-              <p className="font-semibold">Configurações</p>
+          {isMedico && (
+            <Link to="/app/medico/configuracoes" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Configurações</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, sala virtual</p>
+            </Link>
+          )}
+
+          {!isMedico && (
+            <div className="card-elevated p-5 text-sm text-muted-foreground">
+              <Lock className="mb-2 h-4 w-4" />
+              Atalhos administrativos (perfil, treinamento, configurações da sala) só ficam disponíveis para o próprio médico.
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Perfil, agenda, sala virtual</p>
-          </Link>
+          )}
         </div>
       </div>
     </div>
