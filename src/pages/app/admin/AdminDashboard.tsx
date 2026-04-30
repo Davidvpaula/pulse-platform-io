@@ -143,6 +143,45 @@ export default function AdminDashboard() {
         <StatCard label="Agendamentos" value={fmtNum(k.agendamentos_periodo ?? 0)} icon={Calendar} hint={periodoLabel} />
       </div>
 
+      {/* Serviços da plataforma */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-lg font-semibold">Serviços da plataforma</h3>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/app/admin/servicos">Gerenciar serviços <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Serviços ativos</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.total_ativos ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">{fmtNum(servicos?.total_inativos ?? 0)} inativos</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Vínculos médico↔serviço</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.medicos_vinculados ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">ativos na vitrine</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Overrides pendentes</p>
+            <p className={cn("mt-1 text-2xl font-semibold", (servicos?.overrides_pendentes ?? 0) > 0 && "text-warning")}>
+              {fmtNum(servicos?.overrides_pendentes ?? 0)}
+            </p>
+            <p className="text-xs text-muted-foreground">aguardando aprovação</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Ticket médio do catálogo</p>
+            <p className="mt-1 text-2xl font-semibold">{fmtBRL(servicos?.ticket_medio_centavos ?? 0)}</p>
+            <p className="text-xs text-muted-foreground">por atendimento</p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Faturamento" value={fmtBRL(k.faturamento_periodo_centavos ?? 0)} icon={Wallet} hint={periodoLabel} />
         <StatCard label="Consultas hoje" value={fmtNum(k.consultas_hoje ?? 0)} icon={Calendar}
