@@ -118,7 +118,7 @@ export type Agendamento = {
 export const agendamentos: Agendamento[] = [
   { id: "C-1024", pacienteId: "P-1001", paciente: "Marina Costa", medico: "Dr. Rafael Lasmar", esp: "Cardiologia", data: "Hoje", hora: "14:30", modalidade: "Telemedicina", canal: "App", status: "confirmado" },
   { id: "C-1031", pacienteId: "P-1001", paciente: "Marina Costa", medico: "Dra. Ana Figueiredo", esp: "Dermatologia", data: "28/Abr", hora: "09:00", modalidade: "Telemedicina", canal: "App", status: "aguardando" },
-  { id: "C-0992", pacienteId: "P-1001", paciente: "Marina Costa", medico: "Dr. Lucas Pereira", esp: "Pediatria", data: "20/Abr", hora: "16:00", modalidade: "Presencial", canal: "Site", status: "concluido" },
+  { id: "C-0992", pacienteId: "P-1001", paciente: "Marina Costa", medico: "Dr. Lucas Pereira", esp: "Pediatria", data: "20/Abr", hora: "16:00", modalidade: "Telemedicina", canal: "Site", status: "concluido" },
   { id: "C-1108", pacienteId: "P-1002", paciente: "Bruno Carvalho", medico: "Dra. Camila Rocha", esp: "Clínica Geral", data: "Hoje", hora: "09:00", modalidade: "Empresarial", canal: "Empresa", status: "em_andamento", origem: "Construtora Horizonte" },
   { id: "C-1110", pacienteId: "P-1003", paciente: "Patrícia Nunes", medico: "Dr. Marcos Vieira", esp: "Ortopedia", data: "Hoje", hora: "10:30", modalidade: "Empresarial", canal: "Empresa", status: "agendamento_criado", origem: "Construtora Horizonte" },
   { id: "C-1112", pacienteId: "P-1005", paciente: "Sofia Mendes", medico: "Dra. Camila Rocha", esp: "Clínica Geral", data: "Hoje", hora: "11:00", modalidade: "Telemedicina", canal: "App", status: "confirmado" },
