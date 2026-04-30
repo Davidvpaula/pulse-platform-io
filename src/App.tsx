@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/lib/auth";
 import { SessionProvider } from "@/lib/session";
+import { ImpersonationProvider } from "@/lib/impersonation";
 import Auth from "@/pages/auth/Auth";
 import PublicLayout from "@/layouts/PublicLayout";
 import AppLayout from "@/layouts/AppLayout";
@@ -76,6 +77,7 @@ import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import PermissoesLog from "@/pages/app/admin/PermissoesLog";
+import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
 import AdminAnalises from "@/pages/app/admin/AdminAnalises";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
@@ -108,6 +110,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SessionProvider>
+      <ImpersonationProvider>
       <AuthProvider>
         <BrowserRouter>
           <AnalyticsTracker />
@@ -215,6 +218,7 @@ const App = () => (
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
+              <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
@@ -262,6 +266,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </ImpersonationProvider>
       </SessionProvider>
     </TooltipProvider>
   </QueryClientProvider>

@@ -78,11 +78,17 @@ export default function Permissoes() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Permissões"
-        description="Gerencie acessos por perfil, função interna ou colaborador específico — sem precisar criar dashboards separados."
-      />
-
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Permissões"
+          description="Gerencie acessos por perfil, função interna ou colaborador específico — sem precisar criar dashboards separados."
+        />
+        <Button asChild variant="outline">
+          <Link to="/app/admin/impersonar">
+            <ShieldCheck className="mr-2 h-4 w-4" /> Visualizar como…
+          </Link>
+        </Button>
+      </div>
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
         <KpiMini icon={Users} label="Colaboradores ativos" value={kpis?.colaboradores_ativos ?? "—"} />
