@@ -7,9 +7,13 @@ type Props = {
   slot: MockSlot;
   medico: MockMedico;
   msRestantes: number;
+  precoCentavos?: number;
   onConfirmar: () => void;
   onCancelar: () => void;
 };
+
+const brl = (c: number) =>
+  (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 function formatMs(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -18,7 +22,7 @@ function formatMs(ms: number) {
   return `${m}m${String(r).padStart(2, "0")}s`;
 }
 
-export default function RodapeReserva({ slot, medico, msRestantes, onConfirmar, onCancelar }: Props) {
+export default function RodapeReserva({ slot, medico, msRestantes, precoCentavos, onConfirmar, onCancelar }: Props) {
   return (
     <div className="sticky bottom-4 z-30 mx-auto mt-6 max-w-4xl">
       <div className="card-elevated border-primary/40 bg-card/95 p-4 shadow-xl backdrop-blur">
@@ -38,6 +42,11 @@ export default function RodapeReserva({ slot, medico, msRestantes, onConfirmar, 
               <Badge className="bg-primary/10 text-primary text-[10px] hover:bg-primary/10">
                 atribuído por tempo de casa
               </Badge>
+              {typeof precoCentavos === "number" && (
+                <Badge variant="outline" className="text-[10px] tabular-nums">
+                  {brl(precoCentavos)}
+                </Badge>
+              )}
             </div>
             <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Timer className="h-3 w-3" /> Reserva expira em {formatMs(msRestantes)}
