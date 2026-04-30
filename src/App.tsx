@@ -78,6 +78,10 @@ import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import PermissoesLog from "@/pages/app/admin/PermissoesLog";
 import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
+import AdminSessoes from "@/pages/app/admin/AdminSessoes";
+import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
+import TrocarSenha from "@/pages/auth/TrocarSenha";
+import { SecurityWatcher } from "@/components/security/SecurityWatcher";
 import AdminAnalises from "@/pages/app/admin/AdminAnalises";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
@@ -114,6 +118,7 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <AnalyticsTracker />
+          <SecurityWatcher />
           <Routes>
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
@@ -130,6 +135,8 @@ const App = () => (
               <Route path="/cadastro/medico" element={<CadastroMedico />} />
               <Route path="/auth" element={<Auth />} />
             </Route>
+
+            <Route path="/trocar-senha" element={<TrocarSenha />} />
 
             {/* APP */}
             <Route path="/app" element={<AppLayout />}>
@@ -219,6 +226,8 @@ const App = () => (
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
+              <Route path="admin/sessoes" element={<G perm="colaboradores.alterar_permissoes"><AdminSessoes /></G>} />
+              <Route path="admin/seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminSeguranca /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
