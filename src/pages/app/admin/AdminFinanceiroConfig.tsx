@@ -27,6 +27,7 @@ import {
 } from "@/lib/financeiroConfig";
 import { MotivoDialog } from "@/components/financeiro/MotivoDialog";
 import { RepasseAuditoriaCard } from "@/components/financeiro/RepasseAuditoriaCard";
+import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 const Section = ({
   icon: Icon,
