@@ -1,36 +1,55 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2, XCircle, FileText, Search, ShieldCheck, Eye, Download,
-  AlertTriangle, Clock, History, Plug, RefreshCw,
+  AlertTriangle, Clock, History, Plug, RefreshCw, Pause, Ban, Play, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  listMedicos, updateMedicoStatus, listAuditoria, getSignedUrl,
+  listMedicos, listAuditoria, getSignedUrl,
   liberarAcessoFeegow, FEEGOW_STATUS_LABEL,
   STATUS_LABEL, DOC_LABEL,
+  MOTIVOS_SUSPENSAO, MOTIVOS_BLOQUEIO,
+  medicoColocarEmAnalise, medicoAprovar, medicoReprovar,
+  medicoSuspender, medicoBloquear, medicoReativar,
+  contarConsultasFuturas,
   type MedicoRow, type MedicoStatus, type DocumentoMedico, type AuditoriaRow,
   type FeegowStatus,
 } from "@/lib/medicoRegistro";
 import { isValidCpf, formatCpf } from "@/lib/validation/cpf";
 
-/** Validação completa dos pré-requisitos para liberação na Feegow. */
 function validarFeegow(m: MedicoRow): { ok: boolean; motivo?: string } {
   if (!m.cpf) return { ok: false, motivo: "CPF não informado" };
-  if (!isValidCpf(m.cpf)) return { ok: false, motivo: "CPF inválido (dígitos verificadores não conferem)" };
+  if (!isValidCpf(m.cpf)) return { ok: false, motivo: "CPF inválido" };
   if (!m.data_nascimento) return { ok: false, motivo: "Data de nascimento não informada" };
   const d = new Date(m.data_nascimento + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return { ok: false, motivo: "Data de nascimento em formato inválido" };
+  if (Number.isNaN(d.getTime())) return { ok: false, motivo: "Data inválida" };
   const hoje = new Date();
-  if (d > hoje) return { ok: false, motivo: "Data de nascimento no futuro" };
+  if (d > hoje) return { ok: false, motivo: "Data no futuro" };
   const idade = (hoje.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
-  if (idade < 18) return { ok: false, motivo: "Médico deve ter pelo menos 18 anos" };
-  if (idade > 120) return { ok: false, motivo: "Data de nascimento implausível (> 120 anos)" };
+  if (idade < 18) return { ok: false, motivo: "Médico deve ter ≥18 anos" };
   return { ok: true };
 }
 
-const STATUS_ORDER: MedicoStatus[] = ["pendente", "em_analise", "aprovado", "reprovado"];
+const STATUS_ORDER: MedicoStatus[] = [
+  "pendente", "em_analise", "aprovado", "suspenso", "bloqueado", "reprovado",
+];
+
+type DialogKind = null | "aprovar" | "reprovar" | "em_analise" | "suspender" | "bloquear" | "reativar";
 
 export default function MedicosAprovacao() {
   const [list, setList] = useState<MedicoRow[]>([]);
@@ -40,6 +59,15 @@ export default function MedicosAprovacao() {
   const [audit, setAudit] = useState<AuditoriaRow[]>([]);
   const [previewDoc, setPreviewDoc] = useState<{ doc: DocumentoMedico; url: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [futurasCount, setFuturasCount] = useState<number>(0);
+
+  // Dialog state
+  const [dlg, setDlg] = useState<DialogKind>(null);
+  const [acting, setActing] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [obs, setObs] = useState("");
+  const [presetDuracao, setPresetDuracao] = useState<"24h" | "7d" | "30d" | "custom" | "indeterminado">("7d");
+  const [customAte, setCustomAte] = useState<string>("");
 
   async function reload() {
     try {
@@ -62,8 +90,9 @@ export default function MedicosAprovacao() {
   }, []);
 
   useEffect(() => {
-    if (!selectedId) { setAudit([]); return; }
+    if (!selectedId) { setAudit([]); setFuturasCount(0); return; }
     listAuditoria(selectedId).then(setAudit).catch(() => setAudit([]));
+    contarConsultasFuturas(selectedId).then(setFuturasCount);
   }, [selectedId, list]);
 
   const filtered = useMemo(() => {
@@ -80,93 +109,102 @@ export default function MedicosAprovacao() {
   const selected = list.find(m => m.id === selectedId);
 
   const counts = useMemo(() => {
-    return STATUS_ORDER.reduce<Record<MedicoStatus, number>>((acc, s) => {
-      acc[s] = list.filter(m => m.status === s).length;
-      return acc;
-    }, { pendente: 0, em_analise: 0, aprovado: 0, reprovado: 0 });
+    const base: Record<MedicoStatus, number> = {
+      pendente: 0, em_analise: 0, aprovado: 0, reprovado: 0, suspenso: 0, bloqueado: 0,
+    };
+    list.forEach(m => { base[m.status] = (base[m.status] || 0) + 1; });
+    return base;
   }, [list]);
 
-  async function changeStatus(m: MedicoRow, status: MedicoStatus, motivo?: string) {
-    try {
-      await updateMedicoStatus(m.id, status, motivo);
-      toast({
-        title: status === "aprovado" ? "Médico aprovado" : status === "reprovado" ? "Cadastro reprovado" : "Status atualizado",
-        description: status === "aprovado" ? `${m.nome} já pode acessar a plataforma.` : undefined,
-        variant: status === "reprovado" ? "destructive" : "default",
-      });
-      reload();
-      // Se aprovou e ainda não foi liberado na Feegow, valida e dispara.
-      if (status === "aprovado" && m.feegow_status !== "liberado") {
-        const v = validarFeegow(m);
-        if (v.ok) {
-          liberarFeegow(m, true);
-        } else {
-          toast({
-            title: "Liberação Feegow não pôde ser disparada",
-            description: v.motivo,
-            variant: "destructive",
-          });
-        }
+  // Alertas inteligentes
+  const alertas = useMemo(() => {
+    const out: { tipo: string; nivel: "alta" | "media"; titulo: string; medico?: MedicoRow }[] = [];
+    list.forEach(m => {
+      if (m.status === "aprovado" && (!m.crm || m.crm.length < 3)) {
+        out.push({ tipo: "crm", nivel: "alta", titulo: `${m.nome}: CRM ausente ou inválido`, medico: m });
       }
-    } catch (err) {
-      toast({ title: "Erro", description: err instanceof Error ? err.message : "Tente novamente.", variant: "destructive" });
-    }
+      if (m.status === "suspenso" && m.suspenso_ate && new Date(m.suspenso_ate) <= new Date()) {
+        out.push({ tipo: "expirou", nivel: "media", titulo: `${m.nome}: suspensão expirada — reativará no próximo acesso`, medico: m });
+      }
+    });
+    return out;
+  }, [list]);
+
+  function openDialog(kind: DialogKind) {
+    setMotivo("");
+    setObs("");
+    setPresetDuracao("7d");
+    setCustomAte("");
+    setDlg(kind);
   }
 
-  async function liberarFeegow(m: MedicoRow, silent = false) {
-    const v = validarFeegow(m);
-    if (!v.ok) {
-      toast({
-        title: "Não foi possível liberar na Feegow",
-        description: v.motivo,
-        variant: "destructive",
-      });
-      return;
+  function calcAte(): { ate: string | null; indeterminado: boolean } {
+    if (presetDuracao === "indeterminado") return { ate: null, indeterminado: true };
+    if (presetDuracao === "custom") {
+      return { ate: customAte ? new Date(customAte).toISOString() : null, indeterminado: false };
     }
-    if (!silent) toast({ title: "Enviando para a Feegow..." });
-    const res = await liberarAcessoFeegow(m.id);
-    if (res.ok) {
-      toast({
-        title: "Acesso Feegow liberado",
-        description: res.aviso ?? `ID profissional: ${res.professional_id ?? "—"}`,
-      });
-    } else {
-      toast({
-        title: "Falha ao liberar Feegow",
-        description: res.error ?? "Tente novamente.",
-        variant: "destructive",
-      });
-    }
-    reload();
+    const map = { "24h": 1, "7d": 7, "30d": 30 } as const;
+    const dias = map[presetDuracao];
+    const d = new Date(); d.setDate(d.getDate() + dias);
+    return { ate: d.toISOString(), indeterminado: false };
   }
 
-  function handleAprovar(m: MedicoRow) { changeStatus(m, "aprovado"); }
-  function handleEmAnalise(m: MedicoRow) { changeStatus(m, "em_analise"); }
-  function handleReprovar(m: MedicoRow) {
-    const motivo = window.prompt("Motivo da reprovação:");
-    if (!motivo) return;
-    changeStatus(m, "reprovado", motivo);
+  async function executar() {
+    if (!selected || !dlg) return;
+    setActing(true);
+    try {
+      if (dlg === "aprovar") {
+        await medicoAprovar(selected.id, obs);
+        toast({ title: "Médico aprovado", description: `${selected.nome} já pode acessar a plataforma.` });
+        // Auto-libera Feegow se possível
+        const v = validarFeegow(selected);
+        if (v.ok && selected.feegow_status !== "liberado") {
+          liberarAcessoFeegow(selected.id).then(reload);
+        }
+      } else if (dlg === "em_analise") {
+        await medicoColocarEmAnalise(selected.id, obs);
+        toast({ title: "Cadastro em análise" });
+      } else if (dlg === "reprovar") {
+        if (motivo.trim().length < 3) throw new Error("Motivo obrigatório");
+        await medicoReprovar(selected.id, motivo, obs);
+        toast({ title: "Cadastro reprovado", variant: "destructive" });
+      } else if (dlg === "suspender") {
+        if (motivo.trim().length < 3) throw new Error("Motivo obrigatório");
+        const { ate, indeterminado } = calcAte();
+        if (!indeterminado && !ate) throw new Error("Defina a data de término");
+        await medicoSuspender({ id: selected.id, motivo, observacao: obs, ate, indeterminado });
+        toast({ title: "Médico suspenso", description: indeterminado ? "Suspensão indeterminada" : `Até ${new Date(ate!).toLocaleString("pt-BR")}` });
+      } else if (dlg === "bloquear") {
+        if (motivo.trim().length < 3) throw new Error("Motivo obrigatório");
+        await medicoBloquear(selected.id, motivo, obs);
+        toast({ title: "Médico bloqueado", variant: "destructive" });
+      } else if (dlg === "reativar") {
+        if (obs.trim().length < 3) throw new Error("Justificativa obrigatória");
+        await medicoReativar(selected.id, obs);
+        toast({ title: "Médico reativado" });
+      }
+      setDlg(null);
+      reload();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err?.message || "Tente novamente", variant: "destructive" });
+    } finally {
+      setActing(false);
+    }
   }
 
   async function handlePreview(d: DocumentoMedico) {
     try {
       const url = await getSignedUrl(d.storagePath);
       setPreviewDoc({ doc: d, url });
-    } catch (err) {
-      toast({ title: "Erro ao abrir documento", variant: "destructive" });
-    }
+    } catch { toast({ title: "Erro ao abrir documento", variant: "destructive" }); }
   }
 
   async function handleDownload(d: DocumentoMedico) {
     try {
       const url = await getSignedUrl(d.storagePath, 60);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = d.fileName;
-      a.click();
-    } catch (err) {
-      toast({ title: "Erro ao baixar", variant: "destructive" });
-    }
+      a.href = url; a.download = d.fileName; a.click();
+    } catch { toast({ title: "Erro ao baixar", variant: "destructive" }); }
   }
 
   return (
@@ -174,9 +212,9 @@ export default function MedicosAprovacao() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Cadastros médicos</p>
-          <h1 className="font-display text-2xl font-bold">Aprovação de médicos</h1>
+          <h1 className="font-display text-2xl font-bold">Gestão de médicos</h1>
           <p className="text-sm text-muted-foreground">
-            Revise documentos, aprove ou reprove. Todas as ações ficam registradas em auditoria.
+            Aprovação, suspensão, bloqueio e reativação. Toda ação fica auditada.
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -184,23 +222,56 @@ export default function MedicosAprovacao() {
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+      {/* KPIs */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {STATUS_ORDER.map(s => (
-          <button key={s} onClick={() => setFilter(filter === s ? "todos" : s)} className={`card-elevated p-4 text-left transition ${filter === s ? "ring-2 ring-primary" : ""}`}>
+          <button
+            key={s}
+            onClick={() => setFilter(filter === s ? "todos" : s)}
+            className={`card-elevated p-4 text-left transition ${filter === s ? "ring-2 ring-primary" : ""}`}
+          >
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[s]}</p>
             <p className="mt-1 text-2xl font-bold">{counts[s]}</p>
           </button>
         ))}
       </div>
 
+      {/* Alertas */}
+      {alertas.length > 0 && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning">
+            <AlertTriangle className="h-3.5 w-3.5" /> Alertas inteligentes ({alertas.length})
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {alertas.slice(0, 6).map((a, i) => (
+              <li key={i} className="flex items-center justify-between gap-2">
+                <span>{a.titulo}</span>
+                {a.medico && (
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedId(a.medico!.id)}>Ver</Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        {/* Lista */}
         <div className="card-elevated p-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar por nome, CRM ou e-mail" className="w-full rounded-md border border-input bg-background py-2 pl-8 pr-3 text-sm" />
+              <input
+                value={q} onChange={e => setQ(e.target.value)}
+                placeholder="Buscar por nome, CRM ou e-mail"
+                className="w-full rounded-md border border-input bg-background py-2 pl-8 pr-3 text-sm"
+              />
             </div>
-            <select value={filter} onChange={e => setFilter(e.target.value as MedicoStatus | "todos")} className="rounded-md border border-input bg-background px-2 py-2 text-sm">
+            <select
+              value={filter}
+              onChange={e => setFilter(e.target.value as MedicoStatus | "todos")}
+              className="rounded-md border border-input bg-background px-2 py-2 text-sm"
+            >
               <option value="todos">Todos</option>
               {STATUS_ORDER.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
             </select>
@@ -211,7 +282,10 @@ export default function MedicosAprovacao() {
             {!loading && filtered.length === 0 && <li className="py-12 text-center text-sm text-muted-foreground">Nenhum cadastro encontrado.</li>}
             {filtered.map(m => (
               <li key={m.id}>
-                <button onClick={() => setSelectedId(m.id)} className={`flex w-full items-center gap-3 py-3 text-left transition hover:bg-muted/40 ${selectedId === m.id ? "bg-muted/40" : ""}`}>
+                <button
+                  onClick={() => setSelectedId(m.id)}
+                  className={`flex w-full items-center gap-3 py-3 text-left transition hover:bg-muted/40 ${selectedId === m.id ? "bg-muted/40" : ""}`}
+                >
                   <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-sm font-bold text-primary-foreground">
                     {m.nome.split(" ").map(s => s[0]).slice(0, 2).join("")}
                   </div>
@@ -226,6 +300,7 @@ export default function MedicosAprovacao() {
           </ul>
         </div>
 
+        {/* Detalhe */}
         <div className="card-elevated p-6">
           {!selected ? (
             <div className="grid h-full place-items-center py-16 text-center text-sm text-muted-foreground">
@@ -245,31 +320,65 @@ export default function MedicosAprovacao() {
                 <StatusBadge status={selected.status} />
               </div>
 
-              {selected.motivo_reprovacao && (
+              {/* Banner de status especial */}
+              {selected.status === "suspenso" && (
                 <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
-                  <p className="flex items-center gap-2 font-semibold text-warning-foreground">
-                    <AlertTriangle className="h-4 w-4" /> Motivo da última reprovação
+                  <p className="flex items-center gap-2 font-semibold text-warning">
+                    <Pause className="h-4 w-4" /> Suspenso
+                    {selected.suspenso_indeterminado
+                      ? " — indeterminado"
+                      : selected.suspenso_ate ? ` até ${new Date(selected.suspenso_ate).toLocaleString("pt-BR")}` : ""}
+                  </p>
+                  {selected.suspensao_motivo && <p className="mt-1"><b>Motivo:</b> {selected.suspensao_motivo}</p>}
+                  {selected.suspensao_observacao && <p className="text-xs text-muted-foreground">{selected.suspensao_observacao}</p>}
+                </div>
+              )}
+              {selected.status === "bloqueado" && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                  <p className="flex items-center gap-2 font-semibold text-destructive">
+                    <Ban className="h-4 w-4" /> Bloqueado definitivamente
+                  </p>
+                  {selected.bloqueio_motivo && <p className="mt-1"><b>Motivo:</b> {selected.bloqueio_motivo}</p>}
+                  {selected.bloqueio_observacao && <p className="text-xs text-muted-foreground">{selected.bloqueio_observacao}</p>}
+                </div>
+              )}
+              {selected.motivo_reprovacao && selected.status === "reprovado" && (
+                <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
+                  <p className="flex items-center gap-2 font-semibold text-warning">
+                    <AlertTriangle className="h-4 w-4" /> Reprovado
                   </p>
                   <p className="mt-1">{selected.motivo_reprovacao}</p>
                 </div>
               )}
 
+              {/* Impacto: consultas futuras */}
+              {(selected.status === "suspenso" || selected.status === "bloqueado") && futurasCount > 0 && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                  <p className="font-semibold text-destructive">
+                    ⚠ {futurasCount} consulta{futurasCount > 1 ? "s" : ""} futura{futurasCount > 1 ? "s" : ""} ainda agendada{futurasCount > 1 ? "s" : ""} para este médico.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Acesse "Central de Agendamentos" para reagendar, trocar de profissional ou cancelar.
+                  </p>
+                </div>
+              )}
+
               <section className="grid gap-3 sm:grid-cols-2">
-                <DataField
-                  label="CPF"
-                  value={formatCpf(selected.cpf)}
-                  missing={!selected.cpf}
-                  error={!!selected.cpf && !isValidCpf(selected.cpf) ? "CPF inválido" : undefined}
-                />
+                <DataField label="CPF" value={formatCpf(selected.cpf)} missing={!selected.cpf}
+                  error={!!selected.cpf && !isValidCpf(selected.cpf) ? "CPF inválido" : undefined} />
                 <DataField label="Data de nascimento" value={fmtDate(selected.data_nascimento)} missing={!selected.data_nascimento} />
                 <DataField label="E-mail" value={selected.email} />
                 <DataField label="RQE" value={selected.rqe ?? "—"} />
               </section>
 
-              <FeegowCard
-                medico={selected}
-                onLiberar={() => liberarFeegow(selected)}
-              />
+              <FeegowCard medico={selected} onLiberar={async () => {
+                const v = validarFeegow(selected);
+                if (!v.ok) { toast({ title: "Bloqueado", description: v.motivo, variant: "destructive" }); return; }
+                const r = await liberarAcessoFeegow(selected.id);
+                if (r.ok) toast({ title: "Acesso Feegow liberado" });
+                else toast({ title: "Falha", description: r.error, variant: "destructive" });
+                reload();
+              }} />
 
               <section>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Documentos</p>
@@ -281,44 +390,71 @@ export default function MedicosAprovacao() {
                         <p className="truncate text-xs font-semibold">{DOC_LABEL[d.kind]}</p>
                         <p className="truncate text-[11px] text-muted-foreground">{d.fileName}</p>
                       </div>
-                      <button onClick={() => handlePreview(d)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Visualizar">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => handleDownload(d)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Baixar">
-                        <Download className="h-4 w-4" />
-                      </button>
+                      <button onClick={() => handlePreview(d)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><Eye className="h-4 w-4" /></button>
+                      <button onClick={() => handleDownload(d)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><Download className="h-4 w-4" /></button>
                     </div>
                   ))}
                 </div>
               </section>
 
+              {/* Ações */}
               <section className="flex flex-wrap gap-2">
-                <Button onClick={() => handleAprovar(selected)} className="bg-success text-success-foreground hover:bg-success/90">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Aprovar
-                </Button>
-                <Button variant="outline" onClick={() => handleEmAnalise(selected)}>
-                  <Clock className="mr-2 h-4 w-4" /> Marcar em análise
-                </Button>
-                <Button variant="destructive" onClick={() => handleReprovar(selected)}>
-                  <XCircle className="mr-2 h-4 w-4" /> Reprovar
-                </Button>
+                {(selected.status === "pendente" || selected.status === "em_analise" || selected.status === "reprovado") && (
+                  <>
+                    <Button onClick={() => openDialog("aprovar")} className="bg-success text-success-foreground hover:bg-success/90">
+                      <CheckCircle2 className="mr-2 h-4 w-4" /> Aprovar
+                    </Button>
+                    {selected.status !== "em_analise" && (
+                      <Button variant="outline" onClick={() => openDialog("em_analise")}>
+                        <Clock className="mr-2 h-4 w-4" /> Em análise
+                      </Button>
+                    )}
+                    <Button variant="destructive" onClick={() => openDialog("reprovar")}>
+                      <XCircle className="mr-2 h-4 w-4" /> Reprovar
+                    </Button>
+                  </>
+                )}
+
+                {selected.status === "aprovado" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">Ações administrativas</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="bg-popover">
+                      <DropdownMenuLabel>Conta do médico</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => openDialog("suspender")}>
+                        <Pause className="mr-2 h-4 w-4 text-warning" /> Suspender (temporário)
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => openDialog("bloquear")} className="text-destructive">
+                        <Ban className="mr-2 h-4 w-4" /> Bloquear (definitivo)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
+                {(selected.status === "suspenso" || selected.status === "bloqueado") && (
+                  <Button onClick={() => openDialog("reativar")} className="bg-success text-success-foreground hover:bg-success/90">
+                    <Play className="mr-2 h-4 w-4" /> Reativar médico
+                  </Button>
+                )}
               </section>
 
+              {/* Auditoria */}
               <section>
                 <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <History className="h-3.5 w-3.5" /> Auditoria
                 </p>
-                <ul className="mt-2 space-y-2 text-sm">
+                <ul className="mt-2 space-y-2 text-sm max-h-[280px] overflow-y-auto pr-1">
                   {audit.length === 0 && <li className="text-xs text-muted-foreground">Sem registros.</li>}
                   {audit.map(a => (
                     <li key={a.id} className="flex items-start gap-3 rounded-md bg-muted/30 p-2">
                       <span className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full bg-primary" />
                       <div className="min-w-0">
                         <p className="text-xs font-semibold capitalize">{a.acao.split("_").join(" ")}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {new Date(a.created_at).toLocaleString("pt-BR")}
-                        </p>
-                        {a.motivo && <p className="mt-1 text-xs">{a.motivo}</p>}
+                        <p className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
+                        {a.motivo && <p className="mt-1 text-xs"><b>Motivo:</b> {a.motivo}</p>}
+                        {(a as any).observacao && <p className="text-xs text-muted-foreground">{(a as any).observacao}</p>}
                       </div>
                     </li>
                   ))}
@@ -329,6 +465,7 @@ export default function MedicosAprovacao() {
         </div>
       </div>
 
+      {/* Preview docs */}
       {previewDoc && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" onClick={() => setPreviewDoc(null)}>
           <div className="card-elevated max-h-[90vh] w-full max-w-3xl overflow-hidden p-4" onClick={e => e.stopPropagation()}>
@@ -337,15 +474,95 @@ export default function MedicosAprovacao() {
               <Button variant="ghost" size="sm" onClick={() => setPreviewDoc(null)}>Fechar</Button>
             </div>
             <div className="mt-3 grid place-items-center overflow-auto">
-              {previewDoc.doc.mimeType.startsWith("image/") ? (
-                <img src={previewDoc.url} alt="Documento" className="max-h-[75vh] rounded-md" />
-              ) : (
-                <iframe src={previewDoc.url} title="documento" className="h-[75vh] w-full rounded-md" />
-              )}
+              {previewDoc.doc.mimeType.startsWith("image/")
+                ? <img src={previewDoc.url} alt="Documento" className="max-h-[75vh] rounded-md" />
+                : <iframe src={previewDoc.url} title="documento" className="h-[75vh] w-full rounded-md" />}
             </div>
           </div>
         </div>
       )}
+
+      {/* Dialogs unificados */}
+      <Dialog open={!!dlg} onOpenChange={(o) => { if (!o) setDlg(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {dlg === "aprovar" && "Aprovar médico"}
+              {dlg === "em_analise" && "Marcar em análise"}
+              {dlg === "reprovar" && "Reprovar cadastro"}
+              {dlg === "suspender" && "Suspender médico (temporário)"}
+              {dlg === "bloquear" && "Bloquear médico (definitivo)"}
+              {dlg === "reativar" && "Reativar médico"}
+            </DialogTitle>
+            <DialogDescription>
+              {dlg === "suspender" && "Médico continuará com acesso de leitura, mas não poderá oferecer novos horários."}
+              {dlg === "bloquear" && "Bloqueio definitivo: agenda e novos atendimentos serão impedidos. Histórico permanece."}
+              {dlg === "reativar" && "Restaura status para Aprovado. Justificativa é obrigatória."}
+              {dlg === "reprovar" && "Motivo será visível para o médico. Auditado."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {(dlg === "reprovar" || dlg === "suspender" || dlg === "bloquear") && (
+              <div>
+                <Label>Motivo *</Label>
+                <Select value={motivo} onValueChange={setMotivo}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {(dlg === "suspender" ? MOTIVOS_SUSPENSAO : dlg === "bloquear" ? MOTIVOS_BLOQUEIO : ["Documentação inválida","Dados inconsistentes","CRM não localizado","Outro"]).map(o => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {dlg === "suspender" && (
+              <div className="space-y-2">
+                <Label>Duração</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(["24h","7d","30d","custom","indeterminado"] as const).map(p => (
+                    <Button
+                      key={p} size="sm"
+                      variant={presetDuracao === p ? "default" : "outline"}
+                      onClick={() => setPresetDuracao(p)}
+                    >
+                      {p === "24h" ? "24 horas" : p === "7d" ? "7 dias" : p === "30d" ? "30 dias" : p === "custom" ? "Personalizado" : "Indeterminado"}
+                    </Button>
+                  ))}
+                </div>
+                {presetDuracao === "custom" && (
+                  <Input
+                    type="datetime-local"
+                    value={customAte}
+                    onChange={(e) => setCustomAte(e.target.value)}
+                  />
+                )}
+              </div>
+            )}
+
+            <div>
+              <Label>
+                {dlg === "reativar" ? "Justificativa *" : "Observação interna"}
+                {dlg === "reativar" ? "" : " (opcional)"}
+              </Label>
+              <Textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={3} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDlg(null)}>Cancelar</Button>
+            <Button
+              onClick={executar}
+              disabled={acting}
+              className={dlg === "bloquear" || dlg === "reprovar" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {acting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -356,6 +573,8 @@ function StatusBadge({ status }: { status: MedicoStatus }) {
     em_analise: "bg-primary/10 text-primary",
     aprovado: "bg-success/10 text-success",
     reprovado: "bg-destructive/10 text-destructive",
+    suspenso: "bg-warning/15 text-warning",
+    bloqueado: "bg-destructive/15 text-destructive",
   };
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${map[status]}`}>{STATUS_LABEL[status]}</span>;
 }
@@ -365,7 +584,7 @@ function DataField({ label, value, missing, error }: { label: string; value: str
   return (
     <div className={`rounded-md border p-2 ${flagged ? (error ? "border-destructive/40 bg-destructive/5" : "border-warning/40 bg-warning/5") : "border-border"}`}>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-sm ${flagged ? (error ? "text-destructive" : "text-warning-foreground") : ""}`}>{value || "—"}</p>
+      <p className={`text-sm ${flagged ? (error ? "text-destructive" : "text-warning") : ""}`}>{value || "—"}</p>
       {error && <p className="mt-0.5 text-[11px] font-semibold text-destructive">{error}</p>}
     </div>
   );
@@ -386,15 +605,6 @@ const FEEGOW_TONE: Record<FeegowStatus, { bar: string; chip: string }> = {
 function FeegowCard({ medico, onLiberar }: { medico: MedicoRow; onLiberar: () => void }) {
   const tone = FEEGOW_TONE[medico.feegow_status];
   const aprovado = medico.status === "aprovado";
-  const validacao = validarFeegow(medico);
-  const bloqueado = !aprovado || !validacao.ok || medico.feegow_status === "pendente";
-  const motivoBloqueio = !aprovado
-    ? "Aprove o cadastro antes de liberar."
-    : !validacao.ok
-      ? validacao.motivo!
-      : medico.feegow_status === "pendente"
-        ? "Liberação em andamento…"
-        : "";
   return (
     <section className={`rounded-md border border-border border-l-4 p-3 ${tone.bar}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -406,38 +616,14 @@ function FeegowCard({ medico, onLiberar }: { medico: MedicoRow; onLiberar: () =>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone.chip}`}>
               {FEEGOW_STATUS_LABEL[medico.feegow_status]}
             </span>
-            {medico.feegow_professional_id && (
-              <span className="ml-2 text-xs text-muted-foreground">ID: {medico.feegow_professional_id}</span>
-            )}
-            {medico.feegow_liberado_em && (
-              <span className="ml-2 text-xs text-muted-foreground">
-                em {new Date(medico.feegow_liberado_em).toLocaleString("pt-BR")}
-              </span>
-            )}
+            {medico.feegow_professional_id && <span className="ml-2 text-xs text-muted-foreground">ID: {medico.feegow_professional_id}</span>}
           </p>
-          {medico.feegow_erro && (
-            <p className="mt-1 text-xs text-destructive">Erro: {medico.feegow_erro}</p>
-          )}
-          {aprovado && !validacao.ok && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertTriangle className="h-3.5 w-3.5" /> {validacao.motivo}
-            </p>
-          )}
         </div>
-        <Button
-          size="sm"
-          variant={medico.feegow_status === "liberado" ? "outline" : "default"}
-          onClick={onLiberar}
-          disabled={bloqueado}
-          title={motivoBloqueio}
-        >
+        <Button size="sm" variant={medico.feegow_status === "liberado" ? "outline" : "default"} onClick={onLiberar} disabled={!aprovado}>
           <RefreshCw className="mr-2 h-4 w-4" />
           {medico.feegow_status === "liberado" ? "Reenviar" : "Liberar acesso"}
         </Button>
       </div>
-      {!aprovado && (
-        <p className="mt-2 text-[11px] text-muted-foreground">A liberação ocorre automaticamente ao aprovar o cadastro (se CPF e data de nascimento forem válidos).</p>
-      )}
     </section>
   );
 }
