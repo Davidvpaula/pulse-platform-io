@@ -1,96 +1,117 @@
+# Histórico/auditoria de mudanças no repasse financeiro
 
-## Diagnóstico
+## O que vai existir
 
-A boa notícia: **toda a engrenagem financeira que você descreveu já está implementada no banco**. O que falta é apenas a UI no Admin para gerenciar.
+Toda alteração feita em:
+- **Repasse global** (`app_settings['financeiro.comissao_padrao_pct']`) — % retido pela plataforma
+- **Exceções por médico** (`medico_comissao_override`) — criação, edição, ativação/desativação e remoção
 
-### O que já existe (não vamos refazer)
+passa a gerar automaticamente um registro na tabela já existente `financeiro_auditoria`, com:
+- **data/hora** (`created_at`)
+- **usuário responsável** (`actor_id` = `auth.uid()`)
+- **valor anterior e valor novo** (em % de repasse do médico, padronizado para a UI)
+- **motivo opcional** (texto livre informado pelo admin no momento da edição)
+- **payload** com detalhes técnicos (medico_id, servico_id, ativo)
 
-- **Configuração global**: `app_settings.key = 'financeiro.comissao_padrao_pct'` (default 44%) → representa o % da plataforma. Repasse médico = 100 - este valor.
-- **Exceções por médico**: tabela `medico_comissao_override` (com `medico_id`, `servico_id` opcional, `comissao_pct`).
-- **Função de resolução** `fn_resolver_comissao` com a prioridade exata que você pediu:
-  1. Override médico+serviço (mais específico)
-  2. Override médico (sem serviço) → **regra das particulares**
-  3. Configuração do serviço (quando `servico_id` preenchido)
-  4. Global (`financeiro.comissao_padrao_pct`)
-- **Snapshot imutável**: trigger `fn_consulta_snapshot_financeiro` grava `valor_snapshot_centavos` e `comissao_snapshot_centavos` na criação da consulta. Trigger de UPDATE bloqueia alteração posterior.
-- **Separação particular vs plataforma**: feita por `agenda_slots.servico_id IS NULL` (particular) ou `NOT NULL` (serviço).
+## Como o admin vai ver
 
-A regra "Se servico_id IS NULL → global ou exceção / Se NOT NULL → regra do serviço" **já está ativa** em produção.
+Na tela "Repasse financeiro" (`/app/admin/financeiro/repasse`), adicionar um terceiro card:
 
-### O que falta (e é só isso)
+**"Histórico de alterações"** — tabela com últimas 50 mudanças, mostrando:
+- Data/hora
+- Quem alterou (nome do staff)
+- O que mudou (Global · Exceção criada · Exceção editada · Exceção removida · Ativada/Desativada)
+- De → Para (em % do médico)
+- Motivo (se informado)
 
-UI no Admin para o usuário não-técnico configurar esses valores sem mexer no banco.
+Filtros simples no topo: Tipo (Global / Exceção), médico (busca), período (últimos 7/30/90 dias).
 
----
+Botão "Exportar CSV" para download do histórico filtrado.
 
-## Plano de implementação
+## Captura do motivo na UI
 
-### 1. Página `/app/admin/financeiro-config` (nova)
-
-Nova rota dedicada acessada a partir do menu Admin → Financeiro (e também via card em `AdminConfiguracoes`).
-
-**Card 1 — "Repasse global · Consultas particulares"**
-- Input: `% repasse médico` (ex: 56)
-- Campo derivado read-only: `% plataforma` = 100 − repasse médico
-- Botão Salvar → grava em `app_settings` na chave `financeiro.comissao_padrao_pct` (armazenando o % da plataforma, mantendo compatibilidade com `fn_resolver_comissao`)
-- Texto explicativo: "Aplica-se a todas as consultas de especialidade (sem serviço da plataforma vinculado), exceto médicos com exceção configurada."
-
-**Card 2 — "Exceções de repasse por médico"**
-- Tabela: Médico · CRM · % repasse médico · % plataforma · Ações (editar / remover)
-- Botão "+ Nova exceção" → modal com:
-  - Combobox de busca de médico (ativos)
-  - Input `% repasse médico`
-  - Checkbox "aplicar somente a um serviço específico" (default desligado = exceção global do médico, que é o caso particular)
-- CRUD direto em `medico_comissao_override` (com `servico_id = NULL` por padrão)
-- RLS já existente cobre acesso (admin / `financeiro.editar_comissao`)
-
-**Card 3 — "Como funciona" (informativo)**
-Resume a hierarquia de prioridade para evitar dúvida do operador.
-
-### 2. Integração no menu
-
-- Adicionar link no `AdminConfiguracoes.tsx` (card "Financeiro · Repasse")
-- Adicionar item no menu lateral do admin (seção Financeiro)
-
-### 3. Validações / UX
-
-- % entre 0 e 100, máximo 2 casas decimais
-- Confirmação ao salvar global (afeta novas consultas)
-- Aviso visível: "Não afeta consultas já criadas (snapshot imutável)"
-- Toast de sucesso/erro
-- Auditoria: gravar em `audit_log` toda alteração (já temos infra)
-
-### 4. Não mexer
-
-- Trigger `fn_consulta_snapshot_financeiro` — funcionando
-- `fn_resolver_comissao` — funcionando
-- Cards do dashboard médico (particular vs plataforma) — funcionando
-- Serviços da plataforma (`servicos_financeiros.comissao_pct`) — fluxo separado, intocado
-
----
+- **Repasse global**: o `confirm()` atual vira um modal pequeno com campo opcional "Motivo da alteração" (textarea).
+- **Exceção por médico**: o modal já tem campo `motivo`; passa a ser interpretado também como motivo da alteração (registrado a cada edição).
+- **Remover/Toggle ativo**: o `confirm()` atual vira modal com campo opcional de motivo.
 
 ## Detalhes técnicos
 
-- **Convenção do valor armazenado**: `financeiro.comissao_padrao_pct` historicamente guarda **% da plataforma** (atual 44 → médico recebe 56%). Vou manter essa convenção no banco e converter na UI (mostrar/editar como "% repasse médico" para alinhar com a linguagem do produto).
-- **Sem migration de schema**: tudo já existe. Só `UPDATE app_settings` e `INSERT/UPDATE/DELETE medico_comissao_override` via cliente, com RLS atuais.
-- **Hooks**: criar `useFinanceiroConfig()` para ler/gravar global e `useComissaoOverrides()` para CRUD de exceções.
-- **Arquivos novos**:
-  - `src/pages/app/admin/AdminFinanceiroConfig.tsx`
-  - `src/components/admin/financeiro/RepasseGlobalCard.tsx`
-  - `src/components/admin/financeiro/ExcecoesRepasseCard.tsx`
-  - `src/lib/financeiroConfig.ts`
-- **Arquivos editados**:
-  - `src/App.tsx` (rota)
-  - `src/pages/app/admin/AdminConfiguracoes.tsx` (card de atalho)
-  - sidebar/layout admin (item de menu)
+### 1. Trigger no banco — captura automática
 
----
+Migration nova com:
 
-## Resultado esperado
+**Função `fn_audit_repasse_global()`** (AFTER UPDATE em `app_settings` quando `key = 'financeiro.comissao_padrao_pct'`):
+- Calcula `% médico = 100 - % plataforma` para `valor_anterior` e `valor_novo`.
+- Insere em `financeiro_auditoria` com `entidade='repasse_global'`, `acao='atualizado'`, `actor_id=auth.uid()`, `motivo=current_setting('app.audit_motivo', true)`.
 
-- Admin entra em uma única tela e define em segundos o repasse global das particulares.
-- Cria exceções pontuais para médicos premium / juniores sem precisar de dev.
-- Snapshot imutável continua garantindo histórico financeiro intacto.
-- Nada do fluxo de serviços da plataforma é tocado.
+**Função `fn_audit_override_medico()`** (AFTER INSERT/UPDATE/DELETE em `medico_comissao_override`):
+- INSERT → `acao='criado'`, `valor_anterior=NULL`, `valor_novo=100-NEW.comissao_pct`.
+- UPDATE → `acao='editado'` ou `acao='ativado'`/`acao='desativado'` se só `ativo` mudou.
+- DELETE → `acao='removido'`.
+- `entidade='comissao_override'`, `entidade_id=NEW.id` (ou `OLD.id`), `payload` com `{medico_id, servico_id, ativo, motivo_override}`.
 
-Aprova para eu implementar?
+Ambas usam `current_setting('app.audit_motivo', true)` (variável de sessão) para puxar o motivo livre informado pelo usuário.
+
+### 2. Front — propagar o motivo
+
+Em `src/lib/financeiroConfig.ts`, novo helper:
+```ts
+async function comMotivo<T>(motivo: string | null | undefined, fn: () => Promise<T>): Promise<T>
+```
+que faz `supabase.rpc('set_audit_motivo', { motivo })` antes da operação e limpa depois.
+
+Criar RPC `set_audit_motivo(text)` simples que faz `SET LOCAL app.audit_motivo = $1`.
+
+Atualizar `setRepasseGlobal`, `upsertOverrideParticular`, `deleteOverride` e `toggleOverrideAtivo` para receber `motivo?: string` opcional.
+
+### 3. Front — listagem de auditoria
+
+Em `src/lib/financeiroConfig.ts`:
+```ts
+export type RepasseAuditoriaRow = {
+  id: string;
+  created_at: string;
+  entidade: 'repasse_global' | 'comissao_override';
+  acao: string;
+  actor_nome: string | null;
+  valor_anterior: number | null;
+  valor_novo: number | null;
+  motivo: string | null;
+  medico_nome?: string | null;
+};
+
+export async function listAuditoriaRepasse(filtros: {
+  tipo?: 'global' | 'override' | 'todos';
+  medico_id?: string;
+  desde?: string; // ISO date
+}): Promise<RepasseAuditoriaRow[]>
+```
+
+Faz `select` em `financeiro_auditoria` filtrando `entidade IN ('repasse_global','comissao_override')`, com join opcional em `medicos` (via `payload->>medico_id`) e em `profiles` (via `actor_id`) para nomes.
+
+### 4. Front — UI do card de histórico
+
+Novo componente `RepasseAuditoriaCard.tsx` colocado dentro de `AdminFinanceiroConfig.tsx`, abaixo das seções existentes:
+- Tabela com colunas: Data, Quem, Tipo (badge), De → Para, Motivo
+- Filtros: select de tipo, busca de médico (reusa `searchMedicosAtivos`), select de período
+- Botão "Exportar CSV" usando `Blob` + download local
+
+### 5. Modais de motivo
+
+- Trocar `confirm()` em `salvarGlobal`, `removerOverride` e `togglar` por um `MotivoDialog` simples (componente novo, ~50 linhas) com textarea opcional + Confirmar/Cancelar.
+- O modal de exceção (já existente) passa o `motivo` técnico do override **e** envia via `comMotivo()` para o histórico (mesmo texto, simplifica UX).
+
+## Arquivos afetados
+
+- **Nova migration**: triggers `fn_audit_repasse_global` + `fn_audit_override_medico`, RPC `set_audit_motivo`.
+- **`src/lib/financeiroConfig.ts`**: helper `comMotivo`, novos tipos e `listAuditoriaRepasse`, parâmetro `motivo` nas mutations.
+- **`src/pages/app/admin/AdminFinanceiroConfig.tsx`**: novo card de histórico + uso do `MotivoDialog`.
+- **`src/components/financeiro/MotivoDialog.tsx`** (novo): diálogo reusável de confirmação com motivo.
+- **`src/components/financeiro/RepasseAuditoriaCard.tsx`** (novo): card de histórico com filtros e export.
+
+## Garantias
+
+- **Imutável**: `financeiro_auditoria` permanece append-only (RLS já permite só SELECT para admin/staff com `financeiro.ver`; nenhuma policy de UPDATE/DELETE será adicionada).
+- **Não afeta snapshots**: triggers só registram; não tocam em consultas, `consultas_financeiro` nem cálculo de comissão.
+- **Capability gate**: card e listagem usam a mesma proteção `financeiro.editar_comissao` da rota; SELECT da auditoria pede `financeiro.ver` (já configurado).
+- **Sem secrets/integrações novas**.
