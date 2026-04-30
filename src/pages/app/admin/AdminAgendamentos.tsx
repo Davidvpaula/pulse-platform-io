@@ -125,6 +125,25 @@ export default function AdminAgendamentos() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
+  // Camada de inteligência (RPC admin_agendamentos_overview)
+  const [overview, setOverview] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+
+  const carregarOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    const hojeStr = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase.rpc("admin_agendamentos_overview", {
+      _data: hojeStr, _periodo: "dia",
+    });
+    setOverviewLoading(false);
+    if (error) {
+      // silencioso — usuário pode não ter permissão
+      console.warn("overview indisponível", error.message);
+      return;
+    }
+    setOverview(data);
+  }, []);
+
   // Modais
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; consulta?: ConsultaRow; novoStatus?: Status }>({ open: false });
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; consulta?: ConsultaRow }>({ open: false });
