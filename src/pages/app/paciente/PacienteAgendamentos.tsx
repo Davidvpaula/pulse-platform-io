@@ -276,6 +276,13 @@ export default function PacienteAgendamentos() {
           </ul>
         )}
       </div>
+
+      <AgendarRetornoDialog
+        open={!!voucherSelecionado}
+        onOpenChange={(v) => { if (!v) setVoucherSelecionado(null); }}
+        voucher={voucherSelecionado}
+        onAgendado={() => { setVoucherSelecionado(null); void carregar(); }}
+      />
     </div>
   );
 }
