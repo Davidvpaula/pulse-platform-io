@@ -365,12 +365,21 @@ export default function MedicoDashboard() {
           icon={FileText}
           hint="Prescrições do mês"
         />
-        <StatCard
-          label="Receita do mês"
-          value={formatBRL(stats.receitaMes)}
-          icon={Wallet}
-          hint={stats.pagPendentes > 0 ? `${stats.pagPendentes} pagamento(s) pendente(s)` : "Consultas concluídas"}
-        />
+        {podeVerFinanceiro ? (
+          <StatCard
+            label="Receita do mês"
+            value={formatBRL(stats.receitaMes)}
+            icon={Wallet}
+            hint={stats.pagPendentes > 0 ? `${stats.pagPendentes} pagamento(s) pendente(s)` : "Consultas concluídas"}
+          />
+        ) : (
+          <StatCard
+            label="Receita do mês"
+            value="—"
+            icon={Lock}
+            hint="Sem permissão financeira"
+          />
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
