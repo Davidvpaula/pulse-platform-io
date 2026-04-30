@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { trackConversion } from "@/lib/analytics/tracker";
 import {
   cancelarPagamento,
   confirmarPagamento,
