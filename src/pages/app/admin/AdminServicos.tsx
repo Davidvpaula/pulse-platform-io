@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil } from "lucide-react";
 import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
+import { broadcastAtendimentoImediatoConfigChanged } from "@/lib/clinico";
 
 type Tipo = "consulta" | "pronto_atendimento" | "pacote";
 type Modelo = "percentual" | "valor_fixo";
@@ -106,6 +107,7 @@ export default function AdminServicos() {
     setSavingPa(false);
     if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     setPaServicoId(id);
+    broadcastAtendimentoImediatoConfigChanged();
     toast({ title: id ? "Atendimento imediato configurado" : "Atendimento imediato desativado" });
   }
 
@@ -167,6 +169,7 @@ export default function AdminServicos() {
     setSaving(false);
     if (error) return toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     toast({ title: editing.id ? "Serviço atualizado" : "Serviço criado" });
+    if (editing.id && editing.id === paServicoId) broadcastAtendimentoImediatoConfigChanged();
     setEditing(null);
     load();
   }
