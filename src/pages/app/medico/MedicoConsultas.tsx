@@ -265,6 +265,19 @@ export default function MedicoConsultas() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    onClick={() =>
+                      setHistoricoCtx({
+                        id: c.id,
+                        resumo: `${c.paciente_nome ?? "Paciente"} • ${formatDataBR(c.inicio)} ${formatHora(c.inicio)}`,
+                      })
+                    }
+                    title="Histórico de mudanças"
+                  >
+                    <History className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     asChild
                     title="Reagendar (gerenciar horários)"
                   >
