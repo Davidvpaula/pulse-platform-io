@@ -397,23 +397,57 @@ export default function PacienteCheckout() {
                   </button>
                 </div>
               ) : (
-                <div className="mt-2 flex gap-2">
-                  <Input
-                    value={codigoCupom}
-                    onChange={(e) => setCodigoCupom(e.target.value.toUpperCase())}
-                    placeholder="Ex.: PRIMEIRA10"
-                    className="h-9 text-sm"
-                    disabled={cupomLoading || processando}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={aplicarCupom}
-                    disabled={!codigoCupom || cupomLoading || processando}
-                  >
-                    {cupomLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Aplicar"}
-                  </Button>
+                <div className="mt-2 space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={codigoCupom}
+                      onChange={(e) => setCodigoCupom(e.target.value.toUpperCase())}
+                      placeholder="Ex.: PRIMEIRA10"
+                      maxLength={32}
+                      aria-invalid={preview.state === "error"}
+                      className={`h-9 text-sm ${
+                        preview.state === "error"
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : preview.state === "ok"
+                          ? "border-emerald-500 focus-visible:ring-emerald-500"
+                          : ""
+                      }`}
+                      disabled={cupomLoading || processando}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={aplicarCupom}
+                      disabled={
+                        !codigoCupom ||
+                        cupomLoading ||
+                        processando ||
+                        preview.state === "checking" ||
+                        preview.state === "error"
+                      }
+                    >
+                      {cupomLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Aplicar"}
+                    </Button>
+                  </div>
+
+                  {preview.state === "checking" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando cupom…
+                    </p>
+                  )}
+                  {preview.state === "error" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-destructive">
+                      <AlertCircle className="h-3 w-3" /> {preview.message}
+                    </p>
+                  )}
+                  {preview.state === "ok" && (
+                    <p className="flex items-center gap-1.5 text-[11px] text-emerald-600">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Cupom válido — desconto de {formatBRL(preview.aplicado.desconto_centavos)}
+                      {" "}({formatBRL(preview.aplicado.valor_final_centavos)} no total)
+                    </p>
+                  )}
                 </div>
               )}
             </div>
