@@ -2329,6 +2329,51 @@ export type Database = {
         }
         Relationships: []
       }
+      impersonation_log: {
+        Row: {
+          admin_email: string | null
+          admin_id: string
+          duracao_seg: number | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          ip: string | null
+          motivo: string
+          target_email: string | null
+          target_id: string
+          target_role: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          admin_email?: string | null
+          admin_id: string
+          duracao_seg?: number | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          ip?: string | null
+          motivo: string
+          target_email?: string | null
+          target_id: string
+          target_role?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          admin_email?: string | null
+          admin_id?: string
+          duracao_seg?: number | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          ip?: string | null
+          motivo?: string
+          target_email?: string | null
+          target_id?: string
+          target_role?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       integracoes_config: {
         Row: {
           ambiente: string
@@ -4454,6 +4499,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      impersonation_finalizar: { Args: { _log_id: string }; Returns: undefined }
+      impersonation_iniciar: {
+        Args: { _motivo: string; _target_id: string; _user_agent?: string }
+        Returns: string
+      }
+      impersonation_listar_alvos: {
+        Args: { _busca?: string }
+        Returns: {
+          email: string
+          nome: string
+          role: string
+          user_id: string
+        }[]
       }
       integracoes_dashboard: { Args: never; Returns: Json }
       is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
