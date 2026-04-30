@@ -173,6 +173,177 @@ function formatDataCompleta(iso: string) {
   });
 }
 
+/* ─────────── Histórico de eventos por categoria ─────────── */
+
+type EventoTipo = "info" | "ok" | "warn" | "danger";
+
+type EventoTimeline = {
+  label: string;
+  hint?: string;
+  ts: string; // ISO
+  icon: LucideIcon;
+  tipo: EventoTipo;
+};
+
+const eventoToneUI: Record<EventoTipo, { ring: string; text: string; bg: string }> = {
+  info:   { ring: "ring-primary/30",     text: "text-primary",     bg: "bg-primary/10" },
+  ok:     { ring: "ring-success/30",     text: "text-success",     bg: "bg-success/10" },
+  warn:   { ring: "ring-warning/30",     text: "text-warning",     bg: "bg-warning/10" },
+  danger: { ring: "ring-destructive/30", text: "text-destructive", bg: "bg-destructive/10" },
+};
+
+/**
+ * Gera um histórico mockado de eventos para a mensagem, baseado na categoria.
+ * Quando o backend estiver pronto, basta substituir por uma leitura de
+ * `mensagem_eventos` (msg_id, tipo, label, ts).
+ */
+function eventosPorMensagem(m: Mensagem): EventoTimeline[] {
+  const baseTs = new Date(m.data).getTime();
+  const min = (n: number) => new Date(baseTs - n * 60_000).toISOString();
+  const after = (n: number) => new Date(baseTs + n * 60_000).toISOString();
+
+  const criada: EventoTimeline = {
+    label: "Mensagem criada",
+    hint: "Sistema gerou a notificação",
+    ts: min(2),
+    icon: Sparkles,
+    tipo: "info",
+  };
+  const enviada: EventoTimeline = {
+    label: "Enviada para você",
+    hint: "Push e e-mail disparados",
+    ts: min(1),
+    icon: Send,
+    tipo: "info",
+  };
+  const visualizada: EventoTimeline = {
+    label: m.lida ? "Visualizada" : "Aguardando visualização",
+    hint: m.lida ? "Marcada como lida nesta sessão" : "Ainda não foi aberta",
+    ts: m.lida ? after(0) : m.data,
+    icon: Eye,
+    tipo: m.lida ? "ok" : "info",
+  };
+
+  switch (m.categoria) {
+    case "lembrete":
+      return [
+        criada,
+        enviada,
+        visualizada,
+        {
+          label: "Confirmação solicitada",
+          hint: "Aguardando ação do paciente",
+          ts: after(1),
+          icon: UserCheck,
+          tipo: "warn",
+        },
+      ];
+    case "alteracao":
+      return [
+        {
+          label: "Reagendamento solicitado",
+          hint: "Por: Secretaria · MedClin",
+          ts: min(15),
+          icon: Calendar,
+          tipo: "warn",
+        },
+        {
+          label: "Novo horário aplicado",
+          hint: "Agenda do médico atualizada",
+          ts: min(10),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "retorno":
+      return [
+        {
+          label: "Consulta concluída",
+          hint: "Origem do benefício de retorno",
+          ts: min(180),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        {
+          label: "Retorno gratuito gerado",
+          hint: "Validade de 15 dias",
+          ts: min(170),
+          icon: Repeat,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "pagamento":
+      return [
+        {
+          label: "Cobrança gerada",
+          hint: "Valor: R$ 220,00",
+          ts: min(60),
+          icon: CreditCard,
+          tipo: "info",
+        },
+        enviada,
+        visualizada,
+        {
+          label: "Pagamento pendente",
+          hint: "Aguardando confirmação",
+          ts: after(0),
+          icon: AlertTriangle,
+          tipo: "danger",
+        },
+      ];
+    case "documento":
+      return [
+        {
+          label: "Documento emitido",
+          hint: "Assinatura digital aplicada",
+          ts: min(20),
+          icon: FileText,
+          tipo: "ok",
+        },
+        {
+          label: "Disponibilizado no portal",
+          ts: min(15),
+          icon: CheckCircle2,
+          tipo: "ok",
+        },
+        enviada,
+        visualizada,
+      ];
+    case "telemedicina":
+      return [
+        {
+          label: "Sala criada",
+          hint: "Plataforma de vídeo configurada",
+          ts: min(30),
+          icon: Video,
+          tipo: "info",
+        },
+        {
+          label: "Link enviado",
+          hint: "Disponível no agendamento",
+          ts: min(25),
+          icon: Send,
+          tipo: "info",
+        },
+        visualizada,
+      ];
+    case "sistema":
+    default:
+      return [criada, enviada, visualizada];
+  }
+}
+
+function formatTimelineTs(iso: string) {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 export default function PacienteMensagens() {
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensMock);
   const [filtro, setFiltro] = useState<typeof filtros[number]["key"]>("todas");
