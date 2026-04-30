@@ -211,7 +211,7 @@ export default function TrocarMedicoDialog({
                         {formatDataBR(s.inicio)} · <strong>{formatHora(s.inicio)}</strong>
                       </span>
                       <span className="text-[10px] uppercase text-muted-foreground">
-                        {s.modalidade}
+                        Telemedicina
                       </span>
                     </button>
                   ))}
