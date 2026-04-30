@@ -374,3 +374,171 @@ export default function PacienteDashboard() {
     </div>
   );
 }
+
+/* ============================================================
+ * ComunicacaoCanais
+ * Visão de comunicação: conversas e status com médico, secretaria e admin.
+ * Mocks visuais — pronto para plugar em uma tabela `mensagens` no futuro.
+ * ============================================================ */
+
+type CanalStatus = "online" | "respondido" | "aguardando" | "offline";
+
+const canalStatusUI: Record<CanalStatus, { label: string; dot: string; pill: string }> = {
+  online:      { label: "Online agora",   dot: "bg-success",          pill: "bg-success/10 text-success" },
+  respondido:  { label: "Respondido",     dot: "bg-primary",          pill: "bg-primary/10 text-primary" },
+  aguardando:  { label: "Aguardando você",dot: "bg-warning",          pill: "bg-warning/10 text-warning" },
+  offline:     { label: "Fora do horário",dot: "bg-muted-foreground", pill: "bg-muted text-muted-foreground" },
+};
+
+function ComunicacaoCanais({
+  proximaConsulta, mensagemConsulta,
+}: { proximaConsulta: ConsultaItem; mensagemConsulta: string }) {
+  const canais = [
+    {
+      id: "medico",
+      role: "Médico",
+      nome: proximaConsulta?.medico ?? "Dr. Rafael Lasmar",
+      sub: proximaConsulta?.esp ?? "Cardiologia",
+      iniciais: (proximaConsulta?.medico ?? "RL")
+        .split(" ").filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase(),
+      status: "respondido" as CanalStatus,
+      ultimoContato: "há 2h",
+      ultimaMsg: "Tomar a medicação após o almoço. Qualquer dúvida me chame.",
+      enviadaPor: "medico" as const,
+      naoLidas: 1,
+      icon: Stethoscope,
+      tone: "primary",
+    },
+    {
+      id: "secretaria",
+      role: "Secretaria",
+      nome: "Camila — Atendimento",
+      sub: "Reagendamentos · confirmações · cobranças",
+      iniciais: "CA",
+      status: "aguardando" as CanalStatus,
+      ultimoContato: "há 25 min",
+      ultimaMsg: "Pode confirmar sua presença na consulta de amanhã às 09:00?",
+      enviadaPor: "secretaria" as const,
+      naoLidas: 2,
+      icon: User,
+      tone: "warning",
+    },
+    {
+      id: "admin",
+      role: "Suporte / Admin",
+      nome: "Suporte MedClin",
+      sub: "Dúvidas sobre plano, conta e uso da plataforma",
+      iniciais: "SM",
+      status: "online" as CanalStatus,
+      ultimoContato: "agora",
+      ultimaMsg: "Olá! Estamos online e prontos para ajudar.",
+      enviadaPor: "admin" as const,
+      naoLidas: 0,
+      icon: MessageCircle,
+      tone: "success",
+    },
+  ];
+
+  const totalNaoLidas = canais.reduce((s, c) => s + c.naoLidas, 0);
+
+  return (
+    <section className="card-elevated p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            Comunicação
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Conversas e status com sua equipe de atendimento
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {totalNaoLidas > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-medium text-warning">
+              <Bell className="h-3 w-3" /> {totalNaoLidas} não lida{totalNaoLidas > 1 ? "s" : ""}
+            </span>
+          )}
+          <Button asChild variant="outline" size="sm">
+            <Link to="/app/paciente/mensagens">Ver todas <ChevronRight className="ml-1 h-3.5 w-3.5" /></Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        {canais.map((c) => {
+          const ui = canalStatusUI[c.status];
+          const Icon = c.icon;
+          return (
+            <article
+              key={c.id}
+              className="group relative flex flex-col rounded-xl border border-border bg-background/40 p-4 transition hover:border-primary/30 hover:shadow-sm"
+            >
+              {/* Header: avatar + status */}
+              <div className="flex items-start gap-3">
+                <div className="relative">
+                  <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {c.iniciais}
+                  </div>
+                  <span
+                    className={cn(
+                      "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-card",
+                      ui.dot,
+                    )}
+                    title={ui.label}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.role}</span>
+                  </div>
+                  <p className="truncate text-sm font-semibold">{c.nome}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">{c.sub}</p>
+                </div>
+                {c.naoLidas > 0 && (
+                  <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                    {c.naoLidas}
+                  </span>
+                )}
+              </div>
+
+              {/* Status pill */}
+              <div className="mt-3 flex items-center justify-between">
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium", ui.pill)}>
+                  <span className={cn("h-1.5 w-1.5 rounded-full", ui.dot)} />
+                  {ui.label}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{c.ultimoContato}</span>
+              </div>
+
+              {/* Última mensagem */}
+              <div className="mt-3 flex-1 rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+                <span className="font-medium text-foreground/80">
+                  {c.enviadaPor === "medico" ? "Médico:" : c.enviadaPor === "secretaria" ? "Secretaria:" : "Suporte:"}
+                </span>{" "}
+                {c.ultimaMsg}
+              </div>
+
+              {/* Ações */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                  <Link to="/app/paciente/mensagens">Abrir</Link>
+                </Button>
+                <Button asChild size="sm" className="h-8 bg-success text-success-foreground hover:opacity-90 text-xs">
+                  <a
+                    href={whatsappUrl(undefined, mensagemConsulta)}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    <MessageCircle className="mr-1 h-3 w-3" /> WhatsApp
+                  </a>
+                </Button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
