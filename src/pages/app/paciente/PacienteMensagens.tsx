@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
   AlertTriangle, Search, Inbox, Filter, Check, Trash2, Settings,
-  Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock,
+  Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock, Mail, MailOpen,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -194,6 +194,12 @@ export default function PacienteMensagens() {
   const marcarLida = (id: string) =>
     setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: true } : m)));
 
+  const marcarNaoLida = (id: string) =>
+    setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: false } : m)));
+
+  const toggleLida = (id: string) =>
+    setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: !m.lida } : m)));
+
   const marcarTodasLidas = () =>
     setMensagens((xs) => xs.map((m) => ({ ...m, lida: true })));
 
@@ -202,6 +208,8 @@ export default function PacienteMensagens() {
     if (selecionadaId === id) setSelecionadaId(mensagens[0]?.id ?? "");
   };
 
+  // Selecionar marca como lida automaticamente (comportamento esperado de inbox).
+  // O usuário pode reverter manualmente com o botão "Marcar como não lida".
   const handleSelect = (id: string) => {
     setSelecionadaId(id);
     marcarLida(id);
@@ -278,11 +286,11 @@ export default function PacienteMensagens() {
               const Icon = Cat.icon;
               const ativa = m.id === selecionada?.id;
               return (
-                <li key={m.id}>
+                <li key={m.id} className="group relative">
                   <button
                     onClick={() => handleSelect(m.id)}
                     className={cn(
-                      "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-accent/30",
+                      "flex w-full items-start gap-3 px-4 py-3 pr-12 text-left transition hover:bg-accent/30",
                       ativa && "bg-accent/40",
                     )}
                   >
@@ -307,6 +315,20 @@ export default function PacienteMensagens() {
                         )}
                       </div>
                     </div>
+                  </button>
+                  {/* Toggle lida/não lida (não dispara seleção) */}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleLida(m.id); }}
+                    title={m.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    aria-label={m.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    className={cn(
+                      "absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition",
+                      "opacity-0 group-hover:opacity-100 focus:opacity-100 hover:border-border hover:bg-background hover:text-foreground",
+                      !m.lida && "opacity-100",
+                    )}
+                  >
+                    {m.lida ? <Mail className="h-4 w-4" /> : <MailOpen className="h-4 w-4" />}
                   </button>
                 </li>
               );
@@ -347,9 +369,27 @@ export default function PacienteMensagens() {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => apagar(selecionada.id)} title="Apagar">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => (selecionada.lida ? marcarNaoLida(selecionada.id) : marcarLida(selecionada.id))}
+                      title={selecionada.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    >
+                      {selecionada.lida ? (
+                        <>
+                          <Mail className="mr-1.5 h-4 w-4" /> Não lida
+                        </>
+                      ) : (
+                        <>
+                          <MailOpen className="mr-1.5 h-4 w-4" /> Lida
+                        </>
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => apagar(selecionada.id)} title="Apagar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </header>
 
