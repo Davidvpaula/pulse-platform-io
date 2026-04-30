@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, ShieldCheck, BadgeCheck, MessageSquare, Wallet, Activity, Loader2, Search, ChevronRight } from "lucide-react";
+import { Users, ShieldCheck, BadgeCheck, MessageSquare, Wallet, Activity, Loader2, Search, ChevronRight, History } from "lucide-react";
 import { ColaboradorPermissoesDrawer } from "@/components/permissions/ColaboradorPermissoesDrawer";
 import { MatrizPermissoes } from "@/components/permissions/MatrizPermissoes";
 import { FUNCOES, ROLES, STATUS_BADGE } from "@/lib/permissions/constants";
@@ -211,7 +212,15 @@ export default function Permissoes() {
         </TabsContent>
 
         {/* === AUDITORIA === */}
-        <TabsContent value="auditoria">
+        <TabsContent value="auditoria" className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Mostrando as 30 alterações mais recentes.</p>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/app/admin/permissoes/log">
+                <History className="mr-1 h-4 w-4" /> Ver histórico completo
+              </Link>
+            </Button>
+          </div>
           <div className="card-elevated overflow-hidden">
             <table className="min-w-full text-sm">
               <thead className="bg-muted/40">
