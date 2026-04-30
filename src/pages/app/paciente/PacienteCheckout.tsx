@@ -88,6 +88,38 @@ export default function PacienteCheckout() {
   const desconto = cupomAplicado?.desconto_centavos ?? 0;
   const valorFinal = pagamento?.valor_centavos ?? 0;
 
+  // Pré-validação debounced enquanto digita o cupom
+  useEffect(() => {
+    if (cupomAplicado) return; // já há cupom aplicado
+    const codigo = codigoCupom.trim();
+    if (!codigo) {
+      setPreview({ state: "idle" });
+      return;
+    }
+    if (codigo.length < 3) {
+      setPreview({ state: "error", message: "Código muito curto." });
+      return;
+    }
+    if (!consultaCtx || !pagamento) return;
+
+    setPreview({ state: "checking" });
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const r = await validarCupomParaConsulta({
+        codigo,
+        valorCentavos: valorOriginal,
+        medicoId: consultaCtx.medico_id,
+        especialidadeId: consultaCtx.especialidade_id,
+      });
+      if (cancelled) return;
+      if (r.ok) setPreview({ state: "ok", aplicado: r.aplicado });
+      else setPreview({ state: "error", message: r.error });
+    }, 400);
+
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [codigoCupom, cupomAplicado, consultaCtx, pagamento, valorOriginal]);
+
+
   async function aplicarCupom() {
     if (!pagamento || !consultaCtx) return;
     setCupomLoading(true);
