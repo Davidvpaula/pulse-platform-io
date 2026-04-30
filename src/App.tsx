@@ -41,6 +41,7 @@ import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
+import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
@@ -133,6 +134,8 @@ const App = () => (
               <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
               <Route path="secretaria/agenda" element={<SecretariaAgenda />} />
               <Route path="secretaria/agendamentos" element={<Placeholder title="Agendamentos" />} />
+              <Route path="secretaria/cupons" element={<SecretariaCupons />} />
+              <Route path="admin/cupons" element={<SecretariaCupons />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
               <Route path="secretaria/financeiro" element={<Placeholder title="Pagamentos pendentes" />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />

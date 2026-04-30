@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -97,6 +97,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
+      { label: "Cupons", to: "/app/secretaria/cupons", icon: BadgeCheck },
       { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
       { label: "Pendências Feegow", to: "/app/secretaria/pendencias-integracao", icon: AlertTriangle },
       // ─── módulos liberados ao perfil "Secretaria com supervisão"
@@ -132,6 +133,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       },
       { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
       { label: "Financeiro", to: "/app/admin/financeiro", icon: Wallet },
+      { label: "Cupons", to: "/app/admin/cupons", icon: Tag },
       { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck },
       {
         label: "Comunicação",

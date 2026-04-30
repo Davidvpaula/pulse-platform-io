@@ -254,6 +254,66 @@ export type Database = {
           },
         ]
       }
+      cupons: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          escopo: Database["public"]["Enums"]["cupom_escopo"]
+          especialidade_id: string | null
+          id: string
+          medico_id: string | null
+          nome: string
+          tipo: Database["public"]["Enums"]["cupom_tipo"]
+          updated_at: string
+          uso_atual: number
+          uso_maximo: number | null
+          valido_ate: string | null
+          valido_de: string
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          escopo?: Database["public"]["Enums"]["cupom_escopo"]
+          especialidade_id?: string | null
+          id?: string
+          medico_id?: string | null
+          nome: string
+          tipo: Database["public"]["Enums"]["cupom_tipo"]
+          updated_at?: string
+          uso_atual?: number
+          uso_maximo?: number | null
+          valido_ate?: string | null
+          valido_de?: string
+          valor: number
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          escopo?: Database["public"]["Enums"]["cupom_escopo"]
+          especialidade_id?: string | null
+          id?: string
+          medico_id?: string | null
+          nome?: string
+          tipo?: Database["public"]["Enums"]["cupom_tipo"]
+          updated_at?: string
+          uso_atual?: number
+          uso_maximo?: number | null
+          valido_ate?: string | null
+          valido_de?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       especialidades: {
         Row: {
           ativo: boolean
@@ -866,6 +926,8 @@ export type Database = {
         | "concluida"
         | "cancelada"
         | "no_show"
+      cupom_escopo: "global" | "medico" | "especialidade"
+      cupom_tipo: "percentual" | "fixo"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       medico_status: "pendente" | "em_analise" | "aprovado" | "reprovado"
       pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
@@ -1018,6 +1080,8 @@ export const Constants = {
         "cancelada",
         "no_show",
       ],
+      cupom_escopo: ["global", "medico", "especialidade"],
+      cupom_tipo: ["percentual", "fixo"],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       medico_status: ["pendente", "em_analise", "aprovado", "reprovado"],
       pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
