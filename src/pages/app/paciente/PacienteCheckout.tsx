@@ -113,7 +113,7 @@ export default function PacienteCheckout() {
       });
       if (cancelled) return;
       if (r.ok) setPreview({ state: "ok", aplicado: r.aplicado });
-      else setPreview({ state: "error", message: r.error });
+      else setPreview({ state: "error", message: (r as { ok: false; error: string }).error });
     }, 400);
 
     return () => { cancelled = true; clearTimeout(t); };
