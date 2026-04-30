@@ -321,14 +321,32 @@ export default function AdminFinanceiroCentral() {
               </div>
             </div>
           )}
+          <div className="flex flex-wrap gap-2 items-end">
+            <div className="flex-1 min-w-[220px]"><Label>Buscar</Label><Input placeholder="Paciente, médico, empresa ou ID" value={pgBusca} onChange={e => { setPgBusca(e.target.value); setPgPage(1); }} /></div>
+            <div className="min-w-[180px]"><Label>Status</Label>
+              <Select value={pgStatus} onValueChange={v => { setPgStatus(v); setPgPage(1); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="recusado">Recusado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="reembolsado">Estornado</SelectItem>
+                  <SelectItem value="reembolsado_parcial">Estornado parcial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr>
                 <th className="p-2 w-8"><Checkbox checked={todosPendentesSelecionados} onCheckedChange={toggleTodos} aria-label="Selecionar todos pendentes" disabled={!pendentes.length} /></th>
-                <th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
+                <th className="text-left p-2">ID</th><th className="text-left p-2">Paciente / Médico / Empresa</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
               </tr></thead>
               <tbody>
-                {pagamentos.map(p => (
+                {pagamentosPagina.map(p => (
                   <tr key={p.id} className="border-t">
                     <td className="p-2">
                       {p.status === "pendente" && (
@@ -336,6 +354,12 @@ export default function AdminFinanceiroCentral() {
                       )}
                     </td>
                     <td className="p-2 font-mono text-xs">{p.id.slice(0, 8)}</td>
+                    <td className="p-2">
+                      <div className="leading-tight">
+                        <div>{nomePaciente(p) || <span className="text-muted-foreground">—</span>}</div>
+                        <div className="text-xs text-muted-foreground">{[nomeMedico(p), nomeEmpresa(p)].filter(Boolean).join(" · ") || ""}</div>
+                      </div>
+                    </td>
                     <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
                     <td className="p-2">{p.metodo || p.forma || "—"}</td>
                     <td className="p-2"><StatusBadge s={p.status} /></td>
@@ -349,9 +373,16 @@ export default function AdminFinanceiroCentral() {
                     </td>
                   </tr>
                 ))}
-                {!pagamentos.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
+                {!pagamentosFiltrados.length && <tr><td colSpan={8} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{pagamentosFiltrados.length} resultado(s) · página {pgPageSafe}/{pgTotalPages}</span>
+            <div className="space-x-2">
+              <Button size="sm" variant="outline" disabled={pgPageSafe <= 1} onClick={() => setPgPage(p => Math.max(1, p - 1))}>Anterior</Button>
+              <Button size="sm" variant="outline" disabled={pgPageSafe >= pgTotalPages} onClick={() => setPgPage(p => p + 1)}>Próxima</Button>
+            </div>
           </div>
         </TabsContent>
 
