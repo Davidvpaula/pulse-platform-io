@@ -71,6 +71,7 @@ import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
 import BotConfig from "@/pages/app/comunicacao/BotConfig";
 import Integracoes from "@/pages/app/shared/Integracoes";
+import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
@@ -202,7 +203,8 @@ const App = () => (
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<IntegracaoWhatsApp />} />
-              <Route path="admin/integracoes" element={<Integracoes />} />
+              <Route path="admin/integracoes" element={<AdminIntegracoes />} />
+              <Route path="admin/integracoes-legado" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
               <Route path="admin/relatorios" element={<AdminRelatorios />} />
