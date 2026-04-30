@@ -352,11 +352,9 @@ export default function AdminRelatorioAuditoria() {
           <Button variant="outline" onClick={limparFiltros}>Limpar</Button>
         </div>
 
-        {filtros.actor && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Dica: para filtrar por UUID exato do usuário, cole o ID no campo correspondente; o seletor mostra os atores mais ativos do período.
-          </p>
-        )}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Dica: copie o UUID do usuário ou da entidade a partir das telas de detalhe. Os filtros são aplicados ao clicar em <strong>Aplicar</strong>.
+        </p>
       </Card>
 
       {/* KPIs */}
