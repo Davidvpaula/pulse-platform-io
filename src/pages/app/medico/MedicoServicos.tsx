@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Clock, DollarSign, AlertCircle } from "lucide-react";
+import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 type Servico = {
   id: string;
@@ -43,7 +44,8 @@ export default function MedicoServicos() {
   const [loading, setLoading] = useState(true);
   const [overrideOpen, setOverrideOpen] = useState<Servico | null>(null);
   const [overrideMotivo, setOverrideMotivo] = useState("");
-  const [overridePct, setOverridePct] = useState<number>(0);
+  const [overridePct, setOverridePct] = useState<number>(0); // % MÉDICO desejado (UI)
+  const [overrideValid, setOverrideValid] = useState<boolean>(true);
 
   async function load() {
     if (!user) return;
@@ -98,10 +100,15 @@ export default function MedicoServicos() {
 
   async function solicitarOverride() {
     if (!overrideOpen || !medicoId) return;
+    if (!overrideValid) {
+      return toast({ title: "Corrija o percentual antes de enviar", variant: "destructive" });
+    }
+    // overridePct é o % desejado pelo médico (UI). No banco gravamos % plataforma = 100 - médico.
+    const plataformaPct = Math.round((100 - overridePct) * 100) / 100;
     const { error } = await supabase.from("medico_comissao_override").insert({
       medico_id: medicoId,
       servico_id: overrideOpen.id,
-      comissao_pct: overridePct,
+      comissao_pct: plataformaPct,
       motivo: overrideMotivo,
       ativo: false, // Admin precisa ativar
     });
@@ -165,7 +172,14 @@ export default function MedicoServicos() {
                 )}
                 {ativo && (
                   <Button variant="outline" size="sm" className="w-full"
-                    onClick={() => { setOverrideOpen(s); setOverridePct(s.comissao_pct ?? 0); }}>
+                    onClick={() => {
+                      setOverrideOpen(s);
+                      // s.comissao_pct é % plataforma; mostramos a % do médico atual como ponto de partida
+                      const atualMedicoPct = s.comissao_pct == null
+                        ? 56
+                        : Math.round((100 - Number(s.comissao_pct)) * 100) / 100;
+                      setOverridePct(atualMedicoPct);
+                    }}>
                     Solicitar override de repasse
                   </Button>
                 )}
@@ -192,10 +206,14 @@ export default function MedicoServicos() {
               Sua solicitação para <b>{overrideOpen?.nome}</b> será analisada pelo administrador.
             </p>
             <div className="space-y-2">
-              <Label>Percentual desejado (%)</Label>
-              <input type="number" min={0} max={100} step={0.01}
-                className="w-full border rounded px-3 py-2"
-                value={overridePct} onChange={(e) => setOverridePct(Number(e.target.value))} />
+              <Label>Divisão desejada</Label>
+              <RepasseSplitInput
+                medicoPct={overridePct}
+                onChange={setOverridePct}
+                onValidityChange={setOverrideValid}
+                size="sm"
+                labels={{ medico: "% que você quer receber", plataforma: "% plataforma" }}
+              />
             </div>
             <div className="space-y-2">
               <Label>Motivo</Label>
@@ -205,7 +223,7 @@ export default function MedicoServicos() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOverrideOpen(null)}>Cancelar</Button>
-            <Button onClick={solicitarOverride} disabled={overrideMotivo.length < 10}>
+            <Button onClick={solicitarOverride} disabled={overrideMotivo.length < 10 || !overrideValid}>
               Enviar solicitação
             </Button>
           </DialogFooter>

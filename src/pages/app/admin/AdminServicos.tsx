@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil } from "lucide-react";
+import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 type Tipo = "consulta" | "pronto_atendimento" | "pacote";
 type Modelo = "percentual" | "valor_fixo";
@@ -74,6 +75,7 @@ export default function AdminServicos() {
   const [filtroAtivo, setFiltroAtivo] = useState<string>("todos");
   const [editing, setEditing] = useState<Partial<Servico> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pctValid, setPctValid] = useState<boolean>(true);
   const [paServicoId, setPaServicoId] = useState<string | null>(null);
   const [savingPa, setSavingPa] = useState(false);
 
@@ -134,6 +136,9 @@ export default function AdminServicos() {
     }
     if ((editing.duracao_min ?? 0) % 5 !== 0) {
       return toast({ title: "Duração deve ser múltiplo de 5", variant: "destructive" });
+    }
+    if (editing.modelo === "percentual" && !pctValid) {
+      return toast({ title: "Corrija o percentual de repasse", variant: "destructive" });
     }
     setSaving(true);
     const payload: any = {
@@ -418,10 +423,12 @@ export default function AdminServicos() {
                 </div>
                 {editing.modelo === "percentual" ? (
                   <div className="space-y-2">
-                    <Label>Percentual do médico (%)</Label>
-                    <Input type="number" min={0} max={100} step={0.01}
-                      value={editing.comissao_pct ?? 0}
-                      onChange={(e) => setEditing({ ...editing, comissao_pct: Number(e.target.value) })} />
+                    <Label>Divisão do valor da consulta</Label>
+                    <RepasseSplitInput
+                      medicoPct={editing.comissao_pct ?? 0}
+                      onChange={(v) => setEditing({ ...editing, comissao_pct: v })}
+                      onValidityChange={setPctValid}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-2">
