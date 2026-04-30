@@ -1839,6 +1839,98 @@ export type Database = {
         }
         Relationships: []
       }
+      event_logs: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          created_by: string | null
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          max_attempts: number
+          origem: string | null
+          payload: Json
+          processed_at: string | null
+          scheduled_for: string
+          status: Database["public"]["Enums"]["event_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          max_attempts?: number
+          origem?: string | null
+          payload?: Json
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["event_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          max_attempts?: number
+          origem?: string | null
+          payload?: Json
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["event_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fechamentos_mensais: {
         Row: {
           bloqueado_em: string | null
@@ -1973,6 +2065,201 @@ export type Database = {
           id?: string
           nome?: string
           tipo?: Database["public"]["Enums"]["gateway_tipo"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      integracoes_config: {
+        Row: {
+          ambiente: string
+          ativo: boolean
+          config: Json
+          created_at: string
+          descricao: string | null
+          id: string
+          modo_simulado: boolean
+          nome: string
+          secrets_keys: string[] | null
+          status: Database["public"]["Enums"]["integracao_status"]
+          tipo: Database["public"]["Enums"]["integracao_tipo"]
+          ultima_sincronizacao_at: string | null
+          ultimo_erro: string | null
+          ultimo_teste_at: string | null
+          ultimo_teste_ok: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modo_simulado?: boolean
+          nome: string
+          secrets_keys?: string[] | null
+          status?: Database["public"]["Enums"]["integracao_status"]
+          tipo: Database["public"]["Enums"]["integracao_tipo"]
+          ultima_sincronizacao_at?: string | null
+          ultimo_erro?: string | null
+          ultimo_teste_at?: string | null
+          ultimo_teste_ok?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modo_simulado?: boolean
+          nome?: string
+          secrets_keys?: string[] | null
+          status?: Database["public"]["Enums"]["integracao_status"]
+          tipo?: Database["public"]["Enums"]["integracao_tipo"]
+          ultima_sincronizacao_at?: string | null
+          ultimo_erro?: string | null
+          ultimo_teste_at?: string | null
+          ultimo_teste_ok?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      integracoes_logs: {
+        Row: {
+          acao: string
+          created_at: string
+          duracao_ms: number | null
+          entidade_id_externo: string | null
+          entidade_id_interno: string | null
+          entidade_tipo: string | null
+          erro: string | null
+          id: string
+          integracao: Database["public"]["Enums"]["integracao_tipo"]
+          origem: string
+          payload_envio: Json | null
+          payload_resposta: Json | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          duracao_ms?: number | null
+          entidade_id_externo?: string | null
+          entidade_id_interno?: string | null
+          entidade_tipo?: string | null
+          erro?: string | null
+          id?: string
+          integracao: Database["public"]["Enums"]["integracao_tipo"]
+          origem?: string
+          payload_envio?: Json | null
+          payload_resposta?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          duracao_ms?: number | null
+          entidade_id_externo?: string | null
+          entidade_id_interno?: string | null
+          entidade_tipo?: string | null
+          erro?: string | null
+          id?: string
+          integracao?: Database["public"]["Enums"]["integracao_tipo"]
+          origem?: string
+          payload_envio?: Json | null
+          payload_resposta?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      integracoes_pendencias: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          integracao: Database["public"]["Enums"]["integracao_tipo"]
+          metadata: Json | null
+          motivo_resolucao: string | null
+          prioridade: string
+          resolvido_at: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["pendencia_status"]
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          integracao: Database["public"]["Enums"]["integracao_tipo"]
+          metadata?: Json | null
+          motivo_resolucao?: string | null
+          prioridade?: string
+          resolvido_at?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["pendencia_status"]
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          integracao?: Database["public"]["Enums"]["integracao_tipo"]
+          metadata?: Json | null
+          motivo_resolucao?: string | null
+          prioridade?: string
+          resolvido_at?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["pendencia_status"]
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      integracoes_status_mapping: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          sistema_origem: string
+          status_externo: string
+          status_interno: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          sistema_origem: string
+          status_externo: string
+          status_interno: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          sistema_origem?: string
+          status_externo?: string
+          status_interno?: string
           updated_at?: string
         }
         Relationships: []
@@ -3643,6 +3930,7 @@ export type Database = {
         Returns: Json
       }
       empresa_visao_geral: { Args: { _empresa_id: string }; Returns: Json }
+      event_reprocessar: { Args: { p_event_id: string }; Returns: undefined }
       feegow_marcar_liberacao: {
         Args: {
           _erro: string
@@ -3764,6 +4052,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      integracoes_dashboard: { Args: never; Returns: Json }
       is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
       is_medico_da_consulta: {
         Args: { _consulta_id: string }
@@ -4099,6 +4388,12 @@ export type Database = {
         | "saude_ocupacional"
         | "indicadora"
         | "hibrida"
+      event_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "cancelled"
       fechamento_status:
         | "em_aberto"
         | "pago"
@@ -4122,6 +4417,21 @@ export type Database = {
         | "mercadopago"
         | "manual"
         | "outro"
+      integracao_status:
+        | "nao_configurado"
+        | "aguardando_configuracao"
+        | "conectado"
+        | "erro"
+        | "simulado"
+        | "manutencao"
+      integracao_tipo:
+        | "feegow"
+        | "whatsapp"
+        | "google"
+        | "pagamentos"
+        | "ia_provider"
+        | "assinatura_digital"
+        | "eventos_sistema"
       medico_status:
         | "pendente"
         | "em_analise"
@@ -4180,6 +4490,7 @@ export type Database = {
         | "recusado"
         | "reembolsado_parcial"
         | "expirado"
+      pendencia_status: "aberta" | "em_analise" | "resolvida" | "ignorada"
       permissao_efeito: "grant" | "revoke"
       plano_categoria:
         | "saude_mental"
@@ -4497,6 +4808,13 @@ export const Constants = {
         "indicadora",
         "hibrida",
       ],
+      event_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "cancelled",
+      ],
       fechamento_status: [
         "em_aberto",
         "pago",
@@ -4522,6 +4840,23 @@ export const Constants = {
         "mercadopago",
         "manual",
         "outro",
+      ],
+      integracao_status: [
+        "nao_configurado",
+        "aguardando_configuracao",
+        "conectado",
+        "erro",
+        "simulado",
+        "manutencao",
+      ],
+      integracao_tipo: [
+        "feegow",
+        "whatsapp",
+        "google",
+        "pagamentos",
+        "ia_provider",
+        "assinatura_digital",
+        "eventos_sistema",
       ],
       medico_status: [
         "pendente",
@@ -4588,6 +4923,7 @@ export const Constants = {
         "reembolsado_parcial",
         "expirado",
       ],
+      pendencia_status: ["aberta", "em_analise", "resolvida", "ignorada"],
       permissao_efeito: ["grant", "revoke"],
       plano_categoria: [
         "saude_mental",
