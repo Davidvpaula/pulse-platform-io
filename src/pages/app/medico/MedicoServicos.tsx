@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Clock, DollarSign, AlertCircle } from "lucide-react";
+import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 type Servico = {
   id: string;
@@ -43,7 +44,8 @@ export default function MedicoServicos() {
   const [loading, setLoading] = useState(true);
   const [overrideOpen, setOverrideOpen] = useState<Servico | null>(null);
   const [overrideMotivo, setOverrideMotivo] = useState("");
-  const [overridePct, setOverridePct] = useState<number>(0);
+  const [overridePct, setOverridePct] = useState<number>(0); // % MÉDICO desejado (UI)
+  const [overrideValid, setOverrideValid] = useState<boolean>(true);
 
   async function load() {
     if (!user) return;
