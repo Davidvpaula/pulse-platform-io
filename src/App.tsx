@@ -136,6 +136,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
             </Route>
 
+            <Route path="/trocar-senha" element={<TrocarSenha />} />
+
             {/* APP */}
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Navigate to="/app/admin/dashboard" replace />} />
