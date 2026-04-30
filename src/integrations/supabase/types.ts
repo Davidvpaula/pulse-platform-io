@@ -624,7 +624,14 @@ export type Database = {
       }
       medicos: {
         Row: {
+          analise_observacao: string | null
+          aprovado_em: string | null
+          aprovado_por: string | null
           bio: string | null
+          bloqueio_aplicado_em: string | null
+          bloqueio_aplicado_por: string | null
+          bloqueio_motivo: string | null
+          bloqueio_observacao: string | null
           cpf: string | null
           created_at: string
           crm: string
@@ -644,12 +651,25 @@ export type Database = {
           nome: string
           rqe: string | null
           status: Database["public"]["Enums"]["medico_status"]
+          suspensao_aplicada_em: string | null
+          suspensao_aplicada_por: string | null
+          suspensao_motivo: string | null
+          suspensao_observacao: string | null
+          suspenso_ate: string | null
+          suspenso_indeterminado: boolean
           telefone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          analise_observacao?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           bio?: string | null
+          bloqueio_aplicado_em?: string | null
+          bloqueio_aplicado_por?: string | null
+          bloqueio_motivo?: string | null
+          bloqueio_observacao?: string | null
           cpf?: string | null
           created_at?: string
           crm: string
@@ -669,12 +689,25 @@ export type Database = {
           nome: string
           rqe?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
+          suspensao_aplicada_em?: string | null
+          suspensao_aplicada_por?: string | null
+          suspensao_motivo?: string | null
+          suspensao_observacao?: string | null
+          suspenso_ate?: string | null
+          suspenso_indeterminado?: boolean
           telefone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          analise_observacao?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           bio?: string | null
+          bloqueio_aplicado_em?: string | null
+          bloqueio_aplicado_por?: string | null
+          bloqueio_motivo?: string | null
+          bloqueio_observacao?: string | null
           cpf?: string | null
           created_at?: string
           crm?: string
@@ -694,6 +727,12 @@ export type Database = {
           nome?: string
           rqe?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
+          suspensao_aplicada_em?: string | null
+          suspensao_aplicada_por?: string | null
+          suspensao_motivo?: string | null
+          suspensao_observacao?: string | null
+          suspenso_ate?: string | null
+          suspenso_indeterminado?: boolean
           telefone?: string | null
           updated_at?: string
           user_id?: string
@@ -708,6 +747,8 @@ export type Database = {
           id: string
           medico_id: string
           motivo: string | null
+          observacao: string | null
+          payload: Json | null
           status_anterior: Database["public"]["Enums"]["medico_status"] | null
           status_novo: Database["public"]["Enums"]["medico_status"] | null
         }
@@ -718,6 +759,8 @@ export type Database = {
           id?: string
           medico_id: string
           motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
           status_anterior?: Database["public"]["Enums"]["medico_status"] | null
           status_novo?: Database["public"]["Enums"]["medico_status"] | null
         }
@@ -728,6 +771,8 @@ export type Database = {
           id?: string
           medico_id?: string
           motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
           status_anterior?: Database["public"]["Enums"]["medico_status"] | null
           status_novo?: Database["public"]["Enums"]["medico_status"] | null
         }
@@ -1293,6 +1338,37 @@ export type Database = {
         Args: { _canal?: string; _consulta_id: string }
         Returns: Json
       }
+      medico_acesso_efetivo: { Args: { _medico_id: string }; Returns: string }
+      medico_aprovar: {
+        Args: { _id: string; _observacao?: string }
+        Returns: Json
+      }
+      medico_bloquear: {
+        Args: { _id: string; _motivo: string; _observacao?: string }
+        Returns: Json
+      }
+      medico_colocar_em_analise: {
+        Args: { _id: string; _observacao?: string }
+        Returns: Json
+      }
+      medico_reativar: {
+        Args: { _id: string; _justificativa: string }
+        Returns: Json
+      }
+      medico_reprovar: {
+        Args: { _id: string; _motivo: string; _observacao?: string }
+        Returns: Json
+      }
+      medico_suspender: {
+        Args: {
+          _ate?: string
+          _id: string
+          _indeterminado?: boolean
+          _motivo: string
+          _observacao?: string
+        }
+        Returns: Json
+      }
       processar_pagamento_confirmado: {
         Args: {
           _metodo: Database["public"]["Enums"]["pagamento_metodo"]
@@ -1364,7 +1440,13 @@ export type Database = {
         | "vacina"
         | "outro"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
-      medico_status: "pendente" | "em_analise" | "aprovado" | "reprovado"
+      medico_status:
+        | "pendente"
+        | "em_analise"
+        | "aprovado"
+        | "reprovado"
+        | "suspenso"
+        | "bloqueado"
       pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
       pagamento_provider: "mock" | "stripe"
       pagamento_status:
@@ -1543,7 +1625,14 @@ export const Constants = {
         "outro",
       ],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
-      medico_status: ["pendente", "em_analise", "aprovado", "reprovado"],
+      medico_status: [
+        "pendente",
+        "em_analise",
+        "aprovado",
+        "reprovado",
+        "suspenso",
+        "bloqueado",
+      ],
       pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
       pagamento_provider: ["mock", "stripe"],
       pagamento_status: [
