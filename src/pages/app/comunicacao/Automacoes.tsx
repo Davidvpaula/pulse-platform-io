@@ -1,151 +1,160 @@
-import { useState } from "react";
-import {
-  Activity, Plus, Calendar, Clock, Video, MessageSquare, Star, Wallet,
-  Power, Pencil,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Plus, Trash2, Zap, Activity } from "lucide-react";
+import { toast } from "sonner";
 
-type Automacao = {
+type Rule = {
   id: string;
-  nome: string;
-  gatilho: string;
-  acao: string;
-  template?: string;
-  ativo: boolean;
-  criada: string;
-  icon: typeof Calendar;
-  tone: string;
-  execucoes: number;
+  name: string;
+  description: string | null;
+  trigger: string;
+  action_type: string;
+  template_id: string | null;
+  channel: string;
+  active: boolean;
+  delay_seconds: number;
+  last_executed_at: string | null;
+  success_count: number;
+  failure_count: number;
 };
 
-const initial: Automacao[] = [
-  {
-    id: "AUT-01", nome: "Confirmar agendamento",
-    gatilho: "Novo agendamento criado", acao: "Enviar mensagem WhatsApp",
-    template: "Confirmação de consulta", ativo: true,
-    criada: "10/Mar/2026", icon: Calendar, tone: "bg-success/10 text-success", execucoes: 1842,
-  },
-  {
-    id: "AUT-02", nome: "Lembrete 24h antes",
-    gatilho: "24h antes da consulta", acao: "Enviar mensagem WhatsApp",
-    template: "Lembrete 24h antes", ativo: true,
-    criada: "10/Mar/2026", icon: Clock, tone: "bg-warning/10 text-warning", execucoes: 1567,
-  },
-  {
-    id: "AUT-03", nome: "Lembrete 1h antes",
-    gatilho: "1h antes da consulta", acao: "Enviar mensagem WhatsApp",
-    template: "Lembrete 1h antes", ativo: true,
-    criada: "10/Mar/2026", icon: Clock, tone: "bg-warning/10 text-warning", execucoes: 1521,
-  },
-  {
-    id: "AUT-04", nome: "Enviar link Google Meet",
-    gatilho: "Consulta confirmada (telemedicina)", acao: "Enviar link de videochamada",
-    template: "Link Google Meet", ativo: true,
-    criada: "12/Mar/2026", icon: Video, tone: "bg-info/10 text-info", execucoes: 988,
-  },
-  {
-    id: "AUT-05", nome: "Pós-consulta · feedback",
-    gatilho: "Consulta finalizada", acao: "Enviar pesquisa de satisfação",
-    template: "Pós-consulta", ativo: true,
-    criada: "15/Mar/2026", icon: Star, tone: "bg-accent/10 text-accent", execucoes: 1124,
-  },
-  {
-    id: "AUT-06", nome: "Cobrança Pix automática",
-    gatilho: "Agendamento aguardando pagamento > 30min", acao: "Enviar Pix WhatsApp",
-    template: "Cobrança Pix", ativo: false,
-    criada: "20/Mar/2026", icon: Wallet, tone: "bg-primary-soft text-primary", execucoes: 87,
-  },
+const TRIGGERS = [
+  "appointment.created", "appointment.confirmed",
+  "appointment.payment_pending", "appointment.payment_approved",
+  "appointment.starts_soon_24h", "appointment.starts_soon_1h",
+  "appointment.starts_soon_30min", "appointment.starts_soon_5min",
+  "appointment.finished", "appointment.no_show",
+  "document.available", "payment.refunded",
+  "conversation.received", "conversation.assigned", "conversation.closed",
 ];
+const ACTIONS = ["send_template", "send_message", "assign_conversation", "transfer_sector", "create_task", "notify_user", "webhook"];
 
 export default function Automacoes() {
-  const [items, setItems] = useState<Automacao[]>(initial);
+  const [items, setItems] = useState<Rule[]>([]);
+  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [edit, setEdit] = useState<Partial<Rule>>({});
 
-  const toggle = (id: string) =>
-    setItems(its => its.map(i => i.id === id ? { ...i, ativo: !i.ativo } : i));
+  async function load() {
+    const { data } = await supabase.from("automation_rules").select("*").order("trigger");
+    setItems((data || []) as Rule[]);
+    const { data: t } = await supabase.from("message_templates").select("id,name").eq("active", true);
+    setTemplates(t || []);
+  }
+  useEffect(() => { load(); }, []);
 
-  const ativas = items.filter(i => i.ativo).length;
-  const totalExec = items.reduce((s, i) => s + i.execucoes, 0);
+  async function salvar() {
+    if (!edit.name?.trim() || !edit.trigger || !edit.action_type) { toast.error("Nome, gatilho e ação são obrigatórios"); return; }
+    const payload = {
+      name: edit.name,
+      description: edit.description || null,
+      trigger: edit.trigger as any,
+      action_type: edit.action_type as any,
+      template_id: edit.template_id || null,
+      channel: (edit.channel as any) || "whatsapp",
+      active: edit.active ?? false,
+      delay_seconds: edit.delay_seconds ?? 0,
+    };
+    const { error } = edit.id
+      ? await supabase.from("automation_rules").update(payload).eq("id", edit.id)
+      : await supabase.from("automation_rules").insert(payload);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Automação salva");
+    setOpen(false);
+    load();
+  }
+
+  async function remover(id: string) {
+    if (!confirm("Remover automação?")) return;
+    await supabase.from("automation_rules").delete().eq("id", id);
+    load();
+  }
+
+  async function toggle(r: Rule) {
+    await supabase.from("automation_rules").update({ active: !r.active }).eq("id", r.id);
+    load();
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Automações"
-        description="Regras inteligentes que agem sozinhas em pontos-chave da jornada do paciente."
-        actions={<Button><Plus className="mr-2 h-4 w-4" />Nova automação</Button>}
-      />
+      <PageHeader title="Automações" description="Eventos do sistema disparam mensagens, transferências ou tarefas." />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-elevated p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Automações ativas</p>
-          <p className="mt-2 font-display text-3xl font-bold">{ativas} <span className="text-base text-muted-foreground">/ {items.length}</span></p>
-        </div>
-        <div className="card-elevated p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Execuções no mês</p>
-          <p className="mt-2 font-display text-3xl font-bold">{totalExec.toLocaleString("pt-BR")}</p>
-        </div>
-        <div className="card-elevated p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Taxa de entrega</p>
-          <p className="mt-2 font-display text-3xl font-bold text-success">98.4%</p>
-        </div>
+      <div className="flex justify-end">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button onClick={() => setEdit({ channel: "whatsapp", active: false, delay_seconds: 0, action_type: "send_template" })}>
+              <Plus className="mr-2 h-4 w-4" />Nova automação
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
+            <SheetHeader><SheetTitle>{edit.id ? "Editar" : "Nova"} automação</SheetTitle></SheetHeader>
+            <div className="mt-6 space-y-4">
+              <div><Label>Nome *</Label><Input value={edit.name || ""} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></div>
+              <div><Label>Descrição</Label><Input value={edit.description || ""} onChange={(e) => setEdit({ ...edit, description: e.target.value })} /></div>
+              <div><Label>Gatilho *</Label>
+                <Select value={edit.trigger} onValueChange={(v) => setEdit({ ...edit, trigger: v })}>
+                  <SelectTrigger><SelectValue placeholder="Escolha o evento" /></SelectTrigger>
+                  <SelectContent>{TRIGGERS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Ação *</Label>
+                <Select value={edit.action_type} onValueChange={(v) => setEdit({ ...edit, action_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ACTIONS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {edit.action_type === "send_template" && (
+                <div><Label>Template</Label>
+                  <Select value={edit.template_id || ""} onValueChange={(v) => setEdit({ ...edit, template_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Escolha um template" /></SelectTrigger>
+                    <SelectContent>{templates.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div><Label>Atraso (segundos)</Label><Input type="number" value={edit.delay_seconds ?? 0} onChange={(e) => setEdit({ ...edit, delay_seconds: Number(e.target.value) })} /></div>
+              <div className="flex items-center gap-2"><Switch checked={edit.active ?? false} onCheckedChange={(v) => setEdit({ ...edit, active: v })} /><Label>Ativa</Label></div>
+              <Button className="w-full" onClick={salvar}>Salvar</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      <div className="card-elevated overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="p-3 text-left">Automação</th>
-              <th className="p-3 text-left">Gatilho</th>
-              <th className="p-3 text-left">Ação</th>
-              <th className="p-3 text-left">Template</th>
-              <th className="p-3 text-left">Execuções</th>
-              <th className="p-3 text-left">Criada</th>
-              <th className="p-3 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map(a => (
-              <tr key={a.id} className="border-t border-border hover:bg-muted/30">
-                <td className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", a.tone)}>
-                      <a.icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{a.nome}</p>
-                      <p className="text-[11px] text-muted-foreground">{a.id}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3 text-muted-foreground">{a.gatilho}</td>
-                <td className="p-3">{a.acao}</td>
-                <td className="p-3">
-                  {a.template && (
-                    <span className="rounded bg-primary-soft px-2 py-0.5 text-xs text-primary">{a.template}</span>
-                  )}
-                </td>
-                <td className="p-3 font-mono text-xs">{a.execucoes.toLocaleString("pt-BR")}</td>
-                <td className="p-3 text-muted-foreground">{a.criada}</td>
-                <td className="p-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <Switch checked={a.ativo} onCheckedChange={() => toggle(a.id)} />
-                    <Button size="icon" variant="ghost" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card-elevated p-5 flex items-center gap-3 border-info/30 bg-info/5">
-        <Power className="h-5 w-5 shrink-0 text-info" />
-        <p className="text-sm">
-          <strong>Próximas integrações:</strong> WhatsApp Business API para disparo real, Webhook para Feegow,
-          e gatilhos a partir de eventos de pagamento (Stripe / Pix).
-        </p>
+      <div className="grid gap-3">
+        {items.length === 0 && <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma automação configurada.</CardContent></Card>}
+        {items.map(r => (
+          <Card key={r.id}>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4" />{r.name}</CardTitle>
+                  <CardDescription className="text-xs mt-1">
+                    Quando <code className="bg-muted px-1 rounded">{r.trigger}</code> → <code className="bg-muted px-1 rounded">{r.action_type}</code>
+                    {r.delay_seconds > 0 && <> · espera {r.delay_seconds}s</>}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px]">✓ {r.success_count}</Badge>
+                  <Badge variant="outline" className="text-[10px]">✗ {r.failure_count}</Badge>
+                  <Switch checked={r.active} onCheckedChange={() => toggle(r)} />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 flex gap-1 text-xs">
+              <Button variant="ghost" size="sm" onClick={() => { setEdit(r); setOpen(true); }}>Editar</Button>
+              <Button variant="ghost" size="sm" onClick={() => remover(r.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+              {r.last_executed_at && <span className="ml-auto text-muted-foreground self-center"><Activity className="inline h-3 w-3 mr-1" />{new Date(r.last_executed_at).toLocaleString("pt-BR")}</span>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
