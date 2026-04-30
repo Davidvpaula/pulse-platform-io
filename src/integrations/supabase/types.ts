@@ -1982,6 +1982,116 @@ export type Database = {
           },
         ]
       }
+      marketing_campanhas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          custo_centavos: number
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          fonte: string
+          id: string
+          nome: string
+          observacoes: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          custo_centavos?: number
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          fonte?: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          custo_centavos?: number
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          fonte?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
+      marketing_eventos: {
+        Row: {
+          agendamentos: number
+          campanha_id: string | null
+          consultas: number
+          created_at: string
+          created_by: string | null
+          data: string
+          fonte: string
+          id: string
+          leads: number
+          observacao: string | null
+          receita_centavos: number
+          retornos: number
+          visitantes: number
+        }
+        Insert: {
+          agendamentos?: number
+          campanha_id?: string | null
+          consultas?: number
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fonte?: string
+          id?: string
+          leads?: number
+          observacao?: string | null
+          receita_centavos?: number
+          retornos?: number
+          visitantes?: number
+        }
+        Update: {
+          agendamentos?: number
+          campanha_id?: string | null
+          consultas?: number
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fonte?: string
+          id?: string
+          leads?: number
+          observacao?: string | null
+          receita_centavos?: number
+          retornos?: number
+          visitantes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_eventos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_comissao_override: {
         Row: {
           ativo: boolean
@@ -3674,6 +3784,88 @@ export type Database = {
           _valor_novo?: string
         }
         Returns: string
+      }
+      relatorios_clinica: {
+        Args: {
+          p_canal?: string
+          p_empresa_id?: string
+          p_especialidade?: string
+          p_fim: string
+          p_inicio: string
+          p_medico_id?: string
+        }
+        Returns: Json
+      }
+      relatorios_consultas_diarias: {
+        Args: {
+          p_canal?: string
+          p_empresa_id?: string
+          p_especialidade?: string
+          p_fim: string
+          p_inicio: string
+          p_medico_id?: string
+          p_status?: string
+        }
+        Returns: {
+          canceladas: number
+          concluidas: number
+          dia: string
+          no_show: number
+          receita_centavos: number
+          total_consultas: number
+        }[]
+      }
+      relatorios_executivo: {
+        Args: {
+          p_canal?: string
+          p_empresa_id?: string
+          p_especialidade?: string
+          p_fim: string
+          p_inicio: string
+          p_medico_id?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      relatorios_financeiro: {
+        Args: {
+          p_empresa_id?: string
+          p_fim: string
+          p_inicio: string
+          p_medico_id?: string
+        }
+        Returns: Json
+      }
+      relatorios_marketing_funil: {
+        Args: {
+          p_campanha_id?: string
+          p_fim: string
+          p_fonte?: string
+          p_inicio: string
+        }
+        Returns: Json
+      }
+      relatorios_medicos_performance: {
+        Args: {
+          p_empresa_id?: string
+          p_especialidade?: string
+          p_fim: string
+          p_inicio: string
+        }
+        Returns: {
+          canceladas: number
+          concluidas: number
+          especialidade: string
+          medico_id: string
+          medico_nome: string
+          no_show: number
+          pacientes_unicos: number
+          receita_bruta_centavos: number
+          receita_medico_centavos: number
+          taxa_no_show: number
+          ticket_medio_centavos: number
+          total_consultas: number
+        }[]
       }
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }

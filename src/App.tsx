@@ -83,6 +83,7 @@ import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
 import AdminPlanos from "@/pages/app/admin/AdminPlanos";
+import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
@@ -203,7 +204,7 @@ const App = () => (
               <Route path="admin/integracoes" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
-              <Route path="admin/relatorios" element={<Placeholder title="Relatórios" />} />
+              <Route path="admin/relatorios" element={<AdminRelatorios />} />
               <Route path="admin/auditoria" element={<Placeholder title="Auditoria do sistema" description="Log de ações sensíveis (somente Superadmin)." />} />
               <Route path="admin/fluxo" element={<FluxoOperacional />} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
