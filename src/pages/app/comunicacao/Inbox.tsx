@@ -60,7 +60,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function ComunicacaoInbox() {
-  const { user } = useAuth();
+  const { user } = useSession();
   const [convs, setConvs] = useState<Conv[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
