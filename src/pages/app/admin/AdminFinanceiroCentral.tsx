@@ -38,6 +38,60 @@ export default function AdminFinanceiroCentral() {
   const [cancelMotivo, setCancelMotivo] = useState("");
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reembolsoModal, setReembolsoModal] = useState<{ id: string; motivo: string; observacao: string; aprovar: boolean } | null>(null);
+  const [detalhe, setDetalhe] = useState<any | null>(null);
+  const [detalheReembolsos, setDetalheReembolsos] = useState<any[]>([]);
+  const [detalheSnapshot, setDetalheSnapshot] = useState<any | null>(null);
+  const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
+  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+
+  async function abrirDetalhe(p: any) {
+    setDetalhe(p);
+    setDetalheReembolsos([]);
+    setDetalheSnapshot(null);
+    try {
+      if (p.consulta_id) {
+        const { data: snap } = await supabase.from("consultas_financeiro").select("*").eq("consulta_id", p.consulta_id).maybeSingle();
+        setDetalheSnapshot(snap);
+      }
+      const { data: r } = await supabase.from("reembolsos").select("*").eq("pagamento_id", p.id).order("created_at", { ascending: false });
+      setDetalheReembolsos(r || []);
+    } catch {}
+  }
+
+  async function abrirNovaCobranca() {
+    setNovaCobranca({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+    if (!pacientesOpts.length) {
+      const { data: pac } = await supabase.from("pacientes").select("id,nome").order("nome").limit(500);
+      setPacientesOpts(pac || []);
+    }
+    if (!empresasOpts.length) {
+      const { data: emp } = await supabase.from("empresas").select("id,razao_social,nome_fantasia").order("razao_social").limit(500);
+      setEmpresasOpts(emp || []);
+    }
+  }
+
+  async function criarCobranca() {
+    const valorNum = Number(novaCobranca.valor.replace(",", "."));
+    if (!novaCobranca.descricao.trim() || !valorNum || valorNum <= 0) {
+      toast.error("Preencha descrição e valor válido"); return;
+    }
+    try {
+      const { error } = await supabase.from("cobrancas_links").insert({
+        descricao: novaCobranca.descricao,
+        valor_centavos: Math.round(valorNum * 100),
+        vencimento: novaCobranca.vencimento || null,
+        paciente_id: novaCobranca.paciente_id || null,
+        observacao: novaCobranca.observacao || null,
+        status: "ativo",
+      } as any);
+      if (error) throw error;
+      toast.success("Cobrança criada");
+      setNovaCobranca(s => ({ ...s, open: false }));
+      carregar();
+    } catch (e: any) { toast.error(e.message || "Erro ao criar cobrança"); }
+  }
+
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -164,6 +218,7 @@ export default function AdminFinanceiroCentral() {
                     <td className="p-2"><StatusBadge s={p.status} /></td>
                     <td className="p-2">{fmtData(p.data_pagamento || p.paid_at)}</td>
                     <td className="p-2 text-right space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => abrirDetalhe(p)}>Ver</Button>
                       {p.status === "pendente" && <>
                         <Button size="sm" variant="outline" onClick={() => confirmarPagamento(p.id)}><CheckCircle2 className="h-3 w-3" /></Button>
                         <Button size="sm" variant="outline" onClick={() => { setCancelId(p.id); setCancelMotivo(""); }}><XCircle className="h-3 w-3" /></Button>
@@ -204,6 +259,9 @@ export default function AdminFinanceiroCentral() {
         </TabsContent>
 
         <TabsContent value="links" className="space-y-2">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
+          </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
@@ -274,6 +332,81 @@ export default function AdminFinanceiroCentral() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setReembolsoModal(null)}>Voltar</Button>
             <Button onClick={decidirReembolso}>{reembolsoModal?.aprovar ? "Aprovar" : "Recusar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detalhe do pagamento */}
+      <Dialog open={!!detalhe} onOpenChange={o => !o && setDetalhe(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Detalhe do pagamento</DialogTitle></DialogHeader>
+          {detalhe && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div><span className="text-muted-foreground">ID</span><div className="font-mono text-xs break-all">{detalhe.id}</div></div>
+                <div><span className="text-muted-foreground">Status</span><div><StatusBadge s={detalhe.status} /></div></div>
+                <div><span className="text-muted-foreground">Forma de pagamento</span><div>{detalhe.metodo || detalhe.forma || "—"}</div></div>
+                <div><span className="text-muted-foreground">Pago em</span><div>{fmtData(detalhe.data_pagamento || detalhe.paid_at)}</div></div>
+                <div><span className="text-muted-foreground">Valor bruto</span><div className="font-semibold">{brl(detalhe.valor_bruto_centavos || detalhe.valor_centavos)}</div></div>
+                <div><span className="text-muted-foreground">Valor líquido</span><div className="font-semibold">{brl((detalhe.valor_bruto_centavos || detalhe.valor_centavos || 0) - (detalhe.valor_taxa_centavos || 0))}</div></div>
+                {detalheSnapshot && <>
+                  <div><span className="text-muted-foreground">Repasse médico</span><div>{brl(detalheSnapshot.valor_medico_centavos)}</div></div>
+                  <div><span className="text-muted-foreground">Plataforma</span><div>{brl(detalheSnapshot.valor_plataforma_centavos)} ({detalheSnapshot.comissao_pct_aplicada}%)</div></div>
+                  <div><span className="text-muted-foreground">Snapshot</span><div><StatusBadge s={detalheSnapshot.status} /></div></div>
+                </>}
+                {detalhe.consulta_id && <div className="col-span-2"><span className="text-muted-foreground">Consulta</span><div className="font-mono text-xs">{detalhe.consulta_id}</div></div>}
+              </div>
+              <div>
+                <div className="font-semibold mb-1">Histórico de estornos</div>
+                {detalheReembolsos.length ? (
+                  <ul className="space-y-1">
+                    {detalheReembolsos.map(r => (
+                      <li key={r.id} className="rounded border p-2 flex justify-between items-center">
+                        <div>
+                          <div className="text-xs text-muted-foreground">{fmtData(r.created_at)} · {r.tipo}</div>
+                          <div>{r.motivo}</div>
+                        </div>
+                        <div className="text-right"><div className="font-semibold">{brl(r.valor_centavos)}</div><StatusBadge s={r.status} /></div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <div className="text-muted-foreground text-xs">Sem estornos.</div>}
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button variant="outline" onClick={() => setDetalhe(null)}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Nova cobrança manual */}
+      <Dialog open={novaCobranca.open} onOpenChange={o => setNovaCobranca(s => ({ ...s, open: o }))}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Nova cobrança manual</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
+              <div><Label>Vencimento</Label><Input type="date" value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>Paciente (opcional)</Label>
+              <Select value={novaCobranca.paciente_id} onValueChange={v => setNovaCobranca(s => ({ ...s, paciente_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Empresa (opcional)</Label>
+              <Select value={novaCobranca.empresa_id} onValueChange={v => setNovaCobranca(s => ({ ...s, empresa_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione uma empresa" /></SelectTrigger>
+                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Observação</Label><Textarea value={novaCobranca.observacao} onChange={e => setNovaCobranca(s => ({ ...s, observacao: e.target.value }))} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNovaCobranca(s => ({ ...s, open: false }))}>Cancelar</Button>
+            <Button onClick={criarCobranca}>Criar cobrança</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
