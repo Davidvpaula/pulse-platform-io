@@ -629,40 +629,388 @@ export type Database = {
         Row: {
           ativo: boolean
           cnpj: string | null
+          contrato_inicio: string | null
+          contrato_renovacao: string | null
+          contrato_status: Database["public"]["Enums"]["empresa_contrato_status"]
           created_at: string
+          dia_fechamento: number
           email: string | null
           id: string
+          limite_consultas_mes: number | null
+          modelo_financeiro: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia: string | null
           observacoes: string | null
+          plano_mensal_centavos: number
+          porte: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social: string
+          responsavel_email: string | null
+          responsavel_nome: string | null
+          responsavel_telefone: string | null
+          segmento: string | null
           telefone: string | null
+          tipo_empresa: Database["public"]["Enums"]["empresa_tipo"]
           updated_at: string
+          valor_colaborador_centavos: number
+          valor_consulta_centavos: number
         }
         Insert: {
           ativo?: boolean
           cnpj?: string | null
+          contrato_inicio?: string | null
+          contrato_renovacao?: string | null
+          contrato_status?: Database["public"]["Enums"]["empresa_contrato_status"]
           created_at?: string
+          dia_fechamento?: number
           email?: string | null
           id?: string
+          limite_consultas_mes?: number | null
+          modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia?: string | null
           observacoes?: string | null
+          plano_mensal_centavos?: number
+          porte?: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social: string
+          responsavel_email?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+          segmento?: string | null
           telefone?: string | null
+          tipo_empresa?: Database["public"]["Enums"]["empresa_tipo"]
           updated_at?: string
+          valor_colaborador_centavos?: number
+          valor_consulta_centavos?: number
         }
         Update: {
           ativo?: boolean
           cnpj?: string | null
+          contrato_inicio?: string | null
+          contrato_renovacao?: string | null
+          contrato_status?: Database["public"]["Enums"]["empresa_contrato_status"]
           created_at?: string
+          dia_fechamento?: number
           email?: string | null
           id?: string
+          limite_consultas_mes?: number | null
+          modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia?: string | null
           observacoes?: string | null
+          plano_mensal_centavos?: number
+          porte?: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social?: string
+          responsavel_email?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+          segmento?: string | null
+          telefone?: string | null
+          tipo_empresa?: Database["public"]["Enums"]["empresa_tipo"]
+          updated_at?: string
+          valor_colaborador_centavos?: number
+          valor_consulta_centavos?: number
+        }
+        Relationships: []
+      }
+      empresas_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          campo: string | null
+          created_at: string
+          empresa_id: string
+          id: string
+          motivo: string | null
+          observacao: string | null
+          payload: Json | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          campo?: string | null
+          created_at?: string
+          empresa_id: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          campo?: string | null
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_auditoria_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_contratos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string
+          data_renovacao: string | null
+          empresa_id: string
+          id: string
+          limite_consultas_mes: number | null
+          modelo_financeiro: Database["public"]["Enums"]["empresa_modelo_financeiro"]
+          observacoes: string | null
+          plano_mensal_centavos: number
+          status: Database["public"]["Enums"]["empresa_contrato_status"]
+          updated_at: string
+          valor_colaborador_centavos: number
+          valor_consulta_centavos: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          data_renovacao?: string | null
+          empresa_id: string
+          id?: string
+          limite_consultas_mes?: number | null
+          modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
+          observacoes?: string | null
+          plano_mensal_centavos?: number
+          status?: Database["public"]["Enums"]["empresa_contrato_status"]
+          updated_at?: string
+          valor_colaborador_centavos?: number
+          valor_consulta_centavos?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          data_renovacao?: string | null
+          empresa_id?: string
+          id?: string
+          limite_consultas_mes?: number | null
+          modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
+          observacoes?: string | null
+          plano_mensal_centavos?: number
+          status?: Database["public"]["Enums"]["empresa_contrato_status"]
+          updated_at?: string
+          valor_colaborador_centavos?: number
+          valor_consulta_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_contratos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_faturas: {
+        Row: {
+          competencia_ano: number
+          competencia_mes: number
+          contrato_id: string | null
+          created_at: string
+          created_by: string | null
+          detalhamento: Json
+          empresa_id: string
+          id: string
+          observacoes: string | null
+          pago_em: string | null
+          qtd_consultas: number
+          qtd_funcionarios: number
+          status: Database["public"]["Enums"]["empresa_fatura_status"]
+          updated_at: string
+          valor_total_centavos: number
+          vencimento: string
+        }
+        Insert: {
+          competencia_ano: number
+          competencia_mes: number
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          detalhamento?: Json
+          empresa_id: string
+          id?: string
+          observacoes?: string | null
+          pago_em?: string | null
+          qtd_consultas?: number
+          qtd_funcionarios?: number
+          status?: Database["public"]["Enums"]["empresa_fatura_status"]
+          updated_at?: string
+          valor_total_centavos?: number
+          vencimento: string
+        }
+        Update: {
+          competencia_ano?: number
+          competencia_mes?: number
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          detalhamento?: Json
+          empresa_id?: string
+          id?: string
+          observacoes?: string | null
+          pago_em?: string | null
+          qtd_consultas?: number
+          qtd_funcionarios?: number
+          status?: Database["public"]["Enums"]["empresa_fatura_status"]
+          updated_at?: string
+          valor_total_centavos?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_faturas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresas_faturas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_funcionarios: {
+        Row: {
+          cargo: string | null
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          data_admissao: string | null
+          data_desligamento: string | null
+          email: string | null
+          empresa_id: string
+          id: string
+          importado_em: string | null
+          matricula: string | null
+          nome: string
+          origem: string
+          paciente_id: string | null
+          setor: string | null
+          status: Database["public"]["Enums"]["empresa_funcionario_status"]
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_admissao?: string | null
+          data_desligamento?: string | null
+          email?: string | null
+          empresa_id: string
+          id?: string
+          importado_em?: string | null
+          matricula?: string | null
+          nome: string
+          origem?: string
+          paciente_id?: string | null
+          setor?: string | null
+          status?: Database["public"]["Enums"]["empresa_funcionario_status"]
           telefone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Update: {
+          cargo?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_admissao?: string | null
+          data_desligamento?: string | null
+          email?: string | null
+          empresa_id?: string
+          id?: string
+          importado_em?: string | null
+          matricula?: string | null
+          nome?: string
+          origem?: string
+          paciente_id?: string | null
+          setor?: string | null
+          status?: Database["public"]["Enums"]["empresa_funcionario_status"]
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_funcionarios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresas_funcionarios_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_modulos: {
+        Row: {
+          ativo: boolean
+          configuracao: Json
+          created_at: string
+          empresa_id: string
+          id: string
+          modulo_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          empresa_id: string
+          id?: string
+          modulo_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          configuracao?: Json
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          modulo_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_modulos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       especialidades: {
         Row: {
@@ -1421,6 +1769,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_empresas_overview: { Args: never; Returns: Json }
       admin_visao_geral: { Args: { _periodo?: string }; Returns: Json }
       agendar_retorno_gratuito: {
         Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
@@ -1486,6 +1835,11 @@ export type Database = {
         }
         Returns: Json
       }
+      empresa_toggle_modulo: {
+        Args: { _ativo: boolean; _empresa_id: string; _modulo_key: string }
+        Returns: Json
+      }
+      empresa_visao_geral: { Args: { _empresa_id: string }; Returns: Json }
       feegow_marcar_liberacao: {
         Args: {
           _erro: string
@@ -1515,6 +1869,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
       is_medico_da_consulta: {
         Args: { _consulta_id: string }
         Returns: boolean
@@ -1607,6 +1962,19 @@ export type Database = {
         }
         Returns: string
       }
+      registrar_auditoria_empresa: {
+        Args: {
+          _acao: string
+          _campo?: string
+          _empresa_id: string
+          _motivo?: string
+          _observacao?: string
+          _payload?: Json
+          _valor_anterior?: string
+          _valor_novo?: string
+        }
+        Returns: string
+      }
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
@@ -1654,6 +2022,21 @@ export type Database = {
         | "plano"
         | "vacina"
         | "outro"
+      empresa_contrato_status: "ativo" | "suspenso" | "encerrado" | "rascunho"
+      empresa_fatura_status: "em_aberto" | "paga" | "atrasada" | "cancelada"
+      empresa_funcionario_status: "ativo" | "desligado" | "licenca" | "suspenso"
+      empresa_modelo_financeiro:
+        | "por_colaborador"
+        | "por_consulta"
+        | "plano_fixo"
+        | "hibrido"
+      empresa_porte: "mei" | "pequena" | "media" | "grande"
+      empresa_tipo:
+        | "contratante"
+        | "clinica_parceira"
+        | "saude_ocupacional"
+        | "indicadora"
+        | "hibrida"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       funcao_interna:
         | "secretaria"
@@ -1854,6 +2237,23 @@ export const Constants = {
         "plano",
         "vacina",
         "outro",
+      ],
+      empresa_contrato_status: ["ativo", "suspenso", "encerrado", "rascunho"],
+      empresa_fatura_status: ["em_aberto", "paga", "atrasada", "cancelada"],
+      empresa_funcionario_status: ["ativo", "desligado", "licenca", "suspenso"],
+      empresa_modelo_financeiro: [
+        "por_colaborador",
+        "por_consulta",
+        "plano_fixo",
+        "hibrido",
+      ],
+      empresa_porte: ["mei", "pequena", "media", "grande"],
+      empresa_tipo: [
+        "contratante",
+        "clinica_parceira",
+        "saude_ocupacional",
+        "indicadora",
+        "hibrida",
       ],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       funcao_interna: [
