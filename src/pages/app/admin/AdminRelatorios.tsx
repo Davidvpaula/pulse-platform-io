@@ -81,7 +81,16 @@ export default function AdminRelatorios() {
           <PlaceholderAba titulo="Planos & Assinaturas" descricao="Receita recorrente, uso médio, lucro/prejuízo por plano e planos pouco utilizados (já existe módulo dedicado em Admin > Planos)." />
         </TabsContent>
         <TabsContent value="auditoria" className="mt-4">
-          <PlaceholderAba titulo="Auditoria & Segurança" descricao="Log de ações sensíveis, acessos, alterações financeiras, exclusões e tentativas de violação." />
+          <Card className="p-8 text-center space-y-3">
+            <FileBarChart className="h-10 w-10 mx-auto text-primary" />
+            <h3 className="font-semibold">Auditoria & Segurança</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Visão analítica completa dos eventos sensíveis: filtros por entidade, usuário, severidade e período, com exportação CSV/PDF.
+            </p>
+            <a href="/app/admin/relatorios/auditoria" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+              Abrir relatório completo de auditoria →
+            </a>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

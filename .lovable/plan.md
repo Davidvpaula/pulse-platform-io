@@ -1,89 +1,82 @@
-# Relatório Financeiro com Snapshots Imutáveis
+## Objetivo
 
-Adicionar uma página dedicada de relatório financeiro do admin que utiliza os campos `*_snapshot` criados na Fase 2 (valores congelados quando pagamento vira "pago" e consulta vira "concluída"), com comparação contra período anterior ou ano anterior e exportação em CSV e PDF.
+Criar a tela `/app/admin/relatorios/auditoria` como visão analítica do `audit_log` (via view unificada `audit_eventos_unificado`), no mesmo padrão do relatório financeiro recém-criado. Foco em **consulta/relatório**, sem fluxo de revisão (que já existe em `/app/admin/auditoria`).
 
-## Rota e navegação
-- Nova rota: `/app/admin/relatorios/financeiro`, protegida por `RequireRoutePermission` com permissões `relatorios.ver` + `relatorios.ver_financeiro`
-- Adicionar link "Financeiro detalhado" no topo da aba "Financeiro" do `AdminRelatorios` apontando para a nova rota (mantém o `FinanceiroTab` atual como visão rápida)
+Filtros pedidos: **entidade**, **usuário (ator)**, **data**, **severidade**. Aproveitar RPC `auditoria_listar` e `auditoria_dashboard` que já existem e já validam permissão `auditoria.ver`.
 
-## Banco de dados
-Criar RPC `relatorios_financeiro_snapshot(p_inicio date, p_fim date, p_compare_mode text)` — `SECURITY DEFINER`, apenas admin, retornando JSONB com:
+## Escopo
 
-- **kpis** (período atual): receita_bruta, taxa_gateway, taxa_imposto, receita_liquida, comissão_plataforma, repasse_médicos, reembolsos, pagamentos_pagos, consultas_concluídas, ticket_médio — todos calculados sobre `pagamentos.*_snapshot` (filtro `snapshot_at::date BETWEEN inicio AND fim`) e `consultas.*_snapshot`
-- **kpis_anterior**: mesmos números para o período comparativo, calculado dentro da RPC conforme `p_compare_mode` ("periodo_anterior" ou "ano_anterior")
-- **por_medico**: lista ordenada com nome, consultas, receita, comissão, repasse
-- **por_especialidade**, **por_modalidade**, **por_metodo**, **por_canal**: breakdowns agregados
-- **diario**: série diária para gráfico (receita bruta, líquida, contagem de consultas)
+### 1. Nova página `src/pages/app/admin/AdminRelatorioAuditoria.tsx`
 
-`REVOKE EXECUTE ... FROM PUBLIC, anon` + `GRANT TO authenticated`.
+Layout em três blocos:
 
-## Página `AdminRelatorioFinanceiro.tsx`
-Estrutura:
+**a) Barra de filtros (sticky no topo)**
+- Período (date range com presets 7d / 30d / 90d / customizado) — reutiliza `FiltrosGlobaisBar` ou recria leve
+- Severidade (multi: baixo / médio / alto / crítico)
+- Módulo / Entidade tipo (select: consultas, colaboradores, planos, comunicação, financeiro, permissões — derivado dos valores existentes na view)
+- Entidade ID (input UUID opcional, com placeholder)
+- Usuário (ator) — combobox com busca por nome (carrega top atores via `auditoria_dashboard.top_atores` + permite digitar UUID)
+- Ação (input texto livre, busca parcial)
+- Origem (manual / sistema)
+- Botão "Aplicar" e "Limpar"
 
-```text
-┌────────────────────────────────────────────────────────────┐
-│ PageHeader: Relatório Financeiro                           │
-│ [DateRange]  [Comparar com: ▾ período anterior | ano       │
-│               anterior]   [↓ CSV]  [↓ PDF]                 │
-├────────────────────────────────────────────────────────────┤
-│ KPIs (6 cards)  receita bruta · líquida · comissão ·       │
-│                  repasse · reembolsos · ticket médio       │
-│   cada um com Δ% vs período comparativo                    │
-├────────────────────────────────────────────────────────────┤
-│ Gráfico diário (linha):  receita bruta vs líquida          │
-├────────────────────────────────────────────────────────────┤
-│ Tabs:  Por médico · Especialidade · Modalidade ·           │
-│        Método · Canal                                      │
-│   tabelas ordenáveis com totais                            │
-├────────────────────────────────────────────────────────────┤
-│ Aviso: "Dados baseados em snapshots imutáveis. Pagamentos  │
-│ pendentes não aparecem aqui."                              │
-└────────────────────────────────────────────────────────────┘
-```
+**b) KPIs e gráficos** (via `auditoria_dashboard`)
+- Cards: Total no período, Hoje, Críticos, Altos, Não revisados sensíveis, Financeiro, Permissões, Integração, Bloqueios
+- Gráfico de linha "Eventos por dia" (Recharts, `por_dia`)
+- Gráfico de barras "Top 10 atores" (`top_atores`)
+- Donut "Por módulo" (`por_modulo`)
 
-Comportamento:
-- Dispara RPC ao trocar período ou modo de comparação
-- Loading skeleton enquanto carrega
-- KPIs mostram delta colorido (verde/vermelho) e tooltip com valor anterior
-- Tabela "Por médico" tem busca local
+**c) Tabela de eventos** (via `auditoria_listar`)
+- Colunas: Data/hora, Severidade (badge colorida), Módulo, Ação, Ator, Entidade (tipo + id curto), Campo, Valor anterior → novo, Origem
+- Paginação server-side (50 por página) usando `total_count` que a RPC já retorna
+- Click na linha abre `Sheet` lateral com payload completo (JSON formatado), motivo, observação, contexto de revisão se houver — somente leitura
+- Ordenação por data desc
 
-## Exportação CSV
-Reusa `downloadCSV` de `src/lib/relatorios/utils.ts`:
-- Bloco 1: KPIs período atual + comparativo + variação
-- Bloco 2: por médico, com totais
-- Bloco 3: por especialidade
-- Blocos 4–6: modalidade, método, canal
-- Encoding UTF-8 com BOM (Excel BR-friendly), separador `;`
+### 2. Exportação
 
-## Exportação PDF
-Implementação 100% client-side com `jspdf` + `jspdf-autotable` (já viáveis no bundle, sem edge function nem Puppeteer):
+- **CSV**: gera no cliente a partir do resultado atual filtrado (todos os eventos do filtro, não só a página — fazer fetch sem paginação até limite de 5000 com aviso)
+- **PDF**: novo helper `src/lib/relatorios/pdfAuditoria.ts` (mesmo padrão de `pdfFinanceiro.ts`, usando `jspdf` + `jspdf-autotable`):
+  - Capa com filtros aplicados, período e total de eventos
+  - Resumo de KPIs
+  - Tabela de eventos (truncada se > 1000, com nota)
+  - Rodapé com hash/timestamp da geração para rastreabilidade
 
-- Capa com fundo escuro (slate-900), título "Relatório Financeiro", subtítulo "Lasmar Telemed", período e data de geração
-- Seção "Indicadores": tabela com 4 colunas (Indicador, Atual, Comparativo, Variação)
-- Seção "Por médico" (até 25 linhas no PDF; CSV traz tudo)
-- Seções "Por especialidade", "Por modalidade", "Por método", "Por canal"
-- Quebra de página automática entre seções quando passa de y > 700pt
-- Rodapé com "Página X de Y · Lasmar Telemed" em todas as páginas
-- Nome do arquivo: `relatorio-financeiro-YYYY-MM-DD-a-YYYY-MM-DD.pdf`
+### 3. Roteamento e navegação
 
-Função utilitária em `src/lib/relatorios/pdfFinanceiro.ts` exportando `gerarPdfFinanceiro(dados, opts)`.
+- `src/App.tsx`: registrar rota `admin/relatorios/auditoria` protegida por `RequireRoutePermission perm="auditoria.ver"` (mesma permissão usada na tela existente)
+- `src/pages/app/admin/AdminRelatorios.tsx`: substituir o placeholder da aba "auditoria" por um card com link "Abrir relatório completo de auditoria →" apontando para a nova rota (mantém consistência com aba financeiro)
 
-## Permissões
-A permissão `relatorios.ver_financeiro` já existe no catálogo. O componente `<RequireRoutePermission perm={["relatorios.ver","relatorios.ver_financeiro"]} all>` bloqueia acesso por URL e mostra a tela de "Acesso restrito" para quem não tiver as duas chaves.
+### 4. Diferenciação vs `/app/admin/auditoria` existente
 
-## Observação técnica
-A página depende dos snapshots populados após a Fase 2: pagamentos pagos antes da migration não terão `snapshot_at`, então o relatório só mostrará dados a partir do momento que os triggers entraram em vigor. Não vou retroagir snapshots históricos automaticamente (qualquer cálculo retroativo seria estimativa, quebrando a premissa de imutabilidade). Caso o admin queira incluir histórico, podemos adicionar um botão "Backfill snapshots" em uma fase futura, com confirmação explícita e auditoria.
+| Aspecto | `/admin/auditoria` (operacional) | `/admin/relatorios/auditoria` (analítico) |
+|---|---|---|
+| Foco | Revisar e marcar eventos | Consultar, analisar, exportar |
+| Ações | Botão "Marcar revisado", notas | Somente leitura |
+| Visual | Tabela densa | KPIs + gráficos + tabela |
+| Export | CSV simples | CSV + PDF rico |
+
+## Detalhes técnicos
+
+- Não há mudança de schema nem nova RPC: tudo vai pelas funções existentes `auditoria_listar` e `auditoria_dashboard`, que já têm `SECURITY DEFINER` validando `has_permission(auth.uid(), 'auditoria.ver')`.
+- `audit_log` cru tem 0 linhas hoje; a view `audit_eventos_unificado` agrega outras fontes (consultas, colaboradores, planos, comunicação) — a tela já vai funcionar com os dados reais existentes.
+- Tipagem dos eventos: copiar o type `Evento` de `AdminAuditoria.tsx` para um novo `src/lib/relatorios/typesAuditoria.ts` para reuso entre página e exportador PDF.
+- PDF renderiza em background via `jspdf` (já instalado na fase do relatório financeiro), portanto sem nova dependência.
+- Mantém i18n em pt-BR e segue tokens de cor do design system (badges de severidade: verde/amarelo/laranja/vermelho via `bg-*` semânticos do tailwind config).
 
 ## Arquivos
-**Criar**
-- `supabase/migrations/<timestamp>_relatorios_financeiro_snapshot.sql` — RPC
-- `src/pages/app/admin/AdminRelatorioFinanceiro.tsx` — página
-- `src/lib/relatorios/pdfFinanceiro.ts` — gerador PDF
 
-**Editar**
-- `src/App.tsx` — adicionar rota
-- `src/components/relatorios/FinanceiroTab.tsx` — botão "Ver relatório completo →"
-- `src/lib/profiles.ts` — opcional: adicionar item de menu
+**Novos**
+- `src/pages/app/admin/AdminRelatorioAuditoria.tsx`
+- `src/lib/relatorios/pdfAuditoria.ts`
+- `src/lib/relatorios/typesAuditoria.ts`
 
-**Dependências**
-- `bun add jspdf jspdf-autotable` (sem peer issues conhecidas)
+**Editados**
+- `src/App.tsx` (nova rota)
+- `src/pages/app/admin/AdminRelatorios.tsx` (link na aba auditoria)
+
+## Fora de escopo
+
+- Nenhuma migration SQL
+- Não mexer em `/app/admin/auditoria` existente
+- Não criar fluxo de revisão/marcação nesta tela (é só leitura/relatório)
+- Sem realtime (relatório é snapshot do filtro aplicado)
