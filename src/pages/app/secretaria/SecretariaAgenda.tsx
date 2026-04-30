@@ -143,6 +143,19 @@ export default function SecretariaAgenda() {
                     >
                       <UserCog className="mr-1.5 h-3.5 w-3.5" /> Trocar médico
                     </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        setHistoricoCtx({
+                          id: c.id,
+                          resumo: `${c.paciente_nome ?? "Paciente"} • ${formatHora(c.inicio)} • ${c.medico_nome ?? "—"}`,
+                        })
+                      }
+                      title="Histórico de mudanças"
+                    >
+                      <History className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="icon" variant="ghost" asChild title="WhatsApp">
                       <a
                         href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta às ${formatHora(c.inicio)}`)}
