@@ -19,7 +19,9 @@ export type DocumentoMedico = {
   uploadedAt: string;
 };
 
-export type MedicoStatus = "pendente" | "em_analise" | "aprovado" | "reprovado";
+export type MedicoStatus =
+  | "pendente" | "em_analise" | "aprovado" | "reprovado"
+  | "suspenso" | "bloqueado";
 
 export type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
 
@@ -43,6 +45,16 @@ export type MedicoRow = {
   feegow_professional_id: string | null;
   feegow_liberado_em: string | null;
   feegow_erro: string | null;
+  // Suspensão
+  suspenso_ate: string | null;
+  suspenso_indeterminado: boolean;
+  suspensao_motivo: string | null;
+  suspensao_observacao: string | null;
+  suspensao_aplicada_em: string | null;
+  // Bloqueio
+  bloqueio_motivo: string | null;
+  bloqueio_observacao: string | null;
+  bloqueio_aplicado_em: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -73,7 +85,27 @@ export const STATUS_LABEL: Record<MedicoStatus, string> = {
   em_analise: "Em análise",
   aprovado: "Aprovado",
   reprovado: "Reprovado",
+  suspenso: "Suspenso",
+  bloqueado: "Bloqueado",
 };
+
+export const MOTIVOS_SUSPENSAO = [
+  "Quebra de contrato",
+  "Conduta inadequada",
+  "Falta recorrente",
+  "Problema com paciente",
+  "Auditoria interna",
+  "Outro",
+];
+
+export const MOTIVOS_BLOQUEIO = [
+  "Quebra grave de contrato",
+  "Fraude",
+  "Violação ética",
+  "Vazamento de dados",
+  "Problema jurídico",
+  "Outro",
+];
 
 export const DOC_LABEL: Record<DocKind, string> = {
   crm: "Documento CRM",
