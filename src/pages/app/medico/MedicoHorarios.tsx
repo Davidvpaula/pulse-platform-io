@@ -277,37 +277,7 @@ export default function MedicoHorarios() {
     refresh();
   }
 
-  async function gerarDia() {
-    if (!duracao) {
-      toast.error("Configure uma especialidade com duração antes de gerar horários.");
-      return;
-    }
-    if (!dataSel) {
-      toast.error("Selecione uma data no calendário.");
-      return;
-    }
-    if (faixasDia.some((f) => !f.hi || !f.hf)) {
-      toast.error("Preencha todas as faixas de horário.");
-      return;
-    }
-    setSavingDia(true);
-    const res = await criarSlotsEmLote({
-      datas: [dataSel],
-      faixas: faixasDia,
-      duracaoMin: duracao,
-      modalidade,
-    });
-    setSavingDia(false);
-    if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível gerar.");
-      return;
-    }
-    toast.success(
-      `${res.criados} horário(s) criado(s)` +
-        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
-    );
-    refresh();
-  }
+
 
   async function onDelete() {
     if (!confirmDelete) return;
