@@ -159,7 +159,7 @@ export default function ComunicacaoInbox() {
       conversation_id: active.id,
       sender_type: "colaborador",
       sender_id: user.id,
-      sender_name: user.name,
+      sender_name: user.email || null,
       body,
       message_type: "text",
       status: "sent",
