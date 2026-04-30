@@ -104,73 +104,48 @@ export async function validarCupomParaConsulta(
 }
 
 /**
- * Aplica o cupom ao pagamento (atualiza valor_centavos e grava snapshot
- * em metadata). NÃO registra em `cupons_uso` ainda — isso só acontece
- * quando o pagamento é efetivamente confirmado.
+ * Aplica o cupom ao pagamento via RPC backend `validar_e_aplicar_cupom`,
+ * que revalida código, validade, limite de uso e escopo (médico/especialidade)
+ * de forma atômica (com lock) e atualiza valor_centavos + metadata.
+ *
+ * O parâmetro `aplicado` é mantido por compatibilidade com a UI — só usamos
+ * o `codigo` para enviar ao backend (a fonte de verdade é o servidor).
  */
 export async function aplicarCupomNoPagamento(
   pagamentoId: string,
   aplicado: CupomAplicado,
-): Promise<{ ok: boolean; error?: string }> {
-  const { data: atual, error: errGet } = await supabase
-    .from("pagamentos")
-    .select("metadata, status")
-    .eq("id", pagamentoId)
-    .maybeSingle();
-  if (errGet || !atual) return { ok: false, error: "Pagamento não encontrado." };
-  if (atual.status !== "pendente") {
-    return { ok: false, error: "Pagamento não pode mais ser alterado." };
-  }
-
-  const novaMetadata = {
-    ...((atual.metadata as Record<string, unknown> | null) ?? {}),
-    cupom: {
-      cupom_id: aplicado.cupom_id,
-      codigo: aplicado.codigo,
-      nome: aplicado.nome,
-      tipo: aplicado.tipo,
-      valor_original_centavos: aplicado.valor_original_centavos,
-      desconto_centavos: aplicado.desconto_centavos,
-      valor_final_centavos: aplicado.valor_final_centavos,
-      aplicado_em: new Date().toISOString(),
+): Promise<{ ok: boolean; error?: string; aplicado?: CupomAplicado }> {
+  const { data, error } = await supabase.rpc("validar_e_aplicar_cupom", {
+    _pagamento_id: pagamentoId,
+    _codigo: aplicado.codigo,
+  });
+  if (error) return { ok: false, error: error.message };
+  const r = (data ?? {}) as Record<string, any>;
+  if (!r.ok) return { ok: false, error: "Não foi possível aplicar o cupom." };
+  return {
+    ok: true,
+    aplicado: {
+      cupom_id: r.cupom_id,
+      codigo: r.codigo,
+      nome: r.nome,
+      tipo: r.tipo,
+      valor_original_centavos: r.valor_original_centavos,
+      desconto_centavos: r.desconto_centavos,
+      valor_final_centavos: r.valor_final_centavos,
     },
   };
-
-  const { error } = await supabase
-    .from("pagamentos")
-    .update({
-      valor_centavos: aplicado.valor_final_centavos,
-      metadata: novaMetadata as any,
-    })
-    .eq("id", pagamentoId);
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
 }
 
-/** Remove o cupom aplicado, restaurando o valor original. */
+/** Remove o cupom aplicado, restaurando o valor original (via RPC backend). */
 export async function removerCupomDoPagamento(
   pagamentoId: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { data: atual } = await supabase
-    .from("pagamentos")
-    .select("metadata, status")
-    .eq("id", pagamentoId)
-    .maybeSingle();
-  if (!atual) return { ok: false, error: "Pagamento não encontrado." };
-  if (atual.status !== "pendente") {
-    return { ok: false, error: "Pagamento não pode mais ser alterado." };
-  }
-  const meta = (atual.metadata as any) ?? {};
-  const original = meta?.cupom?.valor_original_centavos as number | undefined;
-  const { cupom: _drop, ...resto } = meta;
-  const { error } = await supabase
-    .from("pagamentos")
-    .update({
-      valor_centavos: original ?? undefined,
-      metadata: resto as any,
-    })
-    .eq("id", pagamentoId);
+  const { data, error } = await supabase.rpc("remover_cupom_pagamento", {
+    _pagamento_id: pagamentoId,
+  });
   if (error) return { ok: false, error: error.message };
+  const r = (data ?? {}) as Record<string, any>;
+  if (!r.ok) return { ok: false, error: "Não foi possível remover o cupom." };
   return { ok: true };
 }
 
