@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -162,6 +162,20 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Permissões", to: "/app/admin/permissoes", icon: ShieldCheck },
+      {
+        label: "Análises",
+        icon: TrendingUp,
+        children: [
+          { label: "Visão geral", to: "/app/admin/analises" },
+          { label: "Tempo real", to: "/app/admin/analises/tempo-real" },
+          { label: "Tráfego", to: "/app/admin/analises/trafego" },
+          { label: "Comportamento", to: "/app/admin/analises/comportamento" },
+          { label: "Conversão", to: "/app/admin/analises/conversao" },
+          { label: "Financeiro", to: "/app/admin/analises/financeiro" },
+          { label: "Marketing", to: "/app/admin/analises/marketing" },
+          { label: "Comparativo", to: "/app/admin/analises/comparativo" },
+        ],
+      },
       { label: "Relatórios", to: "/app/admin/relatorios", icon: FileBarChart },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
