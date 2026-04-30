@@ -52,9 +52,33 @@ export default function Auth() {
       return;
     }
     setLoading(true);
+
+    // Anti brute-force: checa bloqueio antes de tentar
+    const { data: chk } = await supabase.rpc("login_attempt_check", {
+      _email: parsed.data.email, _ip: null,
+    });
+    const chkRow: any = Array.isArray(chk) ? chk[0] : chk;
+    if (chkRow?.blocked) {
+      setLoading(false);
+      const mins = Math.ceil((chkRow.retry_after_seconds ?? 0) / 60);
+      toast({
+        title: "Muitas tentativas",
+        description: `Tente novamente em ${mins} min.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.senha,
+    });
+    // Registra a tentativa (sucesso ou falha)
+    await supabase.rpc("login_attempt_record", {
+      _email: parsed.data.email,
+      _success: !error,
+      _ip: null,
+      _user_agent: navigator.userAgent,
     });
     setLoading(false);
     if (error) {
