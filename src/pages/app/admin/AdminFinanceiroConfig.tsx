@@ -25,6 +25,8 @@ import {
   type ComissaoOverrideRow,
   type MedicoOption,
 } from "@/lib/financeiroConfig";
+import { MotivoDialog } from "@/components/financeiro/MotivoDialog";
+import { RepasseAuditoriaCard } from "@/components/financeiro/RepasseAuditoriaCard";
 
 const Section = ({
   icon: Icon,
