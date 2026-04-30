@@ -306,19 +306,27 @@ export default function MedicoDashboard() {
 
           {proxima && (
             <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-              <Button
-                size="lg"
-                className="bg-gradient-primary hover:opacity-90"
-                disabled={iniciandoId === proxima.id}
-                onClick={() => iniciarConsulta(proxima)}
-              >
-                {iniciandoId === proxima.id
-                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  : <Play className="mr-2 h-4 w-4" />}
-                {proxima.status === "em_andamento" ? "Continuar consulta" : "Iniciar consulta"}
-              </Button>
+              {podeIniciar ? (
+                <Button
+                  size="lg"
+                  className="bg-gradient-primary hover:opacity-90"
+                  disabled={iniciandoId === proxima.id}
+                  onClick={() => iniciarConsulta(proxima)}
+                >
+                  {iniciandoId === proxima.id
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <Play className="mr-2 h-4 w-4" />}
+                  {proxima.status === "em_andamento" ? "Continuar consulta" : "Iniciar consulta"}
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/app/medico/agenda">
+                    <Eye className="mr-2 h-4 w-4" /> Ver detalhes
+                  </Link>
+                </Button>
+              )}
               <ArrowRight className="hidden h-4 w-4 justify-self-center text-muted-foreground sm:block" />
-              {proxima.modalidade === "online" && proxima.link_sala ? (
+              {proxima.modalidade === "online" && proxima.link_sala && podeAtuar ? (
                 <Button size="lg" variant="outline" asChild>
                   <a href={proxima.link_sala} target="_blank" rel="noopener noreferrer">
                     <Video className="mr-2 h-4 w-4" /> Abrir sala
