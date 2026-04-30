@@ -209,6 +209,108 @@ export async function listConsultasDoMedico(opts?: {
   }));
 }
 
+/** Paciente agregado a partir das consultas do médico logado. */
+export type PacienteDoMedico = {
+  paciente_id: string;
+  user_id: string | null;
+  nome: string;
+  cpf: string | null;
+  telefone: string | null;
+  empresa_id: string | null;
+  empresa_nome: string | null;
+  total_consultas: number;
+  proxima_consulta: string | null; // ISO
+  ultima_consulta: string | null;  // ISO
+  tem_pendencia_pagamento: boolean;
+  ativo: boolean; // teve consulta nos últimos 6 meses
+};
+
+/**
+ * Lista pacientes únicos atendidos (ou agendados) com o médico logado,
+ * agregando consultas para informar status, próxima visita e empresa.
+ */
+export async function listPacientesDoMedico(): Promise<PacienteDoMedico[]> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return [];
+
+  const { data: consultas, error } = await supabase
+    .from("consultas")
+    .select("id, paciente_id, inicio, status, empresa_id")
+    .eq("medico_id", medicoId)
+    .order("inicio", { ascending: false });
+
+  if (error) {
+    console.error("[clinico] listPacientesDoMedico:", error);
+    return [];
+  }
+  if (!consultas || consultas.length === 0) return [];
+
+  const pacienteIds = Array.from(new Set(consultas.map((c) => c.paciente_id)));
+
+  const { data: pacientes } = await supabase
+    .from("pacientes")
+    .select("id, user_id, nome_completo, cpf, telefone, empresa_id")
+    .in("id", pacienteIds);
+
+  const userIds = Array.from(new Set((pacientes ?? []).map((p) => p.user_id).filter(Boolean) as string[]));
+  const { data: profs } = userIds.length
+    ? await supabase.from("profiles").select("id, nome").in("id", userIds)
+    : { data: [] as { id: string; nome: string }[] };
+  const nomePorUser = Object.fromEntries((profs ?? []).map((p) => [p.id, p.nome]));
+
+  // Empresas (se tiver tabela; tolera ausência)
+  const empresaIds = Array.from(
+    new Set((pacientes ?? []).map((p) => p.empresa_id).filter(Boolean) as string[]),
+  );
+  let empresaNomePorId: Record<string, string> = {};
+  if (empresaIds.length) {
+    const { data: emps } = await supabase
+      .from("empresas" as any)
+      .select("id, nome")
+      .in("id", empresaIds);
+    empresaNomePorId = Object.fromEntries(((emps ?? []) as any[]).map((e) => [e.id, e.nome]));
+  }
+
+  const agora = Date.now();
+  const seisMeses = 1000 * 60 * 60 * 24 * 30 * 6;
+
+  return pacienteIds.map<PacienteDoMedico>((pid) => {
+    const p = (pacientes ?? []).find((x) => x.id === pid);
+    const cs = consultas.filter((c) => c.paciente_id === pid);
+    const futuras = cs.filter((c) => new Date(c.inicio).getTime() >= agora && c.status !== "cancelada");
+    const passadas = cs.filter((c) => new Date(c.inicio).getTime() < agora);
+    const proxima = futuras.sort((a, b) => +new Date(a.inicio) - +new Date(b.inicio))[0]?.inicio ?? null;
+    const ultima = passadas[0]?.inicio ?? null; // já vem desc
+    const ativo = ultima ? agora - new Date(ultima).getTime() <= seisMeses : !!proxima;
+    const pendente = cs.some((c) => c.status === "aguardando_pagamento");
+    const nome =
+      (p?.user_id && nomePorUser[p.user_id]) ||
+      p?.nome_completo ||
+      "Paciente sem nome";
+
+    return {
+      paciente_id: pid,
+      user_id: p?.user_id ?? null,
+      nome,
+      cpf: p?.cpf ?? null,
+      telefone: p?.telefone ?? null,
+      empresa_id: p?.empresa_id ?? null,
+      empresa_nome: p?.empresa_id ? empresaNomePorId[p.empresa_id] ?? null : null,
+      total_consultas: cs.length,
+      proxima_consulta: proxima,
+      ultima_consulta: ultima,
+      tem_pendencia_pagamento: pendente,
+      ativo,
+    };
+  }).sort((a, b) => {
+    // ordena por próxima consulta (asc), depois última (desc)
+    if (a.proxima_consulta && b.proxima_consulta) return +new Date(a.proxima_consulta) - +new Date(b.proxima_consulta);
+    if (a.proxima_consulta) return -1;
+    if (b.proxima_consulta) return 1;
+    return +new Date(b.ultima_consulta ?? 0) - +new Date(a.ultima_consulta ?? 0);
+  });
+}
+
 /** Lista consultas para secretaria/admin com nomes de paciente e médico. */
 export async function listConsultasParaSecretaria(opts?: {
   desde?: Date;
