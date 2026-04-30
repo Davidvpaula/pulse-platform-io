@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo } fr
 import { profiles, type ProfileKey } from "./profiles";
 import { defaultCapabilities, type Capability } from "./abilities";
 import { useSession } from "./session";
+import { useImpersonation } from "./impersonation";
 
 /**
  * Vínculo do paciente — não é um perfil separado, apenas metadado exibido
