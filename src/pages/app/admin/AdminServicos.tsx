@@ -233,6 +233,11 @@ export default function AdminServicos() {
                 </a>
               </Button>
             )}
+            <Button asChild size="sm">
+              <a href="/app/admin/atendimento-imediato">
+                Abrir painel completo →
+              </a>
+            </Button>
           </div>
           {rows.filter((r) => r.ativo && r.tipo === "pronto_atendimento" && (counts[r.id] ?? 0) > 0).length === 0 && (
             <p className="mt-3 text-xs text-muted-foreground">
