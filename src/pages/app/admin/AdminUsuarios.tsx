@@ -257,7 +257,7 @@ export default function AdminUsuarios() {
         description="Cadastro, vínculo, integração Feegow e ações administrativas sobre contas de pacientes."
         actions={
           <Button asChild>
-            <Link to="/app/secretaria/pacientes-novo"><Plus className="mr-2 h-4 w-4" />Novo paciente</Link>
+            <Link to="/app/secretaria/pacientes?novo=1"><Plus className="mr-2 h-4 w-4" />Novo paciente</Link>
           </Button>
         }
       />
