@@ -99,7 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toggleCapability = (c: Capability) =>
     setCapabilities(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
+  const { active: impersonation } = useImpersonation();
+
+  // Quando há impersonação ativa, a UI usa o perfil do alvo (read-only).
+  const effectiveProfileKey: ProfileKey = impersonation?.profileKey ?? profileKey;
+  const effectiveCapabilities: Capability[] = impersonation
+    ? (defaultCapabilities[impersonation.profileKey] ?? [])
+    : capabilities;
+
   const displayUser = useMemo(() => {
+    if (impersonation) {
+      const name = impersonation.target.nome || impersonation.target.email;
+      const initials = name.split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase() || "U";
+      return { name, role: profiles[impersonation.profileKey].user.role, avatarInitials: initials };
+    }
     if (session?.user) {
       const email = session.user.email ?? "";
       const meta = (session.user.user_metadata ?? {}) as { nome?: string; full_name?: string };
@@ -108,18 +121,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { name, role: profiles[profileKey].user.role, avatarInitials: initials };
     }
     return profiles[profileKey].user;
-  }, [session, profileKey]);
+  }, [session, profileKey, impersonation]);
 
   const value = useMemo<AuthCtx>(() => ({
-    profileKey,
+    profileKey: effectiveProfileKey,
     setProfileKey,
     user: displayUser,
-    capabilities,
-    hasCapability,
+    capabilities: effectiveCapabilities,
+    hasCapability: (c: Capability) => effectiveCapabilities.includes(c),
     toggleCapability,
     patientLink,
     setPatientLink: setPatientLinkState,
-  }), [profileKey, capabilities, patientLink, displayUser, session]);
+  }), [effectiveProfileKey, effectiveCapabilities, patientLink, displayUser, session]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
