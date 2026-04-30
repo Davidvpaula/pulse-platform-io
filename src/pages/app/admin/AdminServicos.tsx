@@ -75,6 +75,7 @@ export default function AdminServicos() {
   const [filtroAtivo, setFiltroAtivo] = useState<string>("todos");
   const [editing, setEditing] = useState<Partial<Servico> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pctValid, setPctValid] = useState<boolean>(true);
   const [paServicoId, setPaServicoId] = useState<string | null>(null);
   const [savingPa, setSavingPa] = useState(false);
 
