@@ -369,9 +369,27 @@ export default function PacienteMensagens() {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => apagar(selecionada.id)} title="Apagar">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => (selecionada.lida ? marcarNaoLida(selecionada.id) : marcarLida(selecionada.id))}
+                      title={selecionada.lida ? "Marcar como não lida" : "Marcar como lida"}
+                    >
+                      {selecionada.lida ? (
+                        <>
+                          <Mail className="mr-1.5 h-4 w-4" /> Não lida
+                        </>
+                      ) : (
+                        <>
+                          <MailOpen className="mr-1.5 h-4 w-4" /> Lida
+                        </>
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => apagar(selecionada.id)} title="Apagar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </header>
 
