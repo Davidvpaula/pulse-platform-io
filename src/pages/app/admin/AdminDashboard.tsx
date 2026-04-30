@@ -51,17 +51,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    supabase.rpc("admin_visao_geral" as any, { _periodo: periodo })
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) {
-          toast.error("Não foi possível carregar a visão geral", { description: error.message });
-          setData(null);
-        } else {
-          setData(data as unknown as VisaoGeral);
-        }
-      })
-      .finally(() => { if (active) setLoading(false); });
+    (async () => {
+      const { data: rpcData, error } = await supabase.rpc("admin_visao_geral" as any, { _periodo: periodo });
+      if (!active) return;
+      if (error) {
+        toast.error("Não foi possível carregar a visão geral", { description: error.message });
+        setData(null);
+      } else {
+        setData(rpcData as unknown as VisaoGeral);
+      }
+      setLoading(false);
+    })();
     return () => { active = false; };
   }, [periodo]);
 
