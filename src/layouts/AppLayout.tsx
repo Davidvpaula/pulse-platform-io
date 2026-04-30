@@ -118,6 +118,7 @@ export default function AppLayout() {
           </ProtectedRoute>
         </main>
       </div>
+      </div>
     </div>
   );
 }
