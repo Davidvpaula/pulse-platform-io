@@ -64,15 +64,22 @@ export default function SecretariaFinanceiro() {
   }
 
   async function criar() {
-    const v = Number(nova.valor.replace(",", "."));
-    if (!nova.descricao.trim() || !v || v <= 0) { toast.error("Informe descrição e valor válido"); return; }
+    const r = validarCobranca({
+      descricao: nova.descricao,
+      valor: nova.valor,
+      vencimento: nova.vencimento,
+      observacao: nova.observacao,
+      paciente_id: nova.paciente_id,
+      empresa_id: nova.empresa_id,
+    });
+    if (r.ok === false) { toast.error(r.erro); return; }
     try {
       const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: nova.descricao,
-        valor_centavos: Math.round(v * 100),
+        descricao: nova.descricao.trim(),
+        valor_centavos: r.valor_centavos,
         vencimento: nova.vencimento || null,
         paciente_id: nova.paciente_id || null,
-        observacao: nova.observacao || null,
+        observacao: nova.observacao?.trim() || null,
         status: "ativo",
       } as any);
       if (error) throw error;
