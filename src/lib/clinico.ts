@@ -209,7 +209,50 @@ export async function listConsultasDoMedico(opts?: {
   }));
 }
 
-export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
+/** Lista consultas para secretaria/admin com nomes de paciente e médico. */
+export async function listConsultasParaSecretaria(opts?: {
+  desde?: Date;
+  ate?: Date;
+  medico_id?: string;
+}): Promise<ConsultaDetalhada[]> {
+  let q = supabase
+    .from("consultas")
+    .select(`
+      *,
+      pacientes:paciente_id ( user_id ),
+      medicos:medico_id ( nome ),
+      especialidades:especialidade_id ( nome )
+    `)
+    .order("inicio", { ascending: true });
+
+  if (opts?.desde) q = q.gte("inicio", opts.desde.toISOString());
+  if (opts?.ate) q = q.lte("inicio", opts.ate.toISOString());
+  if (opts?.medico_id) q = q.eq("medico_id", opts.medico_id);
+
+  const { data, error } = await q;
+  if (error) {
+    console.error("[clinico] listConsultasParaSecretaria:", error);
+    return [];
+  }
+
+  const userIds = Array.from(new Set(
+    (data ?? []).map((c: any) => c.pacientes?.user_id).filter(Boolean) as string[],
+  ));
+  let nomes: Record<string, string> = {};
+  if (userIds.length > 0) {
+    const { data: profs } = await supabase
+      .from("profiles").select("id, nome").in("id", userIds);
+    nomes = Object.fromEntries((profs ?? []).map((p) => [p.id, p.nome]));
+  }
+
+  return (data ?? []).map((c: any) => ({
+    ...c,
+    paciente_nome: c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null,
+    medico_nome: c.medicos?.nome ?? null,
+    especialidade_nome: c.especialidades?.nome ?? null,
+  }));
+}
+
   const paciente = await getPacienteAtual();
   if (!paciente) return [];
 
