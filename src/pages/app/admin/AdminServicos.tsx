@@ -74,22 +74,38 @@ export default function AdminServicos() {
   const [filtroAtivo, setFiltroAtivo] = useState<string>("todos");
   const [editing, setEditing] = useState<Partial<Servico> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [paServicoId, setPaServicoId] = useState<string | null>(null);
+  const [savingPa, setSavingPa] = useState(false);
 
   async function load() {
     setLoading(true);
-    const [{ data: s }, { data: e }, { data: ms }] = await Promise.all([
+    const [{ data: s }, { data: e }, { data: ms }, { data: cfg }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").order("prioridade").order("nome"),
       supabase.from("especialidades").select("id,nome").order("nome"),
       supabase.from("medico_servicos").select("servico_id").eq("ativo", true).eq("status", "ativo"),
+      supabase.from("app_settings").select("value").eq("key", "atendimento_imediato.servico_id").maybeSingle(),
     ]);
     setRows((s ?? []) as Servico[]);
     setEsp((e ?? []) as Esp[]);
     const c: Record<string, number> = {};
     (ms ?? []).forEach((r: any) => { c[r.servico_id] = (c[r.servico_id] ?? 0) + 1; });
     setCounts(c);
+    setPaServicoId((cfg?.value as string | null) ?? null);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
+
+  async function salvarPa(id: string | null) {
+    setSavingPa(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ value: id as any })
+      .eq("key", "atendimento_imediato.servico_id");
+    setSavingPa(false);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    setPaServicoId(id);
+    toast({ title: id ? "Atendimento imediato configurado" : "Atendimento imediato desativado" });
+  }
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
@@ -173,6 +189,53 @@ export default function AdminServicos() {
           <Plus className="h-4 w-4 mr-2" /> Novo serviço
         </Button>
       </div>
+
+      {/* Configuração da porta pública /atendimento-imediato */}
+      <Card className="border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+        <CardHeader>
+          <CardTitle className="text-base">⚡ Atendimento imediato (porta pública)</CardTitle>
+          <CardDescription>
+            Escolha qual serviço de Pronto Atendimento alimenta a página pública{" "}
+            <code className="text-xs">/atendimento-imediato</code>. Apenas serviços ativos
+            do tipo "pronto_atendimento" com pelo menos 1 médico aderido aparecem.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select
+              value={paServicoId ?? "none"}
+              onValueChange={(v) => salvarPa(v === "none" ? null : v)}
+              disabled={savingPa}
+            >
+              <SelectTrigger className="w-80">
+                <SelectValue placeholder="Selecione um serviço" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Desativar porta pública —</SelectItem>
+                {rows
+                  .filter((r) => r.ativo && r.tipo === "pronto_atendimento" && (counts[r.id] ?? 0) > 0)
+                  .map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.nome} · {brl(r.valor_paciente_centavos)} · {counts[r.id]} médico(s)
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {paServicoId && (
+              <Button asChild variant="outline" size="sm">
+                <a href="/atendimento-imediato" target="_blank" rel="noreferrer">
+                  Abrir página pública →
+                </a>
+              </Button>
+            )}
+          </div>
+          {rows.filter((r) => r.ativo && r.tipo === "pronto_atendimento" && (counts[r.id] ?? 0) > 0).length === 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Nenhum serviço de Pronto Atendimento elegível. Crie um serviço tipo "pronto_atendimento", ative-o e tenha ao menos 1 médico aderido.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

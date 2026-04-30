@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarCheck, Video, ShieldCheck, Stethoscope, Building2, Sparkles, Star, Clock, HeartPulse } from "lucide-react";
+import { ArrowRight, CalendarCheck, Video, ShieldCheck, Stethoscope, Building2, Sparkles, Star, Clock, HeartPulse, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { especialidades, medicos } from "@/lib/mock";
 
@@ -66,6 +66,34 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ATENDIMENTO IMEDIATO */}
+      <section className="container py-12">
+        <Link
+          to="/atendimento-imediato"
+          className="group block overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-background p-6 md:p-8 shadow-sm transition hover:shadow-elegant"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <span className="grid h-14 w-14 place-items-center rounded-xl bg-emerald-500 text-white shadow-md">
+                <Activity className="h-7 w-7" />
+              </span>
+              <div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                  Agora
+                </span>
+                <h3 className="mt-1 font-display text-2xl font-bold">⚡ Atendimento imediato</h3>
+                <p className="text-sm text-muted-foreground">
+                  Conecte-se em minutos com o primeiro médico disponível.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow group-hover:bg-emerald-700">
+              Iniciar agora <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+        </Link>
       </section>
 
       {/* ESPECIALIDADES */}

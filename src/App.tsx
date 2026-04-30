@@ -19,6 +19,9 @@ import {
   Empresas, ParaMedicos, Faq, Login,
 } from "@/pages/public/PublicPages";
 import CadastroMedico from "@/pages/public/CadastroMedico";
+import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
+import Servicos from "@/pages/public/Servicos";
+import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
 import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
 import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
 import MedicoGuard from "@/components/MedicoGuard";
@@ -126,6 +129,9 @@ const App = () => (
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/especialidades" element={<Especialidades />} />
+              <Route path="/atendimento-imediato" element={<AtendimentoImediato />} />
+              <Route path="/servicos" element={<Servicos />} />
+              <Route path="/servicos/:slug" element={<ServicoDetalhe />} />
               <Route path="/medicos" element={<Medicos />} />
               <Route path="/medicos/:slug" element={<MedicoDetalhe />} />
               <Route path="/agendar" element={<Agendar />} />

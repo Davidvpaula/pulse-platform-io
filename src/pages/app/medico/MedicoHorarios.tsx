@@ -45,6 +45,8 @@ import {
   type AgendaSlot,
   type FaixaHorario,
 } from "@/lib/clinico";
+import { supabase } from "@/integrations/supabase/client";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -85,6 +87,13 @@ function groupByDay(slots: AgendaSlot[]) {
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
+type ServicoOpc = {
+  id: string;
+  nome: string;
+  duracao_min: number;
+  valor_paciente_centavos: number;
+};
+
 export default function MedicoHorarios() {
   const { session } = useSession();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
@@ -93,6 +102,9 @@ export default function MedicoHorarios() {
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
+  const [tipoSlot, setTipoSlot] = useState<"particular" | "servico">("particular");
+  const [servicoSel, setServicoSel] = useState<string | null>(null);
+  const [servicosDisp, setServicosDisp] = useState<ServicoOpc[]>([]);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -119,8 +131,32 @@ export default function MedicoHorarios() {
     setSlots(list);
     setDuracao(dur);
     setLinkSala(med?.link_sala_padrao ?? null);
+    // Serviços aderidos pelo médico (status ativo)
+    if (med?.id) {
+      const { data: vinc } = await supabase
+        .from("medico_servicos")
+        .select("servico_id")
+        .eq("medico_id", med.id)
+        .eq("status", "ativo")
+        .eq("ativo", true);
+      const ids = (vinc ?? []).map((v: any) => v.servico_id);
+      if (ids.length) {
+        const { data: srv } = await supabase
+          .from("servicos_financeiros")
+          .select("id,nome,duracao_min,valor_paciente_centavos")
+          .in("id", ids)
+          .eq("ativo", true);
+        setServicosDisp((srv ?? []) as ServicoOpc[]);
+      } else {
+        setServicosDisp([]);
+      }
+    }
     setLoading(false);
   }
+
+  // Duração efetiva: se for serviço, usa do serviço; se particular, usa da especialidade
+  const servicoAtual = servicosDisp.find((s) => s.id === servicoSel);
+  const duracaoEfetiva = tipoSlot === "servico" ? (servicoAtual?.duracao_min ?? null) : duracao;
 
   useEffect(() => {
     if (!session) {
@@ -164,8 +200,14 @@ export default function MedicoHorarios() {
   }, [diasSel, semanas]);
 
   async function gerarSemanal() {
-    if (!duracao) {
-      toast.error("Configure uma especialidade com duração antes de gerar horários.");
+    if (!duracaoEfetiva) {
+      toast.error(tipoSlot === "servico"
+        ? "Selecione um serviço antes de gerar horários."
+        : "Configure uma especialidade com duração antes de gerar horários.");
+      return;
+    }
+    if (tipoSlot === "servico" && !servicoSel) {
+      toast.error("Escolha o serviço da plataforma.");
       return;
     }
     if (diasSel.length === 0) {
@@ -180,8 +222,9 @@ export default function MedicoHorarios() {
     const res = await criarSlotsEmLote({
       datas: datasSemana,
       faixas: faixasSemana,
-      duracaoMin: duracao,
+      duracaoMin: duracaoEfetiva,
       modalidade,
+      servicoId: tipoSlot === "servico" ? servicoSel : null,
     });
     setSavingSemana(false);
     if (!res.ok) {
@@ -196,8 +239,14 @@ export default function MedicoHorarios() {
   }
 
   async function gerarDia() {
-    if (!duracao) {
-      toast.error("Configure uma especialidade com duração antes de gerar horários.");
+    if (!duracaoEfetiva) {
+      toast.error(tipoSlot === "servico"
+        ? "Selecione um serviço antes de gerar horários."
+        : "Configure uma especialidade com duração antes de gerar horários.");
+      return;
+    }
+    if (tipoSlot === "servico" && !servicoSel) {
+      toast.error("Escolha o serviço da plataforma.");
       return;
     }
     if (!dataSel) {
@@ -212,8 +261,9 @@ export default function MedicoHorarios() {
     const res = await criarSlotsEmLote({
       datas: [dataSel],
       faixas: faixasDia,
-      duracaoMin: duracao,
+      duracaoMin: duracaoEfetiva,
       modalidade,
+      servicoId: tipoSlot === "servico" ? servicoSel : null,
     });
     setSavingDia(false);
     if (!res.ok) {
@@ -226,6 +276,8 @@ export default function MedicoHorarios() {
     );
     refresh();
   }
+
+
 
   async function onDelete() {
     if (!confirmDelete) return;
@@ -296,7 +348,44 @@ export default function MedicoHorarios() {
         </div>
       </div>
 
-      {/* Aviso: link da sala obrigatório p/ horários online */}
+      {/* Tipo de slot: Particular vs Serviço da plataforma */}
+      <div className="card-elevated p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Tipo de horário a gerar
+        </p>
+        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicoSel(null); }} className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <RadioGroupItem value="particular" id="t-part" />
+            <span className="text-sm">Particular (preço/duração da sua especialidade)</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <RadioGroupItem value="servico" id="t-srv" disabled={servicosDisp.length === 0} />
+            <span className="text-sm">
+              Serviço da plataforma {servicosDisp.length === 0 && <span className="text-xs text-muted-foreground">(adira em /app/medico/servicos)</span>}
+            </span>
+          </label>
+        </RadioGroup>
+        {tipoSlot === "servico" && (
+          <Select value={servicoSel ?? ""} onValueChange={(v) => setServicoSel(v)}>
+            <SelectTrigger className="w-full md:w-96">
+              <SelectValue placeholder="Escolha o serviço" />
+            </SelectTrigger>
+            <SelectContent>
+              {servicosDisp.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.nome} · {s.duracao_min}min · R$ {(s.valor_paciente_centavos / 100).toFixed(2)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {tipoSlot === "servico" && servicoAtual && (
+          <p className="text-xs text-muted-foreground">
+            Duração fixa de <b>{servicoAtual.duracao_min} min</b> definida pelo serviço (não editável).
+          </p>
+        )}
+      </div>
+
       {session && modalidade === "online" && !linkSala && !loading && (
         <div className="card-elevated border-warning/40 bg-warning/5 p-4">
           <div className="flex items-start gap-3">

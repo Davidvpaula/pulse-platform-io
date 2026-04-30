@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
-  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye,
+  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -63,6 +63,9 @@ export default function MedicoDashboard() {
     semana: 0,
     pacientesUnicos: 0,
     receitaMes: 0,
+    receitaParticularMes: 0,
+    receitaServicosMes: 0,
+    qtdServicos: 0,
     pagPendentes: 0,
     docsMes: 0,
   });
@@ -115,9 +118,17 @@ export default function MedicoDashboard() {
 
     // Mês (concluídas → receita; aguardando_pagamento → pendentes)
     const mes = await listConsultasDoMedico({ desde: inicioMes, ate: fimMes });
-    const receitaMes = mes
-      .filter((c) => c.status === "concluida")
-      .reduce((acc, c) => acc + (c.valor_centavos ?? 0), 0);
+    const concluidas = mes.filter((c) => c.status === "concluida");
+    // valor que o médico recebe = comissao_snapshot quando existe, senão valor_centavos (fallback)
+    const valorMedico = (c: any) =>
+      (c.comissao_snapshot_centavos ?? c.valor_centavos ?? 0) as number;
+    const receitaMes = concluidas.reduce((acc, c) => acc + valorMedico(c), 0);
+    const receitaParticularMes = concluidas
+      .filter((c: any) => !c.servico_id)
+      .reduce((acc, c) => acc + valorMedico(c), 0);
+    const consultasServico = concluidas.filter((c: any) => !!c.servico_id);
+    const receitaServicosMes = consultasServico.reduce((acc, c) => acc + valorMedico(c), 0);
+    const qtdServicos = consultasServico.length;
     const pagPendentes = mes.filter((c) => c.status === "aguardando_pagamento").length;
 
     // Pacientes únicos (mês)
@@ -141,6 +152,9 @@ export default function MedicoDashboard() {
       semana: semanaTodas.length,
       pacientesUnicos,
       receitaMes,
+      receitaParticularMes,
+      receitaServicosMes,
+      qtdServicos,
       pagPendentes,
       docsMes,
     });
@@ -381,6 +395,36 @@ export default function MedicoDashboard() {
           />
         )}
       </div>
+
+      {/* Split de receita: Particular vs Serviços da plataforma */}
+      {podeVerFinanceiro && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="card-elevated p-5 border-l-4 border-l-primary">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Receita particular (mês)
+              </p>
+              <Wallet className="h-4 w-4 text-primary" />
+            </div>
+            <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaParticularMes)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Consultas com seu preço próprio (sem serviço da plataforma)
+            </p>
+          </div>
+          <div className="card-elevated p-5 border-l-4 border-l-emerald-500">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Receita serviços plataforma (mês)
+              </p>
+              <Stethoscope className="h-4 w-4 text-emerald-600" />
+            </div>
+            <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaServicosMes)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {stats.qtdServicos} consulta{stats.qtdServicos !== 1 ? "s" : ""} via serviços da plataforma · valor de repasse
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Próximas consultas reais */}

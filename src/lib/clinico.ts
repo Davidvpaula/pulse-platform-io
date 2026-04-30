@@ -726,13 +726,14 @@ export async function criarSlotsEmLote(input: {
   faixas: FaixaHorario[];
   duracaoMin: number;
   modalidade: ConsultaModalidade;
+  servicoId?: string | null;
 }): Promise<{ ok: boolean; criados: number; pulados: number; error?: string }> {
   const medicoId = await getMedicoAtualId();
   if (!medicoId) return { ok: false, criados: 0, pulados: 0, error: "Médico não encontrado." };
   if (input.duracaoMin <= 0) return { ok: false, criados: 0, pulados: 0, error: "Duração inválida." };
 
   const agora = new Date();
-  type Row = { medico_id: string; inicio: string; fim: string; modalidade: ConsultaModalidade };
+  type Row = { medico_id: string; inicio: string; fim: string; modalidade: ConsultaModalidade; servico_id?: string | null };
   const rows: Row[] = [];
 
   for (const dia of input.datas) {
@@ -756,6 +757,7 @@ export async function criarSlotsEmLote(input: {
             inicio: cursor.toISOString(),
             fim: next.toISOString(),
             modalidade: input.modalidade,
+            servico_id: input.servicoId ?? null,
           });
         }
         cursor = next;
