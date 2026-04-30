@@ -346,6 +346,33 @@ export type Database = {
           },
         ]
       }
+      audit_revisoes: {
+        Row: {
+          evento_id: string
+          evento_modulo: string
+          id: string
+          nota: string | null
+          reviewed_at: string
+          reviewed_by: string
+        }
+        Insert: {
+          evento_id: string
+          evento_modulo: string
+          id?: string
+          nota?: string | null
+          reviewed_at?: string
+          reviewed_by: string
+        }
+        Update: {
+          evento_id?: string
+          evento_modulo?: string
+          id?: string
+          nota?: string | null
+          reviewed_at?: string
+          reviewed_by?: string
+        }
+        Relationships: []
+      }
       automation_logs: {
         Row: {
           appointment_id: string | null
@@ -3408,7 +3435,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      audit_eventos_unificado: {
+        Row: {
+          acao: string | null
+          actor_id: string | null
+          actor_nome: string | null
+          campo: string | null
+          created_at: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string | null
+          modulo: string | null
+          motivo: string | null
+          observacao: string | null
+          origem: string | null
+          payload: Json | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revisado: boolean | null
+          revisao_nota: string | null
+          risco: string | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _financeiro_calc_comissao: {
@@ -3492,6 +3543,49 @@ export type Database = {
           _paciente_id: string
         }
         Returns: Json
+      }
+      auditoria_dashboard: {
+        Args: { p_fim?: string; p_inicio?: string }
+        Returns: Json
+      }
+      auditoria_listar: {
+        Args: {
+          p_acao?: string
+          p_actor?: string
+          p_busca?: string
+          p_entidade_id?: string
+          p_fim?: string
+          p_inicio?: string
+          p_limit?: number
+          p_modulo?: string
+          p_offset?: number
+          p_origem?: string
+          p_revisado?: string
+          p_risco?: string
+        }
+        Returns: {
+          acao: string
+          actor_id: string
+          actor_nome: string
+          campo: string
+          created_at: string
+          entidade_id: string
+          entidade_tipo: string
+          id: string
+          modulo: string
+          motivo: string
+          observacao: string
+          origem: string
+          payload: Json
+          reviewed_at: string
+          reviewed_by: string
+          revisado: boolean
+          revisao_nota: string
+          risco: string
+          total_count: number
+          valor_anterior: string
+          valor_novo: string
+        }[]
       }
       colaborador_alterar_status: {
         Args: {
