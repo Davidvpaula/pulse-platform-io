@@ -61,7 +61,10 @@ export default function FinanceiroTab({ filtros }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-2">
+        <a href="/app/admin/relatorios/financeiro" className="text-sm text-primary hover:underline">
+          Ver relatório completo com snapshots imutáveis e exportação PDF →
+        </a>
         <Button size="sm" variant="outline" onClick={exportar}><Download className="h-4 w-4 mr-1" /> Exportar CSV</Button>
       </div>
 
