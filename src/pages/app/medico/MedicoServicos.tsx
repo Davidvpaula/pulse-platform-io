@@ -172,7 +172,14 @@ export default function MedicoServicos() {
                 )}
                 {ativo && (
                   <Button variant="outline" size="sm" className="w-full"
-                    onClick={() => { setOverrideOpen(s); setOverridePct(s.comissao_pct ?? 0); }}>
+                    onClick={() => {
+                      setOverrideOpen(s);
+                      // s.comissao_pct é % plataforma; mostramos a % do médico atual como ponto de partida
+                      const atualMedicoPct = s.comissao_pct == null
+                        ? 56
+                        : Math.round((100 - Number(s.comissao_pct)) * 100) / 100;
+                      setOverridePct(atualMedicoPct);
+                    }}>
                     Solicitar override de repasse
                   </Button>
                 )}
