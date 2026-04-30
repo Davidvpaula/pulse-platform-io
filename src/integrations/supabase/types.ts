@@ -173,51 +173,69 @@ export type Database = {
       }
       consultas: {
         Row: {
+          canal_origem: Database["public"]["Enums"]["consulta_canal"]
+          confirmada_em: string | null
+          confirmada_por: string | null
           created_at: string
           empresa_id: string | null
           especialidade_id: string | null
           fim: string
           id: string
           inicio: string
+          link_enviado_em: string | null
+          link_enviado_por: string | null
           link_sala: string | null
           medico_id: string
           modalidade: Database["public"]["Enums"]["consulta_modalidade"]
           motivo: string | null
           paciente_id: string
+          responsavel_agendamento_id: string | null
           slot_id: string | null
           status: Database["public"]["Enums"]["consulta_status"]
           updated_at: string
           valor_centavos: number
         }
         Insert: {
+          canal_origem?: Database["public"]["Enums"]["consulta_canal"]
+          confirmada_em?: string | null
+          confirmada_por?: string | null
           created_at?: string
           empresa_id?: string | null
           especialidade_id?: string | null
           fim: string
           id?: string
           inicio: string
+          link_enviado_em?: string | null
+          link_enviado_por?: string | null
           link_sala?: string | null
           medico_id: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           motivo?: string | null
           paciente_id: string
+          responsavel_agendamento_id?: string | null
           slot_id?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
           valor_centavos?: number
         }
         Update: {
+          canal_origem?: Database["public"]["Enums"]["consulta_canal"]
+          confirmada_em?: string | null
+          confirmada_por?: string | null
           created_at?: string
           empresa_id?: string | null
           especialidade_id?: string | null
           fim?: string
           id?: string
           inicio?: string
+          link_enviado_em?: string | null
+          link_enviado_por?: string | null
           link_sala?: string | null
           medico_id?: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           motivo?: string | null
           paciente_id?: string
+          responsavel_agendamento_id?: string | null
           slot_id?: string | null
           status?: Database["public"]["Enums"]["consulta_status"]
           updated_at?: string
@@ -253,6 +271,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consultas_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          campo: string | null
+          consulta_id: string
+          created_at: string
+          id: string
+          motivo: string | null
+          observacao: string | null
+          payload: Json | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          campo?: string | null
+          consulta_id: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          campo?: string | null
+          consulta_id?: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: []
       }
       cupons: {
         Row: {
@@ -1189,6 +1249,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      forcar_status_consulta: {
+        Args: {
+          _consulta_id: string
+          _motivo: string
+          _novo_status: Database["public"]["Enums"]["consulta_status"]
+        }
+        Returns: Json
+      }
       has_permission: {
         Args: { _key: string; _user_id: string }
         Returns: boolean
@@ -1221,6 +1289,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      marcar_reenvio_link_consulta: {
+        Args: { _canal?: string; _consulta_id: string }
+        Returns: Json
+      }
       processar_pagamento_confirmado: {
         Args: {
           _metodo: Database["public"]["Enums"]["pagamento_metodo"]
@@ -1231,6 +1303,19 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      registrar_auditoria_consulta: {
+        Args: {
+          _acao: string
+          _campo?: string
+          _consulta_id: string
+          _motivo?: string
+          _observacao?: string
+          _payload?: Json
+          _valor_anterior?: string
+          _valor_novo?: string
+        }
+        Returns: string
+      }
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
@@ -1252,6 +1337,13 @@ export type Database = {
         | "empresa"
         | "admin"
         | "supervisor"
+      consulta_canal:
+        | "app"
+        | "empresa"
+        | "manual_admin"
+        | "manual_secretaria"
+        | "retorno"
+        | "api"
       consulta_modalidade: "online" | "presencial"
       consulta_status:
         | "agendada"
@@ -1420,6 +1512,14 @@ export const Constants = {
         "empresa",
         "admin",
         "supervisor",
+      ],
+      consulta_canal: [
+        "app",
+        "empresa",
+        "manual_admin",
+        "manual_secretaria",
+        "retorno",
+        "api",
       ],
       consulta_modalidade: ["online", "presencial"],
       consulta_status: [
