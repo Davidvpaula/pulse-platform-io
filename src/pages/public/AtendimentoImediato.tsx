@@ -81,7 +81,7 @@ export default function AtendimentoImediato() {
 
       const { data: meds } = await supabase
         .from("medicos")
-        .select("id,nome,especialidade_principal_nome")
+        .select("id,nome,especialidade")
         .in("id", ids);
 
       // 4. Para cada médico, próximo slot disponível
@@ -105,7 +105,7 @@ export default function AtendimentoImediato() {
         cards.push({
           medico_id: m.id,
           nome: (m as any).nome,
-          especialidade: (m as any).especialidade_principal_nome ?? null,
+          especialidade: (m as any).especialidade ?? null,
           disponivel_agora: dispAgora,
           proximo_slot_iso: proximoIso,
         });

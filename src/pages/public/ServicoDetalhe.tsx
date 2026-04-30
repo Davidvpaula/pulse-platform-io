@@ -69,7 +69,7 @@ export default function ServicoDetalhe() {
       }
       const { data: meds } = await supabase
         .from("medicos")
-        .select("id,nome,especialidade_principal_nome")
+        .select("id,nome,especialidade")
         .in("id", ids);
 
       const cards: MedicoItem[] = [];
@@ -88,7 +88,7 @@ export default function ServicoDetalhe() {
         cards.push({
           medico_id: id,
           nome: (m as any).nome,
-          especialidade: (m as any).especialidade_principal_nome ?? null,
+          especialidade: (m as any).especialidade ?? null,
           proximo_slot_id: slot?.id ?? null,
           proximo_slot_iso: slot?.inicio ?? null,
         });
