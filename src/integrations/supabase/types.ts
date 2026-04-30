@@ -2036,6 +2036,41 @@ export type Database = {
         }
         Relationships: []
       }
+      function_permissions: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          funcao_interna: Database["public"]["Enums"]["funcao_interna"]
+          id: string
+          permission_key: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          funcao_interna: Database["public"]["Enums"]["funcao_interna"]
+          id?: string
+          permission_key: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          funcao_interna?: Database["public"]["Enums"]["funcao_interna"]
+          id?: string
+          permission_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "function_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions_catalog"
+            referencedColumns: ["permission_key"]
+          },
+        ]
+      }
       gateways_config: {
         Row: {
           ambiente: string
@@ -3105,6 +3140,78 @@ export type Database = {
           },
         ]
       }
+      permission_audit_logs: {
+        Row: {
+          acao: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          motivo: string | null
+          permission_key: string | null
+          scope: string
+          target_funcao: Database["public"]["Enums"]["funcao_interna"] | null
+          target_role: Database["public"]["Enums"]["app_role"] | null
+          target_user_id: string | null
+          valor_antes: Json | null
+          valor_depois: Json | null
+        }
+        Insert: {
+          acao: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          permission_key?: string | null
+          scope: string
+          target_funcao?: Database["public"]["Enums"]["funcao_interna"] | null
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_user_id?: string | null
+          valor_antes?: Json | null
+          valor_depois?: Json | null
+        }
+        Update: {
+          acao?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          permission_key?: string | null
+          scope?: string
+          target_funcao?: Database["public"]["Enums"]["funcao_interna"] | null
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_user_id?: string | null
+          valor_antes?: Json | null
+          valor_depois?: Json | null
+        }
+        Relationships: []
+      }
+      permissions_catalog: {
+        Row: {
+          created_at: string
+          descricao: string
+          modulo: string
+          ordem: number
+          permission_key: string
+          risco: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          modulo: string
+          ordem?: number
+          permission_key: string
+          risco?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          modulo?: string
+          ordem?: number
+          permission_key?: string
+          risco?: string
+        }
+        Relationships: []
+      }
       permissoes_colaborador: {
         Row: {
           concedido_por: string | null
@@ -4117,6 +4224,18 @@ export type Database = {
           _observacao?: string
         }
         Returns: Json
+      }
+      permissoes_dashboard: { Args: never; Returns: Json }
+      permissoes_efetivas: {
+        Args: { _user_id: string }
+        Returns: {
+          descricao: string
+          modulo: string
+          origem: string
+          permission_key: string
+          permitido: boolean
+          risco: string
+        }[]
       }
       plano_saude_financeira: { Args: { _plano_id: string }; Returns: Json }
       processar_pagamento_confirmado: {

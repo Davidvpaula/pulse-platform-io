@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 import {
   listMedicos, listAuditoria, getSignedUrl,
   liberarAcessoFeegow, FEEGOW_STATUS_LABEL,
@@ -401,36 +402,42 @@ export default function MedicosAprovacao() {
               <section className="flex flex-wrap gap-2">
                 {(selected.status === "pendente" || selected.status === "em_analise" || selected.status === "reprovado") && (
                   <>
-                    <Button onClick={() => openDialog("aprovar")} className="bg-success text-success-foreground hover:bg-success/90">
-                      <CheckCircle2 className="mr-2 h-4 w-4" /> Aprovar
-                    </Button>
+                    <RequirePermission perm="medicos.aprovar">
+                      <Button onClick={() => openDialog("aprovar")} className="bg-success text-success-foreground hover:bg-success/90">
+                        <CheckCircle2 className="mr-2 h-4 w-4" /> Aprovar
+                      </Button>
+                    </RequirePermission>
                     {selected.status !== "em_analise" && (
                       <Button variant="outline" onClick={() => openDialog("em_analise")}>
                         <Clock className="mr-2 h-4 w-4" /> Em análise
                       </Button>
                     )}
-                    <Button variant="destructive" onClick={() => openDialog("reprovar")}>
-                      <XCircle className="mr-2 h-4 w-4" /> Reprovar
-                    </Button>
+                    <RequirePermission perm="medicos.aprovar">
+                      <Button variant="destructive" onClick={() => openDialog("reprovar")}>
+                        <XCircle className="mr-2 h-4 w-4" /> Reprovar
+                      </Button>
+                    </RequirePermission>
                   </>
                 )}
 
                 {selected.status === "aprovado" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline">Ações administrativas</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="bg-popover">
-                      <DropdownMenuLabel>Conta do médico</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => openDialog("suspender")}>
-                        <Pause className="mr-2 h-4 w-4 text-warning" /> Suspender (temporário)
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openDialog("bloquear")} className="text-destructive">
-                        <Ban className="mr-2 h-4 w-4" /> Bloquear (definitivo)
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <RequirePermission perm={["medicos.suspender", "medicos.bloquear"]}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline">Ações administrativas</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="bg-popover">
+                        <DropdownMenuLabel>Conta do médico</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => openDialog("suspender")}>
+                          <Pause className="mr-2 h-4 w-4 text-warning" /> Suspender (temporário)
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openDialog("bloquear")} className="text-destructive">
+                          <Ban className="mr-2 h-4 w-4" /> Bloquear (definitivo)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </RequirePermission>
                 )}
 
                 {(selected.status === "suspenso" || selected.status === "bloqueado") && (

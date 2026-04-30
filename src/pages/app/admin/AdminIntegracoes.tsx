@@ -18,6 +18,7 @@ import {
   Eye, ListChecks, Map as MapIcon, FileSignature, CreditCard, Bot,
 } from "lucide-react";
 import { toast } from "sonner";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 
 // ===== Tipos =====
 type IntegracaoTipo = "feegow"|"whatsapp"|"google"|"pagamentos"|"ia_provider"|"assinatura_digital"|"eventos_sistema";
@@ -222,9 +223,11 @@ export default function AdminIntegracoes() {
                       <TableCell className="text-xs">{fmtData(e.scheduled_for)}</TableCell>
                       <TableCell className="text-right">
                         {(e.status === "failed" || e.status === "cancelled") && (
-                          <Button size="sm" variant="ghost" onClick={() => reprocessarEvento(e.id)}>
-                            <PlayCircle className="mr-1 h-3.5 w-3.5" />Reprocessar
-                          </Button>
+                          <RequirePermission perm="integracoes.reprocessar_eventos">
+                            <Button size="sm" variant="ghost" onClick={() => reprocessarEvento(e.id)}>
+                              <PlayCircle className="mr-1 h-3.5 w-3.5" />Reprocessar
+                            </Button>
+                          </RequirePermission>
                         )}
                       </TableCell>
                     </TableRow>
