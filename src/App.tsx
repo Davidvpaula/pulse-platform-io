@@ -187,7 +187,7 @@ const App = () => (
               <Route path="admin/medicos" element={<MedicosAprovacao />} />
               <Route path="admin/colaboradores" element={<AdminColaboradores />} />
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
-              <Route path="admin/empresas" element={<Placeholder title="Gestão de empresas" />} />
+              <Route path="admin/empresas" element={<AdminEmpresas />} />
               <Route path="admin/agendamentos" element={<AdminAgendamentos />} />
               <Route path="admin/financeiro" element={<Placeholder title="Financeiro plataforma" />} />
               <Route path="admin/planos" element={<Placeholder title="Planos e assinaturas" />} />
