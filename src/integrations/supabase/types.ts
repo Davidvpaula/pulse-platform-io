@@ -129,6 +129,122 @@ export type Database = {
         }
         Relationships: []
       }
+      assinatura_uso: {
+        Row: {
+          assinatura_id: string
+          beneficio_id: string | null
+          consulta_id: string | null
+          created_at: string
+          custo_centavos: number
+          id: string
+          observacao: string | null
+          quantidade: number
+          registrado_por: string | null
+        }
+        Insert: {
+          assinatura_id: string
+          beneficio_id?: string | null
+          consulta_id?: string | null
+          created_at?: string
+          custo_centavos?: number
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          registrado_por?: string | null
+        }
+        Update: {
+          assinatura_id?: string
+          beneficio_id?: string | null
+          consulta_id?: string | null
+          created_at?: string
+          custo_centavos?: number
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          registrado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinatura_uso_assinatura_id_fkey"
+            columns: ["assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "assinaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinatura_uso_beneficio_id_fkey"
+            columns: ["beneficio_id"]
+            isOneToOne: false
+            referencedRelation: "plano_beneficios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assinaturas: {
+        Row: {
+          ciclo: Database["public"]["Enums"]["assinatura_ciclo"]
+          created_at: string
+          created_by: string | null
+          data_cancelamento: string | null
+          data_inicio: string
+          empresa_id: string | null
+          forma_pagamento: string | null
+          id: string
+          motivo_cancelamento: string | null
+          observacoes: string | null
+          paciente_id: string | null
+          plano_id: string
+          proxima_cobranca: string | null
+          status: Database["public"]["Enums"]["assinatura_status"]
+          updated_at: string
+          valor_cobrado_centavos: number
+        }
+        Insert: {
+          ciclo?: Database["public"]["Enums"]["assinatura_ciclo"]
+          created_at?: string
+          created_by?: string | null
+          data_cancelamento?: string | null
+          data_inicio?: string
+          empresa_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          paciente_id?: string | null
+          plano_id: string
+          proxima_cobranca?: string | null
+          status?: Database["public"]["Enums"]["assinatura_status"]
+          updated_at?: string
+          valor_cobrado_centavos?: number
+        }
+        Update: {
+          ciclo?: Database["public"]["Enums"]["assinatura_ciclo"]
+          created_at?: string
+          created_by?: string | null
+          data_cancelamento?: string | null
+          data_inicio?: string
+          empresa_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          paciente_id?: string | null
+          plano_id?: string
+          proxima_cobranca?: string | null
+          status?: Database["public"]["Enums"]["assinatura_status"]
+          updated_at?: string
+          valor_cobrado_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cobrancas_links: {
         Row: {
           consulta_id: string | null
@@ -1960,6 +2076,224 @@ export type Database = {
         }
         Relationships: []
       }
+      plano_beneficios: {
+        Row: {
+          acumulativo: boolean
+          created_at: string
+          custo_estimado_centavos: number
+          desconto_pct: number
+          descricao: string | null
+          especialidade_id: string | null
+          id: string
+          ilimitado: boolean
+          medico_id: string | null
+          nome: string
+          ordem: number
+          periodo: Database["public"]["Enums"]["beneficio_periodo"]
+          plano_id: string
+          preco_fixo_centavos: number | null
+          quantidade: number
+          regra_uso: string | null
+          servico_id: string | null
+          tipo: Database["public"]["Enums"]["beneficio_tipo"]
+          updated_at: string
+          valor_adicional_centavos: number
+        }
+        Insert: {
+          acumulativo?: boolean
+          created_at?: string
+          custo_estimado_centavos?: number
+          desconto_pct?: number
+          descricao?: string | null
+          especialidade_id?: string | null
+          id?: string
+          ilimitado?: boolean
+          medico_id?: string | null
+          nome: string
+          ordem?: number
+          periodo?: Database["public"]["Enums"]["beneficio_periodo"]
+          plano_id: string
+          preco_fixo_centavos?: number | null
+          quantidade?: number
+          regra_uso?: string | null
+          servico_id?: string | null
+          tipo: Database["public"]["Enums"]["beneficio_tipo"]
+          updated_at?: string
+          valor_adicional_centavos?: number
+        }
+        Update: {
+          acumulativo?: boolean
+          created_at?: string
+          custo_estimado_centavos?: number
+          desconto_pct?: number
+          descricao?: string | null
+          especialidade_id?: string | null
+          id?: string
+          ilimitado?: boolean
+          medico_id?: string | null
+          nome?: string
+          ordem?: number
+          periodo?: Database["public"]["Enums"]["beneficio_periodo"]
+          plano_id?: string
+          preco_fixo_centavos?: number | null
+          quantidade?: number
+          regra_uso?: string | null
+          servico_id?: string | null
+          tipo?: Database["public"]["Enums"]["beneficio_tipo"]
+          updated_at?: string
+          valor_adicional_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_beneficios_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          categoria: Database["public"]["Enums"]["plano_categoria"]
+          created_at: string
+          created_by: string | null
+          cta_texto: string | null
+          cta_url: string | null
+          custo_operacional_centavos: number
+          desconto_geral_pct: number
+          descricao: string | null
+          descricao_comercial: string | null
+          destacado: boolean
+          empresa_id: string | null
+          especialidade_id: string | null
+          icone: string | null
+          id: string
+          imagem_url: string | null
+          imposto_estimado_pct: number
+          medico_id: string | null
+          modelo_cobranca: Database["public"]["Enums"]["plano_cobranca"]
+          nome: string
+          ordem_exibicao: number
+          publicado_site: boolean
+          publico: Database["public"]["Enums"]["plano_publico"]
+          status: Database["public"]["Enums"]["plano_status"]
+          taxa_adesao_centavos: number
+          taxa_pagamento_pct: number
+          updated_at: string
+          valor_anual_centavos: number
+          valor_mensal_centavos: number
+          valor_promocional_centavos: number | null
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["plano_categoria"]
+          created_at?: string
+          created_by?: string | null
+          cta_texto?: string | null
+          cta_url?: string | null
+          custo_operacional_centavos?: number
+          desconto_geral_pct?: number
+          descricao?: string | null
+          descricao_comercial?: string | null
+          destacado?: boolean
+          empresa_id?: string | null
+          especialidade_id?: string | null
+          icone?: string | null
+          id?: string
+          imagem_url?: string | null
+          imposto_estimado_pct?: number
+          medico_id?: string | null
+          modelo_cobranca?: Database["public"]["Enums"]["plano_cobranca"]
+          nome: string
+          ordem_exibicao?: number
+          publicado_site?: boolean
+          publico?: Database["public"]["Enums"]["plano_publico"]
+          status?: Database["public"]["Enums"]["plano_status"]
+          taxa_adesao_centavos?: number
+          taxa_pagamento_pct?: number
+          updated_at?: string
+          valor_anual_centavos?: number
+          valor_mensal_centavos?: number
+          valor_promocional_centavos?: number | null
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["plano_categoria"]
+          created_at?: string
+          created_by?: string | null
+          cta_texto?: string | null
+          cta_url?: string | null
+          custo_operacional_centavos?: number
+          desconto_geral_pct?: number
+          descricao?: string | null
+          descricao_comercial?: string | null
+          destacado?: boolean
+          empresa_id?: string | null
+          especialidade_id?: string | null
+          icone?: string | null
+          id?: string
+          imagem_url?: string | null
+          imposto_estimado_pct?: number
+          medico_id?: string | null
+          modelo_cobranca?: Database["public"]["Enums"]["plano_cobranca"]
+          nome?: string
+          ordem_exibicao?: number
+          publicado_site?: boolean
+          publico?: Database["public"]["Enums"]["plano_publico"]
+          status?: Database["public"]["Enums"]["plano_status"]
+          taxa_adesao_centavos?: number
+          taxa_pagamento_pct?: number
+          updated_at?: string
+          valor_anual_centavos?: number
+          valor_mensal_centavos?: number
+          valor_promocional_centavos?: number | null
+        }
+        Relationships: []
+      }
+      planos_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          assinatura_id: string | null
+          campo: string | null
+          created_at: string
+          id: string
+          motivo: string | null
+          observacao: string | null
+          payload: Json | null
+          plano_id: string | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          assinatura_id?: string | null
+          campo?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          plano_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          assinatura_id?: string | null
+          campo?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          plano_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: []
+      }
       prescricoes: {
         Row: {
           assinatura_digital: string | null
@@ -2571,6 +2905,7 @@ export type Database = {
         }
         Returns: Json
       }
+      plano_saude_financeira: { Args: { _plano_id: string }; Returns: Json }
       processar_pagamento_confirmado: {
         Args: {
           _metodo: Database["public"]["Enums"]["pagamento_metodo"]
@@ -2641,6 +2976,20 @@ export type Database = {
         | "empresa"
         | "admin"
         | "supervisor"
+      assinatura_ciclo: "mensal" | "anual" | "unico"
+      assinatura_status:
+        | "trial"
+        | "ativa"
+        | "pausada"
+        | "cancelada"
+        | "inadimplente"
+      beneficio_periodo: "semanal" | "mensal" | "anual" | "total"
+      beneficio_tipo:
+        | "especialidade"
+        | "medico"
+        | "servico"
+        | "categoria"
+        | "desconto_geral"
       cobranca_link_status: "ativo" | "pago" | "cancelado" | "expirado"
       consulta_canal:
         | "app"
@@ -2746,6 +3095,23 @@ export type Database = {
         | "reembolsado_parcial"
         | "expirado"
       permissao_efeito: "grant" | "revoke"
+      plano_categoria:
+        | "saude_mental"
+        | "fitness"
+        | "clinico_geral"
+        | "infantil"
+        | "empresarial"
+        | "personalizado"
+      plano_cobranca:
+        | "gratuito"
+        | "valor_fixo"
+        | "mensal"
+        | "anual"
+        | "por_uso"
+        | "por_colaborador"
+        | "hibrido"
+      plano_publico: "paciente" | "empresa" | "ambos"
+      plano_status: "rascunho" | "ativo" | "inativo" | "arquivado"
       reembolso_status:
         | "solicitado"
         | "em_analise"
@@ -2900,6 +3266,22 @@ export const Constants = {
         "admin",
         "supervisor",
       ],
+      assinatura_ciclo: ["mensal", "anual", "unico"],
+      assinatura_status: [
+        "trial",
+        "ativa",
+        "pausada",
+        "cancelada",
+        "inadimplente",
+      ],
+      beneficio_periodo: ["semanal", "mensal", "anual", "total"],
+      beneficio_tipo: [
+        "especialidade",
+        "medico",
+        "servico",
+        "categoria",
+        "desconto_geral",
+      ],
       cobranca_link_status: ["ativo", "pago", "cancelado", "expirado"],
       consulta_canal: [
         "app",
@@ -3018,6 +3400,25 @@ export const Constants = {
         "expirado",
       ],
       permissao_efeito: ["grant", "revoke"],
+      plano_categoria: [
+        "saude_mental",
+        "fitness",
+        "clinico_geral",
+        "infantil",
+        "empresarial",
+        "personalizado",
+      ],
+      plano_cobranca: [
+        "gratuito",
+        "valor_fixo",
+        "mensal",
+        "anual",
+        "por_uso",
+        "por_colaborador",
+        "hibrido",
+      ],
+      plano_publico: ["paciente", "empresa", "ambos"],
+      plano_status: ["rascunho", "ativo", "inativo", "arquivado"],
       reembolso_status: [
         "solicitado",
         "em_analise",
