@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getAppSetting, type Especialidade } from "@/lib/clinico";
 import { getProviderAtual, type PagamentoProvider } from "@/lib/pagamentos";
+import { useAuth } from "@/lib/auth";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -44,6 +45,8 @@ function slugify(s: string): string {
 }
 
 export default function AdminConfiguracoes() {
+  const { hasCapability } = useAuth();
+  const podeRepasse = hasCapability("financeiro.editar_comissao" as any);
   const [esps, setEsps] = useState<Especialidade[]>([]);
   const [loading, setLoading] = useState(true);
   const [novoNome, setNovoNome] = useState("");
@@ -135,25 +138,26 @@ export default function AdminConfiguracoes() {
         description="Especialidades disponíveis no site e parâmetros de Pronto Atendimento."
       />
 
-      {/* Atalho: Repasse financeiro */}
-      <Link
-        to="/app/admin/financeiro/repasse"
-        className="card-elevated group flex items-center justify-between gap-4 p-5 transition hover:border-primary/40"
-      >
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
-            <Wallet className="h-5 w-5" />
+      {/* Atalho: Repasse financeiro (apenas com capability) */}
+      {podeRepasse && (
+        <Link
+          to="/app/admin/financeiro/repasse"
+          className="card-elevated group flex items-center justify-between gap-4 p-5 transition hover:border-primary/40"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+              <Wallet className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-display text-base font-semibold">Repasse financeiro · Médicos</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Defina o % de repasse global das consultas particulares e configure exceções por médico.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-display text-base font-semibold">Repasse financeiro · Médicos</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Defina o % de repasse global das consultas particulares e configure exceções por médico.
-            </p>
-          </div>
-        </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-      </Link>
-
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+        </Link>
+      )}
       {/* Pagamentos */}
       <Section
         icon={CreditCard}
