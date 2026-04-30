@@ -218,6 +218,7 @@ export default function AdminFinanceiroCentral() {
                     <td className="p-2"><StatusBadge s={p.status} /></td>
                     <td className="p-2">{fmtData(p.data_pagamento || p.paid_at)}</td>
                     <td className="p-2 text-right space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => abrirDetalhe(p)}>Ver</Button>
                       {p.status === "pendente" && <>
                         <Button size="sm" variant="outline" onClick={() => confirmarPagamento(p.id)}><CheckCircle2 className="h-3 w-3" /></Button>
                         <Button size="sm" variant="outline" onClick={() => { setCancelId(p.id); setCancelMotivo(""); }}><XCircle className="h-3 w-3" /></Button>
