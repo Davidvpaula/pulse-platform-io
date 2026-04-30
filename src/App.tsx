@@ -110,8 +110,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SessionProvider>
+      <ImpersonationProvider>
       <AuthProvider>
-        <ImpersonationProvider>
         <BrowserRouter>
           <AnalyticsTracker />
           <Routes>
@@ -265,8 +265,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-        </ImpersonationProvider>
       </AuthProvider>
+      </ImpersonationProvider>
       </SessionProvider>
     </TooltipProvider>
   </QueryClientProvider>
