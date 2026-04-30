@@ -19,12 +19,55 @@ import {
   type MockSlot,
   type Reserva,
 } from "@/lib/mocks/atendimentoImediatoMock";
+import {
+  getServicoAtendimentoImediato,
+  ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL,
+  type AtendimentoImediatoConfig,
+} from "@/lib/clinico";
+
+const brl = (c: number) =>
+  (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function AtendimentoImediato() {
   const hoje = useMemo(() => new Date(), []);
-  const slots = useMemo(() => mockSlotsDoDia(hoje), [hoje]);
+  const [cfg, setCfg] = useState<AtendimentoImediatoConfig | null>(null);
+  const [cfgLoaded, setCfgLoaded] = useState(false);
+  const duracao = cfg?.duracao_min ?? 30;
+  const slots = useMemo(() => mockSlotsDoDia(hoje, duracao), [hoje, duracao]);
   const pacienteId = useMemo(() => obterPacienteId(), []);
   const canalRef = useRef(criarCanalReservas());
+
+  // Carrega config + escuta mudanças vindas do admin
+  useEffect(() => {
+    let alive = true;
+    const refetch = () => {
+      getServicoAtendimentoImediato().then((c) => {
+        if (!alive) return;
+        setCfg(c);
+        setCfgLoaded(true);
+      });
+    };
+    refetch();
+    if (typeof BroadcastChannel !== "undefined") {
+      const ch = new BroadcastChannel(ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL);
+      ch.onmessage = (ev) => {
+        if (ev.data?.t === "changed") {
+          toast.message("Configuração atualizada", {
+            description: "Recarregando o calendário com os novos parâmetros…",
+          });
+          refetch();
+        }
+      };
+      return () => {
+        alive = false;
+        ch.close();
+      };
+    }
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [agora, setAgora] = useState(() => Date.now());
@@ -186,6 +229,17 @@ export default function AtendimentoImediato() {
                 <Users className="mr-1 inline h-3.5 w-3.5" />
                 {medicosNoPlantao} médicos no plantão · <strong>{totalLivres}</strong> horários livres hoje
               </p>
+              {cfgLoaded && cfg && (
+                <p className="mt-1 text-sm font-medium">
+                  Valor por atendimento: <span className="tabular-nums">{brl(cfg.preco_centavos)}</span>{" "}
+                  · Duração: <span className="tabular-nums">{cfg.duracao_min} min</span>
+                </p>
+              )}
+              {cfgLoaded && !cfg && (
+                <p className="mt-1 text-xs text-warning">
+                  Porta pública desativada pelo admin — exibindo calendário de demonstração.
+                </p>
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
                 Sessão: <code className="rounded bg-muted px-1 py-0.5">{pacienteId}</code> ·
                 Abra outra aba anônima ou use{" "}
@@ -223,6 +277,7 @@ export default function AtendimentoImediato() {
             slot={slotMinhaReserva}
             medico={medicoMinhaReserva}
             msRestantes={minhaReserva.expiresAt - agora}
+            precoCentavos={cfg?.preco_centavos}
             onCancelar={cancelar}
             onConfirmar={confirmar}
           />
