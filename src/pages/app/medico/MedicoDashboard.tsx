@@ -409,18 +409,26 @@ export default function MedicoDashboard() {
                     </p>
                   </div>
                   <StatusBadge status={c.status as any} />
-                  <Button
-                    size="sm"
-                    variant={c.status === "em_andamento" ? "default" : "outline"}
-                    className={c.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}
-                    disabled={iniciandoId === c.id}
-                    onClick={() => iniciarConsulta(c)}
-                  >
-                    {iniciandoId === c.id
-                      ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      : <Play className="mr-1.5 h-3.5 w-3.5" />}
-                    {c.status === "em_andamento" ? "Continuar" : "Iniciar"}
-                  </Button>
+                  {podeIniciar ? (
+                    <Button
+                      size="sm"
+                      variant={c.status === "em_andamento" ? "default" : "outline"}
+                      className={c.status === "em_andamento" ? "bg-gradient-primary hover:opacity-90" : ""}
+                      disabled={iniciandoId === c.id}
+                      onClick={() => iniciarConsulta(c)}
+                    >
+                      {iniciandoId === c.id
+                        ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        : <Play className="mr-1.5 h-3.5 w-3.5" />}
+                      {c.status === "em_andamento" ? "Continuar" : "Iniciar"}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link to="/app/medico/agenda">
+                        <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
