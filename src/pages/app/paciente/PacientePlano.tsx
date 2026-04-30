@@ -343,22 +343,46 @@ export default function PacientePlano() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {planosDisponiveis.map((p) => {
-            const isAtual = p.nome === "Saúde Plus";
+            const isAtual = p.id === PLANO_ATUAL_ID;
+            const acaoTipo: "upgrade" | "downgrade" | "troca" | null =
+              isAtual || !planoAtualObj
+                ? null
+                : p.preco > planoAtualObj.preco
+                ? "upgrade"
+                : p.preco < planoAtualObj.preco
+                ? "downgrade"
+                : "troca";
+            const ctaLabel = isAtual
+              ? "Plano atual"
+              : acaoTipo === "upgrade"
+              ? "Fazer upgrade"
+              : acaoTipo === "downgrade"
+              ? "Fazer downgrade"
+              : "Trocar de plano";
+            const CtaIcon =
+              acaoTipo === "upgrade" ? ArrowUpRight : acaoTipo === "downgrade" ? ArrowDownRight : ChevronRight;
+
             return (
               <div
                 key={p.id}
                 className={cn(
                   "relative rounded-xl border p-5 transition",
-                  p.destaque
+                  isAtual
+                    ? "border-success/40 bg-success/5"
+                    : p.destaque
                     ? "border-primary/40 bg-primary/5 shadow-sm"
                     : "border-border bg-background/50 hover:border-primary/30",
                 )}
               >
-                {p.destaque && (
+                {isAtual ? (
+                  <span className="absolute -top-2 left-4 rounded-full bg-success px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success-foreground">
+                    Seu plano
+                  </span>
+                ) : p.destaque ? (
                   <span className="absolute -top-2 left-4 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
                     Mais escolhido
                   </span>
-                )}
+                ) : null}
                 <p className="text-sm text-muted-foreground">{p.nome}</p>
                 <p className="mt-1 text-2xl font-semibold">
                   {formatBRL(p.preco)}
@@ -374,11 +398,12 @@ export default function PacientePlano() {
                 </ul>
                 <Button
                   className="mt-5 w-full"
-                  variant={isAtual ? "outline" : p.destaque ? "default" : "outline"}
+                  variant={isAtual ? "outline" : acaoTipo === "downgrade" ? "outline" : "default"}
                   disabled={isAtual}
+                  onClick={() => abrirConfirmacao(p.id)}
                 >
-                  {isAtual ? "Plano atual" : "Fazer upgrade"}
-                  {!isAtual && <ChevronRight className="ml-1 h-4 w-4" />}
+                  {ctaLabel}
+                  {!isAtual && <CtaIcon className="ml-1 h-4 w-4" />}
                 </Button>
               </div>
             );
@@ -398,12 +423,120 @@ export default function PacientePlano() {
               </p>
             </div>
           </div>
-          <Button variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10">
+          <Button
+            variant="outline"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => setAcaoPendente({ tipo: "cancelar" })}
+          >
             Solicitar cancelamento
           </Button>
         </div>
       </section>
+
+      {/* Modal de confirmação (upgrade / downgrade / troca / cancelamento) */}
+      <ConfirmacaoPlanoDialog
+        acao={acaoPendente}
+        planoAtualObj={planoAtualObj}
+        processando={processando}
+        onCancelar={() => !processando && setAcaoPendente(null)}
+        onConfirmar={confirmarAcao}
+      />
     </div>
+  );
+}
+
+/* ─────────── Modal de confirmação ─────────── */
+
+function ConfirmacaoPlanoDialog({
+  acao, planoAtualObj, processando, onCancelar, onConfirmar,
+}: {
+  acao: AcaoPlano | null;
+  planoAtualObj: (typeof planosDisponiveis)[number] | undefined;
+  processando: boolean;
+  onCancelar: () => void;
+  onConfirmar: () => void;
+}) {
+  const open = !!acao;
+  const novo =
+    acao && acao.tipo !== "cancelar"
+      ? planosDisponiveis.find((p) => p.id === acao.planoId)
+      : null;
+
+  const isCancel = acao?.tipo === "cancelar";
+  const titulo = isCancel
+    ? "Confirmar cancelamento do plano"
+    : acao?.tipo === "upgrade"
+    ? "Confirmar upgrade de plano"
+    : acao?.tipo === "downgrade"
+    ? "Confirmar downgrade de plano"
+    : "Confirmar troca de plano";
+
+  const ctaLabel = isCancel ? "Confirmar cancelamento" : "Continuar para pagamento";
+  const diff =
+    novo && planoAtualObj ? novo.preco - planoAtualObj.preco : 0;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancelar(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+          <DialogDescription>
+            {isCancel
+              ? "Você manterá acesso ao plano até o fim do período já pago."
+              : "Revise os detalhes antes de prosseguir para o pagamento."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isCancel && novo && planoAtualObj && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Plano atual</span>
+              <span className="font-medium">{planoAtualObj.nome} · {formatBRL(planoAtualObj.preco)}/mês</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Novo plano</span>
+              <span className="font-semibold">{novo.nome} · {formatBRL(novo.preco)}/mês</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-3">
+              <span className="text-muted-foreground">
+                {diff >= 0 ? "Diferença mensal" : "Economia mensal"}
+              </span>
+              <span className={cn("font-semibold", diff > 0 ? "text-warning" : diff < 0 ? "text-success" : "")}>
+                {diff > 0 ? "+" : ""}{formatBRL(Math.abs(diff))}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              A cobrança será proporcional ao período restante e renovará automaticamente no próximo ciclo.
+            </p>
+          </div>
+        )}
+
+        {isCancel && (
+          <div className="space-y-2 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm">
+            <p className="font-medium text-destructive">Você perderá os benefícios após o vencimento</p>
+            <ul className="ml-4 list-disc space-y-1 text-muted-foreground">
+              <li>Renovação automática será desativada imediatamente</li>
+              <li>Cobertura ativa até a data de validade vigente</li>
+              <li>Reativação possível a qualquer momento sem nova carência por até 60 dias</li>
+            </ul>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={onCancelar} disabled={processando}>
+            Voltar
+          </Button>
+          <Button
+            onClick={onConfirmar}
+            disabled={processando}
+            variant={isCancel ? "destructive" : "default"}
+          >
+            {processando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {ctaLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
