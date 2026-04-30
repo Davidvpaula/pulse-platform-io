@@ -593,6 +593,41 @@ export default function PacienteMensagens() {
                     </div>
                   </div>
                 )}
+
+                {/* Histórico de eventos da mensagem */}
+                <section className="mt-2 rounded-xl border border-border bg-background/40 p-4">
+                  <header className="mb-3 flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">Histórico desta notificação</h3>
+                  </header>
+                  <ol className="relative ml-2 space-y-3 border-l border-border pl-5">
+                    {eventosPorMensagem(selecionada).map((ev, i) => {
+                      const tone = eventoToneUI[ev.tipo];
+                      const Icon = ev.icon;
+                      return (
+                        <li key={`${ev.label}-${i}`} className="relative">
+                          <span
+                            className={cn(
+                              "absolute -left-[26px] top-0 flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-card",
+                              tone.bg,
+                            )}
+                          >
+                            <Icon className={cn("h-3 w-3", tone.text)} />
+                          </span>
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                            <p className="text-sm font-medium leading-tight">{ev.label}</p>
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatTimelineTs(ev.ts)}
+                            </span>
+                          </div>
+                          {ev.hint && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">{ev.hint}</p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
               </div>
 
               {/* Footer com CTA */}
