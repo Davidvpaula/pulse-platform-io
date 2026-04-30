@@ -462,32 +462,94 @@ export default function AdminAgendamentos() {
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-semibold flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> Insights da IA
+              <Sparkles className="h-4 w-4 text-primary" /> Inteligência operacional
             </h3>
-            <Badge variant="outline">{insights.length}</Badge>
+            {overviewLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
-          <div className="space-y-2 max-h-[260px] overflow-y-auto">
-            {insights.length === 0 && !insightsLoading && (
+          <div className="space-y-3 max-h-[260px] overflow-y-auto">
+            {!overview && !overviewLoading && (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                Clique em "Gerar insights IA" para análise dos próximos 7 dias.
+                Sem dados de inteligência disponíveis.
               </p>
             )}
-            {insightsLoading && (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            {overview && (
+              <>
+                {(overview.inteligencia?.risco_no_show?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-destructive/40 text-destructive">alta</Badge>
+                      <span className="font-medium">Risco de no-show</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.risco_no_show.length} paciente(s) com histórico de faltas e consulta agendada.
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.medicos_sobrecarregados_dia?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Médicos sobrecarregados hoje</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.medicos_sobrecarregados_dia
+                        .map((m: any) => `${m.nome} (${m.qtd})`)
+                        .join(", ")}
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.sugerir_abrir_agenda?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Sugestão: abrir mais agenda</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.sugerir_abrir_agenda
+                        .map((e: any) => `${e.nome} (demanda ${e.demanda} / livres ${e.slots_livres})`)
+                        .join(" • ")}
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.pacientes_sem_confirmar_24h?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Sem confirmação nas próximas 24h</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.pacientes_sem_confirmar_24h.length} paciente(s) aguardando confirmação.
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.risco_no_show?.length || 0) === 0 &&
+                 (overview.inteligencia?.medicos_sobrecarregados_dia?.length || 0) === 0 &&
+                 (overview.inteligencia?.sugerir_abrir_agenda?.length || 0) === 0 &&
+                 (overview.inteligencia?.pacientes_sem_confirmar_24h?.length || 0) === 0 && (
+                  <p className="text-sm text-muted-foreground py-6 text-center">
+                    Operação fluindo sem alertas inteligentes.
+                  </p>
+                )}
+              </>
             )}
-            {insights.map((ins, i) => (
-              <div key={i} className="rounded-md border p-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn(
-                    ins.severidade === "alta" ? "border-destructive/40 text-destructive" :
-                    ins.severidade === "media" ? "border-warning/40 text-warning" :
-                    "border-success/40 text-success",
-                  )}>{ins.severidade}</Badge>
-                  <span className="font-medium">{ins.titulo}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{ins.descricao}</p>
+            {insights.length > 0 && (
+              <div className="border-t pt-3 mt-3 space-y-2">
+                <p className="text-xs uppercase text-muted-foreground">Insights da IA</p>
+                {insights.map((ins, i) => (
+                  <div key={i} className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn(
+                        ins.severidade === "alta" ? "border-destructive/40 text-destructive" :
+                        ins.severidade === "media" ? "border-warning/40 text-warning" :
+                        "border-success/40 text-success",
+                      )}>{ins.severidade}</Badge>
+                      <span className="font-medium">{ins.titulo}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{ins.descricao}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
