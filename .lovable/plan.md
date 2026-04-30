@@ -1,117 +1,66 @@
-# Histórico/auditoria de mudanças no repasse financeiro
+# Validação automática de % de repasse (médico + plataforma = 100)
 
-## O que vai existir
+## Objetivo
 
-Toda alteração feita em:
-- **Repasse global** (`app_settings['financeiro.comissao_padrao_pct']`) — % retido pela plataforma
-- **Exceções por médico** (`medico_comissao_override`) — criação, edição, ativação/desativação e remoção
+Garantir, em **três camadas**, que toda configuração de repasse no sistema sempre tenha plataforma + médico = 100%, com 2 casas decimais e sem brechas para valores fora de 0–100.
 
-passa a gerar automaticamente um registro na tabela já existente `financeiro_auditoria`, com:
-- **data/hora** (`created_at`)
-- **usuário responsável** (`actor_id` = `auth.uid()`)
-- **valor anterior e valor novo** (em % de repasse do médico, padronizado para a UI)
-- **motivo opcional** (texto livre informado pelo admin no momento da edição)
-- **payload** com detalhes técnicos (medico_id, servico_id, ativo)
+## 1. Componente reutilizável `RepasseSplitInput`
 
-## Como o admin vai ver
+Novo componente em `src/components/financeiro/RepasseSplitInput.tsx` com dois inputs lado a lado (% médico / % plataforma) que se mantêm sincronizados:
 
-Na tela "Repasse financeiro" (`/app/admin/financeiro/repasse`), adicionar um terceiro card:
+- Editar **qualquer um dos dois** lados recalcula o outro automaticamente.
+- **Clamp** automático para `[0, 100]` (impede digitar 150 ou negativos).
+- **Arredondamento** para 2 casas, com badge laranja "Ajustado para 2 casas decimais" quando o valor digitado tinha mais.
+- **Erro inline** vermelho quando o valor é vazio, NaN ou fora do intervalo.
+- Badge verde **"Soma: 100,00%"** confirmando consistência.
+- Em `onBlur` com erro, **reverte** para o último valor válido.
+- Callback `onValidityChange(valid)` para o pai bloquear o botão Salvar enquanto inválido.
 
-**"Histórico de alterações"** — tabela com últimas 50 mudanças, mostrando:
-- Data/hora
-- Quem alterou (nome do staff)
-- O que mudou (Global · Exceção criada · Exceção editada · Exceção removida · Ativada/Desativada)
-- De → Para (em % do médico)
-- Motivo (se informado)
+Props: `medicoPct`, `onChange`, `disabled`, `size`, `labels`, `plataformaEditavel`, `onValidityChange`.
 
-Filtros simples no topo: Tipo (Global / Exceção), médico (busca), período (últimos 7/30/90 dias).
+## 2. Substituir os inputs atuais pelo componente
 
-Botão "Exportar CSV" para download do histórico filtrado.
+### `src/pages/app/admin/AdminFinanceiroConfig.tsx`
+- **Card "Repasse global"** (linhas ~209–248): substitui o `Input` solitário do médico + caixa estática da plataforma pelo `RepasseSplitInput` com os dois lados editáveis.
+- **Modal `ExcecaoModal`** (linhas ~597–623): mesmo tratamento.
+- O botão "Salvar" / "Confirmar e salvar" (incluindo o `MotivoDialog`) fica `disabled` quando `valid === false`.
 
-## Captura do motivo na UI
+### `src/pages/app/admin/AdminServicos.tsx`
+- Quando `modelo === "percentual"` (linhas ~419–425): troca o `Input` único por `RepasseSplitInput` (lado médico editável, plataforma editável), respeitando o cálculo `comissao_pct = % plataforma` que o backend espera. Os preços de preview (`preview.medico` / `preview.plataforma`) já refletem essa mudança automaticamente.
+- Botão "Salvar" do diálogo desabilitado quando inválido.
 
-- **Repasse global**: o `confirm()` atual vira um modal pequeno com campo opcional "Motivo da alteração" (textarea).
-- **Exceção por médico**: o modal já tem campo `motivo`; passa a ser interpretado também como motivo da alteração (registrado a cada edição).
-- **Remover/Toggle ativo**: o `confirm()` atual vira modal com campo opcional de motivo.
+### `src/pages/app/medico/MedicoServicos.tsx`
+- Diálogo "Solicitar override de repasse" (linhas ~194–198): troca o input avulso por `RepasseSplitInput` (size `sm`). Preserva o estado `overridePct`.
+- Botão "Solicitar" desabilitado quando inválido.
 
-## Detalhes técnicos
+## 3. Defesa em profundidade no banco (rede de segurança)
 
-### 1. Trigger no banco — captura automática
+Migration nova (será aplicada via tool de migração quando você aprovar este plano):
 
-Migration nova com:
+- **Trigger `BEFORE INSERT/UPDATE` em `app_settings`** (apenas `key='financeiro.comissao_padrao_pct'`):
+  - Rejeita valores não numéricos, fora de `[0,100]` ou nulos com erro `check_violation`.
+  - Arredonda para 2 casas e regrava `value` normalizado.
+- **Trigger `BEFORE INSERT/UPDATE` em `medico_comissao_override`**:
+  - Mesma validação + arredondamento (já existe `CHECK chk_override_pct`, mas a trigger garante o `round2`).
+- **Trigger `BEFORE INSERT/UPDATE` em `servicos_financeiros`**:
+  - Quando `modelo='percentual'`, valida `comissao_pct` ∈ `[0,100]` e arredonda.
 
-**Função `fn_audit_repasse_global()`** (AFTER UPDATE em `app_settings` quando `key = 'financeiro.comissao_padrao_pct'`):
-- Calcula `% médico = 100 - % plataforma` para `valor_anterior` e `valor_novo`.
-- Insere em `financeiro_auditoria` com `entidade='repasse_global'`, `acao='atualizado'`, `actor_id=auth.uid()`, `motivo=current_setting('app.audit_motivo', true)`.
+Todas com `SET search_path = public`. Sem custos extras de leitura.
 
-**Função `fn_audit_override_medico()`** (AFTER INSERT/UPDATE/DELETE em `medico_comissao_override`):
-- INSERT → `acao='criado'`, `valor_anterior=NULL`, `valor_novo=100-NEW.comissao_pct`.
-- UPDATE → `acao='editado'` ou `acao='ativado'`/`acao='desativado'` se só `ativo` mudou.
-- DELETE → `acao='removido'`.
-- `entidade='comissao_override'`, `entidade_id=NEW.id` (ou `OLD.id`), `payload` com `{medico_id, servico_id, ativo, motivo_override}`.
+## Garantias resultantes
 
-Ambas usam `current_setting('app.audit_motivo', true)` (variável de sessão) para puxar o motivo livre informado pelo usuário.
-
-### 2. Front — propagar o motivo
-
-Em `src/lib/financeiroConfig.ts`, novo helper:
-```ts
-async function comMotivo<T>(motivo: string | null | undefined, fn: () => Promise<T>): Promise<T>
-```
-que faz `supabase.rpc('set_audit_motivo', { motivo })` antes da operação e limpa depois.
-
-Criar RPC `set_audit_motivo(text)` simples que faz `SET LOCAL app.audit_motivo = $1`.
-
-Atualizar `setRepasseGlobal`, `upsertOverrideParticular`, `deleteOverride` e `toggleOverrideAtivo` para receber `motivo?: string` opcional.
-
-### 3. Front — listagem de auditoria
-
-Em `src/lib/financeiroConfig.ts`:
-```ts
-export type RepasseAuditoriaRow = {
-  id: string;
-  created_at: string;
-  entidade: 'repasse_global' | 'comissao_override';
-  acao: string;
-  actor_nome: string | null;
-  valor_anterior: number | null;
-  valor_novo: number | null;
-  motivo: string | null;
-  medico_nome?: string | null;
-};
-
-export async function listAuditoriaRepasse(filtros: {
-  tipo?: 'global' | 'override' | 'todos';
-  medico_id?: string;
-  desde?: string; // ISO date
-}): Promise<RepasseAuditoriaRow[]>
-```
-
-Faz `select` em `financeiro_auditoria` filtrando `entidade IN ('repasse_global','comissao_override')`, com join opcional em `medicos` (via `payload->>medico_id`) e em `profiles` (via `actor_id`) para nomes.
-
-### 4. Front — UI do card de histórico
-
-Novo componente `RepasseAuditoriaCard.tsx` colocado dentro de `AdminFinanceiroConfig.tsx`, abaixo das seções existentes:
-- Tabela com colunas: Data, Quem, Tipo (badge), De → Para, Motivo
-- Filtros: select de tipo, busca de médico (reusa `searchMedicosAtivos`), select de período
-- Botão "Exportar CSV" usando `Blob` + download local
-
-### 5. Modais de motivo
-
-- Trocar `confirm()` em `salvarGlobal`, `removerOverride` e `togglar` por um `MotivoDialog` simples (componente novo, ~50 linhas) com textarea opcional + Confirmar/Cancelar.
-- O modal de exceção (já existente) passa o `motivo` técnico do override **e** envia via `comMotivo()` para o histórico (mesmo texto, simplifica UX).
+| Camada | Garantia |
+|---|---|
+| **UI** | Impossível clicar "Salvar" com soma ≠ 100, valor < 0, > 100 ou NaN. Erro visível e auto-correção. |
+| **API client** | `setRepasseGlobal` / `upsertOverrideParticular` já fazem `clampPct` + `round2`. |
+| **Banco** | Triggers rejeitam qualquer escrita inválida vinda de SQL direto, edge function ou bug futuro. |
 
 ## Arquivos afetados
 
-- **Nova migration**: triggers `fn_audit_repasse_global` + `fn_audit_override_medico`, RPC `set_audit_motivo`.
-- **`src/lib/financeiroConfig.ts`**: helper `comMotivo`, novos tipos e `listAuditoriaRepasse`, parâmetro `motivo` nas mutations.
-- **`src/pages/app/admin/AdminFinanceiroConfig.tsx`**: novo card de histórico + uso do `MotivoDialog`.
-- **`src/components/financeiro/MotivoDialog.tsx`** (novo): diálogo reusável de confirmação com motivo.
-- **`src/components/financeiro/RepasseAuditoriaCard.tsx`** (novo): card de histórico com filtros e export.
+- **Novo**: `src/components/financeiro/RepasseSplitInput.tsx`
+- **Editado**: `src/pages/app/admin/AdminFinanceiroConfig.tsx`
+- **Editado**: `src/pages/app/admin/AdminServicos.tsx`
+- **Editado**: `src/pages/app/medico/MedicoServicos.tsx`
+- **Nova migration**: triggers `fn_validar_repasse_global`, `fn_validar_override_pct`, `fn_validar_servico_pct`.
 
-## Garantias
-
-- **Imutável**: `financeiro_auditoria` permanece append-only (RLS já permite só SELECT para admin/staff com `financeiro.ver`; nenhuma policy de UPDATE/DELETE será adicionada).
-- **Não afeta snapshots**: triggers só registram; não tocam em consultas, `consultas_financeiro` nem cálculo de comissão.
-- **Capability gate**: card e listagem usam a mesma proteção `financeiro.editar_comissao` da rota; SELECT da auditoria pede `financeiro.ver` (já configurado).
-- **Sem secrets/integrações novas**.
+Sem mudanças em snapshots já gravados, sem novos secrets, sem alterações em integrações externas.
