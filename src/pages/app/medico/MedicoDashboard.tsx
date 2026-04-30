@@ -154,6 +154,10 @@ export default function MedicoDashboard() {
   const minutosProx = useMemo(() => proxima ? diffMin(proxima.inicio) : null, [proxima]);
 
   async function iniciarConsulta(c: ConsultaDetalhada) {
+    if (!podeIniciar) {
+      toast.error("Você não tem permissão para iniciar consultas.");
+      return;
+    }
     setIniciandoId(c.id);
     try {
       const { error } = await supabase
