@@ -106,12 +106,15 @@ const PERM_GROUPS: { titulo: string; perms: { key: string; label: string }[] }[]
   {
     titulo: "Financeiro",
     perms: [
-      { key: "financeiro.ver_pagamentos", label: "Ver pagamentos" },
-      { key: "financeiro.gerar_cobranca", label: "Gerar cobrança" },
-      { key: "financeiro.confirmar_manual", label: "Confirmar pagamento manual" },
-      { key: "financeiro.solicitar_reembolso", label: "Solicitar reembolso" },
+      { key: "financeiro.ver", label: "Ver pagamentos e relatórios" },
+      { key: "financeiro.cobrar", label: "Gerar cobrança / link de pagamento" },
+      { key: "financeiro.cancelar_cobranca", label: "Cancelar cobrança" },
       { key: "financeiro.aprovar_reembolso", label: "Aprovar reembolso" },
-      { key: "financeiro.ver_relatorios", label: "Ver relatórios financeiros" },
+      { key: "financeiro.reembolsar", label: "Solicitar reembolso" },
+      { key: "financeiro.editar_comissao", label: "Editar comissão" },
+      { key: "financeiro.servicos_gerenciar", label: "Gerenciar serviços" },
+      { key: "financeiro.exportar", label: "Exportar relatórios" },
+      { key: "financeiro.repasse_gerenciar", label: "Gerenciar repasses médicos" },
     ],
   },
   {

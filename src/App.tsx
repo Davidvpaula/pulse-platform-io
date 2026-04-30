@@ -53,6 +53,7 @@ import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
 import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
+import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
@@ -172,7 +173,7 @@ const App = () => (
               <Route path="admin/cupons" element={<SecretariaCupons />} />
               <Route path="admin/cupons/log" element={<CuponsUsoLog />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
-              <Route path="secretaria/financeiro" element={<Placeholder title="Pagamentos pendentes" />} />
+              <Route path="secretaria/financeiro" element={<SecretariaFinanceiro />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />
               <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
               <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
