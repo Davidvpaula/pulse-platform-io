@@ -127,7 +127,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         children: [
           { label: "Usuários", to: "/app/admin/usuarios" },
           { label: "Médicos", to: "/app/admin/medicos" },
-          { label: "Secretaria", to: "/app/admin/secretaria" },
+          { label: "Colaboradores", to: "/app/admin/colaboradores" },
           { label: "Empresas", to: "/app/admin/empresas" },
         ],
       },

@@ -129,6 +129,138 @@ export type Database = {
         }
         Relationships: []
       }
+      colaboradores: {
+        Row: {
+          cargo_descricao: string | null
+          convite_enviado_em: string | null
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          data_nascimento: string | null
+          email: string
+          foto_url: string | null
+          funcao_interna: Database["public"]["Enums"]["funcao_interna"]
+          gestor_id: string | null
+          id: string
+          nome_completo: string
+          obrigar_troca_senha: boolean
+          observacoes_internas: string | null
+          removido_em: string | null
+          setor: string | null
+          status_alterado_em: string | null
+          status_alterado_por: string | null
+          status_conta: Database["public"]["Enums"]["status_colaborador"]
+          status_motivo: string | null
+          status_observacao: string | null
+          suspenso_ate: string | null
+          suspenso_indeterminado: boolean
+          telefone: string | null
+          ultimo_acesso_em: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cargo_descricao?: string | null
+          convite_enviado_em?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_nascimento?: string | null
+          email: string
+          foto_url?: string | null
+          funcao_interna?: Database["public"]["Enums"]["funcao_interna"]
+          gestor_id?: string | null
+          id?: string
+          nome_completo: string
+          obrigar_troca_senha?: boolean
+          observacoes_internas?: string | null
+          removido_em?: string | null
+          setor?: string | null
+          status_alterado_em?: string | null
+          status_alterado_por?: string | null
+          status_conta?: Database["public"]["Enums"]["status_colaborador"]
+          status_motivo?: string | null
+          status_observacao?: string | null
+          suspenso_ate?: string | null
+          suspenso_indeterminado?: boolean
+          telefone?: string | null
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cargo_descricao?: string | null
+          convite_enviado_em?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_nascimento?: string | null
+          email?: string
+          foto_url?: string | null
+          funcao_interna?: Database["public"]["Enums"]["funcao_interna"]
+          gestor_id?: string | null
+          id?: string
+          nome_completo?: string
+          obrigar_troca_senha?: boolean
+          observacoes_internas?: string | null
+          removido_em?: string | null
+          setor?: string | null
+          status_alterado_em?: string | null
+          status_alterado_por?: string | null
+          status_conta?: Database["public"]["Enums"]["status_colaborador"]
+          status_motivo?: string | null
+          status_observacao?: string | null
+          suspenso_ate?: string | null
+          suspenso_indeterminado?: boolean
+          telefone?: string | null
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      colaboradores_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          campo: string | null
+          colaborador_id: string
+          created_at: string
+          id: string
+          motivo: string | null
+          observacao: string | null
+          payload: Json | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          campo?: string | null
+          colaborador_id: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          campo?: string | null
+          colaborador_id?: string
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          payload?: Json | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: []
+      }
       consulta_status_log: {
         Row: {
           actor_id: string | null
@@ -1034,6 +1166,39 @@ export type Database = {
           },
         ]
       }
+      permissoes_colaborador: {
+        Row: {
+          concedido_por: string | null
+          created_at: string
+          efeito: Database["public"]["Enums"]["permissao_efeito"]
+          id: string
+          motivo: string | null
+          permission_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concedido_por?: string | null
+          created_at?: string
+          efeito?: Database["public"]["Enums"]["permissao_efeito"]
+          id?: string
+          motivo?: string | null
+          permission_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concedido_por?: string | null
+          created_at?: string
+          efeito?: Database["public"]["Enums"]["permissao_efeito"]
+          id?: string
+          motivo?: string | null
+          permission_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       permissoes_perfil: {
         Row: {
           ativo: boolean
@@ -1269,6 +1434,42 @@ export type Database = {
         }
         Returns: Json
       }
+      colaborador_alterar_status: {
+        Args: {
+          _id: string
+          _indeterminado?: boolean
+          _motivo: string
+          _novo: Database["public"]["Enums"]["status_colaborador"]
+          _observacao?: string
+          _suspenso_ate?: string
+        }
+        Returns: Json
+      }
+      colaborador_atualizar: {
+        Args: { _id: string; _patch: Json }
+        Returns: Json
+      }
+      colaborador_remover_permissao: {
+        Args: { _key: string; _motivo?: string; _user_id: string }
+        Returns: Json
+      }
+      colaborador_set_permissao: {
+        Args: {
+          _efeito: Database["public"]["Enums"]["permissao_efeito"]
+          _key: string
+          _motivo?: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      colaborador_set_role: {
+        Args: {
+          _motivo?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: Json
+      }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
       criar_consulta_com_reserva: {
         Args: {
@@ -1379,6 +1580,19 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      registrar_auditoria_colaborador: {
+        Args: {
+          _acao: string
+          _campo?: string
+          _colab_id: string
+          _motivo?: string
+          _observacao?: string
+          _payload?: Json
+          _valor_anterior?: string
+          _valor_novo?: string
+        }
+        Returns: string
+      }
       registrar_auditoria_consulta: {
         Args: {
           _acao: string
@@ -1440,6 +1654,15 @@ export type Database = {
         | "vacina"
         | "outro"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
+      funcao_interna:
+        | "secretaria"
+        | "supervisor"
+        | "financeiro"
+        | "comercial"
+        | "atendimento"
+        | "suporte"
+        | "gestor_operacional"
+        | "outro"
       medico_status:
         | "pendente"
         | "em_analise"
@@ -1456,9 +1679,16 @@ export type Database = {
         | "cancelado"
         | "falhou"
         | "reembolsado"
+      permissao_efeito: "grant" | "revoke"
       retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
+      status_colaborador:
+        | "ativo"
+        | "pendente_convite"
+        | "suspenso"
+        | "bloqueado"
+        | "removido"
       status_conta_paciente: "ativo" | "suspenso" | "bloqueado"
     }
     CompositeTypes: {
@@ -1625,6 +1855,16 @@ export const Constants = {
         "outro",
       ],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
+      funcao_interna: [
+        "secretaria",
+        "supervisor",
+        "financeiro",
+        "comercial",
+        "atendimento",
+        "suporte",
+        "gestor_operacional",
+        "outro",
+      ],
       medico_status: [
         "pendente",
         "em_analise",
@@ -1643,9 +1883,17 @@ export const Constants = {
         "falhou",
         "reembolsado",
       ],
+      permissao_efeito: ["grant", "revoke"],
       retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
+      status_colaborador: [
+        "ativo",
+        "pendente_convite",
+        "suspenso",
+        "bloqueado",
+        "removido",
+      ],
       status_conta_paciente: ["ativo", "suspenso", "bloqueado"],
     },
   },
