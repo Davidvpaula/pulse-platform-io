@@ -850,6 +850,10 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      trocar_medico_consulta: {
+        Args: { _consulta_id: string; _motivo?: string; _novo_slot_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "paciente" | "medico" | "secretaria" | "empresa" | "admin"

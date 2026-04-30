@@ -209,6 +209,50 @@ export async function listConsultasDoMedico(opts?: {
   }));
 }
 
+/** Lista consultas para secretaria/admin com nomes de paciente e médico. */
+export async function listConsultasParaSecretaria(opts?: {
+  desde?: Date;
+  ate?: Date;
+  medico_id?: string;
+}): Promise<ConsultaDetalhada[]> {
+  let q = supabase
+    .from("consultas")
+    .select(`
+      *,
+      pacientes:paciente_id ( user_id ),
+      medicos:medico_id ( nome ),
+      especialidades:especialidade_id ( nome )
+    `)
+    .order("inicio", { ascending: true });
+
+  if (opts?.desde) q = q.gte("inicio", opts.desde.toISOString());
+  if (opts?.ate) q = q.lte("inicio", opts.ate.toISOString());
+  if (opts?.medico_id) q = q.eq("medico_id", opts.medico_id);
+
+  const { data, error } = await q;
+  if (error) {
+    console.error("[clinico] listConsultasParaSecretaria:", error);
+    return [];
+  }
+
+  const userIds = Array.from(new Set(
+    (data ?? []).map((c: any) => c.pacientes?.user_id).filter(Boolean) as string[],
+  ));
+  let nomes: Record<string, string> = {};
+  if (userIds.length > 0) {
+    const { data: profs } = await supabase
+      .from("profiles").select("id, nome").in("id", userIds);
+    nomes = Object.fromEntries((profs ?? []).map((p) => [p.id, p.nome]));
+  }
+
+  return (data ?? []).map((c: any) => ({
+    ...c,
+    paciente_nome: c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null,
+    medico_nome: c.medicos?.nome ?? null,
+    especialidade_nome: c.especialidades?.nome ?? null,
+  }));
+}
+
 export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
   const paciente = await getPacienteAtual();
   if (!paciente) return [];
@@ -649,8 +693,68 @@ export async function listSlotsDisponiveisDoMedico(medicoId: string): Promise<Ag
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * Helpers de UI
+ * TROCA DE PROFISSIONAL (admin/secretaria)
  * ────────────────────────────────────────────────────────────────────── */
+
+export type MedicoCompativel = {
+  id: string;
+  nome: string;
+  link_sala_padrao: string | null;
+  preco_centavos: number | null;
+};
+
+/** Lista médicos ativos que atendem a especialidade da consulta (exceto o atual). */
+export async function listMedicosCompativeis(
+  consultaId: string,
+): Promise<MedicoCompativel[]> {
+  const { data: c } = await supabase
+    .from("consultas")
+    .select("medico_id, especialidade_id")
+    .eq("id", consultaId)
+    .maybeSingle();
+  if (!c) return [];
+
+  let query = supabase
+    .from("medico_especialidades")
+    .select(`preco_centavos, medico_id, medicos:medico_id ( id, nome, link_sala_padrao, status )`)
+    .eq("ativo", true)
+    .neq("medico_id", c.medico_id);
+  if (c.especialidade_id) query = query.eq("especialidade_id", c.especialidade_id);
+
+  const { data, error } = await query;
+  if (error) { console.error("[clinico] listMedicosCompativeis:", error); return []; }
+  return (data ?? [])
+    .map((row: any) => ({
+      id: row.medicos?.id,
+      nome: row.medicos?.nome,
+      link_sala_padrao: row.medicos?.link_sala_padrao ?? null,
+      preco_centavos: row.preco_centavos ?? null,
+      status: row.medicos?.status,
+    }))
+    .filter((m) => m.id && m.status === "aprovado")
+    .map(({ status, ...m }) => m);
+}
+
+/** Troca o médico de uma consulta para um novo slot disponível. */
+export async function trocarMedicoConsulta(input: {
+  consulta_id: string;
+  novo_slot_id: string;
+  motivo?: string;
+}): Promise<{
+  consulta_id: string;
+  novo_medico_id: string;
+  novo_slot_id: string;
+  novo_valor_centavos: number;
+  novo_link_sala: string | null;
+}> {
+  const { data, error } = await supabase.rpc("trocar_medico_consulta", {
+    _consulta_id: input.consulta_id,
+    _novo_slot_id: input.novo_slot_id,
+    _motivo: input.motivo ?? null,
+  });
+  if (error) throw error;
+  return data as any;
+}
 
 export function formatDataBR(iso: string): string {
   const d = new Date(iso);
