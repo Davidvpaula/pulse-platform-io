@@ -43,10 +43,19 @@ const fmtHora = (iso: string) =>
 const fmtData = (iso: string) =>
   new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
+interface ServicosResumo {
+  total_ativos: number;
+  total_inativos: number;
+  medicos_vinculados: number;
+  overrides_pendentes: number;
+  ticket_medio_centavos: number;
+}
+
 export default function AdminDashboard() {
   const [periodo, setPeriodo] = useState<PeriodoKey>("mes");
   const [data, setData] = useState<VisaoGeral | null>(null);
   const [loading, setLoading] = useState(true);
+  const [servicos, setServicos] = useState<ServicosResumo | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -64,6 +73,31 @@ export default function AdminDashboard() {
     })();
     return () => { active = false; };
   }, [periodo]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const [{ data: srv }, { count: vinc }, { count: pend }] = await Promise.all([
+        supabase.from("servicos_financeiros").select("ativo,valor_paciente_centavos"),
+        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "ativo"),
+        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "pendente"),
+      ]);
+      if (!active) return;
+      const ativos = (srv ?? []).filter((s: any) => s.ativo);
+      const inativos = (srv ?? []).filter((s: any) => !s.ativo);
+      const valores = ativos.map((s: any) => s.valor_paciente_centavos ?? 0).filter((v: number) => v > 0);
+      const ticket = valores.length ? Math.round(valores.reduce((a: number, b: number) => a + b, 0) / valores.length) : 0;
+      setServicos({
+        total_ativos: ativos.length,
+        total_inativos: inativos.length,
+        medicos_vinculados: vinc ?? 0,
+        overrides_pendentes: pend ?? 0,
+        ticket_medio_centavos: ticket,
+      });
+    })();
+    return () => { active = false; };
+  }, []);
+
 
   const k = data?.kpis ?? {};
   const p = data?.pendencias ?? {};
