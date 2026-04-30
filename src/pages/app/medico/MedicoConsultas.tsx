@@ -32,6 +32,7 @@ export default function MedicoConsultas() {
   const [filtro, setFiltro] = useState<Filtro>("hoje");
   const [acaoId, setAcaoId] = useState<string | null>(null);
   const [retornoCtx, setRetornoCtx] = useState<{ id: string; nome?: string | null } | null>(null);
+  const [historicoCtx, setHistoricoCtx] = useState<{ id: string; resumo?: string } | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); return; }
