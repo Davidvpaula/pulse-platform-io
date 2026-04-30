@@ -2347,7 +2347,11 @@ export type Database = {
         | "manual_secretaria"
         | "retorno"
         | "api"
-      consulta_financeiro_status: "valido" | "invalidado" | "reembolsado"
+      consulta_financeiro_status:
+        | "valido"
+        | "invalidado"
+        | "reembolsado"
+        | "estornado"
       consulta_modalidade: "online" | "presencial"
       consulta_status:
         | "agendada"
@@ -2382,7 +2386,12 @@ export type Database = {
         | "saude_ocupacional"
         | "indicadora"
         | "hibrida"
-      fechamento_status: "em_aberto" | "pago"
+      fechamento_status:
+        | "em_aberto"
+        | "pago"
+        | "em_processamento"
+        | "bloqueado"
+        | "contestado"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       funcao_interna:
         | "secretaria"
@@ -2565,7 +2574,12 @@ export const Constants = {
         "retorno",
         "api",
       ],
-      consulta_financeiro_status: ["valido", "invalidado", "reembolsado"],
+      consulta_financeiro_status: [
+        "valido",
+        "invalidado",
+        "reembolsado",
+        "estornado",
+      ],
       consulta_modalidade: ["online", "presencial"],
       consulta_status: [
         "agendada",
@@ -2604,7 +2618,13 @@ export const Constants = {
         "indicadora",
         "hibrida",
       ],
-      fechamento_status: ["em_aberto", "pago"],
+      fechamento_status: [
+        "em_aberto",
+        "pago",
+        "em_processamento",
+        "bloqueado",
+        "contestado",
+      ],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       funcao_interna: [
         "secretaria",
