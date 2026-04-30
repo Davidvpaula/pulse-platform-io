@@ -19,6 +19,7 @@ import {
 } from "@/lib/clinico";
 import type { Status } from "@/lib/mock";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
+import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";
 
 type Periodo = "hoje" | "semana" | "mes" | "todos";
 
@@ -82,6 +83,7 @@ export default function MedicoAgenda() {
   const [loading, setLoading] = useState(false);
   const [acaoId, setAcaoId] = useState<string | null>(null);
   const [historicoId, setHistoricoId] = useState<string | null>(null);
+  const [finalizar, setFinalizar] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setDbConsultas(null); return; }
@@ -134,21 +136,9 @@ export default function MedicoAgenda() {
     }
   }
 
-  async function concluirConsulta(c: ConsultaDetalhada) {
-    setAcaoId(c.id);
-    try {
-      const { error } = await supabase
-        .from("consultas")
-        .update({ status: "concluida" })
-        .eq("id", c.id);
-      if (error) throw error;
-      toast.success("Consulta concluída");
-      void carregar();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível concluir a consulta");
-    } finally {
-      setAcaoId(null);
-    }
+  // Concluir abre o diálogo de finalização (prontuário/prescrição/pagamento)
+  function abrirFinalizar(c: ConsultaDetalhada) {
+    setFinalizar(c);
   }
 
   // Modo demo (sem sessão) — mantém comportamento anterior com mock
@@ -321,13 +311,10 @@ export default function MedicoAgenda() {
                         <Button
                           size="sm"
                           className="bg-success text-success-foreground hover:opacity-90"
-                          disabled={acaoId === c.id}
-                          onClick={() => concluirConsulta(c)}
+                          onClick={() => abrirFinalizar(c)}
                         >
-                          {acaoId === c.id
-                            ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
-                          Concluir
+                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                          Finalizar
                         </Button>
                       </>
                     )}
@@ -377,6 +364,13 @@ export default function MedicoAgenda() {
         consultaId={historicoId}
         open={!!historicoId}
         onOpenChange={(o) => !o && setHistoricoId(null)}
+      />
+
+      <FinalizarAtendimentoDialog
+        consulta={finalizar}
+        open={!!finalizar}
+        onOpenChange={(o) => !o && setFinalizar(null)}
+        onFinalizado={() => void carregar()}
       />
     </div>
   );

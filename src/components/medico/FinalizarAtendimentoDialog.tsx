@@ -1,0 +1,322 @@
+import { useEffect, useState } from "react";
+import { Loader2, CheckCircle2, FileText, Pill, Wallet, AlertCircle, Plus, Trash2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { ConsultaDetalhada } from "@/lib/clinico";
+
+type Medicamento = { nome: string; dose: string; instrucoes: string };
+
+type Props = {
+  consulta: ConsultaDetalhada | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onFinalizado?: () => void;
+};
+
+function formatBRL(c: number) {
+  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFinalizado }: Props) {
+  const [salvando, setSalvando] = useState(false);
+
+  // Prontuário
+  const [criarProntuario, setCriarProntuario] = useState(true);
+  const [queixa, setQueixa] = useState("");
+  const [conduta, setConduta] = useState("");
+  const [hipotese, setHipotese] = useState("");
+  const [cidStr, setCidStr] = useState("");
+
+  // Prescrição
+  const [criarPrescricao, setCriarPrescricao] = useState(false);
+  const [meds, setMeds] = useState<Medicamento[]>([{ nome: "", dose: "", instrucoes: "" }]);
+  const [orientacoes, setOrientacoes] = useState("");
+  const [validadeDias, setValidadeDias] = useState(30);
+
+  // Pagamento
+  const [pagamentoStatus, setPagamentoStatus] = useState<string | null>(null);
+  const [marcarPago, setMarcarPago] = useState(false);
+
+  useEffect(() => {
+    if (!open || !consulta) return;
+    setCriarProntuario(true);
+    setQueixa(""); setConduta(""); setHipotese(""); setCidStr("");
+    setCriarPrescricao(false);
+    setMeds([{ nome: "", dose: "", instrucoes: "" }]);
+    setOrientacoes(""); setValidadeDias(30);
+    setMarcarPago(false);
+    setPagamentoStatus(null);
+
+    // Verifica se já existe pagamento associado
+    supabase
+      .from("pagamentos")
+      .select("status")
+      .eq("consulta_id", consulta.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setPagamentoStatus(data?.status ?? null));
+  }, [open, consulta]);
+
+  if (!consulta) return null;
+
+  const valor = consulta.valor_centavos ?? 0;
+  const semPagamento = !pagamentoStatus;
+  const pagamentoPendente =
+    pagamentoStatus === "pendente" ||
+    pagamentoStatus === "processando" ||
+    consulta.status === "aguardando_pagamento";
+
+  function addMed() {
+    setMeds((m) => [...m, { nome: "", dose: "", instrucoes: "" }]);
+  }
+  function rmMed(i: number) {
+    setMeds((m) => m.filter((_, idx) => idx !== i));
+  }
+  function setMed(i: number, patch: Partial<Medicamento>) {
+    setMeds((m) => m.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+
+  async function finalizar() {
+    if (!consulta) return;
+    setSalvando(true);
+    try {
+      // 1) Prontuário (upsert por consulta_id — relação 1:1)
+      if (criarProntuario && (queixa || conduta || hipotese || cidStr)) {
+        const cid10 = cidStr
+          .split(/[,\s]+/)
+          .map((s) => s.trim().toUpperCase())
+          .filter(Boolean);
+        const { error: errProntuario } = await supabase
+          .from("prontuarios")
+          .upsert(
+            {
+              consulta_id: consulta.id,
+              queixa_principal: queixa || null,
+              conduta: conduta || null,
+              hipotese_diagnostica: hipotese || null,
+              cid10: cid10.length ? cid10 : null,
+            },
+            { onConflict: "consulta_id" },
+          );
+        if (errProntuario) throw errProntuario;
+      }
+
+      // 2) Prescrição
+      if (criarPrescricao) {
+        const medsLimpos = meds.filter((m) => m.nome.trim().length > 0);
+        if (medsLimpos.length === 0 && !orientacoes.trim()) {
+          throw new Error("Adicione pelo menos um medicamento ou orientações para gerar a prescrição.");
+        }
+        const { error: errPresc } = await supabase.from("prescricoes").insert({
+          consulta_id: consulta.id,
+          medicamentos: medsLimpos as any,
+          orientacoes: orientacoes.trim() || null,
+          validade_dias: validadeDias,
+        });
+        if (errPresc) throw errPresc;
+      }
+
+      // 3) Pagamento simulado (se solicitado)
+      if (marcarPago && valor > 0) {
+        if (semPagamento) {
+          // Cria pagamento já pago (registro simulado pós-atendimento)
+          const { error: errPag } = await supabase.from("pagamentos").insert({
+            consulta_id: consulta.id,
+            valor_centavos: valor,
+            status: "pago",
+            metodo: "simulado",
+            provider: "mock",
+            paid_at: new Date().toISOString(),
+            metadata: { origem: "finalizacao_atendimento" } as any,
+          });
+          if (errPag) throw errPag;
+        } else if (pagamentoPendente) {
+          const { error: errUp } = await supabase
+            .from("pagamentos")
+            .update({
+              status: "pago",
+              paid_at: new Date().toISOString(),
+              metodo: "simulado",
+              provider: "mock",
+            })
+            .eq("consulta_id", consulta.id)
+            .in("status", ["pendente", "processando"]);
+          if (errUp) throw errUp;
+        }
+      }
+
+      // 4) Atualiza status da consulta
+      const { error: errCon } = await supabase
+        .from("consultas")
+        .update({ status: "concluida" })
+        .eq("id", consulta.id);
+      if (errCon) throw errCon;
+
+      toast.success("Atendimento finalizado");
+      onFinalizado?.();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível finalizar o atendimento");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Finalizar atendimento</DialogTitle>
+          <DialogDescription>
+            {consulta.paciente_nome ?? "Paciente"} · {consulta.especialidade_nome ?? "Consulta"} ·{" "}
+            {new Date(consulta.inicio).toLocaleString("pt-BR")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Prontuário */}
+          <section className="rounded-lg border border-border p-4">
+            <header className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Registro do prontuário</p>
+              </div>
+              <Switch checked={criarProntuario} onCheckedChange={setCriarProntuario} />
+            </header>
+            {criarProntuario && (
+              <div className="mt-4 grid gap-3">
+                <div>
+                  <Label>Queixa principal</Label>
+                  <Textarea value={queixa} onChange={(e) => setQueixa(e.target.value)} rows={2} />
+                </div>
+                <div>
+                  <Label>Hipótese diagnóstica</Label>
+                  <Textarea value={hipotese} onChange={(e) => setHipotese(e.target.value)} rows={2} />
+                </div>
+                <div>
+                  <Label>Conduta</Label>
+                  <Textarea value={conduta} onChange={(e) => setConduta(e.target.value)} rows={2} />
+                </div>
+                <div>
+                  <Label>CID-10 (separe por vírgula)</Label>
+                  <Input
+                    value={cidStr}
+                    onChange={(e) => setCidStr(e.target.value)}
+                    placeholder="Ex.: I10, E11.9"
+                  />
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Prescrição */}
+          <section className="rounded-lg border border-border p-4">
+            <header className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Pill className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Prescrição / documento</p>
+              </div>
+              <Switch checked={criarPrescricao} onCheckedChange={setCriarPrescricao} />
+            </header>
+            {criarPrescricao && (
+              <div className="mt-4 space-y-3">
+                {meds.map((m, i) => (
+                  <div key={i} className="grid gap-2 rounded-md border border-border/60 p-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
+                    <Input placeholder="Medicamento" value={m.nome} onChange={(e) => setMed(i, { nome: e.target.value })} />
+                    <Input placeholder="Dose (ex.: 500mg)" value={m.dose} onChange={(e) => setMed(i, { dose: e.target.value })} />
+                    <Input placeholder="Instruções (ex.: 8/8h por 7 dias)" value={m.instrucoes} onChange={(e) => setMed(i, { instrucoes: e.target.value })} />
+                    <Button type="button" size="icon" variant="ghost" onClick={() => rmMed(i)} disabled={meds.length === 1}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" size="sm" variant="outline" onClick={addMed}>
+                  <Plus className="mr-1.5 h-3.5 w-3.5" /> Adicionar medicamento
+                </Button>
+                <div>
+                  <Label>Orientações gerais</Label>
+                  <Textarea value={orientacoes} onChange={(e) => setOrientacoes(e.target.value)} rows={2} />
+                </div>
+                <div className="max-w-[200px]">
+                  <Label>Validade (dias)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={validadeDias}
+                    onChange={(e) => setValidadeDias(Number(e.target.value) || 30)}
+                  />
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Pagamento */}
+          <section className="rounded-lg border border-border p-4">
+            <header className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Pagamento</p>
+              </div>
+              <span className="text-xs text-muted-foreground">{formatBRL(valor)}</span>
+            </header>
+
+            <div className="mt-3 space-y-2 text-sm">
+              {valor === 0 && (
+                <p className="text-muted-foreground">
+                  Consulta sem cobrança (retorno gratuito ou cortesia).
+                </p>
+              )}
+              {valor > 0 && pagamentoPendente && (
+                <div className="flex items-start gap-2 rounded-md bg-warning/10 p-3 text-warning">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>Existe pagamento <strong>pendente</strong> para esta consulta.</p>
+                </div>
+              )}
+              {valor > 0 && semPagamento && (
+                <div className="flex items-start gap-2 rounded-md bg-info/10 p-3 text-info">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>Não há pagamento registrado. Será criado um lançamento simulado se você marcar como pago.</p>
+                </div>
+              )}
+              {valor > 0 && pagamentoStatus === "pago" && (
+                <p className="text-success">Pagamento já confirmado.</p>
+              )}
+
+              {valor > 0 && pagamentoStatus !== "pago" && (
+                <label className="flex items-center gap-2">
+                  <Switch checked={marcarPago} onCheckedChange={setMarcarPago} />
+                  <span>Registrar como <strong>pago</strong> agora (simulado)</span>
+                </label>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={finalizar}
+            disabled={salvando}
+            className="bg-success text-success-foreground hover:opacity-90"
+          >
+            {salvando
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <CheckCircle2 className="mr-2 h-4 w-4" />}
+            Finalizar atendimento
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
