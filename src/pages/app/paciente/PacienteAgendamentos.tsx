@@ -111,6 +111,44 @@ export default function PacienteAgendamentos() {
         }
       />
 
+      {/* Vouchers de retorno gratuito */}
+      {session && vouchers.length > 0 && (
+        <div className="card-elevated overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
+            <Gift className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold">
+              Você tem {vouchers.length} retorno{vouchers.length > 1 ? "s" : ""} gratuito{vouchers.length > 1 ? "s" : ""} disponível{vouchers.length > 1 ? "is" : ""}
+            </p>
+          </div>
+          <ul className="divide-y divide-border">
+            {vouchers.map((v) => (
+              <li key={v.id} className="flex flex-wrap items-center gap-3 p-4">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+                  <Gift className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">
+                    Retorno com {v.medico_nome ?? "seu médico"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {v.especialidade_nome ?? "—"} · válido até{" "}
+                    <strong>{new Date(v.valido_ate).toLocaleDateString("pt-BR")}</strong>
+                    {v.observacao && <> · {v.observacao}</>}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-gradient-primary hover:opacity-90"
+                  onClick={() => setVoucherSelecionado(v)}
+                >
+                  Agendar gratuitamente
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Filtros */}
       <div className="card-elevated flex flex-wrap items-center gap-3 p-4">
         <div className="relative flex-1 min-w-[220px]">
