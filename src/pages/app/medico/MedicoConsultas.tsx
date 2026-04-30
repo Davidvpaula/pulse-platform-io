@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Loader2, Search, Play, User, Stethoscope,
+  Loader2, Search, Play, User, Stethoscope, History,
 } from "lucide-react";
+import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
