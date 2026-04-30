@@ -423,10 +423,12 @@ export default function AdminServicos() {
                 </div>
                 {editing.modelo === "percentual" ? (
                   <div className="space-y-2">
-                    <Label>Percentual do médico (%)</Label>
-                    <Input type="number" min={0} max={100} step={0.01}
-                      value={editing.comissao_pct ?? 0}
-                      onChange={(e) => setEditing({ ...editing, comissao_pct: Number(e.target.value) })} />
+                    <Label>Divisão do valor da consulta</Label>
+                    <RepasseSplitInput
+                      medicoPct={editing.comissao_pct ?? 0}
+                      onChange={(v) => setEditing({ ...editing, comissao_pct: v })}
+                      onValidityChange={setPctValid}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-2">
