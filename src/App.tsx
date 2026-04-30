@@ -53,6 +53,7 @@ import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
 import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
+import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
