@@ -2340,6 +2340,7 @@ export type Database = {
         | "empresa"
         | "admin"
         | "supervisor"
+      cobranca_link_status: "ativo" | "pago" | "cancelado" | "expirado"
       consulta_canal:
         | "app"
         | "empresa"
@@ -2402,6 +2403,13 @@ export type Database = {
         | "suporte"
         | "gestor_operacional"
         | "outro"
+      gateway_tipo:
+        | "stripe"
+        | "pix"
+        | "asaas"
+        | "mercadopago"
+        | "manual"
+        | "outro"
       medico_status:
         | "pendente"
         | "em_analise"
@@ -2416,7 +2424,14 @@ export type Database = {
         | "manual"
         | "transferencia"
         | "outro"
-      pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
+      pagamento_metodo:
+        | "pix"
+        | "cartao"
+        | "boleto"
+        | "simulado"
+        | "manual"
+        | "transferencia"
+        | "outro"
       pagamento_provider: "mock" | "stripe"
       pagamento_status:
         | "pendente"
@@ -2425,7 +2440,18 @@ export type Database = {
         | "cancelado"
         | "falhou"
         | "reembolsado"
+        | "aprovado"
+        | "recusado"
+        | "reembolsado_parcial"
+        | "expirado"
       permissao_efeito: "grant" | "revoke"
+      reembolso_status:
+        | "solicitado"
+        | "em_analise"
+        | "aprovado"
+        | "recusado"
+        | "concluido"
+      reembolso_tipo: "total" | "parcial"
       retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
       servico_financeiro_modelo: "percentual" | "valor_fixo"
       servico_financeiro_tipo: "consulta" | "pronto_atendimento" | "pacote"
@@ -2573,6 +2599,7 @@ export const Constants = {
         "admin",
         "supervisor",
       ],
+      cobranca_link_status: ["ativo", "pago", "cancelado", "expirado"],
       consulta_canal: [
         "app",
         "empresa",
@@ -2643,6 +2670,14 @@ export const Constants = {
         "gestor_operacional",
         "outro",
       ],
+      gateway_tipo: [
+        "stripe",
+        "pix",
+        "asaas",
+        "mercadopago",
+        "manual",
+        "outro",
+      ],
       medico_status: [
         "pendente",
         "em_analise",
@@ -2659,7 +2694,15 @@ export const Constants = {
         "transferencia",
         "outro",
       ],
-      pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],
+      pagamento_metodo: [
+        "pix",
+        "cartao",
+        "boleto",
+        "simulado",
+        "manual",
+        "transferencia",
+        "outro",
+      ],
       pagamento_provider: ["mock", "stripe"],
       pagamento_status: [
         "pendente",
@@ -2668,8 +2711,20 @@ export const Constants = {
         "cancelado",
         "falhou",
         "reembolsado",
+        "aprovado",
+        "recusado",
+        "reembolsado_parcial",
+        "expirado",
       ],
       permissao_efeito: ["grant", "revoke"],
+      reembolso_status: [
+        "solicitado",
+        "em_analise",
+        "aprovado",
+        "recusado",
+        "concluido",
+      ],
+      reembolso_tipo: ["total", "parcial"],
       retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
       servico_financeiro_modelo: ["percentual", "valor_fixo"],
       servico_financeiro_tipo: ["consulta", "pronto_atendimento", "pacote"],
