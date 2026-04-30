@@ -33,6 +33,12 @@ import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
 import PacientePlano from "@/pages/app/paciente/PacientePlano";
 import PacienteMensagens from "@/pages/app/paciente/PacienteMensagens";
 import PacienteFinanceiro from "@/pages/app/paciente/PacienteFinanceiro";
+import PacienteRotaNaoEncontrada from "@/pages/app/paciente/PacienteRotaNaoEncontrada";
+import {
+  PacienteParamGuard,
+  UUID_RE,
+  CHECKOUT_SESSION_RE,
+} from "@/pages/app/paciente/PacienteParamGuard";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
