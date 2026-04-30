@@ -51,6 +51,40 @@ export default function AdminFinanceiroCentral() {
   const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
   const [loteRunning, setLoteRunning] = useState(false);
 
+  // Filtros / busca / paginação
+  const PAGE_SIZE = 20;
+  const [pgBusca, setPgBusca] = useState("");
+  const [pgStatus, setPgStatus] = useState<string>("todos");
+  const [pgPage, setPgPage] = useState(1);
+  const [lkBusca, setLkBusca] = useState("");
+  const [lkStatus, setLkStatus] = useState<string>("todos");
+  const [lkPage, setLkPage] = useState(1);
+
+  const nomePaciente = (p: any) => p?.paciente?.nome || "";
+  const nomeMedico = (p: any) => p?.medico?.nome || "";
+  const nomeEmpresa = (p: any) => p?.empresa?.nome_fantasia || p?.empresa?.razao_social || "";
+  const matchBusca = (q: string, ...campos: string[]) => {
+    const t = q.trim().toLowerCase();
+    if (!t) return true;
+    return campos.some(c => (c || "").toLowerCase().includes(t));
+  };
+
+  const pagamentosFiltrados = pagamentos.filter(p =>
+    (pgStatus === "todos" || p.status === pgStatus) &&
+    matchBusca(pgBusca, nomePaciente(p), nomeMedico(p), nomeEmpresa(p), p.id)
+  );
+  const pgTotalPages = Math.max(1, Math.ceil(pagamentosFiltrados.length / PAGE_SIZE));
+  const pgPageSafe = Math.min(pgPage, pgTotalPages);
+  const pagamentosPagina = pagamentosFiltrados.slice((pgPageSafe - 1) * PAGE_SIZE, pgPageSafe * PAGE_SIZE);
+
+  const linksFiltrados = links.filter(l =>
+    (lkStatus === "todos" || l.status === lkStatus) &&
+    matchBusca(lkBusca, nomePaciente(l), l.descricao, l.id)
+  );
+  const lkTotalPages = Math.max(1, Math.ceil(linksFiltrados.length / PAGE_SIZE));
+  const lkPageSafe = Math.min(lkPage, lkTotalPages);
+  const linksPagina = linksFiltrados.slice((lkPageSafe - 1) * PAGE_SIZE, lkPageSafe * PAGE_SIZE);
+
   const togglePagamento = (id: string) => setSelecionados(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const pendentes = pagamentos.filter(p => p.status === "pendente");
   const todosPendentesSelecionados = pendentes.length > 0 && pendentes.every(p => selecionados.has(p.id));
@@ -148,11 +182,11 @@ export default function AdminFinanceiroCentral() {
     try {
       const { data: d } = await supabase.rpc("financeiro_central_dashboard" as any, { _inicio: inicio, _fim: fim });
       setDash(d);
-      const { data: p } = await supabase.from("pagamentos").select("*").order("created_at", { ascending: false }).limit(200);
+      const { data: p } = await supabase.from("pagamentos").select("*, paciente:pacientes(id,nome), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500);
       setPagamentos(p || []);
-      const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(100);
+      const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(200);
       setReembolsos(r || []);
-      const { data: l } = await supabase.from("cobrancas_links").select("*").order("created_at", { ascending: false }).limit(100);
+      const { data: l } = await supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome)").order("created_at", { ascending: false }).limit(500);
       setLinks(l || []);
       const { data: f } = await supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100);
       setRepasses(f || []);
@@ -287,14 +321,32 @@ export default function AdminFinanceiroCentral() {
               </div>
             </div>
           )}
+          <div className="flex flex-wrap gap-2 items-end">
+            <div className="flex-1 min-w-[220px]"><Label>Buscar</Label><Input placeholder="Paciente, médico, empresa ou ID" value={pgBusca} onChange={e => { setPgBusca(e.target.value); setPgPage(1); }} /></div>
+            <div className="min-w-[180px]"><Label>Status</Label>
+              <Select value={pgStatus} onValueChange={v => { setPgStatus(v); setPgPage(1); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="recusado">Recusado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="reembolsado">Estornado</SelectItem>
+                  <SelectItem value="reembolsado_parcial">Estornado parcial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr>
                 <th className="p-2 w-8"><Checkbox checked={todosPendentesSelecionados} onCheckedChange={toggleTodos} aria-label="Selecionar todos pendentes" disabled={!pendentes.length} /></th>
-                <th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
+                <th className="text-left p-2">ID</th><th className="text-left p-2">Paciente / Médico / Empresa</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
               </tr></thead>
               <tbody>
-                {pagamentos.map(p => (
+                {pagamentosPagina.map(p => (
                   <tr key={p.id} className="border-t">
                     <td className="p-2">
                       {p.status === "pendente" && (
@@ -302,6 +354,12 @@ export default function AdminFinanceiroCentral() {
                       )}
                     </td>
                     <td className="p-2 font-mono text-xs">{p.id.slice(0, 8)}</td>
+                    <td className="p-2">
+                      <div className="leading-tight">
+                        <div>{nomePaciente(p) || <span className="text-muted-foreground">—</span>}</div>
+                        <div className="text-xs text-muted-foreground">{[nomeMedico(p), nomeEmpresa(p)].filter(Boolean).join(" · ") || ""}</div>
+                      </div>
+                    </td>
                     <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
                     <td className="p-2">{p.metodo || p.forma || "—"}</td>
                     <td className="p-2"><StatusBadge s={p.status} /></td>
@@ -315,9 +373,16 @@ export default function AdminFinanceiroCentral() {
                     </td>
                   </tr>
                 ))}
-                {!pagamentos.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
+                {!pagamentosFiltrados.length && <tr><td colSpan={8} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{pagamentosFiltrados.length} resultado(s) · página {pgPageSafe}/{pgTotalPages}</span>
+            <div className="space-x-2">
+              <Button size="sm" variant="outline" disabled={pgPageSafe <= 1} onClick={() => setPgPage(p => Math.max(1, p - 1))}>Anterior</Button>
+              <Button size="sm" variant="outline" disabled={pgPageSafe >= pgTotalPages} onClick={() => setPgPage(p => p + 1)}>Próxima</Button>
+            </div>
           </div>
         </TabsContent>
 
@@ -348,24 +413,45 @@ export default function AdminFinanceiroCentral() {
         </TabsContent>
 
         <TabsContent value="links" className="space-y-2">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap gap-2 items-end">
+            <div className="flex-1 min-w-[220px]"><Label>Buscar</Label><Input placeholder="Paciente, descrição ou ID" value={lkBusca} onChange={e => { setLkBusca(e.target.value); setLkPage(1); }} /></div>
+            <div className="min-w-[180px]"><Label>Status</Label>
+              <Select value={lkStatus} onValueChange={v => { setLkStatus(v); setLkPage(1); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="expirado">Expirado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
+              <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Paciente</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th></tr></thead>
               <tbody>
-                {links.map(l => (
+                {linksPagina.map(l => (
                   <tr key={l.id} className="border-t">
                     <td className="p-2">{l.descricao}</td>
+                    <td className="p-2">{nomePaciente(l) || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2">{brl(l.valor_centavos)}</td>
                     <td className="p-2">{l.vencimento || "—"}</td>
                     <td className="p-2"><StatusBadge s={l.status} /></td>
                   </tr>
                 ))}
-                {!links.length && <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Nenhum link de cobrança ainda</td></tr>}
+                {!linksFiltrados.length && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhum link de cobrança ainda</td></tr>}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{linksFiltrados.length} resultado(s) · página {lkPageSafe}/{lkTotalPages}</span>
+            <div className="space-x-2">
+              <Button size="sm" variant="outline" disabled={lkPageSafe <= 1} onClick={() => setLkPage(p => Math.max(1, p - 1))}>Anterior</Button>
+              <Button size="sm" variant="outline" disabled={lkPageSafe >= lkTotalPages} onClick={() => setLkPage(p => p + 1)}>Próxima</Button>
+            </div>
           </div>
         </TabsContent>
 
