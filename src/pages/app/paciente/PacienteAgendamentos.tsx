@@ -14,12 +14,15 @@ import {
 import { useSession } from "@/lib/session";
 import {
   listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge,
-  updateConsultaStatus, type ConsultaDetalhada,
+  updateConsultaStatus, listRetornosDisponiveis,
+  type ConsultaDetalhada, type RetornoComContexto,
 } from "@/lib/clinico";
 import { proximasConsultasPaciente, type Status } from "@/lib/mock";
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
+import { Gift } from "lucide-react";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
