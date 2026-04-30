@@ -108,10 +108,56 @@ function diasAteVencimento(iso: string) {
   return Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+type AcaoPlano =
+  | { tipo: "upgrade" | "downgrade" | "troca"; planoId: string }
+  | { tipo: "cancelar" };
+
+const PLANO_ATUAL_ID = "plus"; // mock — id do plano atualmente contratado
+
 export default function PacientePlano() {
   const dias = diasAteVencimento(planoAtual.validade);
   const status = planoAtual.status;
   const statusUI = statusStyles[status];
+
+  const [acaoPendente, setAcaoPendente] = useState<AcaoPlano | null>(null);
+  const [processando, setProcessando] = useState(false);
+
+  const planoAtualObj = planosDisponiveis.find((p) => p.id === PLANO_ATUAL_ID);
+
+  function abrirConfirmacao(planoId: string) {
+    if (planoId === PLANO_ATUAL_ID) return;
+    const novo = planosDisponiveis.find((p) => p.id === planoId);
+    if (!novo || !planoAtualObj) return;
+    const tipo: AcaoPlano["tipo"] =
+      novo.preco > planoAtualObj.preco
+        ? "upgrade"
+        : novo.preco < planoAtualObj.preco
+        ? "downgrade"
+        : "troca";
+    setAcaoPendente({ tipo, planoId });
+  }
+
+  async function confirmarAcao() {
+    if (!acaoPendente) return;
+    setProcessando(true);
+    // 🔌 Integração futura:
+    //  - upgrade/downgrade/troca → criarCheckoutSession({ tipo, plano_id })
+    //  - cancelar → cancelarPlanoPaciente({ motivo, ao_fim_do_periodo: true })
+    await new Promise((r) => setTimeout(r, 900));
+    setProcessando(false);
+    const acao = acaoPendente;
+    setAcaoPendente(null);
+    if (acao.tipo === "cancelar") {
+      toast.success("Solicitação de cancelamento registrada", {
+        description: "Você manterá a cobertura até o fim do período vigente.",
+      });
+    } else {
+      const nome = planosDisponiveis.find((p) => p.id === acao.planoId)?.nome ?? "novo plano";
+      toast.success(`Solicitação de ${acao.tipo} enviada`, {
+        description: `Em breve você receberá o link de pagamento para o plano ${nome}.`,
+      });
+    }
+  }
 
   return (
     <div className="space-y-6">
