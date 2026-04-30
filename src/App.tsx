@@ -75,6 +75,7 @@ import Integracoes from "@/pages/app/shared/Integracoes";
 import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
+import PermissoesLog from "@/pages/app/admin/PermissoesLog";
 import AdminAnalises from "@/pages/app/admin/AdminAnalises";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
@@ -213,6 +214,7 @@ const App = () => (
               <Route path="admin/integracoes-legado" element={<G perm="integracoes.ver"><Integracoes /></G>} />
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
+              <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
