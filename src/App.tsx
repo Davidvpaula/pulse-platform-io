@@ -120,10 +120,26 @@ const App = () => (
               <Route path="paciente/financeiro" element={<PacienteFinanceiro />} />
               <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<PacienteMensagens />} />
-              <Route path="paciente/checkout/:sessionId" element={<PacienteCheckout />} />
+              <Route
+                path="paciente/checkout/:sessionId"
+                element={
+                  <PacienteParamGuard param="sessionId" pattern={CHECKOUT_SESSION_RE}>
+                    <PacienteCheckout />
+                  </PacienteParamGuard>
+                }
+              />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
-              <Route path="paciente/agendar/confirmar/:slotId" element={<PacienteAgendarConfirmar />} />
+              <Route
+                path="paciente/agendar/confirmar/:slotId"
+                element={
+                  <PacienteParamGuard param="slotId" pattern={UUID_RE}>
+                    <PacienteAgendarConfirmar />
+                  </PacienteParamGuard>
+                }
+              />
+              {/* Catch-all do paciente: qualquer /app/paciente/* desconhecido */}
+              <Route path="paciente/*" element={<PacienteRotaNaoEncontrada />} />
 
               {/* Médico — todas as rotas operacionais protegidas pelo MedicoGuard */}
               <Route path="medico/aguardando-aprovacao" element={<MedicoAguardandoAprovacao />} />
