@@ -1,95 +1,96 @@
-## Validação da arquitetura — Particular do médico × Serviços da plataforma
 
-### Modelo final (confirmado)
+## Diagnóstico
 
-Existem duas dimensões independentes, com fontes de verdade distintas:
+A boa notícia: **toda a engrenagem financeira que você descreveu já está implementada no banco**. O que falta é apenas a UI no Admin para gerenciar.
 
-```text
-┌─────────────────────────────┬──────────────────────────────────────┐
-│ medico_especialidades       │ servicos_financeiros + medico_servicos│
-│ "Particular do médico"      │ "Serviços da plataforma"              │
-├─────────────────────────────┼──────────────────────────────────────┤
-│ Médico define preço/duração │ Admin define preço/duração (imutável)│
-│ Recebe 100% (- taxa global) │ Recebe via fn_resolver_comissao      │
-│ Slot.servico_id = NULL      │ Slot.servico_id = <uuid>             │
-└─────────────────────────────┴──────────────────────────────────────┘
-```
+### O que já existe (não vamos refazer)
 
-Quem decide o caminho é `agenda_slots.servico_id`. O snapshot financeiro é gravado uma única vez na criação da consulta — nada é recalculado depois. **Essa parte está correta e já implementada.**
+- **Configuração global**: `app_settings.key = 'financeiro.comissao_padrao_pct'` (default 44%) → representa o % da plataforma. Repasse médico = 100 - este valor.
+- **Exceções por médico**: tabela `medico_comissao_override` (com `medico_id`, `servico_id` opcional, `comissao_pct`).
+- **Função de resolução** `fn_resolver_comissao` com a prioridade exata que você pediu:
+  1. Override médico+serviço (mais específico)
+  2. Override médico (sem serviço) → **regra das particulares**
+  3. Configuração do serviço (quando `servico_id` preenchido)
+  4. Global (`financeiro.comissao_padrao_pct`)
+- **Snapshot imutável**: trigger `fn_consulta_snapshot_financeiro` grava `valor_snapshot_centavos` e `comissao_snapshot_centavos` na criação da consulta. Trigger de UPDATE bloqueia alteração posterior.
+- **Separação particular vs plataforma**: feita por `agenda_slots.servico_id IS NULL` (particular) ou `NOT NULL` (serviço).
 
-### Decisões fechadas agora
+A regra "Se servico_id IS NULL → global ou exceção / Se NOT NULL → regra do serviço" **já está ativa** em produção.
 
-1. **Atendimento imediato (PA público)** = página separada `/atendimento-imediato`
-   - Lista todos os médicos vinculados ao serviço de PA da plataforma (sem filtro/escolha pelo paciente)
-   - O Admin pode editar qual serviço da plataforma alimenta essa página
-   - Não usa mais o PA do `medico_especialidades` para a porta pública (esse fica só para agenda interna)
+### O que falta (e é só isso)
 
-2. **Dashboard do médico** = dois cards separados de receita
-   - "Receita particular" (consultas com `servico_id = NULL`)
-   - "Receita serviços da plataforma" (consultas com `servico_id` preenchido, mostra repasse)
-
-3. **Criação manual de slot** = default Particular, Serviço opcional
-   - Radio "Particular | Serviço da plataforma"
-   - Particular já vem marcado; só vira serviço se selecionar explicitamente
+UI no Admin para o usuário não-técnico configurar esses valores sem mexer no banco.
 
 ---
 
-## O que será feito (Etapa 3 ajustada)
+## Plano de implementação
 
-### 3.1 Configuração admin do "Atendimento imediato"
-- Em `app_settings` adicionar chave `atendimento_imediato.servico_id` (uuid do serviço que alimenta a porta pública)
-- Em `/app/admin/servicos` adicionar seção "Atendimento imediato" com select dos serviços tipo `pronto_atendimento` ativos
-- Validação: só permite escolher serviço com pelo menos 1 médico aderido
+### 1. Página `/app/admin/financeiro-config` (nova)
 
-### 3.2 Página pública `/atendimento-imediato`
-- Header explicativo + valor + duração do serviço configurado
-- Lista todos os médicos com adesão ativa naquele serviço (sem ranking visível ao paciente, sem filtro)
-- Indica quem está "Disponível agora" (slot livre nos próximos N min) vs "Próximo: HH:MM"
-- Botão "Iniciar atendimento" → entra na fila do primeiro médico disponível segundo `fn_ranking_medico_servico` internamente
-- Sem seleção manual de médico
+Nova rota dedicada acessada a partir do menu Admin → Financeiro (e também via card em `AdminConfiguracoes`).
 
-### 3.3 Bloco na Home
-- Card hero "⚡ Atendimento imediato" → CTA leva para `/atendimento-imediato`
-- Mostra valor + "X médicos disponíveis agora"
+**Card 1 — "Repasse global · Consultas particulares"**
+- Input: `% repasse médico` (ex: 56)
+- Campo derivado read-only: `% plataforma` = 100 − repasse médico
+- Botão Salvar → grava em `app_settings` na chave `financeiro.comissao_padrao_pct` (armazenando o % da plataforma, mantendo compatibilidade com `fn_resolver_comissao`)
+- Texto explicativo: "Aplica-se a todas as consultas de especialidade (sem serviço da plataforma vinculado), exceto médicos com exceção configurada."
 
-### 3.4 Vitrine `/servicos` e `/servicos/[slug]`
-- Grid de serviços ativos (exceto o de PA, que tem porta própria)
-- Detalhe do serviço lista médicos aderidos com ranking (aqui sim o paciente escolhe — diferente do PA)
+**Card 2 — "Exceções de repasse por médico"**
+- Tabela: Médico · CRM · % repasse médico · % plataforma · Ações (editar / remover)
+- Botão "+ Nova exceção" → modal com:
+  - Combobox de busca de médico (ativos)
+  - Input `% repasse médico`
+  - Checkbox "aplicar somente a um serviço específico" (default desligado = exceção global do médico, que é o caso particular)
+- CRUD direto em `medico_comissao_override` (com `servico_id = NULL` por padrão)
+- RLS já existente cobre acesso (admin / `financeiro.editar_comissao`)
 
-### 3.5 Menu público
-- Item "Serviços" entre "Especialidades" e "Para empresas"
-- Item "Atendimento imediato" em destaque (badge/cor diferente)
+**Card 3 — "Como funciona" (informativo)**
+Resume a hierarquia de prioridade para evitar dúvida do operador.
 
-### 3.6 Dashboard do médico — split de receita
-- Em `MedicoDashboard.tsx` adicionar dois cards:
-  - "Receita particular (mês)" — soma `consultas_financeiro.valor_medico_centavos` onde consulta tem `servico_id IS NULL`
-  - "Receita serviços plataforma (mês)" — mesma soma onde `servico_id IS NOT NULL`, com badge mostrando quantos serviços
-- Mantém o card total agregado por cima
+### 2. Integração no menu
 
-### 3.7 Criação manual de slot (médico/secretaria)
-- Em `MedicoHorarios.tsx` (e telas equivalentes da secretaria) adicionar radio:
-  - ⦿ Particular (default) → usa preço/duração de `medico_especialidades`
-  - ○ Serviço da plataforma → mostra select dos serviços que o médico aderiu; duração fica readonly
-- Validação client + trigger DB já bloqueiam inconsistência
+- Adicionar link no `AdminConfiguracoes.tsx` (card "Financeiro · Repasse")
+- Adicionar item no menu lateral do admin (seção Financeiro)
 
----
+### 3. Validações / UX
 
-## Ordem de execução
-1. Migração: `app_settings.atendimento_imediato.servico_id`
-2. Admin: tela de configuração do PA público
-3. Páginas públicas: `/atendimento-imediato`, `/servicos`, `/servicos/[slug]` + Home + Menu
-4. Dashboard médico: split de receita
-5. Slot manual: radio Particular/Serviço
+- % entre 0 e 100, máximo 2 casas decimais
+- Confirmação ao salvar global (afeta novas consultas)
+- Aviso visível: "Não afeta consultas já criadas (snapshot imutável)"
+- Toast de sucesso/erro
+- Auditoria: gravar em `audit_log` toda alteração (já temos infra)
 
-Tudo sequencial sem pausa, conforme combinado.
+### 4. Não mexer
+
+- Trigger `fn_consulta_snapshot_financeiro` — funcionando
+- `fn_resolver_comissao` — funcionando
+- Cards do dashboard médico (particular vs plataforma) — funcionando
+- Serviços da plataforma (`servicos_financeiros.comissao_pct`) — fluxo separado, intocado
 
 ---
 
 ## Detalhes técnicos
 
-- **`fn_ranking_medico_servico`** já existe e é usada internamente na página de PA para escolher médico — paciente nunca vê o ranking nessa porta
-- **Snapshot financeiro** continua imutável; nenhuma das mudanças mexe em `consultas_financeiro`
-- **`medico_especialidades.pronto_atendimento`** continua existindo mas só governa slots PA internos da agenda do médico (uso operacional, não mais a porta pública)
-- **Memória**: vou adicionar à memória do projeto a regra "Atendimento imediato público = sempre via servicos_financeiros configurado em app_settings, nunca via medico_especialidades" para não confundir em sessões futuras
+- **Convenção do valor armazenado**: `financeiro.comissao_padrao_pct` historicamente guarda **% da plataforma** (atual 44 → médico recebe 56%). Vou manter essa convenção no banco e converter na UI (mostrar/editar como "% repasse médico" para alinhar com a linguagem do produto).
+- **Sem migration de schema**: tudo já existe. Só `UPDATE app_settings` e `INSERT/UPDATE/DELETE medico_comissao_override` via cliente, com RLS atuais.
+- **Hooks**: criar `useFinanceiroConfig()` para ler/gravar global e `useComissaoOverrides()` para CRUD de exceções.
+- **Arquivos novos**:
+  - `src/pages/app/admin/AdminFinanceiroConfig.tsx`
+  - `src/components/admin/financeiro/RepasseGlobalCard.tsx`
+  - `src/components/admin/financeiro/ExcecoesRepasseCard.tsx`
+  - `src/lib/financeiroConfig.ts`
+- **Arquivos editados**:
+  - `src/App.tsx` (rota)
+  - `src/pages/app/admin/AdminConfiguracoes.tsx` (card de atalho)
+  - sidebar/layout admin (item de menu)
 
-**Aprovar para iniciar.**
+---
+
+## Resultado esperado
+
+- Admin entra em uma única tela e define em segundos o repasse global das particulares.
+- Cria exceções pontuais para médicos premium / juniores sem precisar de dev.
+- Snapshot imutável continua garantindo histórico financeiro intacto.
+- Nada do fluxo de serviços da plataforma é tocado.
+
+Aprova para eu implementar?
