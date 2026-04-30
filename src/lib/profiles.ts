@@ -91,9 +91,10 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         icon: MessageCircle,
         requiresCapability: "comunicacao.acessar",
         children: [
-          { label: "Pacientes (WhatsApp)", to: "/app/comunicacao/conversas" },
+          { label: "Inbox", to: "/app/comunicacao/inbox" },
           { label: "Equipe (interna)", to: "/app/secretaria/comunicacao-interna" },
           { label: "Templates", to: "/app/comunicacao/templates" },
+          { label: "Métricas", to: "/app/comunicacao/metricas" },
         ],
       },
       { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
