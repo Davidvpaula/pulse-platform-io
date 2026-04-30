@@ -97,6 +97,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
+      { label: "Cupons", to: "/app/secretaria/cupons", icon: BadgeCheck },
       { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
       { label: "Pendências Feegow", to: "/app/secretaria/pendencias-integracao", icon: AlertTriangle },
       // ─── módulos liberados ao perfil "Secretaria com supervisão"
