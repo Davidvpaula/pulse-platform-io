@@ -51,6 +51,40 @@ export default function AdminFinanceiroCentral() {
   const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
   const [loteRunning, setLoteRunning] = useState(false);
 
+  // Filtros / busca / paginação
+  const PAGE_SIZE = 20;
+  const [pgBusca, setPgBusca] = useState("");
+  const [pgStatus, setPgStatus] = useState<string>("todos");
+  const [pgPage, setPgPage] = useState(1);
+  const [lkBusca, setLkBusca] = useState("");
+  const [lkStatus, setLkStatus] = useState<string>("todos");
+  const [lkPage, setLkPage] = useState(1);
+
+  const nomePaciente = (p: any) => p?.paciente?.nome || "";
+  const nomeMedico = (p: any) => p?.medico?.nome || "";
+  const nomeEmpresa = (p: any) => p?.empresa?.nome_fantasia || p?.empresa?.razao_social || "";
+  const matchBusca = (q: string, ...campos: string[]) => {
+    const t = q.trim().toLowerCase();
+    if (!t) return true;
+    return campos.some(c => (c || "").toLowerCase().includes(t));
+  };
+
+  const pagamentosFiltrados = pagamentos.filter(p =>
+    (pgStatus === "todos" || p.status === pgStatus) &&
+    matchBusca(pgBusca, nomePaciente(p), nomeMedico(p), nomeEmpresa(p), p.id)
+  );
+  const pgTotalPages = Math.max(1, Math.ceil(pagamentosFiltrados.length / PAGE_SIZE));
+  const pgPageSafe = Math.min(pgPage, pgTotalPages);
+  const pagamentosPagina = pagamentosFiltrados.slice((pgPageSafe - 1) * PAGE_SIZE, pgPageSafe * PAGE_SIZE);
+
+  const linksFiltrados = links.filter(l =>
+    (lkStatus === "todos" || l.status === lkStatus) &&
+    matchBusca(lkBusca, nomePaciente(l), l.descricao, l.id)
+  );
+  const lkTotalPages = Math.max(1, Math.ceil(linksFiltrados.length / PAGE_SIZE));
+  const lkPageSafe = Math.min(lkPage, lkTotalPages);
+  const linksPagina = linksFiltrados.slice((lkPageSafe - 1) * PAGE_SIZE, lkPageSafe * PAGE_SIZE);
+
   const togglePagamento = (id: string) => setSelecionados(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const pendentes = pagamentos.filter(p => p.status === "pendente");
   const todosPendentesSelecionados = pendentes.length > 0 && pendentes.every(p => selecionados.has(p.id));
