@@ -309,27 +309,18 @@ export default function AdminRelatorioAuditoria() {
 
           <div>
             <Label className="text-xs">Usuário (ator) — UUID</Label>
-            <Select
-              value={filtros.actor || "__none__"}
-              onValueChange={(v) => setFiltros({ ...filtros, actor: v === "__none__" ? null : v })}
-            >
-              <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Todos</SelectItem>
-                {topAtores.slice(0, 20).map((a, i) => (
-                  <SelectItem key={i} value={a.actor_nome /* fallback caso uuid não disponível */}>
-                    {a.actor_nome} ({a.total})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              placeholder="UUID do usuário"
+              value={filtros.actor || ""}
+              onChange={(e) => setFiltros({ ...filtros, actor: e.target.value.trim() || null })}
+            />
           </div>
           <div>
             <Label className="text-xs">Entidade ID (UUID)</Label>
             <Input
               placeholder="ex: a1b2c3d4-…"
               value={filtros.entidadeId || ""}
-              onChange={(e) => setFiltros({ ...filtros, entidadeId: e.target.value || null })}
+              onChange={(e) => setFiltros({ ...filtros, entidadeId: e.target.value.trim() || null })}
             />
           </div>
           <div>
