@@ -462,7 +462,7 @@ function ExcecaoModal({
   const [valid, setValid] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
 
-  const plataformaPct = Math.round((100 - medicoPct) * 100) / 100;
+  // soma plataforma é mantida pelo RepasseSplitInput
 
   useEffect(() => {
     if (isEdit) return;
@@ -614,7 +614,7 @@ function ExcecaoModal({
           </Button>
           <Button
             onClick={salvar}
-            disabled={saving || !medicoSel}
+            disabled={saving || !medicoSel || !valid}
             className="bg-gradient-primary hover:opacity-90"
           >
             {saving ? (
