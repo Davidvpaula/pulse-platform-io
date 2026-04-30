@@ -85,9 +85,9 @@ export default function MedicoConsultas() {
   };
 
   const iniciar = async (c: ConsultaDetalhada) => {
-    // Marca como em_atendimento e abre a sala
+    // Marca como em_andamento e abre a sala
     setAcaoId(c.id);
-    const ok = await updateConsultaStatus(c.id, "em_atendimento");
+    const ok = await updateConsultaStatus(c.id, "em_andamento");
     setAcaoId(null);
     if (ok && c.link_sala) {
       window.open(c.link_sala, "_blank", "noopener,noreferrer");
@@ -102,10 +102,10 @@ export default function MedicoConsultas() {
 
   const concluir = async (id: string) => {
     setAcaoId(id);
-    const ok = await updateConsultaStatus(id, "realizada");
+    const ok = await updateConsultaStatus(id, "concluida");
     setAcaoId(null);
     if (ok) {
-      toast.success("Consulta marcada como realizada");
+      toast.success("Consulta marcada como concluida");
       void carregar();
     } else toast.error("Erro ao concluir");
   };
@@ -177,10 +177,10 @@ export default function MedicoConsultas() {
           const ini = new Date(c.inicio);
           const podeIniciar =
             c.status !== "cancelada" &&
-            c.status !== "realizada" &&
+            c.status !== "concluida" &&
             ini.getTime() - Date.now() < 30 * 60_000; // 30min antes
-          const podeConcluir = c.status === "em_atendimento" || c.status === "agendada";
-          const podeCancelar = c.status !== "cancelada" && c.status !== "realizada";
+          const podeConcluir = c.status === "em_andamento" || c.status === "agendada";
+          const podeCancelar = c.status !== "cancelada" && c.status !== "concluida";
 
           return (
             <div key={c.id} className="card-elevated p-4">
