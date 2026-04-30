@@ -1421,6 +1421,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_visao_geral: { Args: { _periodo?: string }; Returns: Json }
       agendar_retorno_gratuito: {
         Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
         Returns: Json
