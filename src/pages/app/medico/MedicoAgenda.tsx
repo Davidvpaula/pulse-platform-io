@@ -311,13 +311,10 @@ export default function MedicoAgenda() {
                         <Button
                           size="sm"
                           className="bg-success text-success-foreground hover:opacity-90"
-                          disabled={acaoId === c.id}
-                          onClick={() => concluirConsulta(c)}
+                          onClick={() => abrirFinalizar(c)}
                         >
-                          {acaoId === c.id
-                            ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
-                          Concluir
+                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                          Finalizar
                         </Button>
                       </>
                     )}
