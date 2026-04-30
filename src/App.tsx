@@ -30,6 +30,7 @@ import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfir
 import PacienteAgendamentos from "@/pages/app/paciente/PacienteAgendamentos";
 import PacientePerfilPage from "@/pages/app/paciente/PacientePerfilPage";
 import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
+import PacientePlano from "@/pages/app/paciente/PacientePlano";
 import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
@@ -107,7 +108,7 @@ const App = () => (
               <Route path="paciente/dashboard" element={<PacienteDashboard />} />
               <Route path="paciente/agendamentos" element={<PacienteAgendamentos />} />
               <Route path="paciente/documentos" element={<PacienteDocumentos />} />
-              <Route path="paciente/plano" element={<Placeholder title="Meu plano" />} />
+              <Route path="paciente/plano" element={<PacientePlano />} />
               <Route path="paciente/financeiro" element={<Placeholder title="Financeiro" />} />
               <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<Placeholder title="Mensagens e suporte" />} />
