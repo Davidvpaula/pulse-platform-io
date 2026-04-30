@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { AnalyticsTracker } from "@/lib/analytics/AnalyticsTracker";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -74,6 +75,7 @@ import Integracoes from "@/pages/app/shared/Integracoes";
 import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
+import AdminAnalises from "@/pages/app/admin/AdminAnalises";
 import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
 import Inbox from "@/pages/app/comunicacao/Inbox";
@@ -104,6 +106,7 @@ const App = () => (
       <SessionProvider>
       <AuthProvider>
         <BrowserRouter>
+          <AnalyticsTracker />
           <Routes>
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
@@ -207,6 +210,14 @@ const App = () => (
               <Route path="admin/integracoes-legado" element={<Integracoes />} />
               <Route path="admin/configuracoes" element={<AdminConfiguracoes />} />
               <Route path="admin/permissoes" element={<Permissoes />} />
+              <Route path="admin/analises" element={<AdminAnalises />} />
+              <Route path="admin/analises/tempo-real" element={<AdminAnalises />} />
+              <Route path="admin/analises/trafego" element={<AdminAnalises />} />
+              <Route path="admin/analises/comportamento" element={<AdminAnalises />} />
+              <Route path="admin/analises/conversao" element={<AdminAnalises />} />
+              <Route path="admin/analises/financeiro" element={<AdminAnalises />} />
+              <Route path="admin/analises/marketing" element={<AdminAnalises />} />
+              <Route path="admin/analises/comparativo" element={<AdminAnalises />} />
               <Route path="admin/relatorios" element={<AdminRelatorios />} />
               <Route path="admin/auditoria" element={<AdminAuditoria />} />
               <Route path="admin/fluxo" element={<FluxoOperacional />} />

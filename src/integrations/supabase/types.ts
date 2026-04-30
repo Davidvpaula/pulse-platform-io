@@ -165,6 +165,174 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_conversions: {
+        Row: {
+          consulta_id: string | null
+          created_at: string
+          empresa_id: string | null
+          id: string
+          medico_id: string | null
+          origem: string | null
+          pagamento_id: string | null
+          servico: string | null
+          session_token: string | null
+          tipo: string
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          valor: number | null
+        }
+        Insert: {
+          consulta_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          medico_id?: string | null
+          origem?: string | null
+          pagamento_id?: string | null
+          servico?: string | null
+          session_token?: string | null
+          tipo: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          valor?: number | null
+        }
+        Update: {
+          consulta_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          medico_id?: string | null
+          origem?: string | null
+          pagamento_id?: string | null
+          servico?: string | null
+          session_token?: string | null
+          tipo?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          valor?: number | null
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          detalhes: Json | null
+          dispositivo: string | null
+          id: string
+          origem: string | null
+          rota: string | null
+          rota_anterior: string | null
+          session_token: string | null
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhes?: Json | null
+          dispositivo?: string | null
+          id?: string
+          origem?: string | null
+          rota?: string | null
+          rota_anterior?: string | null
+          session_token?: string | null
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhes?: Json | null
+          dispositivo?: string | null
+          id?: string
+          origem?: string | null
+          rota?: string | null
+          rota_anterior?: string | null
+          session_token?: string | null
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_sessions: {
+        Row: {
+          converteu: boolean
+          created_at: string
+          dispositivo: string | null
+          duracao_segundos: number | null
+          fim: string | null
+          id: string
+          inicio: string
+          origem: string | null
+          paginas_vistas: number
+          pais: string | null
+          primeira_rota: string | null
+          referrer: string | null
+          session_token: string
+          ultima_rota: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          converteu?: boolean
+          created_at?: string
+          dispositivo?: string | null
+          duracao_segundos?: number | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          origem?: string | null
+          paginas_vistas?: number
+          pais?: string | null
+          primeira_rota?: string | null
+          referrer?: string | null
+          session_token: string
+          ultima_rota?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          converteu?: boolean
+          created_at?: string
+          dispositivo?: string | null
+          duracao_segundos?: number | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          origem?: string | null
+          paginas_vistas?: number
+          pais?: string | null
+          primeira_rota?: string | null
+          referrer?: string | null
+          session_token?: string
+          ultima_rota?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       anexos_consulta: {
         Row: {
           consulta_id: string
@@ -2331,6 +2499,57 @@ export type Database = {
           },
         ]
       }
+      marketing_campaigns: {
+        Row: {
+          ativo: boolean
+          canal: string
+          created_at: string
+          created_by: string | null
+          custo_total: number
+          fim: string | null
+          id: string
+          inicio: string | null
+          nome: string
+          observacoes: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          canal: string
+          created_at?: string
+          created_by?: string | null
+          custo_total?: number
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+          nome: string
+          observacoes?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          canal?: string
+          created_at?: string
+          created_by?: string | null
+          custo_total?: number
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+          nome?: string
+          observacoes?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       marketing_campanhas: {
         Row: {
           ativo: boolean
@@ -3938,6 +4157,11 @@ export type Database = {
         }
         Returns: Json
       }
+      analytics_conversao: { Args: { _dias?: number }; Returns: Json }
+      analytics_financeiro: { Args: { _dias?: number }; Returns: Json }
+      analytics_overview: { Args: { _dias?: number }; Returns: Json }
+      analytics_tempo_real: { Args: never; Returns: Json }
+      analytics_trafego: { Args: { _dias?: number }; Returns: Json }
       auditoria_dashboard: {
         Args: { p_fim?: string; p_inicio?: string }
         Returns: Json

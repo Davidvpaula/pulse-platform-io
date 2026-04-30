@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { trackConversion } from "@/lib/analytics/tracker";
 import {
   cancelarPagamento,
   confirmarPagamento,
@@ -189,6 +190,17 @@ export default function PacienteCheckout() {
           console.warn("[checkout] falha ao registrar uso de cupom:", reg.error);
         }
       }
+
+      // analytics: conversão paga
+      try {
+        await trackConversion({
+          tipo: "pagamento",
+          valor: (pagamento.valor_centavos ?? 0) / 100,
+          consulta_id: pagamento.consulta_id,
+          pagamento_id: pagamento.id,
+          servico: "consulta",
+        });
+      } catch {}
 
       toast.success("Pagamento aprovado!");
       navigate(`/app/paciente/pagamento/sucesso?p=${pagamento.id}`);
