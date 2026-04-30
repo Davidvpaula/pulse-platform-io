@@ -125,6 +125,25 @@ export default function AdminAgendamentos() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
+  // Camada de inteligência (RPC admin_agendamentos_overview)
+  const [overview, setOverview] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+
+  const carregarOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    const hojeStr = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase.rpc("admin_agendamentos_overview", {
+      _data: hojeStr, _periodo: "dia",
+    });
+    setOverviewLoading(false);
+    if (error) {
+      // silencioso — usuário pode não ter permissão
+      console.warn("overview indisponível", error.message);
+      return;
+    }
+    setOverview(data);
+  }, []);
+
   // Modais
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; consulta?: ConsultaRow; novoStatus?: Status }>({ open: false });
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; consulta?: ConsultaRow }>({ open: false });
@@ -204,6 +223,7 @@ export default function AdminAgendamentos() {
   }, [filtroData, toast]);
 
   useEffect(() => { carregar(); }, [carregar]);
+  useEffect(() => { carregarOverview(); }, [carregarOverview]);
 
   const carregarInsights = useCallback(async () => {
     setInsightsLoading(true);
@@ -285,7 +305,7 @@ export default function AdminAgendamentos() {
     });
   }, [rows, busca, filtroStatus, filtroCanal]);
 
-  // Ações
+  // Ações — RPCs dedicadas (admin_consulta_*)
   async function forcarStatus() {
     if (!statusDialog.consulta || !statusDialog.novoStatus) return;
     if (motivoStatus.trim().length < 3) {
@@ -293,11 +313,27 @@ export default function AdminAgendamentos() {
       return;
     }
     setActing(true);
-    const { error } = await supabase.rpc("forcar_status_consulta", {
-      _consulta_id: statusDialog.consulta.id,
-      _novo_status: statusDialog.novoStatus,
-      _motivo: motivoStatus.trim(),
-    });
+    let error: any = null;
+    const consultaId = statusDialog.consulta.id;
+    const motivo = motivoStatus.trim();
+
+    if (statusDialog.novoStatus === "confirmada") {
+      ({ error } = await supabase.rpc("admin_consulta_forcar_confirmacao", {
+        _consulta_id: consultaId, _motivo: motivo,
+      }));
+    } else if (statusDialog.novoStatus === "concluida") {
+      ({ error } = await supabase.rpc("admin_consulta_marcar_realizada", {
+        _consulta_id: consultaId, _observacao: motivo,
+      }));
+    } else {
+      // no_show ou outros — usa RPC antiga genérica como fallback
+      ({ error } = await supabase.rpc("forcar_status_consulta", {
+        _consulta_id: consultaId,
+        _novo_status: statusDialog.novoStatus,
+        _motivo: motivo,
+      }));
+    }
+
     setActing(false);
     if (error) {
       toast({ title: "Não foi possível alterar", description: error.message, variant: "destructive" });
@@ -307,14 +343,14 @@ export default function AdminAgendamentos() {
     setStatusDialog({ open: false });
     setMotivoStatus("");
     carregar();
+    carregarOverview();
   }
 
   async function cancelarConsulta() {
     if (!cancelDialog.consulta) return;
     setActing(true);
-    const { error } = await supabase.rpc("forcar_status_consulta", {
+    const { error } = await supabase.rpc("admin_consulta_cancelar", {
       _consulta_id: cancelDialog.consulta.id,
-      _novo_status: "cancelada",
       _motivo: `${motivoCancel}${obsCancel ? " — " + obsCancel : ""}`,
     });
     setActing(false);
@@ -322,15 +358,16 @@ export default function AdminAgendamentos() {
       toast({ title: "Erro ao cancelar", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Consulta cancelada" });
+    toast({ title: "Consulta cancelada", description: "Slot liberado e auditoria registrada." });
     setCancelDialog({ open: false });
     setObsCancel("");
     carregar();
+    carregarOverview();
   }
 
   async function reenviarLink(c: ConsultaRow) {
-    const { error } = await supabase.rpc("marcar_reenvio_link_consulta", {
-      _consulta_id: c.id, _canal: "whatsapp",
+    const { error } = await supabase.rpc("admin_consulta_reenviar_link", {
+      _consulta_id: c.id,
     });
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -425,32 +462,94 @@ export default function AdminAgendamentos() {
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-semibold flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> Insights da IA
+              <Sparkles className="h-4 w-4 text-primary" /> Inteligência operacional
             </h3>
-            <Badge variant="outline">{insights.length}</Badge>
+            {overviewLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
-          <div className="space-y-2 max-h-[260px] overflow-y-auto">
-            {insights.length === 0 && !insightsLoading && (
+          <div className="space-y-3 max-h-[260px] overflow-y-auto">
+            {!overview && !overviewLoading && (
               <p className="text-sm text-muted-foreground py-6 text-center">
-                Clique em "Gerar insights IA" para análise dos próximos 7 dias.
+                Sem dados de inteligência disponíveis.
               </p>
             )}
-            {insightsLoading && (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            {overview && (
+              <>
+                {(overview.inteligencia?.risco_no_show?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-destructive/40 text-destructive">alta</Badge>
+                      <span className="font-medium">Risco de no-show</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.risco_no_show.length} paciente(s) com histórico de faltas e consulta agendada.
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.medicos_sobrecarregados_dia?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Médicos sobrecarregados hoje</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.medicos_sobrecarregados_dia
+                        .map((m: any) => `${m.nome} (${m.qtd})`)
+                        .join(", ")}
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.sugerir_abrir_agenda?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Sugestão: abrir mais agenda</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.sugerir_abrir_agenda
+                        .map((e: any) => `${e.nome} (demanda ${e.demanda} / livres ${e.slots_livres})`)
+                        .join(" • ")}
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.pacientes_sem_confirmar_24h?.length || 0) > 0 && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-warning/40 text-warning">média</Badge>
+                      <span className="font-medium">Sem confirmação nas próximas 24h</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {overview.inteligencia.pacientes_sem_confirmar_24h.length} paciente(s) aguardando confirmação.
+                    </p>
+                  </div>
+                )}
+                {(overview.inteligencia?.risco_no_show?.length || 0) === 0 &&
+                 (overview.inteligencia?.medicos_sobrecarregados_dia?.length || 0) === 0 &&
+                 (overview.inteligencia?.sugerir_abrir_agenda?.length || 0) === 0 &&
+                 (overview.inteligencia?.pacientes_sem_confirmar_24h?.length || 0) === 0 && (
+                  <p className="text-sm text-muted-foreground py-6 text-center">
+                    Operação fluindo sem alertas inteligentes.
+                  </p>
+                )}
+              </>
             )}
-            {insights.map((ins, i) => (
-              <div key={i} className="rounded-md border p-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn(
-                    ins.severidade === "alta" ? "border-destructive/40 text-destructive" :
-                    ins.severidade === "media" ? "border-warning/40 text-warning" :
-                    "border-success/40 text-success",
-                  )}>{ins.severidade}</Badge>
-                  <span className="font-medium">{ins.titulo}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{ins.descricao}</p>
+            {insights.length > 0 && (
+              <div className="border-t pt-3 mt-3 space-y-2">
+                <p className="text-xs uppercase text-muted-foreground">Insights da IA</p>
+                {insights.map((ins, i) => (
+                  <div key={i} className="rounded-md border p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn(
+                        ins.severidade === "alta" ? "border-destructive/40 text-destructive" :
+                        ins.severidade === "media" ? "border-warning/40 text-warning" :
+                        "border-success/40 text-success",
+                      )}>{ins.severidade}</Badge>
+                      <span className="font-medium">{ins.titulo}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{ins.descricao}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
