@@ -19,6 +19,7 @@ import {
 } from "@/lib/clinico";
 import type { Status } from "@/lib/mock";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
+import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";
 
 type Periodo = "hoje" | "semana" | "mes" | "todos";
 
