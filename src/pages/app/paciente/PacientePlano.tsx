@@ -2,11 +2,16 @@ import { Link } from "react-router-dom";
 import {
   BadgeCheck, CheckCircle2, XCircle, Calendar, CreditCard, Users,
   Stethoscope, Video, FileText, Repeat, ChevronRight, Sparkles, Building2,
-  AlertTriangle, Download,
+  AlertTriangle, Download, Wallet, TrendingUp, Receipt,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  cobrancasMock,
+  statusCobrancaUI,
+  resumoFinanceiroMock,
+} from "@/lib/mocks/financeiroMock";
 
 /**
  * Página: Meu Plano (paciente)
@@ -252,6 +257,9 @@ export default function PacientePlano() {
         </div>
       </div>
 
+      {/* Resumo financeiro (mock — alimentado por /app/paciente/financeiro) */}
+      <ResumoFinanceiro />
+
       {/* Histórico */}
       <section className="rounded-2xl border border-border bg-card p-6">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
@@ -374,6 +382,129 @@ function Row({
         tone === "success" && "text-success",
         tone === "muted" && "text-muted-foreground",
       )}>{value}</dd>
+    </div>
+  );
+}
+
+/* ─────────── Resumo financeiro (mock compartilhado) ─────────── */
+
+function ResumoFinanceiro() {
+  const resumo = resumoFinanceiroMock();
+  // Últimas 5 cobranças, mais recentes primeiro
+  const ultimas = [...cobrancasMock]
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, 5);
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+          <Wallet className="h-4 w-4 text-primary" /> Resumo financeiro
+        </h3>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/app/paciente/financeiro">
+            Ver tudo <ChevronRight className="ml-1 h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <KpiCard
+          icon={TrendingUp}
+          label="Pago nos últimos 12 meses"
+          value={formatBRL(resumo.totalPagoUlt12m)}
+          tone="success"
+        />
+        <KpiCard
+          icon={AlertTriangle}
+          label="A pagar"
+          value={formatBRL(resumo.aPagar)}
+          hint={`${resumo.pendentesCount} cobrança${resumo.pendentesCount === 1 ? "" : "s"} pendente${resumo.pendentesCount === 1 ? "" : "s"}`}
+          tone={resumo.pendentesCount > 0 ? "warning" : "muted"}
+        />
+        <KpiCard
+          icon={Receipt}
+          label="Última paga"
+          value={resumo.ultimaPaga ? formatBRL(resumo.ultimaPaga.valor) : "—"}
+          hint={resumo.ultimaPaga ? formatBR(resumo.ultimaPaga.data) : "Sem registros"}
+          tone="default"
+        />
+      </div>
+
+      {/* Lista de últimas cobranças */}
+      <div className="mt-5 overflow-hidden rounded-xl border border-border">
+        <ul className="divide-y divide-border">
+          {ultimas.map((c) => {
+            const ui = statusCobrancaUI[c.status];
+            return (
+              <li key={c.id} className="flex items-center gap-3 p-3 sm:p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Receipt className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{c.descricao}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatBR(c.data)} · {c.metodo}
+                  </p>
+                </div>
+                <div className="hidden text-right sm:block">
+                  <p className="text-sm font-semibold">{formatBRL(c.valor)}</p>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
+                    ui.wrap,
+                  )}
+                >
+                  <span className={cn("h-1.5 w-1.5 rounded-full", ui.dot)} />
+                  {ui.label}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {resumo.falhasCount > 0 && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {resumo.falhasCount} cobrança{resumo.falhasCount === 1 ? "" : "s"} com falha no
+          período. Veja detalhes no{" "}
+          <Link to="/app/paciente/financeiro" className="text-primary hover:underline">
+            histórico financeiro
+          </Link>
+          .
+        </p>
+      )}
+    </section>
+  );
+}
+
+function KpiCard({
+  icon: Icon, label, value, hint, tone = "default",
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "default" | "success" | "warning" | "muted";
+}) {
+  const toneCls =
+    tone === "success" ? "text-success bg-success/10"
+    : tone === "warning" ? "text-warning bg-warning/10"
+    : tone === "muted" ? "text-muted-foreground bg-muted"
+    : "text-primary bg-primary/10";
+
+  return (
+    <div className="rounded-xl border border-border bg-background/50 p-4">
+      <div className="flex items-center gap-2">
+        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", toneCls)}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-2 text-xl font-semibold">{value}</p>
+      {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
