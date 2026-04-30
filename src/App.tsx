@@ -38,6 +38,7 @@ import MedicoConsultas from "@/pages/app/medico/MedicoConsultas";
 
 import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
 import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
+import MedicoDocumentos from "@/pages/app/medico/MedicoDocumentos";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
@@ -120,7 +121,7 @@ const App = () => (
               <Route path="medico/horarios" element={<MedicoGuard><MedicoHorarios /></MedicoGuard>} />
               <Route path="medico/consultas" element={<MedicoGuard><MedicoConsultas /></MedicoGuard>} />
               <Route path="medico/pacientes" element={<MedicoGuard><MedicoPacientes /></MedicoGuard>} />
-              <Route path="medico/documentos" element={<MedicoGuard><Placeholder title="Documentos emitidos" /></MedicoGuard>} />
+              <Route path="medico/documentos" element={<MedicoGuard><MedicoDocumentos /></MedicoGuard>} />
               <Route path="medico/financeiro" element={<MedicoGuard><Placeholder title="Financeiro" /></MedicoGuard>} />
               <Route path="medico/perfil" element={<MedicoGuard><MedicoPerfil /></MedicoGuard>} />
               <Route path="medico/configuracoes" element={<MedicoGuard><MedicoConfiguracoes /></MedicoGuard>} />
