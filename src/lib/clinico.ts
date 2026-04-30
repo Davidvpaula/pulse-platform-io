@@ -253,6 +253,7 @@ export async function listConsultasParaSecretaria(opts?: {
   }));
 }
 
+export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
   const paciente = await getPacienteAtual();
   if (!paciente) return [];
 
