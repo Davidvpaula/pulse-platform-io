@@ -189,6 +189,41 @@ export async function deletarDocumentoPaciente(doc: DocumentoPaciente): Promise<
   return true;
 }
 
+/** Anexos enviados em consultas (pelo médico ou pelo próprio paciente), visíveis via RLS. */
+export type AnexoConsulta = {
+  id: string;
+  consulta_id: string;
+  uploader_id: string;
+  nome_arquivo: string;
+  storage_path: string;
+  mime_type: string | null;
+  tamanho_bytes: number | null;
+  descricao: string | null;
+  created_at: string;
+};
+
+export async function listAnexosConsultaDoPaciente(): Promise<AnexoConsulta[]> {
+  const p = await getPacienteAtual();
+  if (!p) return [];
+  // Pega ids das consultas do paciente e busca anexos respeitando RLS
+  const { data: cs } = await supabase.from("consultas").select("id").eq("paciente_id", p.id);
+  const ids = (cs ?? []).map((c: any) => c.id);
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("anexos_consulta")
+    .select("*")
+    .in("consulta_id", ids)
+    .order("created_at", { ascending: false });
+  if (error) { console.error("[clinico] listAnexosConsultaDoPaciente:", error); return []; }
+  return (data ?? []) as any;
+}
+
+export async function getAnexoConsultaUrl(path: string, expiresInSec = 60): Promise<string | null> {
+  const { data, error } = await supabase.storage.from("consultas").createSignedUrl(path, expiresInSec);
+  if (error) { console.error("[clinico] anexo signed url:", error); return null; }
+  return data?.signedUrl ?? null;
+}
+
 /** Atualiza nome/telefone no profile (espelho user). */
 export async function updateProfileBasico(patch: {
   nome?: string;
