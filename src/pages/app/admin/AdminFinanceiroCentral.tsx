@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -45,6 +46,49 @@ export default function AdminFinanceiroCentral() {
   const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
   const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
   const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [loteCancelOpen, setLoteCancelOpen] = useState(false);
+  const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
+  const [loteRunning, setLoteRunning] = useState(false);
+
+  const togglePagamento = (id: string) => setSelecionados(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const pendentes = pagamentos.filter(p => p.status === "pendente");
+  const todosPendentesSelecionados = pendentes.length > 0 && pendentes.every(p => selecionados.has(p.id));
+  const toggleTodos = () => setSelecionados(s => {
+    if (todosPendentesSelecionados) { const n = new Set(s); pendentes.forEach(p => n.delete(p.id)); return n; }
+    const n = new Set(s); pendentes.forEach(p => n.add(p.id)); return n;
+  });
+  const selecionadosPendentes = pagamentos.filter(p => selecionados.has(p.id) && p.status === "pendente");
+
+  async function aprovarLote() {
+    if (!selecionadosPendentes.length) return;
+    setLoteRunning(true);
+    let ok = 0, fail = 0;
+    for (const p of selecionadosPendentes) {
+      try { await supabase.rpc("financeiro_pagamento_confirmar" as any, { _pagamento_id: p.id }); ok++; }
+      catch { fail++; }
+    }
+    setLoteRunning(false);
+    setSelecionados(new Set());
+    toast.success(`${ok} aprovados${fail ? `, ${fail} com erro` : ""}`);
+    carregar();
+  }
+
+  async function cancelarLote() {
+    if (!selecionadosPendentes.length || !loteCancelMotivo.trim()) return;
+    setLoteRunning(true);
+    let ok = 0, fail = 0;
+    for (const p of selecionadosPendentes) {
+      try { await supabase.rpc("financeiro_pagamento_cancelar" as any, { _pagamento_id: p.id, _motivo: loteCancelMotivo }); ok++; }
+      catch { fail++; }
+    }
+    setLoteRunning(false);
+    setLoteCancelOpen(false);
+    setLoteCancelMotivo("");
+    setSelecionados(new Set());
+    toast.success(`${ok} cancelados${fail ? `, ${fail} com erro` : ""}`);
+    carregar();
+  }
 
   async function abrirDetalhe(p: any) {
     setDetalhe(p);
@@ -229,12 +273,34 @@ export default function AdminFinanceiroCentral() {
         </TabsList>
 
         <TabsContent value="pagamentos" className="space-y-2">
+          {selecionadosPendentes.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg border bg-muted/40 p-2">
+              <span className="text-sm">{selecionadosPendentes.length} pagamento(s) pendente(s) selecionado(s)</span>
+              <div className="space-x-2">
+                <Button size="sm" variant="outline" onClick={() => setSelecionados(new Set())} disabled={loteRunning}>Limpar</Button>
+                <Button size="sm" onClick={aprovarLote} disabled={loteRunning}>
+                  {loteRunning ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Aprovar selecionados
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => setLoteCancelOpen(true)} disabled={loteRunning}>
+                  <XCircle className="h-3 w-3 mr-1" />Cancelar selecionados
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40"><tr><th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th></tr></thead>
+              <thead className="bg-muted/40"><tr>
+                <th className="p-2 w-8"><Checkbox checked={todosPendentesSelecionados} onCheckedChange={toggleTodos} aria-label="Selecionar todos pendentes" disabled={!pendentes.length} /></th>
+                <th className="text-left p-2">ID</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Status</th><th className="text-left p-2">Pago em</th><th className="text-right p-2">Ações</th>
+              </tr></thead>
               <tbody>
                 {pagamentos.map(p => (
                   <tr key={p.id} className="border-t">
+                    <td className="p-2">
+                      {p.status === "pendente" && (
+                        <Checkbox checked={selecionados.has(p.id)} onCheckedChange={() => togglePagamento(p.id)} aria-label={`Selecionar ${p.id}`} />
+                      )}
+                    </td>
                     <td className="p-2 font-mono text-xs">{p.id.slice(0, 8)}</td>
                     <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
                     <td className="p-2">{p.metodo || p.forma || "—"}</td>
@@ -249,7 +315,7 @@ export default function AdminFinanceiroCentral() {
                     </td>
                   </tr>
                 ))}
-                {!pagamentos.length && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
+                {!pagamentos.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem pagamentos</td></tr>}
               </tbody>
             </table>
           </div>
@@ -329,6 +395,21 @@ export default function AdminFinanceiroCentral() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal cancelamento em lote */}
+      <Dialog open={loteCancelOpen} onOpenChange={o => { if (!loteRunning) { setLoteCancelOpen(o); if (!o) setLoteCancelMotivo(""); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Cancelar {selecionadosPendentes.length} cobranças</DialogTitle></DialogHeader>
+          <Label>Motivo (aplicado a todas)</Label>
+          <Textarea value={loteCancelMotivo} onChange={e => setLoteCancelMotivo(e.target.value)} placeholder="Informe o motivo do cancelamento em lote" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLoteCancelOpen(false)} disabled={loteRunning}>Voltar</Button>
+            <Button variant="destructive" onClick={cancelarLote} disabled={loteRunning || !loteCancelMotivo.trim()}>
+              {loteRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Cancelar todos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal cancelar */}
       <Dialog open={!!cancelId} onOpenChange={o => !o && setCancelId(null)}>
