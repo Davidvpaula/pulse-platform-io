@@ -194,6 +194,12 @@ export default function PacienteMensagens() {
   const marcarLida = (id: string) =>
     setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: true } : m)));
 
+  const marcarNaoLida = (id: string) =>
+    setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: false } : m)));
+
+  const toggleLida = (id: string) =>
+    setMensagens((xs) => xs.map((m) => (m.id === id ? { ...m, lida: !m.lida } : m)));
+
   const marcarTodasLidas = () =>
     setMensagens((xs) => xs.map((m) => ({ ...m, lida: true })));
 
@@ -202,6 +208,8 @@ export default function PacienteMensagens() {
     if (selecionadaId === id) setSelecionadaId(mensagens[0]?.id ?? "");
   };
 
+  // Selecionar marca como lida automaticamente (comportamento esperado de inbox).
+  // O usuário pode reverter manualmente com o botão "Marcar como não lida".
   const handleSelect = (id: string) => {
     setSelecionadaId(id);
     marcarLida(id);
