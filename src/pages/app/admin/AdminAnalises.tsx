@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +50,12 @@ function downloadCSV(filename: string, rows: any[]) {
 }
 
 export default function AdminAnalises() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const TABS = ["overview", "tempo-real", "trafego", "comportamento", "conversao", "financeiro", "marketing", "comparativo"];
+  const subPath = location.pathname.replace(/^\/app\/admin\/analises\/?/, "").split("/")[0] || "overview";
+  const activeTab = TABS.includes(subPath) ? subPath : "overview";
+
   const [periodo, setPeriodo] = useState("30");
   const [overview, setOverview] = useState<any>(null);
   const [trafego, setTrafego] = useState<any>(null);
@@ -113,7 +120,7 @@ export default function AdminAnalises() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={(v) => navigate(v === "overview" ? "/app/admin/analises" : `/app/admin/analises/${v}`)}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="tempo-real">Tempo real</TabsTrigger>
