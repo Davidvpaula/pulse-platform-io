@@ -433,6 +433,45 @@ export type Database = {
         }
         Relationships: []
       }
+      empresas: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome_fantasia: string | null
+          observacoes: string | null
+          razao_social: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       especialidades: {
         Row: {
           ativo: boolean
@@ -655,16 +694,34 @@ export type Database = {
           cpf: string | null
           created_at: string
           data_nascimento: string | null
+          empresa_cargo: string | null
           empresa_id: string | null
+          empresa_setor: string | null
+          estado_civil: string | null
+          feegow_erro: string | null
+          feegow_paciente_id: string | null
+          feegow_status: Database["public"]["Enums"]["feegow_status"]
+          feegow_ultimo_envio_em: string | null
           id: string
           logradouro: string | null
           matricula_empresa: string | null
           medicamentos_uso: string | null
+          nacionalidade: string | null
           nome_completo: string | null
           numero: string | null
           observacoes_internas: string | null
+          origem_cadastro: string | null
+          responsavel_cadastro_id: string | null
+          rg: string | null
           sexo: Database["public"]["Enums"]["sexo_biologico"]
+          status_alterado_em: string | null
+          status_alterado_por: string | null
+          status_conta: Database["public"]["Enums"]["status_conta_paciente"]
+          status_motivo: string | null
+          status_observacao: string | null
+          tags: string[]
           telefone: string | null
+          telefone_secundario: string | null
           uf: string | null
           updated_at: string
           user_id: string
@@ -681,16 +738,34 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
+          empresa_cargo?: string | null
           empresa_id?: string | null
+          empresa_setor?: string | null
+          estado_civil?: string | null
+          feegow_erro?: string | null
+          feegow_paciente_id?: string | null
+          feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          feegow_ultimo_envio_em?: string | null
           id?: string
           logradouro?: string | null
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
+          nacionalidade?: string | null
           nome_completo?: string | null
           numero?: string | null
           observacoes_internas?: string | null
+          origem_cadastro?: string | null
+          responsavel_cadastro_id?: string | null
+          rg?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
+          status_alterado_em?: string | null
+          status_alterado_por?: string | null
+          status_conta?: Database["public"]["Enums"]["status_conta_paciente"]
+          status_motivo?: string | null
+          status_observacao?: string | null
+          tags?: string[]
           telefone?: string | null
+          telefone_secundario?: string | null
           uf?: string | null
           updated_at?: string
           user_id: string
@@ -707,19 +782,88 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
+          empresa_cargo?: string | null
           empresa_id?: string | null
+          empresa_setor?: string | null
+          estado_civil?: string | null
+          feegow_erro?: string | null
+          feegow_paciente_id?: string | null
+          feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          feegow_ultimo_envio_em?: string | null
           id?: string
           logradouro?: string | null
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
+          nacionalidade?: string | null
           nome_completo?: string | null
           numero?: string | null
           observacoes_internas?: string | null
+          origem_cadastro?: string | null
+          responsavel_cadastro_id?: string | null
+          rg?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
+          status_alterado_em?: string | null
+          status_alterado_por?: string | null
+          status_conta?: Database["public"]["Enums"]["status_conta_paciente"]
+          status_motivo?: string | null
+          status_observacao?: string | null
+          tags?: string[]
           telefone?: string | null
+          telefone_secundario?: string | null
           uf?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pacientes_auditoria: {
+        Row: {
+          acao: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          motivo: string | null
+          observacao: string | null
+          paciente_id: string
+          payload: Json | null
+          status_anterior:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
+          status_novo:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
+        }
+        Insert: {
+          acao: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          paciente_id: string
+          payload?: Json | null
+          status_anterior?:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
+          status_novo?:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
+        }
+        Update: {
+          acao?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          paciente_id?: string
+          payload?: Json | null
+          status_anterior?:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
+          status_novo?:
+            | Database["public"]["Enums"]["status_conta_paciente"]
+            | null
         }
         Relationships: []
       }
@@ -784,6 +928,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      permissoes_perfil: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       prescricoes: {
         Row: {
@@ -984,6 +1155,15 @@ export type Database = {
         Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
         Returns: Json
       }
+      alterar_status_conta_paciente: {
+        Args: {
+          _motivo: string
+          _novo_status: Database["public"]["Enums"]["status_conta_paciente"]
+          _observacao?: string
+          _paciente_id: string
+        }
+        Returns: Json
+      }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
       criar_consulta_com_reserva: {
         Args: {
@@ -1008,6 +1188,10 @@ export type Database = {
           _status: Database["public"]["Enums"]["feegow_status"]
         }
         Returns: undefined
+      }
+      has_permission: {
+        Args: { _key: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1101,6 +1285,7 @@ export type Database = {
       retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
+      status_conta_paciente: "ativo" | "suspenso" | "bloqueado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1272,6 +1457,7 @@ export const Constants = {
       retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
+      status_conta_paciente: ["ativo", "suspenso", "bloqueado"],
     },
   },
 } as const
