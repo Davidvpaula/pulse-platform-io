@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle } from "lucide-react";
+import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   cancelarPagamento,
   confirmarPagamento,
@@ -15,30 +16,140 @@ import {
   type Pagamento,
   type PagamentoMetodo,
 } from "@/lib/pagamentos";
+import {
+  validarCupomParaConsulta,
+  aplicarCupomNoPagamento,
+  removerCupomDoPagamento,
+  registrarUsoCupom,
+  type CupomAplicado,
+} from "@/lib/cupons";
+
+type ConsultaCtx = {
+  paciente_id: string;
+  medico_id: string;
+  especialidade_id: string | null;
+};
 
 export default function PacienteCheckout() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const [pagamento, setPagamento] = useState<Pagamento | null>(null);
+  const [consultaCtx, setConsultaCtx] = useState<ConsultaCtx | null>(null);
   const [loading, setLoading] = useState(true);
   const [metodo, setMetodo] = useState<PagamentoMetodo>("pix");
   const [processando, setProcessando] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const p = await getPagamento(sessionId);
-      setPagamento(p);
-      setLoading(false);
-    })();
-  }, [sessionId]);
+  // Cupom
+  const [codigoCupom, setCodigoCupom] = useState("");
+  const [cupomAplicado, setCupomAplicado] = useState<CupomAplicado | null>(null);
+  const [cupomLoading, setCupomLoading] = useState(false);
+
+  async function carregar() {
+    const p = await getPagamento(sessionId);
+    setPagamento(p);
+
+    // Lê cupom já aplicado (caso volte na página)
+    const meta = (p?.metadata as any) ?? {};
+    if (meta?.cupom) {
+      setCupomAplicado({
+        cupom_id: meta.cupom.cupom_id,
+        codigo: meta.cupom.codigo,
+        nome: meta.cupom.nome,
+        tipo: meta.cupom.tipo,
+        valor_original_centavos: meta.cupom.valor_original_centavos,
+        desconto_centavos: meta.cupom.desconto_centavos,
+        valor_final_centavos: meta.cupom.valor_final_centavos,
+      });
+    }
+
+    if (p) {
+      const { data: c } = await supabase
+        .from("consultas")
+        .select("paciente_id, medico_id, especialidade_id")
+        .eq("id", p.consulta_id)
+        .maybeSingle();
+      if (c) setConsultaCtx(c as ConsultaCtx);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [sessionId]);
+
+  const valorOriginal = cupomAplicado?.valor_original_centavos ?? pagamento?.valor_centavos ?? 0;
+  const desconto = cupomAplicado?.desconto_centavos ?? 0;
+  const valorFinal = pagamento?.valor_centavos ?? 0;
+
+  async function aplicarCupom() {
+    if (!pagamento || !consultaCtx) return;
+    setCupomLoading(true);
+    try {
+      const r = await validarCupomParaConsulta({
+        codigo: codigoCupom,
+        valorCentavos: valorOriginal,
+        medicoId: consultaCtx.medico_id,
+        especialidadeId: consultaCtx.especialidade_id,
+      });
+      if (!r.ok) {
+        toast.error(r.error);
+        return;
+      }
+      const ap = await aplicarCupomNoPagamento(pagamento.id, r.aplicado);
+      if (!ap.ok) {
+        toast.error(ap.error ?? "Não foi possível aplicar o cupom");
+        return;
+      }
+      toast.success(`Cupom ${r.aplicado.codigo} aplicado: −${formatBRL(r.aplicado.desconto_centavos)}`);
+      setCodigoCupom("");
+      await carregar();
+    } finally {
+      setCupomLoading(false);
+    }
+  }
+
+  async function removerCupom() {
+    if (!pagamento) return;
+    setCupomLoading(true);
+    try {
+      const r = await removerCupomDoPagamento(pagamento.id);
+      if (!r.ok) {
+        toast.error(r.error ?? "Não foi possível remover o cupom");
+        return;
+      }
+      setCupomAplicado(null);
+      toast.success("Cupom removido");
+      await carregar();
+    } finally {
+      setCupomLoading(false);
+    }
+  }
 
   const pagar = async () => {
     if (!pagamento) return;
     setProcessando(true);
     try {
-      // Simula latência de gateway real
       await new Promise((r) => setTimeout(r, 1200));
       await confirmarPagamento(pagamento.id, metodo);
+
+      // Registra uso do cupom (após pagamento confirmado)
+      if (cupomAplicado && consultaCtx) {
+        const reg = await registrarUsoCupom({
+          cupomId: cupomAplicado.cupom_id,
+          consultaId: pagamento.consulta_id,
+          pacienteId: consultaCtx.paciente_id,
+          medicoId: consultaCtx.medico_id,
+          codigoSnapshot: cupomAplicado.codigo,
+          tipoSnapshot: cupomAplicado.tipo,
+          valorOriginalCentavos: cupomAplicado.valor_original_centavos,
+          valorDescontoCentavos: cupomAplicado.desconto_centavos,
+          valorFinalCentavos: cupomAplicado.valor_final_centavos,
+        });
+        if (!reg.ok) {
+          // Não bloqueia o sucesso do pagamento, só registra log
+          console.warn("[checkout] falha ao registrar uso de cupom:", reg.error);
+        }
+      }
+
       toast.success("Pagamento aprovado!");
       navigate(`/app/paciente/pagamento/sucesso?p=${pagamento.id}`);
     } catch (e: any) {
@@ -109,9 +220,7 @@ export default function PacienteCheckout() {
         <div className="space-y-6">
           <div className="card-elevated p-6">
             <h2 className="font-display text-lg font-bold">Forma de pagamento</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Escolha como deseja pagar.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Escolha como deseja pagar.</p>
 
             <RadioGroup
               value={metodo}
@@ -146,9 +255,7 @@ export default function PacienteCheckout() {
                   <div className="flex items-center gap-2 font-semibold">
                     <CreditCard className="h-4 w-4" /> Cartão de crédito
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Visa, Mastercard, Elo, Amex.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Visa, Mastercard, Elo, Amex.</p>
                 </div>
               </label>
             </RadioGroup>
@@ -157,11 +264,7 @@ export default function PacienteCheckout() {
               <div className="mt-5 grid gap-3 rounded-lg border border-dashed border-border p-4">
                 <div>
                   <Label htmlFor="card-number">Número do cartão</Label>
-                  <Input
-                    id="card-number"
-                    placeholder="4242 4242 4242 4242"
-                    disabled={processando}
-                  />
+                  <Input id="card-number" placeholder="4242 4242 4242 4242" disabled={processando} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -211,8 +314,16 @@ export default function PacienteCheckout() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatBRL(pagamento.valor_centavos)}</span>
+                <span>{formatBRL(valorOriginal)}</span>
               </div>
+              {cupomAplicado && (
+                <div className="flex justify-between text-emerald-600">
+                  <span className="inline-flex items-center gap-1">
+                    <Ticket className="h-3.5 w-3.5" /> Cupom {cupomAplicado.codigo}
+                  </span>
+                  <span>− {formatBRL(desconto)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Taxas</span>
                 <span>R$ 0,00</span>
@@ -220,9 +331,53 @@ export default function PacienteCheckout() {
               <div className="my-2 border-t border-border" />
               <div className="flex justify-between text-base font-bold">
                 <span>Total</span>
-                <span>{formatBRL(pagamento.valor_centavos)}</span>
+                <span>{formatBRL(valorFinal)}</span>
               </div>
             </div>
+
+            {/* Cupom */}
+            <div className="mt-4 rounded-lg border border-dashed border-border p-3">
+              <Label className="text-xs">Cupom de desconto</Label>
+              {cupomAplicado ? (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="h-3.5 w-3.5" />
+                    <div>
+                      <p className="font-semibold">{cupomAplicado.codigo}</p>
+                      <p className="text-[11px] opacity-80">{cupomAplicado.nome}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={removerCupom}
+                    disabled={cupomLoading}
+                    className="rounded-full p-1 hover:bg-emerald-100 disabled:opacity-50"
+                    title="Remover cupom"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    value={codigoCupom}
+                    onChange={(e) => setCodigoCupom(e.target.value.toUpperCase())}
+                    placeholder="Ex.: PRIMEIRA10"
+                    className="h-9 text-sm"
+                    disabled={cupomLoading || processando}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={aplicarCupom}
+                    disabled={!codigoCupom || cupomLoading || processando}
+                  >
+                    {cupomLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Aplicar"}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Button
               className="mt-4 w-full"
               size="lg"
@@ -236,7 +391,7 @@ export default function PacienteCheckout() {
               ) : (
                 <>
                   <ShieldCheck className="mr-2 h-4 w-4" />
-                  Pagar {formatBRL(pagamento.valor_centavos)}
+                  Pagar {formatBRL(valorFinal)}
                 </>
               )}
             </Button>
