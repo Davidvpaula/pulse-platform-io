@@ -649,8 +649,68 @@ export async function listSlotsDisponiveisDoMedico(medicoId: string): Promise<Ag
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * Helpers de UI
+ * TROCA DE PROFISSIONAL (admin/secretaria)
  * ────────────────────────────────────────────────────────────────────── */
+
+export type MedicoCompativel = {
+  id: string;
+  nome: string;
+  link_sala_padrao: string | null;
+  preco_centavos: number | null;
+};
+
+/** Lista médicos ativos que atendem a especialidade da consulta (exceto o atual). */
+export async function listMedicosCompativeis(
+  consultaId: string,
+): Promise<MedicoCompativel[]> {
+  const { data: c } = await supabase
+    .from("consultas")
+    .select("medico_id, especialidade_id")
+    .eq("id", consultaId)
+    .maybeSingle();
+  if (!c) return [];
+
+  let query = supabase
+    .from("medico_especialidades")
+    .select(`preco_centavos, medico_id, medicos:medico_id ( id, nome, link_sala_padrao, status )`)
+    .eq("ativo", true)
+    .neq("medico_id", c.medico_id);
+  if (c.especialidade_id) query = query.eq("especialidade_id", c.especialidade_id);
+
+  const { data, error } = await query;
+  if (error) { console.error("[clinico] listMedicosCompativeis:", error); return []; }
+  return (data ?? [])
+    .map((row: any) => ({
+      id: row.medicos?.id,
+      nome: row.medicos?.nome,
+      link_sala_padrao: row.medicos?.link_sala_padrao ?? null,
+      preco_centavos: row.preco_centavos ?? null,
+      status: row.medicos?.status,
+    }))
+    .filter((m) => m.id && m.status === "aprovado")
+    .map(({ status, ...m }) => m);
+}
+
+/** Troca o médico de uma consulta para um novo slot disponível. */
+export async function trocarMedicoConsulta(input: {
+  consulta_id: string;
+  novo_slot_id: string;
+  motivo?: string;
+}): Promise<{
+  consulta_id: string;
+  novo_medico_id: string;
+  novo_slot_id: string;
+  novo_valor_centavos: number;
+  novo_link_sala: string | null;
+}> {
+  const { data, error } = await supabase.rpc("trocar_medico_consulta", {
+    _consulta_id: input.consulta_id,
+    _novo_slot_id: input.novo_slot_id,
+    _motivo: input.motivo ?? null,
+  });
+  if (error) throw error;
+  return data as any;
+}
 
 export function formatDataBR(iso: string): string {
   const d = new Date(iso);
