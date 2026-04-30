@@ -38,6 +38,60 @@ export default function AdminFinanceiroCentral() {
   const [cancelMotivo, setCancelMotivo] = useState("");
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [reembolsoModal, setReembolsoModal] = useState<{ id: string; motivo: string; observacao: string; aprovar: boolean } | null>(null);
+  const [detalhe, setDetalhe] = useState<any | null>(null);
+  const [detalheReembolsos, setDetalheReembolsos] = useState<any[]>([]);
+  const [detalheSnapshot, setDetalheSnapshot] = useState<any | null>(null);
+  const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
+  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+
+  async function abrirDetalhe(p: any) {
+    setDetalhe(p);
+    setDetalheReembolsos([]);
+    setDetalheSnapshot(null);
+    try {
+      if (p.consulta_id) {
+        const { data: snap } = await supabase.from("consultas_financeiro").select("*").eq("consulta_id", p.consulta_id).maybeSingle();
+        setDetalheSnapshot(snap);
+      }
+      const { data: r } = await supabase.from("reembolsos").select("*").eq("pagamento_id", p.id).order("created_at", { ascending: false });
+      setDetalheReembolsos(r || []);
+    } catch {}
+  }
+
+  async function abrirNovaCobranca() {
+    setNovaCobranca({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+    if (!pacientesOpts.length) {
+      const { data: pac } = await supabase.from("pacientes").select("id,nome").order("nome").limit(500);
+      setPacientesOpts(pac || []);
+    }
+    if (!empresasOpts.length) {
+      const { data: emp } = await supabase.from("empresas").select("id,razao_social,nome_fantasia").order("razao_social").limit(500);
+      setEmpresasOpts(emp || []);
+    }
+  }
+
+  async function criarCobranca() {
+    const valorNum = Number(novaCobranca.valor.replace(",", "."));
+    if (!novaCobranca.descricao.trim() || !valorNum || valorNum <= 0) {
+      toast.error("Preencha descrição e valor válido"); return;
+    }
+    try {
+      const { error } = await supabase.from("cobrancas_links").insert({
+        descricao: novaCobranca.descricao,
+        valor_centavos: Math.round(valorNum * 100),
+        vencimento: novaCobranca.vencimento || null,
+        paciente_id: novaCobranca.paciente_id || null,
+        observacao: novaCobranca.observacao || null,
+        status: "ativo",
+      } as any);
+      if (error) throw error;
+      toast.success("Cobrança criada");
+      setNovaCobranca(s => ({ ...s, open: false }));
+      carregar();
+    } catch (e: any) { toast.error(e.message || "Erro ao criar cobrança"); }
+  }
+
 
   const carregar = useCallback(async () => {
     setLoading(true);
