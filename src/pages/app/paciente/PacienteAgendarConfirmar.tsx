@@ -340,7 +340,7 @@ export default function PacienteAgendarConfirmar() {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                {slot.modalidade}
+                Telemedicina
               </span>
             </div>
           </div>

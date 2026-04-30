@@ -101,11 +101,7 @@ export default function AgendarRetornoDialog({ open, onOpenChange, voucher, onAg
                         <p className="font-bold">{formatHora(s.inicio)}</p>
                       </div>
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
-                        {s.modalidade === "online" ? (
-                          <><Video className="h-3 w-3" /> Online</>
-                        ) : (
-                          <><MapPin className="h-3 w-3" /> Presencial</>
-                        )}
+                        <Video className="h-3 w-3" /> Telemedicina
                       </span>
                     </div>
                     {selectedId === s.id && (

@@ -264,7 +264,7 @@ export default function MedicoAgenda() {
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{c.paciente_nome ?? "Paciente"}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {c.especialidade_nome ?? "Consulta"} · {isOnline ? "Telemedicina" : "Presencial"}
+                      {c.especialidade_nome ?? "Consulta"} · Telemedicina
                       {c.valor_centavos ? ` · ${(c.valor_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` : ""}
                     </p>
                     <div className="mt-1.5"><StatusBadge status={toStatusBadge(c.status)} /></div>

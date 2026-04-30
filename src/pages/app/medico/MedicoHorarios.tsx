@@ -8,7 +8,7 @@ import {
   Database,
   Clock,
   Video,
-  MapPin,
+  
   X,
   Info,
 } from "lucide-react";
@@ -49,7 +49,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-type Modalidade = "online" | "presencial";
+type Modalidade = "online";
 
 const DIAS_SEMANA = [
   { idx: 1, label: "Seg" },
@@ -290,19 +290,9 @@ export default function MedicoHorarios() {
             </span>
           )}
         </div>
-        <div className="w-44">
-          <Select
-            value={modalidade}
-            onValueChange={(v) => setModalidade(v as Modalidade)}
-          >
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="online">Online</SelectItem>
-              <SelectItem value="presencial">Presencial</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-xs text-muted-foreground">
+          <Video className="h-3.5 w-3.5 text-primary" />
+          Telemedicina (online)
         </div>
       </div>
 
@@ -603,11 +593,7 @@ export default function MedicoHorarios() {
                           key={s.id}
                           className="group relative flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs"
                         >
-                          {s.modalidade === "online" ? (
-                            <Video className="h-3 w-3 text-primary" />
-                          ) : (
-                            <MapPin className="h-3 w-3 text-primary" />
-                          )}
+                          <Video className="h-3 w-3 text-primary" />
                           <span className="font-medium">
                             {format(new Date(s.inicio), "HH:mm")}–
                             {format(new Date(s.fim), "HH:mm")}

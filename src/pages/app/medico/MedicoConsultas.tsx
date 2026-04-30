@@ -208,11 +208,7 @@ export default function MedicoConsultas() {
                     <Stethoscope className="h-3.5 w-3.5" />
                     {c.especialidade_nome ?? "—"}
                     <span className="mx-1">·</span>
-                    {c.modalidade === "online" ? (
-                      <><Video className="h-3.5 w-3.5" /> Online</>
-                    ) : (
-                      <><MapPin className="h-3.5 w-3.5" /> Presencial</>
-                    )}
+                    <Video className="h-3.5 w-3.5" /> Telemedicina
                   </p>
                   {c.motivo && (
                     <p className="mt-1 text-xs text-muted-foreground italic line-clamp-1">

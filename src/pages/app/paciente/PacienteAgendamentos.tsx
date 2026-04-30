@@ -214,8 +214,8 @@ export default function PacienteAgendamentos() {
                       {c.especialidade_nome ?? "—"} · {formatDataBR(c.inicio)} {formatHora(c.inicio)}
                       {" · "}
                       <span className="inline-flex items-center gap-1">
-                        {isOnline ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-                        {isOnline ? "Online" : "Presencial"}
+                        <Video className="h-3 w-3" />
+                        Telemedicina
                       </span>
                     </p>
                     {c.motivo && (
