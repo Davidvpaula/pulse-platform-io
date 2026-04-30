@@ -391,6 +391,48 @@ export type Database = {
           },
         ]
       }
+      documentos_paciente: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          mime_type: string | null
+          paciente_id: string
+          storage_path: string
+          tamanho_bytes: number | null
+          tipo: Database["public"]["Enums"]["documento_paciente_tipo"]
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          paciente_id: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          tipo?: Database["public"]["Enums"]["documento_paciente_tipo"]
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          paciente_id?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          tipo?: Database["public"]["Enums"]["documento_paciente_tipo"]
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       especialidades: {
         Row: {
           ativo: boolean
@@ -603,7 +645,10 @@ export type Database = {
       pacientes: {
         Row: {
           alergias: string | null
+          bairro: string | null
           cep: string | null
+          cidade: string | null
+          complemento: string | null
           condicoes_cronicas: string | null
           contato_emergencia_nome: string | null
           contato_emergencia_telefone: string | null
@@ -612,18 +657,24 @@ export type Database = {
           data_nascimento: string | null
           empresa_id: string | null
           id: string
+          logradouro: string | null
           matricula_empresa: string | null
           medicamentos_uso: string | null
           nome_completo: string | null
+          numero: string | null
           observacoes_internas: string | null
           sexo: Database["public"]["Enums"]["sexo_biologico"]
           telefone: string | null
+          uf: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           alergias?: string | null
+          bairro?: string | null
           cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           condicoes_cronicas?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_telefone?: string | null
@@ -632,18 +683,24 @@ export type Database = {
           data_nascimento?: string | null
           empresa_id?: string | null
           id?: string
+          logradouro?: string | null
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
           nome_completo?: string | null
+          numero?: string | null
           observacoes_internas?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           alergias?: string | null
+          bairro?: string | null
           cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           condicoes_cronicas?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_telefone?: string | null
@@ -652,12 +709,15 @@ export type Database = {
           data_nascimento?: string | null
           empresa_id?: string | null
           id?: string
+          logradouro?: string | null
           matricula_empresa?: string | null
           medicamentos_uso?: string | null
           nome_completo?: string | null
+          numero?: string | null
           observacoes_internas?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1013,6 +1073,14 @@ export type Database = {
         | "no_show"
       cupom_escopo: "global" | "medico" | "especialidade"
       cupom_tipo: "percentual" | "fixo"
+      documento_paciente_tipo:
+        | "exame"
+        | "laudo"
+        | "receita"
+        | "identidade"
+        | "plano"
+        | "vacina"
+        | "outro"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       medico_status: "pendente" | "em_analise" | "aprovado" | "reprovado"
       pagamento_metodo: "pix" | "cartao" | "boleto" | "simulado"
@@ -1167,6 +1235,15 @@ export const Constants = {
       ],
       cupom_escopo: ["global", "medico", "especialidade"],
       cupom_tipo: ["percentual", "fixo"],
+      documento_paciente_tipo: [
+        "exame",
+        "laudo",
+        "receita",
+        "identidade",
+        "plano",
+        "vacina",
+        "outro",
+      ],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       medico_status: ["pendente", "em_analise", "aprovado", "reprovado"],
       pagamento_metodo: ["pix", "cartao", "boleto", "simulado"],

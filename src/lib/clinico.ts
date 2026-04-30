@@ -75,6 +75,12 @@ export async function updatePacientePerfil(patch: {
   medicamentos_uso?: string | null;
   contato_emergencia_nome?: string | null;
   contato_emergencia_telefone?: string | null;
+  logradouro?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
   const { data: s } = await supabase.auth.getSession();
   const uid = s.session?.user.id;
@@ -82,13 +88,105 @@ export async function updatePacientePerfil(patch: {
 
   const existing = await getPacienteAtual();
   if (existing) {
-    const { error } = await supabase.from("pacientes").update(patch).eq("id", existing.id);
+    const { error } = await supabase.from("pacientes").update(patch as any).eq("id", existing.id);
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
-  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch });
+  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch } as any);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * DOCUMENTOS PESSOAIS DO PACIENTE
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type DocumentoPacienteTipo =
+  | "exame" | "laudo" | "receita" | "identidade" | "plano" | "vacina" | "outro";
+
+export type DocumentoPaciente = {
+  id: string;
+  paciente_id: string;
+  user_id: string;
+  tipo: DocumentoPacienteTipo;
+  titulo: string;
+  descricao: string | null;
+  storage_path: string;
+  mime_type: string | null;
+  tamanho_bytes: number | null;
+  created_at: string;
+};
+
+export async function listDocumentosDoPaciente(): Promise<DocumentoPaciente[]> {
+  const p = await getPacienteAtual();
+  if (!p) return [];
+  const { data, error } = await supabase
+    .from("documentos_paciente" as any)
+    .select("*")
+    .eq("paciente_id", p.id)
+    .order("created_at", { ascending: false });
+  if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
+  return (data ?? []) as any;
+}
+
+export async function uploadDocumentoPaciente(input: {
+  file: File;
+  tipo: DocumentoPacienteTipo;
+  titulo: string;
+  descricao?: string | null;
+}): Promise<{ ok: boolean; error?: string; doc?: DocumentoPaciente }> {
+  const { data: s } = await supabase.auth.getSession();
+  const uid = s.session?.user.id;
+  if (!uid) return { ok: false, error: "Não autenticado." };
+  const paciente = await ensurePaciente();
+  if (!paciente) return { ok: false, error: "Cadastro de paciente não encontrado." };
+
+  if (input.file.size > 20 * 1024 * 1024) {
+    return { ok: false, error: "Arquivo muito grande (máx. 20 MB)." };
+  }
+  const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
+  const path = `${uid}/${Date.now()}-${safeName}`;
+  const up = await supabase.storage.from("paciente-docs").upload(path, input.file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: input.file.type || undefined,
+  });
+  if (up.error) return { ok: false, error: up.error.message };
+
+  const { data, error } = await supabase
+    .from("documentos_paciente" as any)
+    .insert({
+      paciente_id: paciente.id,
+      user_id: uid,
+      tipo: input.tipo,
+      titulo: input.titulo.trim() || input.file.name,
+      descricao: input.descricao ?? null,
+      storage_path: path,
+      mime_type: input.file.type || null,
+      tamanho_bytes: input.file.size,
+    } as any)
+    .select("*")
+    .single();
+  if (error) {
+    await supabase.storage.from("paciente-docs").remove([path]);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, doc: data as any };
+}
+
+export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from("paciente-docs")
+    .createSignedUrl(path, expiresInSec);
+  if (error) { console.error("[clinico] signed url:", error); return null; }
+  return data?.signedUrl ?? null;
+}
+
+export async function deletarDocumentoPaciente(doc: DocumentoPaciente): Promise<boolean> {
+  await supabase.storage.from("paciente-docs").remove([doc.storage_path]);
+  const { error } = await supabase.from("documentos_paciente" as any).delete().eq("id", doc.id);
+  if (error) { console.error("[clinico] deletar doc:", error); return false; }
+  return true;
 }
 
 /** Atualiza nome/telefone no profile (espelho user). */
