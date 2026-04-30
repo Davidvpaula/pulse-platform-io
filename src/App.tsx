@@ -224,9 +224,11 @@ const App = () => (
 
               {/* Comunicação */}
               <Route path="comunicacao/dashboard" element={<ComunicacaoDashboard />} />
-              <Route path="comunicacao/conversas" element={<Conversas />} />
-              <Route path="comunicacao/whatsapp" element={<WhatsAppCentral />} />
+              <Route path="comunicacao/inbox" element={<Inbox />} />
+              <Route path="comunicacao/conversas" element={<Navigate to="/app/comunicacao/inbox" replace />} />
+              <Route path="comunicacao/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="comunicacao/bot" element={<BotConfig />} />
+              <Route path="comunicacao/ia" element={<IAAvatar />} />
               <Route path="comunicacao/templates" element={<Templates />} />
               <Route path="comunicacao/automacoes" element={<Automacoes />} />
               <Route path="comunicacao/metricas" element={<Metricas />} />
