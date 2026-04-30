@@ -74,22 +74,38 @@ export default function AdminServicos() {
   const [filtroAtivo, setFiltroAtivo] = useState<string>("todos");
   const [editing, setEditing] = useState<Partial<Servico> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [paServicoId, setPaServicoId] = useState<string | null>(null);
+  const [savingPa, setSavingPa] = useState(false);
 
   async function load() {
     setLoading(true);
-    const [{ data: s }, { data: e }, { data: ms }] = await Promise.all([
+    const [{ data: s }, { data: e }, { data: ms }, { data: cfg }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").order("prioridade").order("nome"),
       supabase.from("especialidades").select("id,nome").order("nome"),
       supabase.from("medico_servicos").select("servico_id").eq("ativo", true).eq("status", "ativo"),
+      supabase.from("app_settings").select("value").eq("key", "atendimento_imediato.servico_id").maybeSingle(),
     ]);
     setRows((s ?? []) as Servico[]);
     setEsp((e ?? []) as Esp[]);
     const c: Record<string, number> = {};
     (ms ?? []).forEach((r: any) => { c[r.servico_id] = (c[r.servico_id] ?? 0) + 1; });
     setCounts(c);
+    setPaServicoId((cfg?.value as string | null) ?? null);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
+
+  async function salvarPa(id: string | null) {
+    setSavingPa(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ value: id as any })
+      .eq("key", "atendimento_imediato.servico_id");
+    setSavingPa(false);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    setPaServicoId(id);
+    toast({ title: id ? "Atendimento imediato configurado" : "Atendimento imediato desativado" });
+  }
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
