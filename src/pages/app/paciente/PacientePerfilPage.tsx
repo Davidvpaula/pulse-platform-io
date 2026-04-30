@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { User, Save, Loader2, Database as DbIcon, ShieldCheck, Heart } from "lucide-react";
+import {
+  User, Save, Loader2, Database as DbIcon, ShieldCheck, Heart,
+  MapPin, KeyRound, Mail, FileText,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSession } from "@/lib/session";
 import {
   getPacienteAtual, updatePacientePerfil, updateProfileBasico,
@@ -24,6 +29,12 @@ type FormState = {
   data_nascimento: string;
   sexo: Sexo;
   cep: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
   alergias: string;
   condicoes_cronicas: string;
   medicamentos_uso: string;
@@ -33,9 +44,13 @@ type FormState = {
 
 const empty: FormState = {
   nome_completo: "", cpf: "", telefone: "", data_nascimento: "",
-  sexo: "nao_informado", cep: "", alergias: "", condicoes_cronicas: "",
+  sexo: "nao_informado", cep: "",
+  logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "",
+  alergias: "", condicoes_cronicas: "",
   medicamentos_uso: "", contato_emergencia_nome: "", contato_emergencia_telefone: "",
 };
+
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function PacientePerfilPage() {
   const { session } = useSession();
@@ -53,18 +68,25 @@ export default function PacientePerfilPage() {
         getPacienteAtual(),
       ]);
       setEmail(prof?.email ?? session.user.email ?? "");
+      const p: any = paciente ?? {};
       setForm({
-        nome_completo: paciente?.nome_completo ?? prof?.nome ?? "",
-        cpf: paciente?.cpf ?? "",
-        telefone: paciente?.telefone ?? prof?.telefone ?? "",
-        data_nascimento: paciente?.data_nascimento ?? "",
-        sexo: (paciente?.sexo as Sexo) ?? "nao_informado",
-        cep: paciente?.cep ?? "",
-        alergias: paciente?.alergias ?? "",
-        condicoes_cronicas: paciente?.condicoes_cronicas ?? "",
-        medicamentos_uso: paciente?.medicamentos_uso ?? "",
-        contato_emergencia_nome: paciente?.contato_emergencia_nome ?? "",
-        contato_emergencia_telefone: paciente?.contato_emergencia_telefone ?? "",
+        nome_completo: p.nome_completo ?? prof?.nome ?? "",
+        cpf: p.cpf ?? "",
+        telefone: p.telefone ?? prof?.telefone ?? "",
+        data_nascimento: p.data_nascimento ?? "",
+        sexo: (p.sexo as Sexo) ?? "nao_informado",
+        cep: p.cep ?? "",
+        logradouro: p.logradouro ?? "",
+        numero: p.numero ?? "",
+        complemento: p.complemento ?? "",
+        bairro: p.bairro ?? "",
+        cidade: p.cidade ?? "",
+        uf: p.uf ?? "",
+        alergias: p.alergias ?? "",
+        condicoes_cronicas: p.condicoes_cronicas ?? "",
+        medicamentos_uso: p.medicamentos_uso ?? "",
+        contato_emergencia_nome: p.contato_emergencia_nome ?? "",
+        contato_emergencia_telefone: p.contato_emergencia_telefone ?? "",
       });
       setLoading(false);
     })();
@@ -73,16 +95,31 @@ export default function PacientePerfilPage() {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Auto-preenche endereço por CEP (ViaCEP)
+  const buscarCep = async () => {
+    const cep = form.cep.replace(/\D/g, "");
+    if (cep.length !== 8) { toast.error("Informe um CEP de 8 dígitos."); return; }
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const j = await r.json();
+      if (j.erro) { toast.error("CEP não encontrado."); return; }
+      setForm((f) => ({
+        ...f,
+        logradouro: j.logradouro || f.logradouro,
+        bairro: j.bairro || f.bairro,
+        cidade: j.localidade || f.cidade,
+        uf: j.uf || f.uf,
+      }));
+      toast.success("Endereço preenchido pelo CEP.");
+    } catch {
+      toast.error("Não foi possível consultar o CEP.");
+    }
+  };
+
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) {
-      toast.error("Faça login para salvar seu perfil.");
-      return;
-    }
-    if (form.nome_completo.trim().length < 3) {
-      toast.error("Informe seu nome completo.");
-      return;
-    }
+    if (!session) { toast.error("Faça login para salvar seu perfil."); return; }
+    if (form.nome_completo.trim().length < 3) { toast.error("Informe seu nome completo."); return; }
     setSaving(true);
     const r1 = await updatePacientePerfil({
       nome_completo: form.nome_completo.trim(),
@@ -91,6 +128,12 @@ export default function PacientePerfilPage() {
       data_nascimento: form.data_nascimento || null,
       sexo: form.sexo,
       cep: form.cep.replace(/\D/g, "") || null,
+      logradouro: form.logradouro || null,
+      numero: form.numero || null,
+      complemento: form.complemento || null,
+      bairro: form.bairro || null,
+      cidade: form.cidade || null,
+      uf: form.uf || null,
       alergias: form.alergias || null,
       condicoes_cronicas: form.condicoes_cronicas || null,
       medicamentos_uso: form.medicamentos_uso || null,
@@ -124,7 +167,7 @@ export default function PacientePerfilPage() {
     <div className="space-y-6">
       <PageHeader
         title="Meu perfil"
-        description="Mantenha seus dados atualizados — eles são usados nos seus agendamentos e prescrições."
+        description="Mantenha seus dados atualizados — eles são usados nos agendamentos, prescrições e comunicação."
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
             <DbIcon className="h-3 w-3" /> Dados em tempo real
@@ -137,135 +180,263 @@ export default function PacientePerfilPage() {
           <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
         </div>
       ) : (
-        <form onSubmit={salvar} className="space-y-6">
-          {/* Identificação */}
-          <section className="card-elevated p-6">
-            <header className="mb-4 flex items-center gap-2">
-              <User className="h-4 w-4 text-primary" />
-              <h3 className="font-display text-lg font-semibold">Identificação</h3>
-            </header>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Nome completo *">
-                <Input
-                  required
-                  value={form.nome_completo}
-                  onChange={(e) => set("nome_completo", e.target.value)}
-                  placeholder="Seu nome completo"
-                />
-              </Field>
-              <Field label="E-mail">
-                <Input value={email} disabled />
-              </Field>
-              <Field label="CPF">
-                <Input
-                  value={form.cpf}
-                  onChange={(e) => set("cpf", e.target.value)}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                />
-              </Field>
-              <Field label="Telefone">
-                <Input
-                  value={form.telefone}
-                  onChange={(e) => set("telefone", e.target.value)}
-                  placeholder="(11) 99999-0000"
-                />
-              </Field>
-              <Field label="Data de nascimento">
-                <Input
-                  type="date"
-                  value={form.data_nascimento}
-                  onChange={(e) => set("data_nascimento", e.target.value)}
-                />
-              </Field>
-              <Field label="Sexo biológico">
-                <Select value={form.sexo} onValueChange={(v) => set("sexo", v as Sexo)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="feminino">Feminino</SelectItem>
-                    <SelectItem value="masculino">Masculino</SelectItem>
-                    <SelectItem value="intersexo">Intersexo</SelectItem>
-                    <SelectItem value="nao_informado">Não informado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="CEP">
-                <Input
-                  value={form.cep}
-                  onChange={(e) => set("cep", e.target.value)}
-                  placeholder="00000-000"
-                  inputMode="numeric"
-                />
-              </Field>
-            </div>
-          </section>
+        <Tabs defaultValue="dados" className="space-y-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+            <TabsTrigger value="dados">Dados</TabsTrigger>
+            <TabsTrigger value="endereco">Endereço</TabsTrigger>
+            <TabsTrigger value="saude">Saúde</TabsTrigger>
+            <TabsTrigger value="conta">Conta & senha</TabsTrigger>
+          </TabsList>
 
-          {/* Saúde */}
-          <section className="card-elevated p-6">
-            <header className="mb-4 flex items-center gap-2">
-              <Heart className="h-4 w-4 text-primary" />
-              <h3 className="font-display text-lg font-semibold">Informações de saúde</h3>
-            </header>
-            <div className="grid gap-4">
-              <Field label="Alergias">
-                <Textarea
-                  rows={2}
-                  value={form.alergias}
-                  onChange={(e) => set("alergias", e.target.value)}
-                  placeholder="Ex: penicilina, dipirona…"
-                />
-              </Field>
-              <Field label="Condições crônicas">
-                <Textarea
-                  rows={2}
-                  value={form.condicoes_cronicas}
-                  onChange={(e) => set("condicoes_cronicas", e.target.value)}
-                  placeholder="Ex: hipertensão, diabetes…"
-                />
-              </Field>
-              <Field label="Medicamentos em uso">
-                <Textarea
-                  rows={2}
-                  value={form.medicamentos_uso}
-                  onChange={(e) => set("medicamentos_uso", e.target.value)}
-                  placeholder="Ex: Losartana 50mg 1x/dia"
-                />
-              </Field>
-            </div>
-          </section>
+          <form onSubmit={salvar} className="space-y-6">
+            <TabsContent value="dados" className="space-y-6">
+              {/* Identificação */}
+              <section className="card-elevated p-6">
+                <header className="mb-4 flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  <h3 className="font-display text-lg font-semibold">Identificação</h3>
+                </header>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Nome completo *">
+                    <Input required value={form.nome_completo}
+                      onChange={(e) => set("nome_completo", e.target.value)}
+                      placeholder="Seu nome completo" />
+                  </Field>
+                  <Field label="E-mail (somente leitura)">
+                    <Input value={email} disabled />
+                  </Field>
+                  <Field label="CPF">
+                    <Input value={form.cpf} onChange={(e) => set("cpf", e.target.value)}
+                      placeholder="000.000.000-00" inputMode="numeric" />
+                  </Field>
+                  <Field label="Telefone">
+                    <Input value={form.telefone} onChange={(e) => set("telefone", e.target.value)}
+                      placeholder="(11) 99999-0000" />
+                  </Field>
+                  <Field label="Data de nascimento">
+                    <Input type="date" value={form.data_nascimento}
+                      onChange={(e) => set("data_nascimento", e.target.value)} />
+                  </Field>
+                  <Field label="Sexo biológico">
+                    <Select value={form.sexo} onValueChange={(v) => set("sexo", v as Sexo)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="feminino">Feminino</SelectItem>
+                        <SelectItem value="masculino">Masculino</SelectItem>
+                        <SelectItem value="intersexo">Intersexo</SelectItem>
+                        <SelectItem value="nao_informado">Não informado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+              </section>
 
-          {/* Contato emergência */}
-          <section className="card-elevated p-6">
-            <header className="mb-4 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <h3 className="font-display text-lg font-semibold">Contato de emergência</h3>
-            </header>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Nome">
-                <Input
-                  value={form.contato_emergencia_nome}
-                  onChange={(e) => set("contato_emergencia_nome", e.target.value)}
-                />
-              </Field>
-              <Field label="Telefone">
-                <Input
-                  value={form.contato_emergencia_telefone}
-                  onChange={(e) => set("contato_emergencia_telefone", e.target.value)}
-                />
-              </Field>
-            </div>
-          </section>
+              {/* Contato emergência */}
+              <section className="card-elevated p-6">
+                <header className="mb-4 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <h3 className="font-display text-lg font-semibold">Contato de emergência</h3>
+                </header>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Nome">
+                    <Input value={form.contato_emergencia_nome}
+                      onChange={(e) => set("contato_emergencia_nome", e.target.value)} />
+                  </Field>
+                  <Field label="Telefone">
+                    <Input value={form.contato_emergencia_telefone}
+                      onChange={(e) => set("contato_emergencia_telefone", e.target.value)} />
+                  </Field>
+                </div>
+              </section>
+            </TabsContent>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={saving} className="bg-gradient-primary hover:opacity-90">
-              {saving
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando…</>
-                : <><Save className="mr-2 h-4 w-4" /> Salvar alterações</>}
-            </Button>
-          </div>
-        </form>
+            <TabsContent value="endereco" className="space-y-6">
+              <section className="card-elevated p-6">
+                <header className="mb-4 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <h3 className="font-display text-lg font-semibold">Endereço</h3>
+                </header>
+                <div className="grid gap-4 md:grid-cols-6">
+                  <div className="md:col-span-2">
+                    <Field label="CEP">
+                      <div className="flex gap-2">
+                        <Input value={form.cep} onChange={(e) => set("cep", e.target.value)}
+                          placeholder="00000-000" inputMode="numeric" />
+                        <Button type="button" variant="outline" onClick={buscarCep}>Buscar</Button>
+                      </div>
+                    </Field>
+                  </div>
+                  <div className="md:col-span-4">
+                    <Field label="Logradouro"><Input value={form.logradouro}
+                      onChange={(e) => set("logradouro", e.target.value)} /></Field>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Field label="Número"><Input value={form.numero}
+                      onChange={(e) => set("numero", e.target.value)} /></Field>
+                  </div>
+                  <div className="md:col-span-4">
+                    <Field label="Complemento"><Input value={form.complemento}
+                      onChange={(e) => set("complemento", e.target.value)} /></Field>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Field label="Bairro"><Input value={form.bairro}
+                      onChange={(e) => set("bairro", e.target.value)} /></Field>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Field label="Cidade"><Input value={form.cidade}
+                      onChange={(e) => set("cidade", e.target.value)} /></Field>
+                  </div>
+                  <div className="md:col-span-1">
+                    <Field label="UF">
+                      <Select value={form.uf} onValueChange={(v) => set("uf", v)}>
+                        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent className="max-h-64">
+                          {UFS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                </div>
+              </section>
+            </TabsContent>
+
+            <TabsContent value="saude" className="space-y-6">
+              <section className="card-elevated p-6">
+                <header className="mb-4 flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <h3 className="font-display text-lg font-semibold">Informações de saúde</h3>
+                </header>
+                <div className="grid gap-4">
+                  <Field label="Alergias">
+                    <Textarea rows={2} value={form.alergias}
+                      onChange={(e) => set("alergias", e.target.value)}
+                      placeholder="Ex: penicilina, dipirona…" />
+                  </Field>
+                  <Field label="Condições crônicas">
+                    <Textarea rows={2} value={form.condicoes_cronicas}
+                      onChange={(e) => set("condicoes_cronicas", e.target.value)}
+                      placeholder="Ex: hipertensão, diabetes…" />
+                  </Field>
+                  <Field label="Medicamentos em uso">
+                    <Textarea rows={2} value={form.medicamentos_uso}
+                      onChange={(e) => set("medicamentos_uso", e.target.value)}
+                      placeholder="Ex: Losartana 50mg 1x/dia" />
+                  </Field>
+                </div>
+                <div className="mt-4 flex items-center justify-between rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> Quer anexar exames, laudos ou cartão do plano?</span>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/app/paciente/documentos">Ir para Documentos</Link>
+                  </Button>
+                </div>
+              </section>
+            </TabsContent>
+
+            <TabsContent value="conta" className="space-y-6">
+              <ContaSeguranca emailAtual={email} onEmailChange={setEmail} />
+            </TabsContent>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={saving} className="bg-gradient-primary hover:opacity-90">
+                {saving
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando…</>
+                  : <><Save className="mr-2 h-4 w-4" /> Salvar alterações</>}
+              </Button>
+            </div>
+          </form>
+        </Tabs>
       )}
     </div>
+  );
+}
+
+function ContaSeguranca({ emailAtual, onEmailChange }: { emailAtual: string; onEmailChange: (v: string) => void }) {
+  const [novoEmail, setNovoEmail] = useState(emailAtual);
+  const [trocandoEmail, setTrocandoEmail] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confSenha, setConfSenha] = useState("");
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
+
+  useEffect(() => { setNovoEmail(emailAtual); }, [emailAtual]);
+
+  const trocarEmail = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!novoEmail || novoEmail === emailAtual) { toast.error("Informe um novo e-mail."); return; }
+    setTrocandoEmail(true);
+    const { error } = await supabase.auth.updateUser({ email: novoEmail });
+    setTrocandoEmail(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Confirme o novo e-mail no link enviado para a caixa atual e nova.");
+    onEmailChange(novoEmail);
+  };
+
+  const trocarSenha = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (novaSenha.length < 8) { toast.error("Nova senha precisa de no mínimo 8 caracteres."); return; }
+    if (novaSenha !== confSenha) { toast.error("Confirmação de senha não confere."); return; }
+    setTrocandoSenha(true);
+    // Re-autentica para validar a senha atual
+    const reauth = await supabase.auth.signInWithPassword({ email: emailAtual, password: senhaAtual });
+    if (reauth.error) {
+      setTrocandoSenha(false);
+      toast.error("Senha atual incorreta.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    setTrocandoSenha(false);
+    if (error) { toast.error(error.message); return; }
+    setSenhaAtual(""); setNovaSenha(""); setConfSenha("");
+    toast.success("Senha atualizada com sucesso.");
+  };
+
+  return (
+    <>
+      <section className="card-elevated p-6">
+        <header className="mb-4 flex items-center gap-2">
+          <Mail className="h-4 w-4 text-primary" />
+          <h3 className="font-display text-lg font-semibold">E-mail de acesso</h3>
+        </header>
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+          <Field label="Novo e-mail">
+            <Input type="email" value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} />
+          </Field>
+          <Button type="button" variant="outline" onClick={trocarEmail} disabled={trocandoEmail}>
+            {trocandoEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar e-mail"}
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Você receberá um link de confirmação no e-mail atual e no novo. A troca só é efetivada após confirmar.
+        </p>
+      </section>
+
+      <section className="card-elevated p-6">
+        <header className="mb-4 flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-primary" />
+          <h3 className="font-display text-lg font-semibold">Trocar senha</h3>
+        </header>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Senha atual">
+            <Input type="password" autoComplete="current-password"
+              value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
+          </Field>
+          <Field label="Nova senha">
+            <Input type="password" autoComplete="new-password" minLength={8}
+              value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
+          </Field>
+          <Field label="Confirmar nova senha">
+            <Input type="password" autoComplete="new-password" minLength={8}
+              value={confSenha} onChange={(e) => setConfSenha(e.target.value)} />
+          </Field>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button type="button" variant="outline" onClick={trocarSenha} disabled={trocandoSenha}>
+            {trocandoSenha ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar senha"}
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Mínimo de 8 caracteres. Use uma senha exclusiva.</p>
+      </section>
+    </>
   );
 }
 
