@@ -196,7 +196,7 @@ export default function AdminFinanceiroConfig() {
           <Button
             size="sm"
             onClick={salvarGlobal}
-            disabled={savingGlobal || loadingGlobal}
+            disabled={savingGlobal || loadingGlobal || !globalValid}
             className="bg-gradient-primary hover:opacity-90"
           >
             {savingGlobal ? (
@@ -213,43 +213,16 @@ export default function AdminFinanceiroConfig() {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                % repasse para o médico
-              </label>
-              <div className="mt-1.5 flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  value={medicoPct}
-                  onChange={(e) =>
-                    setMedicoPct(Math.max(0, Math.min(100, Number(e.target.value) || 0)))
-                  }
-                  className="w-32"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Quanto o médico recebe do valor bruto cobrado do paciente.
-              </p>
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                % retido pela plataforma
-              </label>
-              <div className="mt-1.5 flex items-center gap-2">
-                <div className="w-32 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm font-medium">
-                  {plataformaPct.toFixed(2)}
-                </div>
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Calculado automaticamente: 100 − % do médico.
-              </p>
-            </div>
+          <div className="space-y-2">
+            <RepasseSplitInput
+              medicoPct={medicoPct}
+              onChange={setMedicoPct}
+              onValidityChange={setGlobalValid}
+              labels={{ medico: "% repasse para o médico", plataforma: "% retido pela plataforma" }}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Edite qualquer um dos dois lados — o outro é recalculado automaticamente para somar 100%.
+            </p>
           </div>
         )}
 
