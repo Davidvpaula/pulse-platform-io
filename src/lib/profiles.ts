@@ -137,14 +137,15 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       {
         label: "Financeiro",
         icon: Wallet,
+        requiresCapability: "financeiro.ver",
         children: [
-          { label: "Visão geral", to: "/app/admin/financeiro" },
-          { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse" },
+          { label: "Visão geral", to: "/app/admin/financeiro", requiresCapability: "financeiro.ver" },
+          { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse", requiresCapability: "financeiro.editar_comissao" },
         ],
       },
-      { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope },
-      { label: "Cupons", to: "/app/admin/cupons", icon: Tag },
-      { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck },
+      { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
+      { label: "Cupons", to: "/app/admin/cupons", icon: Tag, requiresCapability: "financeiro.servicos_gerenciar" },
+      { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck, requiresCapability: "financeiro.servicos_gerenciar" },
       {
         label: "Comunicação",
         icon: MessageCircle,
