@@ -25,6 +25,7 @@ export type Database = {
           observacoes: string | null
           reserva_expira_em: string | null
           reservado_por_consulta_id: string | null
+          servico_id: string | null
           status: Database["public"]["Enums"]["slot_status"]
           updated_at: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           observacoes?: string | null
           reserva_expira_em?: string | null
           reservado_por_consulta_id?: string | null
+          servico_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
           updated_at?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           observacoes?: string | null
           reserva_expira_em?: string | null
           reservado_por_consulta_id?: string | null
+          servico_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
           updated_at?: string
         }
@@ -60,6 +63,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_slots_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_financeiros"
             referencedColumns: ["id"]
           },
         ]
@@ -1064,6 +1074,9 @@ export type Database = {
       }
       consultas: {
         Row: {
+          avaliacao_paciente_comentario: string | null
+          avaliacao_paciente_em: string | null
+          avaliacao_paciente_nota: number | null
           canal_origem: Database["public"]["Enums"]["consulta_canal"]
           comissao_percentual_snapshot: number | null
           comissao_snapshot_centavos: number | null
@@ -1092,6 +1105,9 @@ export type Database = {
           valor_snapshot_centavos: number | null
         }
         Insert: {
+          avaliacao_paciente_comentario?: string | null
+          avaliacao_paciente_em?: string | null
+          avaliacao_paciente_nota?: number | null
           canal_origem?: Database["public"]["Enums"]["consulta_canal"]
           comissao_percentual_snapshot?: number | null
           comissao_snapshot_centavos?: number | null
@@ -1120,6 +1136,9 @@ export type Database = {
           valor_snapshot_centavos?: number | null
         }
         Update: {
+          avaliacao_paciente_comentario?: string | null
+          avaliacao_paciente_em?: string | null
+          avaliacao_paciente_nota?: number | null
           canal_origem?: Database["public"]["Enums"]["consulta_canal"]
           comissao_percentual_snapshot?: number | null
           comissao_snapshot_centavos?: number | null
@@ -2894,6 +2913,7 @@ export type Database = {
           id: string
           medico_id: string
           servico_id: string
+          status: Database["public"]["Enums"]["medico_servico_status"]
           updated_at: string
         }
         Insert: {
@@ -2904,6 +2924,7 @@ export type Database = {
           id?: string
           medico_id: string
           servico_id: string
+          status?: Database["public"]["Enums"]["medico_servico_status"]
           updated_at?: string
         }
         Update: {
@@ -2914,6 +2935,7 @@ export type Database = {
           id?: string
           medico_id?: string
           servico_id?: string
+          status?: Database["public"]["Enums"]["medico_servico_status"]
           updated_at?: string
         }
         Relationships: []
@@ -2945,6 +2967,7 @@ export type Database = {
           link_sala_padrao: string | null
           motivo_reprovacao: string | null
           nome: string
+          prioridade_atendimento: number
           rqe: string | null
           status: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em: string | null
@@ -2983,6 +3006,7 @@ export type Database = {
           link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome: string
+          prioridade_atendimento?: number
           rqe?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null
@@ -3021,6 +3045,7 @@ export type Database = {
           link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome?: string
+          prioridade_atendimento?: number
           rqe?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null
@@ -4110,13 +4135,21 @@ export type Database = {
           created_at: string
           created_by: string | null
           descricao: string | null
+          descricao_publica: string | null
+          duracao_min: number
+          especialidade_id: string | null
+          icone: string | null
           id: string
           modelo: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome: string
           ordem: number
+          prioridade: number
+          requer_aprovacao_medico: boolean
+          slug: string | null
           tipo: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at: string
           valor_fixo_centavos: number | null
+          valor_paciente_centavos: number
         }
         Insert: {
           ativo?: boolean
@@ -4124,13 +4157,21 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           descricao?: string | null
+          descricao_publica?: string | null
+          duracao_min?: number
+          especialidade_id?: string | null
+          icone?: string | null
           id?: string
           modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome: string
           ordem?: number
+          prioridade?: number
+          requer_aprovacao_medico?: boolean
+          slug?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at?: string
           valor_fixo_centavos?: number | null
+          valor_paciente_centavos?: number
         }
         Update: {
           ativo?: boolean
@@ -4138,15 +4179,31 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           descricao?: string | null
+          descricao_publica?: string | null
+          duracao_min?: number
+          especialidade_id?: string | null
+          icone?: string | null
           id?: string
           modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome?: string
           ordem?: number
+          prioridade?: number
+          requer_aprovacao_medico?: boolean
+          slug?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at?: string
           valor_fixo_centavos?: number | null
+          valor_paciente_centavos?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "servicos_financeiros_especialidade_id_fkey"
+            columns: ["especialidade_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_password_meta: {
         Row: {
@@ -4600,6 +4657,37 @@ export type Database = {
           _observacao?: string
         }
         Returns: string
+      }
+      fn_ranking_medico_servico: {
+        Args: {
+          _limit?: number
+          _modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
+          _servico_id: string
+        }
+        Returns: {
+          avaliacao: number
+          espera_min: number
+          medico_id: string
+          medico_nome: string
+          prioridade: number
+          proximo_slot_id: string
+          proximo_slot_inicio: string
+          score: number
+        }[]
+      }
+      fn_resolver_comissao: {
+        Args: {
+          _medico_id: string
+          _servico_id: string
+          _valor_bruto_centavos: number
+        }
+        Returns: {
+          comissao_pct: number
+          modelo: Database["public"]["Enums"]["servico_financeiro_modelo"]
+          origem_regra: string
+          valor_medico_centavos: number
+          valor_plataforma_centavos: number
+        }[]
       }
       forcar_status_consulta: {
         Args: {
@@ -5078,6 +5166,7 @@ export type Database = {
         | "ia_provider"
         | "assinatura_digital"
         | "eventos_sistema"
+      medico_servico_status: "ativo" | "pendente" | "recusado" | "desativado"
       medico_status:
         | "pendente"
         | "em_analise"
@@ -5504,6 +5593,7 @@ export const Constants = {
         "assinatura_digital",
         "eventos_sistema",
       ],
+      medico_servico_status: ["ativo", "pendente", "recusado", "desativado"],
       medico_status: [
         "pendente",
         "em_analise",
