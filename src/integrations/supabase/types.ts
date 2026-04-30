@@ -1061,7 +1061,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "paciente" | "medico" | "secretaria" | "empresa" | "admin"
+      app_role:
+        | "paciente"
+        | "medico"
+        | "secretaria"
+        | "empresa"
+        | "admin"
+        | "supervisor"
       consulta_modalidade: "online" | "presencial"
       consulta_status:
         | "agendada"
@@ -1222,7 +1228,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["paciente", "medico", "secretaria", "empresa", "admin"],
+      app_role: [
+        "paciente",
+        "medico",
+        "secretaria",
+        "empresa",
+        "admin",
+        "supervisor",
+      ],
       consulta_modalidade: ["online", "presencial"],
       consulta_status: [
         "agendada",
