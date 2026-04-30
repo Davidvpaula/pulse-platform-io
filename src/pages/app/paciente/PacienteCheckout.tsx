@@ -44,6 +44,14 @@ export default function PacienteCheckout() {
   const [cupomAplicado, setCupomAplicado] = useState<CupomAplicado | null>(null);
   const [cupomLoading, setCupomLoading] = useState(false);
 
+  // Pré-validação (enquanto digita)
+  type Preview =
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "ok"; aplicado: CupomAplicado }
+    | { state: "error"; message: string };
+  const [preview, setPreview] = useState<Preview>({ state: "idle" });
+
   async function carregar() {
     const p = await getPagamento(sessionId);
     setPagamento(p);
