@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power } from "lucide-react";
+import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power, Filter } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
