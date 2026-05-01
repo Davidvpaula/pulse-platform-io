@@ -171,6 +171,10 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       delete payload.id;
       delete payload.created_at;
       delete payload.updated_at;
+      if (medicoMode) {
+        payload.nivel = "medico";
+        payload.termos_aceitos = true;
+      }
 
       if (id) {
         const { error } = await supabase.from("planos").update(payload).eq("id", id);
