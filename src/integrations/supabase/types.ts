@@ -4205,6 +4205,112 @@ export type Database = {
           },
         ]
       }
+      treinamentos_aulas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          duracao_min: number | null
+          id: string
+          modulo_id: string
+          ordem: number
+          titulo: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          modulo_id: string
+          ordem?: number
+          titulo: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          modulo_id?: string
+          ordem?: number
+          titulo?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_aulas_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_conclusoes: {
+        Row: {
+          aula_id: string
+          concluido_em: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          aula_id: string
+          concluido_em?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          aula_id?: string
+          concluido_em?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_conclusoes_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_aulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_modulos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_password_meta: {
         Row: {
           must_change: boolean
