@@ -50,6 +50,7 @@ import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
 import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
 import MedicoPerfil from "@/pages/app/medico/MedicoPerfil";
 import MedicoConsultas from "@/pages/app/medico/MedicoConsultas";
+import MedicoFinanceiro from "@/pages/app/medico/MedicoFinanceiro";
 
 import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
 import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
@@ -57,8 +58,10 @@ import MedicoDocumentos from "@/pages/app/medico/MedicoDocumentos";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
+import SecretariaAgendamentos from "@/pages/app/secretaria/SecretariaAgendamentos";
 import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
 import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
+import SecretariaRelatorios from "@/pages/app/secretaria/SecretariaRelatorios";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
