@@ -113,6 +113,17 @@ export default function AdminSaquesMedicos() {
     for (const u of updates) {
       await supabase.from("app_settings").upsert(u, { onConflict: "key" });
     }
+    // Auditoria da alteração de configuração
+    if (configAnterior) {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("financeiro_auditoria").insert({
+        tipo: "config_saque",
+        descricao: "Alteração nas regras de liberação de saque",
+        dados: { antes: configAnterior, depois: config },
+        user_id: user?.id,
+      });
+    }
+    setConfigAnterior(config);
     toast.success("Configurações de saque salvas");
     setConfigOpen(false);
   }
