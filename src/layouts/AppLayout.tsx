@@ -178,36 +178,38 @@ function SidebarBody({
   // Monta a lista visível conforme o perfil.
   const visibleNav: RenderItem[] = useMemo(() => {
     if (profileKey === "colaborador") {
-      return colaboradorMenu
-        .map(node => {
-          if (node.children?.length) {
-            const visibleChildren = node.children
-              .filter(c => allow(c.key))
-              .map(c => ({ label: c.label, to: c.to }));
-            if (visibleChildren.length === 0) return null;
-            return { label: node.label, icon: node.icon, children: visibleChildren };
-          }
-          if (!allow(node.key)) return null;
-          return { label: node.label, icon: node.icon, to: node.to };
-        })
-        .filter((x): x is RenderItem => x !== null);
+      const out: RenderItem[] = [];
+      for (const node of colaboradorMenu) {
+        if (node.children?.length) {
+          const visibleChildren = node.children
+            .filter(c => allow(c.key))
+            .map(c => ({ label: c.label, to: c.to }));
+          if (visibleChildren.length === 0) continue;
+          out.push({ label: node.label, icon: node.icon, children: visibleChildren });
+        } else {
+          if (!allow(node.key)) continue;
+          out.push({ label: node.label, icon: node.icon, to: node.to });
+        }
+      }
+      return out;
     }
 
     // Demais perfis: usa profile.nav fixo, filtrando por has_permission do banco.
-    return profile.nav
-      .map(item => {
-        if (item.children?.length) {
-          if (item.requiresCapability && !allow(item.requiresCapability)) return null;
-          const visibleChildren = item.children
-            .filter(c => allow(c.requiresCapability))
-            .map(c => ({ label: c.label, to: c.to }));
-          if (visibleChildren.length === 0) return null;
-          return { label: item.label, icon: item.icon, children: visibleChildren };
-        }
-        if (!allow(item.requiresCapability)) return null;
-        return { label: item.label, icon: item.icon, to: item.to };
-      })
-      .filter((x): x is RenderItem => x !== null);
+    const out: RenderItem[] = [];
+    for (const item of profile.nav) {
+      if (item.children?.length) {
+        if (item.requiresCapability && !allow(item.requiresCapability)) continue;
+        const visibleChildren = item.children
+          .filter(c => allow(c.requiresCapability))
+          .map(c => ({ label: c.label, to: c.to }));
+        if (visibleChildren.length === 0) continue;
+        out.push({ label: item.label, icon: item.icon, children: visibleChildren });
+      } else {
+        if (!allow(item.requiresCapability)) continue;
+        out.push({ label: item.label, icon: item.icon, to: item.to });
+      }
+    }
+    return out;
   }, [profileKey, profile.nav, loading, has, isDemoMode]);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
