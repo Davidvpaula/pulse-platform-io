@@ -161,6 +161,7 @@ export default function AdminSaquesMedicos() {
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="solicitado">Solicitado</SelectItem>
             <SelectItem value="em_analise">Em análise</SelectItem>
+            <SelectItem value="correcao_solicitada">Correção solicitada</SelectItem>
             <SelectItem value="aprovado">Aprovado</SelectItem>
             <SelectItem value="pago">Pago</SelectItem>
             <SelectItem value="recusado">Recusado</SelectItem>
