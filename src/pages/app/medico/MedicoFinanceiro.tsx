@@ -78,7 +78,7 @@ export default function MedicoFinanceiro() {
           pacientes:paciente_id ( user_id )
         )
       `)
-      .eq("medico_id", medicoId)
+      .eq("medico_id", mid)
       .order("data_consulta", { ascending: false })
       .limit(500);
 
