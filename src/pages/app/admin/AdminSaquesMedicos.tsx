@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Banknote, CheckCircle2, Clock, XCircle, AlertTriangle, Loader2, Eye, Download, Settings } from "lucide-react";
+import { Banknote, CheckCircle2, Clock, XCircle, AlertTriangle, Loader2, Eye, Download, Settings, RotateCcw } from "lucide-react";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
