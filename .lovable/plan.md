@@ -1,114 +1,140 @@
-## Objetivo
 
-Reorganizar perfis e unificar a fonte de verdade do menu lateral:
+# Planos Customizados — Plano de Execução
 
-- **Paciente**, **Médico**, **Empresa**, **Admin**: cada um com menu base próprio (lista fixa de itens).
-- **Colaborador**: menu **dinâmico**, sem nenhuma lista fixa — itens aparecem somente conforme `has_permission` retornar `true` para o usuário logado, dado o que o Admin liberou (grant individual, função interna como Secretaria/Supervisor/Financeiro/Comercial/Suporte, ou permissão de role).
-- Menu e rota passam a usar a **mesma** fonte: `has_permission` (RPC do banco). O filtro mock `hasCapability` deixa de ser usado em decisões reais.
+## Viabilidade
 
-## O que existe hoje (confirmado)
+**Sim, é 100% viável.** A base atual já possui:
+- `planos` com `medico_id` (nullable) — suporta planos do médico
+- `plano_beneficios` com `especialidade_id`, `medico_id`, `servico_id` (todos nullable) — já tem os FKs
+- `assinaturas` e `assinatura_uso` — ciclo de vida de assinatura já funcional
+- `especialidades`, `servicos_financeiros`, `medico_servicos` — fontes de dados para seleção dinâmica
+- Enum `beneficio_tipo` já inclui: especialidade, medico, servico, categoria, desconto_geral
 
-- Roles do banco (enum `app_role`): `paciente, medico, secretaria, empresa, admin, supervisor`.
-- Tabelas reais já em uso: `permissions_catalog` (com `permission_key`, `modulo`, `descricao`), `permissoes_perfil` (defaults por role), `permissoes_colaborador` (grant/revoke por usuário), `function_permissions` (por função interna), `colaboradores` (`funcao_interna`, `status_conta`).
-- RPC `has_permission(_user_id, _key)` já cobre: bypass admin → revoke individual → grant individual → função interna → permissão por role. Esta é a fonte oficial.
-- O perfil "Colaborador" hoje está fundido com o `secretaria` no `profiles.ts` (lista fixa). Vamos separá-lo conceitualmente.
+O que **falta** é UI de seleção dinâmica nos benefícios, o módulo do médico, taxação, plano do paciente, e separação financeira nos dashboards.
 
-## Plano
+---
 
-### 1. Catálogo do menu por chave de permissão
+## Etapa 1 — Correção dos Benefícios (item 1)
 
-Arquivo novo: `src/lib/menu/menuCatalog.ts`.
+**Problema:** O `PlanoBuilder` tem os campos `tipo` (especialidade/medico/servico) mas o formulário não exibe seletor dinâmico — só um campo texto "Nome".
 
-Define **todos** os possíveis itens do menu de Colaborador como objetos:
+**Solução:**
+- No `PlanoBuilder.tsx`, ao selecionar tipo "Médico": exibir autocomplete buscando perfis com `tipo_perfil = 'medico'`
+- Tipo "Especialidade": autocomplete da tabela `especialidades`
+- Tipo "Serviço": autocomplete de `servicos_financeiros`
+- Salvar o respectivo ID (`medico_id`, `especialidade_id`, `servico_id`) no benefício
+- O campo "Nome" vira read-only, preenchido automaticamente pela seleção
 
-```text
-{ key: "financeiro.ver", label: "Financeiro", to: "/app/colaborador/financeiro",
-  icon: Wallet, modulo: "Financeiro", ordem: 30 }
-```
+**Impacto:** Nenhuma alteração de banco necessária (colunas já existem).
 
-Itens com sub-rotas (ex.: Comunicação, Supervisão) declaram `children`, cada filho com sua própria `key`. Um pai aparece se **qualquer** filho tiver permissão.
+---
 
-A ordem segue a coluna `ordem` do `permissions_catalog` quando aplicável; senão, ordem manual no catálogo.
+## Etapa 2 — Plano Criado pelo Médico (item 2)
 
-### 2. Novo perfil `colaborador` em `profiles.ts`
+**Banco:**
+- Adicionar coluna `nivel` (enum: `admin`, `medico`, `paciente_custom`) na tabela `planos` — default `admin`
+- Adicionar coluna `regra_acesso` (enum: `direto`, `pos_consulta`) — default `direto`
+- Adicionar coluna `termos_aceitos` (boolean) no `planos`
+- Adicionar `termos_plano_medico` em `app_settings` (texto editável pelo Admin)
+- RLS: médico só pode criar/editar planos onde `medico_id = auth.uid()` e `nivel = 'medico'`
 
-- Adiciona `ProfileKey = "colaborador"` (mantém os outros 4 fixos).
-- `profiles.colaborador.nav` fica **vazio** (`[]`) — sinal de "menu dinâmico".
-- `basePath: "/app/colaborador"` (rotas reaproveitam as existentes em `/app/secretaria/*` via redirects ou alias; ver passo 6).
-- Atualiza `rolesToProfileKey` e `ROLE_PRIORITY` em `auth.tsx`:
-  - Se o usuário tem role `secretaria` ou `supervisor`, ou existe registro em `colaboradores` para o `user_id`, o perfil ativo vira `colaborador`.
-  - Prioridade: `admin > medico > colaborador > empresa > paciente`.
-- O perfil antigo `secretaria` deixa de ser exibido como dashboard separado; vira detalhe de "função interna" dentro de Colaborador.
+**Frontend:**
+- Nova página: `/app/medico/planos` — lista planos do médico logado
+- Reutilizar `PlanoBuilder` com modo restrito (sem campos de custo operacional, imposto, etc.)
+- Tela de Termos antes de salvar
+- Plano publicado aparece no perfil público do médico
+- Nova página Admin: `/app/admin/planos-medicos` — lista todos os planos de médicos (read-only + aprovação)
 
-### 3. Hook `usePermissionsBatch`
+---
 
-Arquivo novo: `src/lib/permissions/usePermissionsBatch.ts`.
+## Etapa 3 — Taxação Admin sobre Plano do Médico (item 3)
 
-- Recebe um `string[]` de chaves.
-- Verifica role admin (uma chamada `has_role` com cache) — se admin, retorna todas as chaves como `true` sem ir ao banco para cada uma.
-- Caso contrário, faz `Promise.all` de `has_permission` reaproveitando o cache do `usePermission` atual (`cache` do módulo). Memoiza a entrada por `keys.sort().join("|")` para evitar refetch a cada render.
-- Retorna `{ loading, has(key), allowed: Record<string, boolean> }`.
+**Banco:**
+- Nova tabela `plano_taxa_plataforma` com: `id`, `tipo` (percentual/fixo), `valor_pct`, `valor_fixo_centavos`, `vigencia_inicio`, `created_by`, `created_at`
+- Nova tabela `assinatura_snapshot` com: `id`, `assinatura_id`, `plano_snapshot` (JSONB), `beneficios_snapshot` (JSONB), `valor_bruto_centavos`, `taxa_plataforma_centavos`, `valor_liquido_medico_centavos`, `desconto_aplicado_pct`, `origem` (enum: admin/medico/paciente_custom), `created_at`
+- Trigger: ao criar assinatura de plano com `nivel = 'medico'`, gerar snapshot automaticamente com cálculo da taxa
 
-### 4. Refatorar `SidebarBody` (`src/layouts/AppLayout.tsx`)
+**Frontend:**
+- Admin > Financeiro > Planos personalizados: configurar % ou valor fixo
+- Dashboard médico: card "Receita de planos" (valor líquido)
+- Dashboard admin: card "Lucro plataforma — planos médicos"
 
-Lógica nova:
+---
 
-```text
-1. Se profileKey ∈ {paciente, medico, empresa, admin}:
-     - usa profile.nav fixo (como hoje)
-     - chaves coletadas dos itens com requiresCapability são consultadas via usePermissionsBatch
-     - admin: bypass total (todas chaves = true)
-2. Se profileKey === "colaborador":
-     - usa o catálogo do passo 1
-     - chaves = todas as keys do catálogo (itens + filhos)
-     - usePermissionsBatch retorna o mapa
-     - itens visíveis = aqueles com has(key) === true (e pais com pelo menos 1 filho permitido)
-3. Enquanto loading: renderiza skeleton de 6-8 linhas no lugar do <ul>, sem piscar.
-4. Modo demo (DEV && !session): exibe TUDO do menu do perfil escolhido — bypass local, sem chamar RPC. Garante que o switcher de perfis em desenvolvimento siga útil.
-```
+## Etapa 4 — Plano Personalizado pelo Paciente (item 4)
 
-Remove de `SidebarBody`:
-- `useAuth().hasCapability` (não decide mais o menu real).
-- O bypass por `profileKey === "admin"` baseado em string (admin agora é detectado via role).
+**Banco:**
+- Nova tabela `plano_medicos` (N:N): `id`, `plano_id`, `medico_id`, `aceite_medico` (boolean), `aceite_em` (timestamp)
+- Nova tabela `desconto_progressivo_regras`: `id`, `qtd_medicos_min`, `desconto_pct`, `ativo`, `created_by`, `created_at`
+- Ao criar plano com `nivel = 'paciente_custom'`, `created_by = paciente`, inserir linhas em `plano_medicos` para cada médico escolhido
+- Assinatura só ativa após todos os médicos aceitarem (`aceite_medico = true`)
 
-### 5. Limpeza em `abilities.ts` e `auth.tsx`
+**Frontend:**
+- Fluxo no app do paciente: `/app/paciente/montar-plano`
+  - Step 1: escolher médicos (com busca)
+  - Step 2: ver desconto progressivo calculado em tempo real
+  - Step 3: revisar valor final e confirmar
+- Admin > Planos > Regras de desconto: CRUD da tabela `desconto_progressivo_regras`
+- Admin > Planos > Planos pacientes: lista de planos custom com status de aceite
 
-- `Capability` deixa de listar chaves do banco (`financeiro.ver`, `auditoria.ver`, etc.). Mantém só caps puramente cosméticas/demo, se houver — caso contrário, marca `hasCapability` como `@deprecated` no `useAuth`.
-- `defaultCapabilities` reduzido (ou removido se ninguém mais consome — vou confirmar com `rg "hasCapability"` antes de apagar).
-- `useAuth` continua expondo `hasCapability` para retrocompatibilidade temporária, mas o menu não usa mais.
+---
 
-### 6. Rotas do colaborador
+## Etapa 5 — Separação Financeira (itens 5 e 6)
 
-- Mantém as URLs existentes (`/app/secretaria/*`) funcionando para não quebrar links externos/bookmarks.
-- Adiciona aliases `/app/colaborador/*` redirecionando para as mesmas páginas (mesmo componente, rota duplicada). O guard de cada rota continua sendo `RequireRoutePermission` com a `perm` correspondente — fonte única.
-- O catálogo do menu (passo 1) aponta para `/app/colaborador/...`.
+**Banco:**
+- Adicionar coluna `origem_receita` (enum: `consulta`, `servico_plataforma`, `plano_admin`, `plano_medico`, `plano_paciente_custom`) na tabela `assinaturas`
+- Trigger que preenche automaticamente com base no `nivel` do plano vinculado
 
-### 7. Garantia de coerência (dev only)
+**Frontend — Dashboard Admin:**
+- Admin > Planos: 3 abas (Plataforma / Médicos / Pacientes custom)
+- Admin > Financeiro: cards separados por origem (consultas, serviços, plano admin, plano médico, plano paciente)
+- Filtro por `origem_receita` em todos os relatórios
 
-Adiciona, em `src/lib/menu/validateMenuKeys.ts`, uma checagem em `import.meta.env.DEV`: ao montar o catálogo, faz `select permission_key from permissions_catalog` (uma vez) e loga `console.warn` para qualquer `key` referenciada no menu que não exista no catálogo. Evita typos silenciosos no futuro.
+**Frontend — Dashboard Médico:**
+- Separar receita de consultas vs receita de planos próprios
 
-## Fora de escopo (próximas iterações)
+---
 
-- UI de "atribuir função interna" / "liberar permissão pontual" — já existe em `Permissoes.tsx`; só vamos validar que ela escreve em `permissoes_colaborador` e `colaboradores.funcao_interna`.
-- Migrar dados de antigos usuários `secretaria` para registros em `colaboradores` (se necessário, fazemos depois com migração dedicada).
+## Etapa 6 — Regras Críticas (item 7)
 
-## Arquivos alterados
+- Versionamento de plano: ao editar plano com assinantes ativos, criar nova versão (novo registro) e manter o antigo vinculado às assinaturas existentes
+- Snapshot imutável: `assinatura_snapshot` nunca é editado após criação
+- RLS rigoroso em todas as novas tabelas
+- Auditoria: triggers em `planos_auditoria` já existem, estender para novas tabelas
 
-**Novos**
-- `src/lib/menu/menuCatalog.ts`
-- `src/lib/menu/validateMenuKeys.ts`
-- `src/lib/permissions/usePermissionsBatch.ts`
+---
 
-**Editados**
-- `src/layouts/AppLayout.tsx` — `SidebarBody` reescrito.
-- `src/lib/profiles.ts` — adiciona perfil `colaborador` (nav vazio); itens fixos dos demais perfis preservados.
-- `src/lib/auth.tsx` — `ROLE_PRIORITY`, `rolesToProfileKey` reconhecendo `colaborador`; `hasCapability` marcado deprecated.
-- `src/lib/abilities.ts` — limpeza do `Capability`/`defaultCapabilities`.
-- `src/App.tsx` — aliases `/app/colaborador/*` apontando para os mesmos componentes de `/app/secretaria/*`.
+## Ordem de Execução
 
-## Impacto
+1. **Etapa 1** — Seleção dinâmica nos benefícios (só frontend, risco zero)
+2. **Etapa 2** — Plano do médico (migração + frontend)
+3. **Etapa 3** — Taxação (migração + frontend)
+4. **Etapa 4** — Plano do paciente (migração + frontend)
+5. **Etapa 5** — Separação financeira nos dashboards
+6. **Etapa 6** — Versionamento e regras de segurança
 
-- **Sem migração de banco.** A função `has_permission` e tabelas já estão prontas.
-- **Sem quebra de URL.** Rotas antigas de secretaria continuam respondendo.
-- **Menu do colaborador passa a refletir 1:1** o que o Admin libera no painel de Permissões.
-- **Risco baixo**: as rotas já são protegidas pelo `RequireRoutePermission` há tempo; só estamos alinhando o menu à mesma fonte.
+Cada etapa é independente e não quebra o sistema existente. Posso executar uma por vez para validação.
+
+---
+
+## Detalhes Técnicos
+
+**Novas tabelas:** `plano_taxa_plataforma`, `assinatura_snapshot`, `plano_medicos`, `desconto_progressivo_regras`
+
+**Colunas adicionadas em tabelas existentes:**
+- `planos`: `nivel`, `regra_acesso`, `termos_aceitos`
+- `assinaturas`: `origem_receita`
+
+**Novos enums:** `plano_nivel`, `plano_regra_acesso`, `origem_receita_assinatura`
+
+**Novas rotas:**
+- `/app/medico/planos`
+- `/app/paciente/montar-plano`
+- `/app/admin/planos-medicos`
+
+**Arquivos principais afetados:**
+- `src/components/planos/PlanoBuilder.tsx` (seleção dinâmica)
+- `src/pages/app/admin/AdminPlanos.tsx` (abas por nível)
+- Novos componentes para cada módulo
+
+**Nenhuma tabela existente é removida ou reestruturada.** Apenas adições.
