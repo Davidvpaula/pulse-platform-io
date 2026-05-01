@@ -1,140 +1,59 @@
 
-# Planos Customizados — Plano de Execução
+# 5 Ações Pendentes + Sistema de Cancelamento de Planos Médicos
 
-## Viabilidade
+## Ação 1 — Menus e Navegação
+- `profiles.ts`: importar icone `Layers`
+- Menu paciente: adicionar "Montar Plano" (`/app/paciente/montar-plano`, icone `Layers`) após "Meu Plano"
+- Menu medico: adicionar "Meus Planos" (`/app/medico/planos`, icone `BadgeCheck`) após "Treinamento"
+- Menu admin: adicionar sub-item "Planos de Médicos" (`/app/admin/planos-medicos`) dentro da seção existente
 
-**Sim, é 100% viável.** A base atual já possui:
-- `planos` com `medico_id` (nullable) — suporta planos do médico
-- `plano_beneficios` com `especialidade_id`, `medico_id`, `servico_id` (todos nullable) — já tem os FKs
-- `assinaturas` e `assinatura_uso` — ciclo de vida de assinatura já funcional
-- `especialidades`, `servicos_financeiros`, `medico_servicos` — fontes de dados para seleção dinâmica
-- Enum `beneficio_tipo` já inclui: especialidade, medico, servico, categoria, desconto_geral
+## Ação 2 — Integrar Configs no Admin
+- `AdminPlanos.tsx`: adicionar abas "Regras de desconto" e "Taxa plataforma" renderizando `DescontoProgressivoConfig` e `TaxaPlataformaConfig`
 
-O que **falta** é UI de seleção dinâmica nos benefícios, o módulo do médico, taxação, plano do paciente, e separação financeira nos dashboards.
+## Ação 3 — Fluxo de Aceite do Médico
+- `MedicoPlanos.tsx`: adicionar seção "Planos pendentes de aceite" consultando `plano_medicos` onde `medico_id = uid` e `aceite_medico = false`
+- Botões Aceitar/Recusar com update no banco
 
----
+## Ação 4 — Receita Separada nos Dashboards
+- `AdminDashboard.tsx` e `MedicoFinanceiro.tsx`: adicionar cards de receita agrupados por `origem_receita` da tabela `assinaturas`
 
-## Etapa 1 — Correção dos Benefícios (item 1)
+## Ação 5 — Versionamento de Plano
+- `PlanoBuilder.tsx`: verificar se plano tem assinaturas ativas; se sim, bloquear edição e oferecer "Criar nova versão"
 
-**Problema:** O `PlanoBuilder` tem os campos `tipo` (especialidade/medico/servico) mas o formulário não exibe seletor dinâmico — só um campo texto "Nome".
+## Ação 6 — Sistema de Cancelamento (GRANDE)
 
-**Solução:**
-- No `PlanoBuilder.tsx`, ao selecionar tipo "Médico": exibir autocomplete buscando perfis com `tipo_perfil = 'medico'`
-- Tipo "Especialidade": autocomplete da tabela `especialidades`
-- Tipo "Serviço": autocomplete de `servicos_financeiros`
-- Salvar o respectivo ID (`medico_id`, `especialidade_id`, `servico_id`) no benefício
-- O campo "Nome" vira read-only, preenchido automaticamente pela seleção
+### Migration (banco)
+- Enum `plano_status`: adicionar `encerramento_pendente` e `encerrado`
+- Enum `modo_cancelamento_plano`: `cumprir_ciclo`, `reembolso_imediato`, `hibrido`
+- `planos`: adicionar `aprovado_admin` (boolean)
+- `assinaturas`: adicionar `renovacao_bloqueada` (boolean), `data_fim_acesso` (date)
+- Nova tabela `plano_cancelamento_evento`: plano_id, medico_id, total_pacientes, valor_comprometido, tipo_encerramento, motivo, termos_aceitos, status, admin_acao
+- Nova tabela `reembolso_planos`: paciente_id, plano_id, assinatura_id, valor, valor_proporcional, dias_restantes, status, motivo
+- Nova tabela `plano_medico_status_log`: plano_id, medico_id, status_anterior, status_novo, changed_by, motivo
+- Trigger para logar mudanças de status automaticamente
+- Função `calcular_reembolso_proporcional`
+- RLS completo em todas as tabelas
 
-**Impacto:** Nenhuma alteração de banco necessária (colunas já existem).
+### Frontend — Médico
+- `MedicoPlanos.tsx`: botão "Encerrar plano" em cada card
+- Modal obrigatório com: aviso jurídico, numero de pacientes ativos, valor comprometido, possível reembolso, checkbox de termos, campo de motivo
+- Ao confirmar: cria evento de cancelamento, muda status para `encerramento_pendente`, bloqueia renovações
 
----
+### Frontend — Admin
+- Nova página `AdminCancelamentosPlanos.tsx` em `/app/admin/planos-cancelamentos`
+- Tabela com: médico, plano, pacientes afetados, valor, status
+- Ações: aprovar, forçar reembolso, bloquear médico, ajustar saldo
+- Configuração de modo de cancelamento (cumprir_ciclo/reembolso_imediato/hibrido) via `app_settings`
 
-## Etapa 2 — Plano Criado pelo Médico (item 2)
+### Frontend — Termos
+- Campo editável em Admin para "Termos de cancelamento de plano médico" (salvo em `app_settings`)
+- Exibido no modal de cancelamento e no momento da criação do plano
 
-**Banco:**
-- Adicionar coluna `nivel` (enum: `admin`, `medico`, `paciente_custom`) na tabela `planos` — default `admin`
-- Adicionar coluna `regra_acesso` (enum: `direto`, `pos_consulta`) — default `direto`
-- Adicionar coluna `termos_aceitos` (boolean) no `planos`
-- Adicionar `termos_plano_medico` em `app_settings` (texto editável pelo Admin)
-- RLS: médico só pode criar/editar planos onde `medico_id = auth.uid()` e `nivel = 'medico'`
-
-**Frontend:**
-- Nova página: `/app/medico/planos` — lista planos do médico logado
-- Reutilizar `PlanoBuilder` com modo restrito (sem campos de custo operacional, imposto, etc.)
-- Tela de Termos antes de salvar
-- Plano publicado aparece no perfil público do médico
-- Nova página Admin: `/app/admin/planos-medicos` — lista todos os planos de médicos (read-only + aprovação)
-
----
-
-## Etapa 3 — Taxação Admin sobre Plano do Médico (item 3)
-
-**Banco:**
-- Nova tabela `plano_taxa_plataforma` com: `id`, `tipo` (percentual/fixo), `valor_pct`, `valor_fixo_centavos`, `vigencia_inicio`, `created_by`, `created_at`
-- Nova tabela `assinatura_snapshot` com: `id`, `assinatura_id`, `plano_snapshot` (JSONB), `beneficios_snapshot` (JSONB), `valor_bruto_centavos`, `taxa_plataforma_centavos`, `valor_liquido_medico_centavos`, `desconto_aplicado_pct`, `origem` (enum: admin/medico/paciente_custom), `created_at`
-- Trigger: ao criar assinatura de plano com `nivel = 'medico'`, gerar snapshot automaticamente com cálculo da taxa
-
-**Frontend:**
-- Admin > Financeiro > Planos personalizados: configurar % ou valor fixo
-- Dashboard médico: card "Receita de planos" (valor líquido)
-- Dashboard admin: card "Lucro plataforma — planos médicos"
-
----
-
-## Etapa 4 — Plano Personalizado pelo Paciente (item 4)
-
-**Banco:**
-- Nova tabela `plano_medicos` (N:N): `id`, `plano_id`, `medico_id`, `aceite_medico` (boolean), `aceite_em` (timestamp)
-- Nova tabela `desconto_progressivo_regras`: `id`, `qtd_medicos_min`, `desconto_pct`, `ativo`, `created_by`, `created_at`
-- Ao criar plano com `nivel = 'paciente_custom'`, `created_by = paciente`, inserir linhas em `plano_medicos` para cada médico escolhido
-- Assinatura só ativa após todos os médicos aceitarem (`aceite_medico = true`)
-
-**Frontend:**
-- Fluxo no app do paciente: `/app/paciente/montar-plano`
-  - Step 1: escolher médicos (com busca)
-  - Step 2: ver desconto progressivo calculado em tempo real
-  - Step 3: revisar valor final e confirmar
-- Admin > Planos > Regras de desconto: CRUD da tabela `desconto_progressivo_regras`
-- Admin > Planos > Planos pacientes: lista de planos custom com status de aceite
-
----
-
-## Etapa 5 — Separação Financeira (itens 5 e 6)
-
-**Banco:**
-- Adicionar coluna `origem_receita` (enum: `consulta`, `servico_plataforma`, `plano_admin`, `plano_medico`, `plano_paciente_custom`) na tabela `assinaturas`
-- Trigger que preenche automaticamente com base no `nivel` do plano vinculado
-
-**Frontend — Dashboard Admin:**
-- Admin > Planos: 3 abas (Plataforma / Médicos / Pacientes custom)
-- Admin > Financeiro: cards separados por origem (consultas, serviços, plano admin, plano médico, plano paciente)
-- Filtro por `origem_receita` em todos os relatórios
-
-**Frontend — Dashboard Médico:**
-- Separar receita de consultas vs receita de planos próprios
-
----
-
-## Etapa 6 — Regras Críticas (item 7)
-
-- Versionamento de plano: ao editar plano com assinantes ativos, criar nova versão (novo registro) e manter o antigo vinculado às assinaturas existentes
-- Snapshot imutável: `assinatura_snapshot` nunca é editado após criação
-- RLS rigoroso em todas as novas tabelas
-- Auditoria: triggers em `planos_auditoria` já existem, estender para novas tabelas
-
----
+### Auditoria
+- Todas as ações registradas em `plano_cancelamento_evento` e `plano_medico_status_log`
 
 ## Ordem de Execução
-
-1. **Etapa 1** — Seleção dinâmica nos benefícios (só frontend, risco zero)
-2. **Etapa 2** — Plano do médico (migração + frontend)
-3. **Etapa 3** — Taxação (migração + frontend)
-4. **Etapa 4** — Plano do paciente (migração + frontend)
-5. **Etapa 5** — Separação financeira nos dashboards
-6. **Etapa 6** — Versionamento e regras de segurança
-
-Cada etapa é independente e não quebra o sistema existente. Posso executar uma por vez para validação.
-
----
-
-## Detalhes Técnicos
-
-**Novas tabelas:** `plano_taxa_plataforma`, `assinatura_snapshot`, `plano_medicos`, `desconto_progressivo_regras`
-
-**Colunas adicionadas em tabelas existentes:**
-- `planos`: `nivel`, `regra_acesso`, `termos_aceitos`
-- `assinaturas`: `origem_receita`
-
-**Novos enums:** `plano_nivel`, `plano_regra_acesso`, `origem_receita_assinatura`
-
-**Novas rotas:**
-- `/app/medico/planos`
-- `/app/paciente/montar-plano`
-- `/app/admin/planos-medicos`
-
-**Arquivos principais afetados:**
-- `src/components/planos/PlanoBuilder.tsx` (seleção dinâmica)
-- `src/pages/app/admin/AdminPlanos.tsx` (abas por nível)
-- Novos componentes para cada módulo
-
-**Nenhuma tabela existente é removida ou reestruturada.** Apenas adições.
+1. Migration (banco) — tudo em uma migração
+2. Código: menus, configs, aceite, versionamento
+3. Código: sistema de cancelamento (médico + admin)
+4. Código: dashboards de receita
