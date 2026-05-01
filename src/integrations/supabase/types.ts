@@ -2927,6 +2927,118 @@ export type Database = {
         }
         Relationships: []
       }
+      medico_dados_bancarios: {
+        Row: {
+          agencia: string
+          ativo: boolean
+          banco: string
+          conta: string
+          created_at: string
+          id: string
+          medico_id: string
+          pix_chave: string | null
+          pix_tipo: Database["public"]["Enums"]["pix_tipo"] | null
+          tipo_conta: Database["public"]["Enums"]["tipo_conta_bancaria"]
+          tipo_pessoa: Database["public"]["Enums"]["tipo_pessoa"]
+          titular_documento: string
+          titular_nome: string
+          updated_at: string
+        }
+        Insert: {
+          agencia?: string
+          ativo?: boolean
+          banco?: string
+          conta?: string
+          created_at?: string
+          id?: string
+          medico_id: string
+          pix_chave?: string | null
+          pix_tipo?: Database["public"]["Enums"]["pix_tipo"] | null
+          tipo_conta?: Database["public"]["Enums"]["tipo_conta_bancaria"]
+          tipo_pessoa?: Database["public"]["Enums"]["tipo_pessoa"]
+          titular_documento?: string
+          titular_nome?: string
+          updated_at?: string
+        }
+        Update: {
+          agencia?: string
+          ativo?: boolean
+          banco?: string
+          conta?: string
+          created_at?: string
+          id?: string
+          medico_id?: string
+          pix_chave?: string | null
+          pix_tipo?: Database["public"]["Enums"]["pix_tipo"] | null
+          tipo_conta?: Database["public"]["Enums"]["tipo_conta_bancaria"]
+          tipo_pessoa?: Database["public"]["Enums"]["tipo_pessoa"]
+          titular_documento?: string
+          titular_nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_dados_bancarios_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_enderecos: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          created_at: string
+          estado: string | null
+          id: string
+          medico_id: string
+          numero: string | null
+          rua: string | null
+          tipo: Database["public"]["Enums"]["endereco_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          medico_id: string
+          numero?: string | null
+          rua?: string | null
+          tipo?: Database["public"]["Enums"]["endereco_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          medico_id?: string
+          numero?: string | null
+          rua?: string | null
+          tipo?: Database["public"]["Enums"]["endereco_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_enderecos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_especialidades: {
         Row: {
           ativo: boolean
@@ -2983,6 +3095,60 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_nfes: {
+        Row: {
+          arquivo_url: string | null
+          created_at: string
+          data_emissao: string | null
+          id: string
+          medico_id: string
+          numero_nota: string | null
+          observacao: string | null
+          saque_id: string | null
+          status: Database["public"]["Enums"]["nfe_status"]
+          valor_centavos: number | null
+        }
+        Insert: {
+          arquivo_url?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          id?: string
+          medico_id: string
+          numero_nota?: string | null
+          observacao?: string | null
+          saque_id?: string | null
+          status?: Database["public"]["Enums"]["nfe_status"]
+          valor_centavos?: number | null
+        }
+        Update: {
+          arquivo_url?: string | null
+          created_at?: string
+          data_emissao?: string | null
+          id?: string
+          medico_id?: string
+          numero_nota?: string | null
+          observacao?: string | null
+          saque_id?: string | null
+          status?: Database["public"]["Enums"]["nfe_status"]
+          valor_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_nfes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_nfes_saque_id_fkey"
+            columns: ["saque_id"]
+            isOneToOne: false
+            referencedRelation: "saques_medicos"
             referencedColumns: ["id"]
           },
         ]
@@ -4488,6 +4654,117 @@ export type Database = {
         }
         Relationships: []
       }
+      saque_medico_itens: {
+        Row: {
+          consulta_financeiro_id: string
+          id: string
+          saque_id: string
+          valor_medico_centavos: number
+        }
+        Insert: {
+          consulta_financeiro_id: string
+          id?: string
+          saque_id: string
+          valor_medico_centavos: number
+        }
+        Update: {
+          consulta_financeiro_id?: string
+          id?: string
+          saque_id?: string
+          valor_medico_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saque_medico_itens_consulta_financeiro_id_fkey"
+            columns: ["consulta_financeiro_id"]
+            isOneToOne: true
+            referencedRelation: "consultas_financeiro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saque_medico_itens_saque_id_fkey"
+            columns: ["saque_id"]
+            isOneToOne: false
+            referencedRelation: "saques_medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saques_medicos: {
+        Row: {
+          aprovado_em: string | null
+          created_at: string
+          created_by: string | null
+          dados_bancarios_id: string | null
+          id: string
+          medico_id: string
+          metodo: Database["public"]["Enums"]["saque_metodo"]
+          motivo_recusa: string | null
+          observacao: string | null
+          pago_em: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          recusado_em: string | null
+          solicitado_em: string
+          status: Database["public"]["Enums"]["saque_status"]
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          aprovado_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          dados_bancarios_id?: string | null
+          id?: string
+          medico_id: string
+          metodo?: Database["public"]["Enums"]["saque_metodo"]
+          motivo_recusa?: string | null
+          observacao?: string | null
+          pago_em?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          recusado_em?: string | null
+          solicitado_em?: string
+          status?: Database["public"]["Enums"]["saque_status"]
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          aprovado_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          dados_bancarios_id?: string | null
+          id?: string
+          medico_id?: string
+          metodo?: Database["public"]["Enums"]["saque_metodo"]
+          motivo_recusa?: string | null
+          observacao?: string | null
+          pago_em?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          recusado_em?: string | null
+          solicitado_em?: string
+          status?: Database["public"]["Enums"]["saque_status"]
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saques_medicos_dados_bancarios_id_fkey"
+            columns: ["dados_bancarios_id"]
+            isOneToOne: false
+            referencedRelation: "medico_dados_bancarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servicos_financeiros: {
         Row: {
           ativo: boolean
@@ -5610,6 +5887,7 @@ export type Database = {
         | "saude_ocupacional"
         | "indicadora"
         | "hibrida"
+      endereco_tipo: "residencial" | "comercial"
       event_status:
         | "pending"
         | "processing"
@@ -5690,6 +5968,7 @@ export type Database = {
         | "cumprir_ciclo"
         | "reembolso_imediato"
         | "hibrido"
+      nfe_status: "pendente" | "validada" | "recusada"
       origem_receita_assinatura:
         | "consulta"
         | "servico_plataforma"
@@ -5725,6 +6004,7 @@ export type Database = {
         | "expirado"
       pendencia_status: "aberta" | "em_analise" | "resolvida" | "ignorada"
       permissao_efeito: "grant" | "revoke"
+      pix_tipo: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria"
       plano_categoria:
         | "saude_mental"
         | "fitness"
@@ -5758,6 +6038,14 @@ export type Database = {
         | "concluido"
       reembolso_tipo: "total" | "parcial"
       retorno_status: "disponivel" | "usado" | "expirado" | "cancelado"
+      saque_metodo: "pix" | "ted"
+      saque_status:
+        | "solicitado"
+        | "em_analise"
+        | "aprovado"
+        | "pago"
+        | "recusado"
+        | "cancelado"
       servico_financeiro_modelo: "percentual" | "valor_fixo"
       servico_financeiro_tipo: "consulta" | "pronto_atendimento" | "pacote"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
@@ -5782,6 +6070,8 @@ export type Database = {
         | "suporte"
         | "outro"
       template_wa_status: "rascunho" | "pendente" | "aprovado" | "rejeitado"
+      tipo_conta_bancaria: "corrente" | "poupanca"
+      tipo_pessoa: "pf" | "pj"
       whatsapp_instance_status:
         | "conectado"
         | "desconectado"
@@ -6049,6 +6339,7 @@ export const Constants = {
         "indicadora",
         "hibrida",
       ],
+      endereco_tipo: ["residencial", "comercial"],
       event_status: [
         "pending",
         "processing",
@@ -6140,6 +6431,7 @@ export const Constants = {
         "reembolso_imediato",
         "hibrido",
       ],
+      nfe_status: ["pendente", "validada", "recusada"],
       origem_receita_assinatura: [
         "consulta",
         "servico_plataforma",
@@ -6179,6 +6471,7 @@ export const Constants = {
       ],
       pendencia_status: ["aberta", "em_analise", "resolvida", "ignorada"],
       permissao_efeito: ["grant", "revoke"],
+      pix_tipo: ["cpf", "cnpj", "email", "telefone", "aleatoria"],
       plano_categoria: [
         "saude_mental",
         "fitness",
@@ -6216,6 +6509,15 @@ export const Constants = {
       ],
       reembolso_tipo: ["total", "parcial"],
       retorno_status: ["disponivel", "usado", "expirado", "cancelado"],
+      saque_metodo: ["pix", "ted"],
+      saque_status: [
+        "solicitado",
+        "em_analise",
+        "aprovado",
+        "pago",
+        "recusado",
+        "cancelado",
+      ],
       servico_financeiro_modelo: ["percentual", "valor_fixo"],
       servico_financeiro_tipo: ["consulta", "pronto_atendimento", "pacote"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
@@ -6242,6 +6544,8 @@ export const Constants = {
         "outro",
       ],
       template_wa_status: ["rascunho", "pendente", "aprovado", "rejeitado"],
+      tipo_conta_bancaria: ["corrente", "poupanca"],
+      tipo_pessoa: ["pf", "pj"],
       whatsapp_instance_status: [
         "conectado",
         "desconectado",
