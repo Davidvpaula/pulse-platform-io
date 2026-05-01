@@ -23,6 +23,7 @@ import { toast } from "sonner";
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   solicitado: { label: "Solicitado", cls: "border-warning/40 text-warning" },
   em_analise: { label: "Em análise", cls: "border-info/40 text-info" },
+  correcao_solicitada: { label: "Correção solicitada", cls: "border-warning/40 text-warning" },
   aprovado: { label: "Aprovado", cls: "border-success/40 text-success" },
   pago: { label: "Pago", cls: "border-success/40 text-success" },
   recusado: { label: "Recusado", cls: "border-destructive/40 text-destructive" },
