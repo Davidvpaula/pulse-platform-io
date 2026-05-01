@@ -15,6 +15,7 @@ export type ProfileKey =
   | "paciente"
   | "medico"
   | "secretaria"
+  | "colaborador"
   | "admin"
   | "empresa";
 
