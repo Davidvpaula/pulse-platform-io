@@ -206,14 +206,14 @@ const App = () => (
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
               <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
               <Route path="secretaria/agenda" element={<SecretariaAgenda />} />
-              <Route path="secretaria/agendamentos" element={<Placeholder title="Agendamentos" />} />
+              <Route path="secretaria/agendamentos" element={<SecretariaAgendamentos />} />
               <Route path="secretaria/cupons" element={<SecretariaCupons />} />
               <Route path="secretaria/cupons/log" element={<CuponsUsoLog />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
               <Route path="secretaria/financeiro" element={<SecretariaFinanceiro />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />
               <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
-              <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
+              <Route path="secretaria/relatorios" element={<SecretariaRelatorios />} />
               <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
 
