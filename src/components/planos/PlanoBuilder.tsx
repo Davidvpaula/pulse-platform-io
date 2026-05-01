@@ -143,7 +143,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       .from("assinaturas")
       .select("*", { count: "exact", head: true })
       .eq("plano_id", id)
-      .in("status", ["ativa", "pendente"]);
+      .in("status", ["ativa", "trial"] as any[]);
     setSubscriberCount(count ?? 0);
     setHasActiveSubscribers((count ?? 0) > 0);
   }
