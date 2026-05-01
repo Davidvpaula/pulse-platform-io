@@ -116,6 +116,9 @@ import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
+import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
+import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
+import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
@@ -162,6 +165,7 @@ const App = () => (
               <Route path="paciente/agendamentos" element={<PacienteAgendamentos />} />
               <Route path="paciente/documentos" element={<PacienteDocumentos />} />
               <Route path="paciente/plano" element={<PacientePlano />} />
+              <Route path="paciente/montar-plano" element={<PacienteMontarPlano />} />
               <Route path="paciente/financeiro" element={<PacienteFinanceiro />} />
               <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<PacienteMensagens />} />
@@ -202,6 +206,7 @@ const App = () => (
               <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
               <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
               <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
+              <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
@@ -250,6 +255,7 @@ const App = () => (
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
               <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
+              <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />

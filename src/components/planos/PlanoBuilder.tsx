@@ -12,6 +12,7 @@ import { Trash2, Plus, Save, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SaudeFinanceiraCard } from "./SaudeFinanceiraCard";
+import { BeneficioSelector } from "./BeneficioSelector";
 
 type Plano = any;
 type Beneficio = any;
@@ -21,6 +22,8 @@ interface Props {
   onClose: () => void;
   planoId?: string | null;
   onSaved?: () => void;
+  /** Modo restrito para médico: oculta campos de custo operacional, imposto, etc. */
+  medicoMode?: boolean;
 }
 
 const CATEGORIAS = [
@@ -112,7 +115,7 @@ function emptyBeneficio(planoId?: string): Beneficio {
 const toReais = (c: number) => ((c || 0) / 100).toString().replace(".", ",");
 const toCentavos = (s: string) => Math.round(Number(String(s).replace(/\./g, "").replace(",", ".") || 0) * 100);
 
-export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
+export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = false }: Props) {
   const [plano, setPlano] = useState<Plano>(emptyPlano());
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(false);
@@ -168,6 +171,10 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
       delete payload.id;
       delete payload.created_at;
       delete payload.updated_at;
+      if (medicoMode) {
+        payload.nivel = "medico";
+        payload.termos_aceitos = true;
+      }
 
       if (id) {
         const { error } = await supabase.from("planos").update(payload).eq("id", id);
@@ -278,22 +285,26 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
                   <Label>Taxa de adesão (R$)</Label>
                   <Input value={toReais(plano.taxa_adesao_centavos)} onChange={(e) => setField("taxa_adesao_centavos", toCentavos(e.target.value))} />
                 </div>
-                <div>
-                  <Label>Custo operacional (R$/assinante)</Label>
-                  <Input value={toReais(plano.custo_operacional_centavos)} onChange={(e) => setField("custo_operacional_centavos", toCentavos(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Taxa pagamento (%)</Label>
-                  <Input type="number" step="0.1" value={plano.taxa_pagamento_pct ?? 0} onChange={(e) => setField("taxa_pagamento_pct", Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Imposto estimado (%)</Label>
-                  <Input type="number" step="0.1" value={plano.imposto_estimado_pct ?? 0} onChange={(e) => setField("imposto_estimado_pct", Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Desconto geral (%)</Label>
-                  <Input type="number" step="0.1" value={plano.desconto_geral_pct ?? 0} onChange={(e) => setField("desconto_geral_pct", Number(e.target.value))} />
-                </div>
+                {!medicoMode && (
+                  <>
+                    <div>
+                      <Label>Custo operacional (R$/assinante)</Label>
+                      <Input value={toReais(plano.custo_operacional_centavos)} onChange={(e) => setField("custo_operacional_centavos", toCentavos(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Taxa pagamento (%)</Label>
+                      <Input type="number" step="0.1" value={plano.taxa_pagamento_pct ?? 0} onChange={(e) => setField("taxa_pagamento_pct", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Imposto estimado (%)</Label>
+                      <Input type="number" step="0.1" value={plano.imposto_estimado_pct ?? 0} onChange={(e) => setField("imposto_estimado_pct", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Desconto geral (%)</Label>
+                      <Input type="number" step="0.1" value={plano.desconto_geral_pct ?? 0} onChange={(e) => setField("desconto_geral_pct", Number(e.target.value))} />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -320,15 +331,30 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div>
                         <Label>Tipo</Label>
-                        <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v })}>
+                        <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v, medico_id: null, especialidade_id: null, servico_id: null, nome: "" })}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>{BENEF_TIPOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="md:col-span-2">
-                        <Label>Nome</Label>
-                        <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
-                      </div>
+                      {["medico", "especialidade", "servico"].includes(b.tipo) ? (
+                        <BeneficioSelector
+                          tipo={b.tipo}
+                          selectedId={b.tipo === "medico" ? b.medico_id : b.tipo === "especialidade" ? b.especialidade_id : b.servico_id}
+                          selectedLabel={b.nome ?? ""}
+                          onSelect={(id, label) => {
+                            const patch: any = { nome: label };
+                            if (b.tipo === "medico") patch.medico_id = id;
+                            else if (b.tipo === "especialidade") patch.especialidade_id = id;
+                            else if (b.tipo === "servico") patch.servico_id = id;
+                            updateBen(i, patch);
+                          }}
+                        />
+                      ) : (
+                        <div className="md:col-span-2">
+                          <Label>Nome</Label>
+                          <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
+                        </div>
+                      )}
                       <div>
                         <Label>Quantidade</Label>
                         <Input type="number" value={b.quantidade ?? 0} onChange={(e) => updateBen(i, { quantidade: Number(e.target.value) })} disabled={b.ilimitado} />
