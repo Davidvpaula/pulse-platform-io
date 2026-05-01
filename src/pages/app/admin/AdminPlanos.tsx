@@ -349,6 +349,16 @@ export default function AdminPlanos() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* DESCONTOS PROGRESSIVOS */}
+        <TabsContent value="descontos">
+          <DescontoProgressivoConfig />
+        </TabsContent>
+
+        {/* TAXA PLATAFORMA */}
+        <TabsContent value="taxa">
+          <TaxaPlataformaConfig />
+        </TabsContent>
       </Tabs>
 
       <PlanoBuilder
