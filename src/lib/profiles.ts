@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -49,6 +49,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Agendamentos", to: "/app/paciente/agendamentos", icon: Calendar },
       { label: "Documentos", to: "/app/paciente/documentos", icon: FileText },
       { label: "Meu Plano", to: "/app/paciente/plano", icon: BadgeCheck },
+      { label: "Montar Plano", to: "/app/paciente/montar-plano", icon: Layers },
       { label: "Financeiro", to: "/app/paciente/financeiro", icon: Wallet },
       { label: "Mensagens", to: "/app/paciente/mensagens", icon: MessageSquare },
       { label: "Perfil", to: "/app/paciente/perfil", icon: User },
@@ -72,7 +73,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Comunicação interna", to: "/app/medico/comunicacao-interna", icon: MessageSquare },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Treinamento", to: "/app/medico/treinamento", icon: BookOpen },
-      
+      { label: "Meus Planos", to: "/app/medico/planos", icon: BadgeCheck },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],
@@ -148,7 +149,16 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Atendimento imediato", to: "/app/admin/atendimento-imediato", icon: Activity, requiresCapability: "financeiro.servicos_gerenciar" },
       { label: "Cupons", to: "/app/admin/cupons", icon: Tag, requiresCapability: "financeiro.servicos_gerenciar" },
-      { label: "Planos", to: "/app/admin/planos", icon: BadgeCheck, requiresCapability: "financeiro.servicos_gerenciar" },
+      {
+        label: "Planos",
+        icon: BadgeCheck,
+        requiresCapability: "financeiro.servicos_gerenciar",
+        children: [
+          { label: "Planos da plataforma", to: "/app/admin/planos" },
+          { label: "Planos de médicos", to: "/app/admin/planos-medicos" },
+          { label: "Cancelamentos", to: "/app/admin/planos-cancelamentos" },
+        ],
+      },
       {
         label: "Comunicação",
         icon: MessageCircle,
