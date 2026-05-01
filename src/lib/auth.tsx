@@ -19,6 +19,11 @@ type AuthCtx = {
   setProfileKey: (k: ProfileKey) => void;
   user: { name: string; role: string; avatarInitials: string };
   capabilities: Capability[];
+  /**
+   * @deprecated Não usar para decidir menu lateral nem rotas — use
+   * `usePermission` / `usePermissionsBatch` (fonte: has_permission no banco).
+   * Mantido apenas para retrocompatibilidade de 3 widgets internos legados.
+   */
   hasCapability: (c: Capability) => boolean;
   toggleCapability: (c: Capability) => void;
   patientLink: PatientLink;
