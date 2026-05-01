@@ -135,8 +135,8 @@ export default function MedicoFinanceiro() {
       />
 
       <div className="grid gap-3 md:grid-cols-4">
-        <StatCard label="A receber (liberado)" value={brl(kpis.totalReceber)} icon={CheckCircle2} accent="success" />
-        <StatCard label="Pendente" value={brl(kpis.pendentes)} icon={Clock} accent="warning" />
+        <StatCard label="A receber (liberado)" value={brl(kpis.totalReceber)} icon={CheckCircle2} />
+        <StatCard label="Pendente" value={brl(kpis.pendentes)} icon={Clock} />
         <StatCard label="Consultas no período" value={kpis.consultas.toString()} icon={TrendingUp} />
         <StatCard label="Ticket médio (você)" value={brl(kpis.ticketMedio)} icon={Wallet} />
       </div>
