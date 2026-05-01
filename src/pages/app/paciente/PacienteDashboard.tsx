@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download,
   ChevronRight, Building2, User, MessageCircle, RefreshCw, Bell, AlertTriangle,
-  CheckCircle2, Info, Repeat, Stethoscope, Database as DbIcon,
+  CheckCircle2, Info, Repeat, Stethoscope,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -15,8 +15,6 @@ import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
-import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
