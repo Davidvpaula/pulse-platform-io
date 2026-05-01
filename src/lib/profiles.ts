@@ -144,6 +144,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Visão geral", to: "/app/admin/financeiro", requiresCapability: "financeiro.ver" },
           { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse", requiresCapability: "financeiro.editar_comissao" },
           { label: "Prévia de repasse", to: "/app/admin/financeiro/previa-repasse", requiresCapability: "financeiro.editar_comissao" },
+          { label: "Saques médicos", to: "/app/admin/financeiro/saques-medicos", requiresCapability: "financeiro.saques.ver" },
         ],
       },
       { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
