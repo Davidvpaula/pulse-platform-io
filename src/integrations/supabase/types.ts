@@ -4808,6 +4808,13 @@ export type Database = {
         Args: { _key: string; _user_id: string }
         Returns: boolean
       }
+      has_permissions_batch: {
+        Args: { _keys: string[]; _user_id: string }
+        Returns: {
+          allowed: boolean
+          permission_key: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { profiles, type ProfileKey } from "./profiles";
-import { defaultCapabilities, type Capability } from "./abilities";
 import { useSession } from "./session";
 import { useImpersonation } from "./impersonation";
 
@@ -18,21 +17,12 @@ type AuthCtx = {
   profileKey: ProfileKey;
   setProfileKey: (k: ProfileKey) => void;
   user: { name: string; role: string; avatarInitials: string };
-  capabilities: Capability[];
-  /**
-   * @deprecated Não usar para decidir menu lateral nem rotas — use
-   * `usePermission` / `usePermissionsBatch` (fonte: has_permission no banco).
-   * Mantido apenas para retrocompatibilidade de 3 widgets internos legados.
-   */
-  hasCapability: (c: Capability) => boolean;
-  toggleCapability: (c: Capability) => void;
   patientLink: PatientLink;
   setPatientLink: (l: PatientLink) => void;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 const STORAGE_KEY = "lasmar.profile";
-const CAPS_KEY = "lasmar.capabilities";
 const LINK_KEY = "lasmar.patientLink";
 
 // Prioridade quando o usuário tem múltiplos papéis no banco.
@@ -40,7 +30,6 @@ const LINK_KEY = "lasmar.patientLink";
 const ROLE_PRIORITY: ProfileKey[] = ["admin", "medico", "colaborador", "empresa", "paciente"];
 
 function rolesToProfileKey(roles: string[]): ProfileKey | null {
-  // Normaliza roles do banco para ProfileKey
   const normalized = roles.map(r => (r === "secretaria" || r === "supervisor" ? "colaborador" : r));
   for (const p of ROLE_PRIORITY) {
     if (normalized.includes(p)) return p;
@@ -57,15 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (stored as ProfileKey) || "admin";
   });
 
-  const [capabilities, setCapabilities] = useState<Capability[]>(() => {
-    if (typeof window === "undefined") return defaultCapabilities[profileKey] ?? [];
-    const stored = localStorage.getItem(CAPS_KEY);
-    if (stored) {
-      try { return JSON.parse(stored); } catch { /* ignore */ }
-    }
-    return defaultCapabilities[profileKey] ?? [];
-  });
-
   const [patientLink, setPatientLinkState] = useState<PatientLink>(() => {
     if (typeof window === "undefined") return { tipo: "particular" };
     const stored = localStorage.getItem(LINK_KEY);
@@ -79,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fromRoles = rolesToProfileKey(roles);
     if (fromRoles && fromRoles !== profileKey) {
       setProfileKeyState(fromRoles);
-      setCapabilities(defaultCapabilities[fromRoles] ?? []);
     }
   }, [session, roles]);
 
@@ -89,10 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [profileKey, session, isDev]);
 
   useEffect(() => {
-    localStorage.setItem(CAPS_KEY, JSON.stringify(capabilities));
-  }, [capabilities]);
-
-  useEffect(() => {
     localStorage.setItem(LINK_KEY, JSON.stringify(patientLink));
   }, [patientLink]);
 
@@ -100,20 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Em sessão real, ignora trocas manuais — banco é a fonte da verdade.
     if (session) return;
     setProfileKeyState(k);
-    setCapabilities(defaultCapabilities[k] ?? []);
   };
-
-  const hasCapability = (c: Capability) => capabilities.includes(c);
-  const toggleCapability = (c: Capability) =>
-    setCapabilities(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
   const { active: impersonation } = useImpersonation();
 
   // Quando há impersonação ativa, a UI usa o perfil do alvo (read-only).
   const effectiveProfileKey: ProfileKey = impersonation?.profileKey ?? profileKey;
-  const effectiveCapabilities: Capability[] = impersonation
-    ? (defaultCapabilities[impersonation.profileKey] ?? [])
-    : capabilities;
 
   const displayUser = useMemo(() => {
     if (impersonation) {
@@ -135,12 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profileKey: effectiveProfileKey,
     setProfileKey,
     user: displayUser,
-    capabilities: effectiveCapabilities,
-    hasCapability: (c: Capability) => effectiveCapabilities.includes(c),
-    toggleCapability,
     patientLink,
     setPatientLink: setPatientLinkState,
-  }), [effectiveProfileKey, effectiveCapabilities, patientLink, displayUser, session]);
+  }), [effectiveProfileKey, patientLink, displayUser, session]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -161,8 +125,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * True quando o médico logado (sessão real) ainda não foi aprovado.
- * Não bloqueia o seletor de demo — só é true se houver sessão real
- * E o usuário tiver papel "medico" cadastrado mas não aprovado.
  */
 export function useMedicoAguardandoAprovacao(): boolean {
   const [aguardando, setAguardando] = useState(false);

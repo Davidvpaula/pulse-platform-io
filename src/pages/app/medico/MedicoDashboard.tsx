@@ -18,6 +18,7 @@ import {
 } from "@/lib/clinico";
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
+import { usePermission } from "@/lib/permissions/usePermission";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -43,15 +44,16 @@ type Onboarding = {
 
 export default function MedicoDashboard() {
   const { session } = useSession();
-  const { profileKey, hasCapability } = useAuth();
+  const { profileKey } = useAuth();
   const can = useCan();
+  const { has: hasPerm } = usePermission("financeiro.ver");
 
   // Permissões finas
   const isMedico = profileKey === "medico";
   const isAdmin = profileKey === "admin";
   const podeAtuar = isMedico || isAdmin; // só esses iniciam/concluem consulta
   const podeIniciar = can("consulta.start", "edit"); // mutativo
-  const podeVerFinanceiro = isMedico ? hasCapability("medico.financeiro") : isAdmin;
+  const podeVerFinanceiro = isMedico ? hasPerm("financeiro.ver") : isAdmin;
   const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
   const [loading, setLoading] = useState(true);
   const [medicoNome, setMedicoNome] = useState<string>("");
