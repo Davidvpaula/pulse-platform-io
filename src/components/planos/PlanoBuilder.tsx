@@ -22,6 +22,8 @@ interface Props {
   onClose: () => void;
   planoId?: string | null;
   onSaved?: () => void;
+  /** Modo restrito para médico: oculta campos de custo operacional, imposto, etc. */
+  medicoMode?: boolean;
 }
 
 const CATEGORIAS = [
