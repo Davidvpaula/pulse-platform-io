@@ -117,10 +117,13 @@ export default function AdminSaquesMedicos() {
     if (configAnterior) {
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("financeiro_auditoria").insert({
-        tipo: "config_saque",
-        descricao: "Alteração nas regras de liberação de saque",
-        dados: { antes: configAnterior, depois: config },
-        user_id: user?.id,
+        entidade: "app_settings",
+        entidade_id: "config_saque",
+        acao: "alteracao_config_saque",
+        actor_id: user?.id,
+        valor_anterior: JSON.stringify(configAnterior),
+        valor_novo: JSON.stringify(config),
+        observacao: "Alteração nas regras de liberação de saque",
       });
     }
     setConfigAnterior(config);
