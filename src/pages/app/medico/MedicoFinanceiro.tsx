@@ -64,8 +64,9 @@ export default function MedicoFinanceiro() {
   async function carregar() {
     if (!session) { setLoading(false); return; }
     setLoading(true);
-    const medicoId = await getMedicoAtualId();
-    if (!medicoId) { setRows([]); setLoading(false); return; }
+    const mid = await getMedicoAtualId();
+    setMedicoId(mid);
+    if (!mid) { setRows([]); setLoading(false); return; }
 
     let q = supabase
       .from("consultas_financeiro")
