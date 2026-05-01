@@ -116,6 +116,9 @@ import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
+import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
+import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
+import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
