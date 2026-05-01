@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Save, Loader2 } from "lucide-react";
+import { Trash2, Plus, Save, Loader2, AlertTriangle, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SaudeFinanceiraCard } from "./SaudeFinanceiraCard";
@@ -121,16 +121,32 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [hasActiveSubscribers, setHasActiveSubscribers] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState(0);
+
   useEffect(() => {
     if (!open) return;
     if (planoId) {
       void carregar(planoId);
+      void checkSubscribers(planoId);
     } else {
       setPlano(emptyPlano());
       setBeneficios([]);
+      setHasActiveSubscribers(false);
+      setSubscriberCount(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, planoId]);
+
+  async function checkSubscribers(id: string) {
+    const { count } = await supabase
+      .from("assinaturas")
+      .select("*", { count: "exact", head: true })
+      .eq("plano_id", id)
+      .in("status", ["ativa", "trial"] as any[]);
+    setSubscriberCount(count ?? 0);
+    setHasActiveSubscribers((count ?? 0) > 0);
+  }
 
   async function carregar(id: string) {
     setLoading(true);
@@ -141,6 +157,43 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
     if (p) setPlano(p);
     setBeneficios(bs ?? []);
     setLoading(false);
+  }
+
+  async function criarNovaVersao() {
+    if (!planoId) return;
+    setSaving(true);
+    try {
+      const payload = { ...plano };
+      delete payload.id;
+      delete payload.created_at;
+      delete payload.updated_at;
+      payload.versao = (payload.versao ?? 1) + 1;
+      payload.plano_base_id = plano.plano_base_id ?? planoId;
+      payload.status = "rascunho";
+
+      const { data: novo, error } = await supabase.from("planos").insert(payload).select("id").single();
+      if (error) throw error;
+
+      // Copy benefits
+      if (beneficios.length > 0) {
+        const rows = beneficios.map((b: any, idx: number) => {
+          const r: any = { ...b, plano_id: novo.id, ordem: idx };
+          delete r.id;
+          delete r.created_at;
+          delete r.updated_at;
+          return r;
+        });
+        await supabase.from("plano_beneficios").insert(rows);
+      }
+
+      toast.success("Nova versão criada como rascunho");
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao criar nova versão");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function setField<K extends keyof Plano>(k: K, v: Plano[K]) {
@@ -222,6 +275,24 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
           </div>
         ) : (
           <div className="space-y-6 mt-4">
+            {/* Aviso de assinantes ativos */}
+            {hasActiveSubscribers && planoId && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-warning">
+                    Este plano possui {subscriberCount} assinante{subscriberCount > 1 ? "s" : ""} ativo{subscriberCount > 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Edições diretas estão bloqueadas. Crie uma nova versão para aplicar alterações — os assinantes atuais continuam na versão vigente.
+                  </p>
+                  <Button size="sm" className="mt-3" onClick={criarNovaVersao} disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
+                    Criar nova versão (v{(plano.versao ?? 1) + 1})
+                  </Button>
+                </div>
+              </div>
+            )}
             {/* Dados básicos */}
             <Card>
               <CardHeader>
@@ -428,7 +499,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
 
             <div className="flex justify-end gap-2 pb-6">
               <Button variant="outline" onClick={onClose}>Cancelar</Button>
-              <Button onClick={salvar} disabled={saving}>
+              <Button onClick={salvar} disabled={saving || (hasActiveSubscribers && !!planoId)}>
                 {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                 Salvar plano
               </Button>

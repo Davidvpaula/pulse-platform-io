@@ -12,6 +12,7 @@ import { integracoes } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
 
 const periodos = [
   { key: "hoje", label: "Hoje" },
@@ -189,6 +190,9 @@ export default function AdminDashboard() {
         <StatCard label="Confirmadas hoje" value={fmtNum(k.consultas_confirmadas_hoje ?? 0)} icon={ShieldCheck}
           hint={`${k.consultas_concluidas_hoje ?? 0} concluídas · ${k.consultas_canceladas_hoje ?? 0} canceladas`} />
       </div>
+
+      {/* Receita por origem */}
+      <ReceitaPorOrigem periodo={periodo} />
 
       {/* Alertas do sistema */}
       {data && data.alertas.length > 0 && (

@@ -9,6 +9,7 @@ import { useSession } from "@/lib/session";
 import { getMedicoAtualId } from "@/lib/clinico";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
 
 type FinRow = {
   id: string;
@@ -50,6 +51,7 @@ export default function MedicoFinanceiro() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<FinRow[]>([]);
   const [periodo, setPeriodo] = useState<typeof periodos[number]["key"]>("30d");
+  const [medicoId, setMedicoId] = useState<string | null>(null);
 
   function cutoffDate(): Date | null {
     const d = new Date();
@@ -62,8 +64,9 @@ export default function MedicoFinanceiro() {
   async function carregar() {
     if (!session) { setLoading(false); return; }
     setLoading(true);
-    const medicoId = await getMedicoAtualId();
-    if (!medicoId) { setRows([]); setLoading(false); return; }
+    const mid = await getMedicoAtualId();
+    setMedicoId(mid);
+    if (!mid) { setRows([]); setLoading(false); return; }
 
     let q = supabase
       .from("consultas_financeiro")
@@ -75,7 +78,7 @@ export default function MedicoFinanceiro() {
           pacientes:paciente_id ( user_id )
         )
       `)
-      .eq("medico_id", medicoId)
+      .eq("medico_id", mid)
       .order("data_consulta", { ascending: false })
       .limit(500);
 
@@ -140,6 +143,9 @@ export default function MedicoFinanceiro() {
         <StatCard label="Consultas no período" value={kpis.consultas.toString()} icon={TrendingUp} />
         <StatCard label="Ticket médio (você)" value={brl(kpis.ticketMedio)} icon={Wallet} />
       </div>
+
+      {/* Receita por origem */}
+      {medicoId && <ReceitaPorOrigem periodo={periodo} medicoId={medicoId} />}
 
       <div className="card-elevated p-4">
         <div className="flex flex-wrap items-center gap-2">
