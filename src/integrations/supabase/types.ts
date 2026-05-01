@@ -5500,6 +5500,10 @@ export type Database = {
         Args: { _consulta_id: string }
         Returns: boolean
       }
+      is_paciente_da_conversa: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
       liberar_reservas_expiradas: { Args: never; Returns: number }
       login_attempt_check: {
         Args: { _email: string; _ip?: string }
