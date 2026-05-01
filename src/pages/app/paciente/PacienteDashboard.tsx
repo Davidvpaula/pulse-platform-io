@@ -50,7 +50,6 @@ export default function PacienteDashboard() {
   const { patientLink, setPatientLink } = useAuth();
   const { session } = useSession();
   const empresarial = patientLink.tipo === "empresarial";
-  const navigate = useNavigate();
 
   const [dbConsultas, setDbConsultas] = useState<ConsultaItem[] | null>(null);
   useEffect(() => {
