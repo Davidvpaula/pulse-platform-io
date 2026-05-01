@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Stethoscope, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Database as DbIcon, Loader2, Search, Filter,
+  Loader2, Search, Filter,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
