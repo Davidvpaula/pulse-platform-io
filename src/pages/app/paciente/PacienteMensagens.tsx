@@ -394,8 +394,35 @@ export default function PacienteMensagens() {
 
               {/* Input */}
               {convSelecionada.status !== "fechada" && convSelecionada.status !== "arquivada" && (
-                <div className="border-t border-border p-3">
+                <div className="border-t border-border p-3 space-y-2">
+                  {pendingFile && (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="truncate flex-1">{pendingFile.name}</span>
+                      <span className="text-xs text-muted-foreground">{(pendingFile.size / 1024).toFixed(0)} KB</span>
+                      <button onClick={() => setPendingFile(null)} className="text-muted-foreground hover:text-foreground">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-end gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                      onChange={handleFileSelect}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Anexar arquivo"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
                     <Textarea
                       value={novaMsg}
                       onChange={(e) => setNovaMsg(e.target.value)}
@@ -409,12 +436,17 @@ export default function PacienteMensagens() {
                     <Button
                       size="icon"
                       className="h-10 w-10 shrink-0 bg-gradient-primary hover:opacity-90"
-                      disabled={!novaMsg.trim() || sending}
+                      disabled={(!novaMsg.trim() && !pendingFile) || sending}
                       onClick={enviar}
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {uploading && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Enviando anexo…
+                    </p>
+                  )}
                 </div>
               )}
             </>
