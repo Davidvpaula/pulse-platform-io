@@ -205,6 +205,7 @@ const App = () => (
               <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
               <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
               <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
+              <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
