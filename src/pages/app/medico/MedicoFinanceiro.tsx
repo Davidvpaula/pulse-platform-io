@@ -9,6 +9,7 @@ import { useSession } from "@/lib/session";
 import { getMedicoAtualId } from "@/lib/clinico";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
 
 type FinRow = {
   id: string;
