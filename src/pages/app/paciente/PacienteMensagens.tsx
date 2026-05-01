@@ -125,17 +125,36 @@ export default function PacienteMensagens() {
   }, [selectedConvId, session]);
 
   const enviar = useCallback(async () => {
-    if (!novaMsg.trim() || !selectedConvId || sending) return;
+    if ((!novaMsg.trim() && !pendingFile) || !selectedConvId || sending) return;
     setSending(true);
     try {
-      await enviarMensagemPaciente(selectedConvId, novaMsg.trim(), "Paciente");
+      let attachment: { url: string; name: string; type: string } | undefined;
+      if (pendingFile) {
+        setUploading(true);
+        attachment = await uploadAnexoMensagem(pendingFile);
+        setUploading(false);
+        setPendingFile(null);
+      }
+      await enviarMensagemPaciente(selectedConvId, novaMsg.trim(), "Paciente", attachment);
       setNovaMsg("");
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao enviar mensagem");
+      setUploading(false);
     } finally {
       setSending(false);
     }
-  }, [novaMsg, selectedConvId, sending]);
+  }, [novaMsg, selectedConvId, sending, pendingFile]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máximo 10 MB)");
+      return;
+    }
+    setPendingFile(file);
+    e.target.value = "";
+  };
 
   const convsFiltradas = useMemo(() => {
     if (!busca.trim()) return conversas;
