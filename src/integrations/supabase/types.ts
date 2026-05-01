@@ -512,6 +512,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_cancelamento: string | null
+          data_fim_acesso: string | null
           data_inicio: string
           empresa_id: string | null
           forma_pagamento: string | null
@@ -522,6 +523,7 @@ export type Database = {
           paciente_id: string | null
           plano_id: string
           proxima_cobranca: string | null
+          renovacao_bloqueada: boolean
           status: Database["public"]["Enums"]["assinatura_status"]
           updated_at: string
           valor_cobrado_centavos: number
@@ -531,6 +533,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_cancelamento?: string | null
+          data_fim_acesso?: string | null
           data_inicio?: string
           empresa_id?: string | null
           forma_pagamento?: string | null
@@ -541,6 +544,7 @@ export type Database = {
           paciente_id?: string | null
           plano_id: string
           proxima_cobranca?: string | null
+          renovacao_bloqueada?: boolean
           status?: Database["public"]["Enums"]["assinatura_status"]
           updated_at?: string
           valor_cobrado_centavos?: number
@@ -550,6 +554,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_cancelamento?: string | null
+          data_fim_acesso?: string | null
           data_inicio?: string
           empresa_id?: string | null
           forma_pagamento?: string | null
@@ -560,6 +565,7 @@ export type Database = {
           paciente_id?: string | null
           plano_id?: string
           proxima_cobranca?: string | null
+          renovacao_bloqueada?: boolean
           status?: Database["public"]["Enums"]["assinatura_status"]
           updated_at?: string
           valor_cobrado_centavos?: number
@@ -3844,6 +3850,106 @@ export type Database = {
           },
         ]
       }
+      plano_cancelamento_evento: {
+        Row: {
+          admin_acao: string | null
+          admin_acao_em: string | null
+          admin_id: string | null
+          created_at: string
+          id: string
+          medico_id: string
+          motivo: string | null
+          plano_id: string
+          status: string
+          termos_aceitos: boolean
+          tipo_encerramento: Database["public"]["Enums"]["modo_cancelamento_plano"]
+          total_pacientes: number
+          updated_at: string
+          valor_total_comprometido_centavos: number
+        }
+        Insert: {
+          admin_acao?: string | null
+          admin_acao_em?: string | null
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          medico_id: string
+          motivo?: string | null
+          plano_id: string
+          status?: string
+          termos_aceitos?: boolean
+          tipo_encerramento?: Database["public"]["Enums"]["modo_cancelamento_plano"]
+          total_pacientes?: number
+          updated_at?: string
+          valor_total_comprometido_centavos?: number
+        }
+        Update: {
+          admin_acao?: string | null
+          admin_acao_em?: string | null
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          medico_id?: string
+          motivo?: string | null
+          plano_id?: string
+          status?: string
+          termos_aceitos?: boolean
+          tipo_encerramento?: Database["public"]["Enums"]["modo_cancelamento_plano"]
+          total_pacientes?: number
+          updated_at?: string
+          valor_total_comprometido_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_cancelamento_evento_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_medico_status_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          medico_id: string | null
+          motivo: string | null
+          plano_id: string
+          status_anterior: string | null
+          status_novo: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          medico_id?: string | null
+          motivo?: string | null
+          plano_id: string
+          status_anterior?: string | null
+          status_novo: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          medico_id?: string | null
+          motivo?: string | null
+          plano_id?: string
+          status_anterior?: string | null
+          status_novo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_medico_status_log_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plano_medicos: {
         Row: {
           aceite_em: string | null
@@ -3921,6 +4027,7 @@ export type Database = {
       }
       planos: {
         Row: {
+          aprovado_admin: boolean
           categoria: Database["public"]["Enums"]["plano_categoria"]
           created_at: string
           created_by: string | null
@@ -3957,6 +4064,7 @@ export type Database = {
           versao: number
         }
         Insert: {
+          aprovado_admin?: boolean
           categoria?: Database["public"]["Enums"]["plano_categoria"]
           created_at?: string
           created_by?: string | null
@@ -3993,6 +4101,7 @@ export type Database = {
           versao?: number
         }
         Update: {
+          aprovado_admin?: boolean
           categoria?: Database["public"]["Enums"]["plano_categoria"]
           created_at?: string
           created_by?: string | null
@@ -4203,6 +4312,82 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: true
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reembolso_planos: {
+        Row: {
+          assinatura_id: string | null
+          cancelamento_evento_id: string | null
+          created_at: string
+          dias_restantes: number
+          dias_total_ciclo: number
+          id: string
+          motivo: string | null
+          paciente_id: string
+          plano_id: string
+          processado_em: string | null
+          processado_por: string | null
+          status: Database["public"]["Enums"]["reembolso_status"]
+          updated_at: string
+          valor_centavos: number
+          valor_proporcional_centavos: number
+        }
+        Insert: {
+          assinatura_id?: string | null
+          cancelamento_evento_id?: string | null
+          created_at?: string
+          dias_restantes?: number
+          dias_total_ciclo?: number
+          id?: string
+          motivo?: string | null
+          paciente_id: string
+          plano_id: string
+          processado_em?: string | null
+          processado_por?: string | null
+          status?: Database["public"]["Enums"]["reembolso_status"]
+          updated_at?: string
+          valor_centavos?: number
+          valor_proporcional_centavos?: number
+        }
+        Update: {
+          assinatura_id?: string | null
+          cancelamento_evento_id?: string | null
+          created_at?: string
+          dias_restantes?: number
+          dias_total_ciclo?: number
+          id?: string
+          motivo?: string | null
+          paciente_id?: string
+          plano_id?: string
+          processado_em?: string | null
+          processado_por?: string | null
+          status?: Database["public"]["Enums"]["reembolso_status"]
+          updated_at?: string
+          valor_centavos?: number
+          valor_proporcional_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reembolso_planos_assinatura_id_fkey"
+            columns: ["assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "assinaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reembolso_planos_cancelamento_evento_id_fkey"
+            columns: ["cancelamento_evento_id"]
+            isOneToOne: false
+            referencedRelation: "plano_cancelamento_evento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reembolso_planos_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
             referencedColumns: ["id"]
           },
         ]
@@ -4779,6 +4964,19 @@ export type Database = {
           total_count: number
           valor_anterior: string
           valor_novo: string
+        }[]
+      }
+      calcular_reembolso_proporcional: {
+        Args: {
+          _data_cancelamento?: string
+          _data_fim: string
+          _data_inicio: string
+          _valor_cobrado: number
+        }
+        Returns: {
+          dias_restantes: number
+          dias_total: number
+          valor_proporcional: number
         }[]
       }
       colaborador_alterar_status: {
@@ -5488,6 +5686,10 @@ export type Database = {
         | "image"
         | "document"
         | "interactive"
+      modo_cancelamento_plano:
+        | "cumprir_ciclo"
+        | "reembolso_imediato"
+        | "hibrido"
       origem_receita_assinatura:
         | "consulta"
         | "servico_plataforma"
@@ -5541,7 +5743,13 @@ export type Database = {
       plano_nivel: "admin" | "medico" | "paciente_custom"
       plano_publico: "paciente" | "empresa" | "ambos"
       plano_regra_acesso: "direto" | "pos_consulta"
-      plano_status: "rascunho" | "ativo" | "inativo" | "arquivado"
+      plano_status:
+        | "rascunho"
+        | "ativo"
+        | "inativo"
+        | "arquivado"
+        | "encerramento_pendente"
+        | "encerrado"
       reembolso_status:
         | "solicitado"
         | "em_analise"
@@ -5927,6 +6135,11 @@ export const Constants = {
         "document",
         "interactive",
       ],
+      modo_cancelamento_plano: [
+        "cumprir_ciclo",
+        "reembolso_imediato",
+        "hibrido",
+      ],
       origem_receita_assinatura: [
         "consulta",
         "servico_plataforma",
@@ -5986,7 +6199,14 @@ export const Constants = {
       plano_nivel: ["admin", "medico", "paciente_custom"],
       plano_publico: ["paciente", "empresa", "ambos"],
       plano_regra_acesso: ["direto", "pos_consulta"],
-      plano_status: ["rascunho", "ativo", "inativo", "arquivado"],
+      plano_status: [
+        "rascunho",
+        "ativo",
+        "inativo",
+        "arquivado",
+        "encerramento_pendente",
+        "encerrado",
+      ],
       reembolso_status: [
         "solicitado",
         "em_analise",
