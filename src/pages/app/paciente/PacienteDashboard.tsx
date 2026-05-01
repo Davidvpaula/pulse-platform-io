@@ -346,9 +346,15 @@ export default function PacienteDashboard() {
 
 /* ============================================================
  * ComunicacaoCanais
- * Visão de comunicação: conversas e status com médico, secretaria e admin.
- * Mocks visuais — pronto para plugar em uma tabela `mensagens` no futuro.
+ * Busca conversations reais do banco (RLS filtra pelo paciente).
+ * Fallback para mocks visuais quando não há sessão ou dados.
  * ============================================================ */
+
+import {
+  listConversasPaciente,
+  formatTempoRelativo,
+  type ConversaPaciente,
+} from "@/lib/pacienteConversas";
 
 type CanalStatus = "online" | "respondido" | "aguardando" | "offline";
 
@@ -359,10 +365,26 @@ const canalStatusUI: Record<CanalStatus, { label: string; dot: string; pill: str
   offline:     { label: "Fora do horário",dot: "bg-muted-foreground", pill: "bg-muted text-muted-foreground" },
 };
 
+function mapConvToStatus(c: ConversaPaciente): CanalStatus {
+  if (c.status === "fechada" || c.status === "arquivada") return "offline";
+  if (c.unread_count > 0) return "aguardando";
+  if (c.last_message_at) return "respondido";
+  return "online";
+}
+
 function ComunicacaoCanais({
   proximaConsulta, mensagemConsulta,
 }: { proximaConsulta: ConsultaItem; mensagemConsulta: string }) {
-  const canais = [
+  const { session } = useSession();
+  const [dbConversas, setDbConversas] = useState<ConversaPaciente[] | null>(null);
+
+  useEffect(() => {
+    if (!session) { setDbConversas(null); return; }
+    listConversasPaciente().then(setDbConversas);
+  }, [session]);
+
+  // Mocks estáticos como fallback
+  const mockCanais = [
     {
       id: "medico",
       role: "Médico",
@@ -376,7 +398,6 @@ function ComunicacaoCanais({
       enviadaPor: "medico" as const,
       naoLidas: 1,
       icon: Stethoscope,
-      tone: "primary",
     },
     {
       id: "secretaria",
@@ -390,7 +411,6 @@ function ComunicacaoCanais({
       enviadaPor: "secretaria" as const,
       naoLidas: 2,
       icon: User,
-      tone: "warning",
     },
     {
       id: "admin",
@@ -404,9 +424,25 @@ function ComunicacaoCanais({
       enviadaPor: "admin" as const,
       naoLidas: 0,
       icon: MessageCircle,
-      tone: "success",
     },
   ];
+
+  // Usa dados reais se disponíveis
+  const canais = (session && dbConversas && dbConversas.length > 0)
+    ? dbConversas.map((c) => ({
+        id: c.id,
+        role: c.origin === "comercial" ? "Atendimento" : c.channel === "interno" ? "Suporte" : "Médico",
+        nome: c.contact_name ?? "Conversa",
+        sub: c.origin,
+        iniciais: (c.contact_name ?? "??").split(" ").filter(Boolean).slice(0, 2).map(s => s[0]).join("").toUpperCase(),
+        status: mapConvToStatus(c),
+        ultimoContato: formatTempoRelativo(c.last_message_at),
+        ultimaMsg: c.last_message_preview ?? "Sem mensagens ainda.",
+        enviadaPor: "sistema" as const,
+        naoLidas: c.unread_count,
+        icon: c.medico_id ? Stethoscope : c.origin === "comercial" ? User : MessageCircle,
+      }))
+    : mockCanais;
 
   const totalNaoLidas = canais.reduce((s, c) => s + c.naoLidas, 0);
 
@@ -435,7 +471,7 @@ function ComunicacaoCanais({
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
-        {canais.map((c) => {
+        {canais.slice(0, 3).map((c) => {
           const ui = canalStatusUI[c.status];
           const Icon = c.icon;
           return (
@@ -443,7 +479,6 @@ function ComunicacaoCanais({
               key={c.id}
               className="group relative flex flex-col rounded-xl border border-border bg-background/40 p-4 transition hover:border-primary/30 hover:shadow-sm"
             >
-              {/* Header: avatar + status */}
               <div className="flex items-start gap-3">
                 <div className="relative">
                   <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
@@ -472,7 +507,6 @@ function ComunicacaoCanais({
                 )}
               </div>
 
-              {/* Status pill */}
               <div className="mt-3 flex items-center justify-between">
                 <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium", ui.pill)}>
                   <span className={cn("h-1.5 w-1.5 rounded-full", ui.dot)} />
@@ -481,18 +515,13 @@ function ComunicacaoCanais({
                 <span className="text-[10px] text-muted-foreground">{c.ultimoContato}</span>
               </div>
 
-              {/* Última mensagem */}
               <div className="mt-3 flex-1 rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-                <span className="font-medium text-foreground/80">
-                  {c.enviadaPor === "medico" ? "Médico:" : c.enviadaPor === "secretaria" ? "Secretaria:" : "Suporte:"}
-                </span>{" "}
                 {c.ultimaMsg}
               </div>
 
-              {/* Ações */}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button asChild variant="outline" size="sm" className="h-8 text-xs">
-                  <Link to="/app/paciente/mensagens">Abrir</Link>
+                  <Link to={`/app/paciente/mensagens${session && dbConversas?.length ? `?conv=${c.id}` : ""}`}>Abrir</Link>
                 </Button>
                 <Button asChild size="sm" className="h-8 bg-success text-success-foreground hover:opacity-90 text-xs">
                   <a
