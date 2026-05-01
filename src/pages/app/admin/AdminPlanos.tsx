@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlanoBuilder } from "@/components/planos/PlanoBuilder";
+import { DescontoProgressivoConfig } from "@/components/planos/DescontoProgressivoConfig";
+import { TaxaPlataformaConfig } from "@/components/planos/TaxaPlataformaConfig";
 import { brl, corClassificacao, labelClassificacao, type Classificacao, type SaudeFinanceira } from "@/lib/planos/saude";
 
 type Plano = any;
@@ -171,6 +173,8 @@ export default function AdminPlanos() {
           <TabsTrigger value="planos">Planos ({planos.length})</TabsTrigger>
           <TabsTrigger value="assinaturas">Assinaturas ({assinaturas.length})</TabsTrigger>
           <TabsTrigger value="auditoria">Auditoria</TabsTrigger>
+          <TabsTrigger value="descontos">Descontos</TabsTrigger>
+          <TabsTrigger value="taxa">Taxa plataforma</TabsTrigger>
         </TabsList>
 
         {/* DASHBOARD */}
@@ -344,6 +348,16 @@ export default function AdminPlanos() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* DESCONTOS PROGRESSIVOS */}
+        <TabsContent value="descontos">
+          <DescontoProgressivoConfig />
+        </TabsContent>
+
+        {/* TAXA PLATAFORMA */}
+        <TabsContent value="taxa">
+          <TaxaPlataformaConfig />
         </TabsContent>
       </Tabs>
 
