@@ -159,6 +159,43 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
     setLoading(false);
   }
 
+  async function criarNovaVersao() {
+    if (!planoId) return;
+    setSaving(true);
+    try {
+      const payload = { ...plano };
+      delete payload.id;
+      delete payload.created_at;
+      delete payload.updated_at;
+      payload.versao = (payload.versao ?? 1) + 1;
+      payload.plano_base_id = plano.plano_base_id ?? planoId;
+      payload.status = "rascunho";
+
+      const { data: novo, error } = await supabase.from("planos").insert(payload).select("id").single();
+      if (error) throw error;
+
+      // Copy benefits
+      if (beneficios.length > 0) {
+        const rows = beneficios.map((b: any, idx: number) => {
+          const r: any = { ...b, plano_id: novo.id, ordem: idx };
+          delete r.id;
+          delete r.created_at;
+          delete r.updated_at;
+          return r;
+        });
+        await supabase.from("plano_beneficios").insert(rows);
+      }
+
+      toast.success("Nova versão criada como rascunho");
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao criar nova versão");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function setField<K extends keyof Plano>(k: K, v: Plano[K]) {
     setPlano((p: Plano) => ({ ...p, [k]: v }));
   }
