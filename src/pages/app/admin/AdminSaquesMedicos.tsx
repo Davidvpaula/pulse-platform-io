@@ -56,7 +56,7 @@ export default function AdminSaquesMedicos() {
       `)
       .order("solicitado_em", { ascending: false })
       .limit(200);
-    if (filtroStatus !== "todos") q = q.eq("status", filtroStatus);
+    if (filtroStatus !== "todos") q = q.eq("status", filtroStatus as any);
     const { data } = await q;
     setSaques(data ?? []);
     setLoading(false);
