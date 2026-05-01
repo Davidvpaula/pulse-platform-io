@@ -93,37 +93,9 @@ export default function PacienteDashboard() {
         title="Olá, Marina 👋"
         description="Sua central de saúde — ações rápidas, próximas consultas e suporte direto."
         actions={
-          <div className="flex items-center gap-2">
-            {session && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-                <DbIcon className="h-3 w-3" /> Dados em tempo real
-              </span>
-            )}
-            {session && dbConsultas && dbConsultas[0] && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const s = await criarCheckoutSession({
-                      consultaId: dbConsultas[0].id,
-                      valorCentavos: 22000,
-                      descricao: "Consulta de teste",
-                    });
-                    abrirCheckout(s, navigate);
-                  } catch (e: any) {
-                    toast.error(e.message ?? "Falha ao iniciar checkout");
-                  }
-                }}
-                title="Modo simulado para desenvolvimento"
-              >
-                <Wallet className="mr-1.5 h-3.5 w-3.5" /> Testar checkout
-              </Button>
-            )}
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
-            </Button>
-          </div>
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
+          </Button>
         }
       />
 
