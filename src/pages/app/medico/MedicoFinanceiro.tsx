@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter } from "lucide-react";
+import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter, Banknote, CalendarClock, ArrowDownToLine } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,9 @@ import { getMedicoAtualId } from "@/lib/clinico";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
+import { getSaqueConfig, calcularSaldo, brl, type SaqueConfig, type SaldoInfo } from "@/lib/saques";
+import { SolicitarSaqueDialog } from "@/components/medico/SolicitarSaqueDialog";
+import { SaqueHistorico } from "@/components/medico/SaqueHistorico";
 
 type FinRow = {
   id: string;
@@ -32,15 +35,12 @@ const periodos = [
   { key: "tudo", label: "Tudo" },
 ] as const;
 
-const brl = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
 function statusBadge(s: string) {
-  if (s === "liberado" || s === "pago")
+  if (s === "liberado" || s === "pago" || s === "valido")
     return <Badge variant="outline" className="border-success/40 text-success">Liberado</Badge>;
   if (s === "pendente")
     return <Badge variant="outline" className="border-warning/40 text-warning">Pendente</Badge>;
-  if (s === "cancelado" || s === "estornado")
+  if (s === "cancelado" || s === "estornado" || s === "invalidado" || s === "reembolsado")
     return <Badge variant="outline" className="border-destructive/40 text-destructive">{s}</Badge>;
   return <Badge variant="outline">{s}</Badge>;
 }
@@ -52,6 +52,11 @@ export default function MedicoFinanceiro() {
   const [rows, setRows] = useState<FinRow[]>([]);
   const [periodo, setPeriodo] = useState<typeof periodos[number]["key"]>("30d");
   const [medicoId, setMedicoId] = useState<string | null>(null);
+
+  // Saque state
+  const [saqueConfig, setSaqueConfig] = useState<SaqueConfig | null>(null);
+  const [saldo, setSaldo] = useState<SaldoInfo | null>(null);
+  const [saqueDialogOpen, setSaqueDialogOpen] = useState(false);
 
   function cutoffDate(): Date | null {
     const d = new Date();
@@ -117,13 +122,22 @@ export default function MedicoFinanceiro() {
     setLoading(false);
   }
 
-  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session, periodo]);
+  async function carregarSaldo() {
+    if (!medicoId) return;
+    const cfg = await getSaqueConfig();
+    setSaqueConfig(cfg);
+    const s = await calcularSaldo(medicoId, cfg);
+    setSaldo(s);
+  }
+
+  useEffect(() => { void carregar(); }, [session, periodo]);
+  useEffect(() => { if (medicoId) carregarSaldo(); }, [medicoId]);
 
   const kpis = useMemo(() => {
-    const liberado = rows.filter(r => r.status === "liberado" || r.status === "pago");
+    const valido = rows.filter(r => r.status === "valido" || r.status === "liberado" || r.status === "pago");
     const pendente = rows.filter(r => r.status === "pendente");
     return {
-      totalReceber: liberado.reduce((s, r) => s + r.valor_medico_centavos, 0),
+      totalReceber: valido.reduce((s, r) => s + r.valor_medico_centavos, 0),
       pendentes: pendente.reduce((s, r) => s + r.valor_medico_centavos, 0),
       consultas: rows.length,
       ticketMedio: rows.length ? Math.round(rows.reduce((s, r) => s + r.valor_medico_centavos, 0) / rows.length) : 0,
@@ -134,7 +148,7 @@ export default function MedicoFinanceiro() {
     <div className="space-y-6">
       <PageHeader
         title="Financeiro"
-        description="Extrato dos seus repasses por consulta — calculados automaticamente conforme regras da plataforma."
+        description="Extrato dos seus repasses por consulta e controle de saques."
       />
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -143,6 +157,59 @@ export default function MedicoFinanceiro() {
         <StatCard label="Consultas no período" value={kpis.consultas.toString()} icon={TrendingUp} />
         <StatCard label="Ticket médio (você)" value={brl(kpis.ticketMedio)} icon={Wallet} />
       </div>
+
+      {/* ── SEÇÃO DE SAQUE ── */}
+      {saldo && saqueConfig && medicoId && (
+        <div className="card-elevated p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-primary" /> Saldo para saque
+            </h3>
+            <Button
+              className="bg-gradient-primary hover:opacity-90"
+              disabled={saldo.liberado_centavos < saqueConfig.valor_minimo_centavos}
+              onClick={() => setSaqueDialogOpen(true)}
+            >
+              <ArrowDownToLine className="mr-2 h-4 w-4" /> Solicitar saque
+            </Button>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="rounded-lg border border-success/30 bg-success/5 p-4 text-center">
+              <p className="text-xs text-muted-foreground">Disponível para saque</p>
+              <p className="text-xl font-bold text-success">{brl(saldo.liberado_centavos)}</p>
+            </div>
+            <div className="rounded-lg border border-warning/30 bg-warning/5 p-4 text-center">
+              <p className="text-xs text-muted-foreground">Aguardando liberação</p>
+              <p className="text-xl font-bold text-warning">{brl(saldo.aguardando_centavos)}</p>
+            </div>
+            <div className="rounded-lg border border-border p-4 text-center">
+              <p className="text-xs text-muted-foreground">Prazo de segurança</p>
+              <p className="text-xl font-bold">{saqueConfig.prazo_liberacao_dias} dias</p>
+            </div>
+            <div className="rounded-lg border border-border p-4 text-center">
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><CalendarClock className="h-3 w-3" /> Próxima liberação</p>
+              <p className="text-xl font-bold">
+                {saldo.proxima_liberacao ? saldo.proxima_liberacao.toLocaleDateString("pt-BR") : "—"}
+              </p>
+            </div>
+          </div>
+          {saldo.liberado_centavos < saqueConfig.valor_minimo_centavos && saldo.liberado_centavos > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Valor mínimo para saque: {brl(saqueConfig.valor_minimo_centavos)}. Aguarde mais consultas serem liberadas.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Histórico de saques */}
+      {medicoId && (
+        <div className="card-elevated overflow-hidden">
+          <div className="border-b border-border px-4 py-3">
+            <h3 className="text-sm font-semibold">Histórico de saques</h3>
+          </div>
+          <SaqueHistorico medicoId={medicoId} />
+        </div>
+      )}
 
       {/* Receita por origem */}
       {medicoId && <ReceitaPorOrigem periodo={periodo} medicoId={medicoId} />}
@@ -221,6 +288,18 @@ export default function MedicoFinanceiro() {
         Os valores são calculados no momento da criação da consulta (snapshot imutável).
         Dúvidas sobre comissões? Fale com o administrador.
       </p>
+
+      {/* Dialog de saque */}
+      {medicoId && saldo && saqueConfig && (
+        <SolicitarSaqueDialog
+          open={saqueDialogOpen}
+          onOpenChange={setSaqueDialogOpen}
+          medicoId={medicoId}
+          saldo={saldo}
+          config={saqueConfig}
+          onSuccess={carregarSaldo}
+        />
+      )}
     </div>
   );
 }
