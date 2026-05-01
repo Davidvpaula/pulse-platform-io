@@ -119,6 +119,7 @@ import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
 import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
 import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
+import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
 import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
@@ -255,6 +256,7 @@ const App = () => (
               <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
               <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
+              <Route path="admin/financeiro/saques-medicos" element={<G perm="financeiro.saques.ver"><AdminSaquesMedicos /></G>} />
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/planos-cancelamentos" element={<G perm="financeiro.servicos_gerenciar"><AdminCancelamentosPlanos /></G>} />
