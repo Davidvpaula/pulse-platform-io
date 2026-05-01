@@ -48,6 +48,7 @@ export default function AdminSaquesMedicos() {
   async function loadConfig() {
     const cfg = await getSaqueConfig();
     setConfig(cfg);
+    setConfigAnterior(cfg);
   }
 
   async function load() {
