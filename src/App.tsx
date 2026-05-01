@@ -254,6 +254,7 @@ const App = () => (
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
               <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
+              <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />
