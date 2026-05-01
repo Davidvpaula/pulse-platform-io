@@ -85,6 +85,8 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "empresa.dados": ["view", "edit"],
     "financeiro.own": ["view"],
   },
+  // Colaborador: matriz mock vazia. As permissões reais vêm de has_permission no banco.
+  colaborador: {},
 };
 
 export function can(profile: ProfileKey, resource: Resource, action: Action = "view"): boolean {
@@ -99,6 +101,7 @@ export const allowedAreas: Record<ProfileKey, string[]> = {
   paciente: ["/app/paciente"],
   medico: ["/app/medico", "/app/comunicacao"], // comunicação restrita por capability no menu
   secretaria: ["/app/secretaria", "/app/comunicacao"],
+  colaborador: ["/app/colaborador", "/app/secretaria", "/app/comunicacao"],
   admin: ["/app"], // acesso total
   empresa: ["/app/empresa"],
 };
