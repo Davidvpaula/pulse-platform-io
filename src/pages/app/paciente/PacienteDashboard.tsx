@@ -380,7 +380,7 @@ function ComunicacaoCanais({
 
   useEffect(() => {
     if (!session) { setDbConversas(null); return; }
-    listConversasPaciente().then(setDbConversas);
+    listConversasPaciente().then((res) => setDbConversas(res.data));
   }, [session]);
 
   // Mocks estáticos como fallback

@@ -3415,6 +3415,7 @@ export type Database = {
           media_url: string | null
           message_type: Database["public"]["Enums"]["message_type"]
           metadata: Json
+          read_at: string | null
           sender_id: string | null
           sender_name: string | null
           sender_type: Database["public"]["Enums"]["message_sender_type"]
@@ -3435,6 +3436,7 @@ export type Database = {
           media_url?: string | null
           message_type?: Database["public"]["Enums"]["message_type"]
           metadata?: Json
+          read_at?: string | null
           sender_id?: string | null
           sender_name?: string | null
           sender_type: Database["public"]["Enums"]["message_sender_type"]
@@ -3455,6 +3457,7 @@ export type Database = {
           media_url?: string | null
           message_type?: Database["public"]["Enums"]["message_type"]
           metadata?: Json
+          read_at?: string | null
           sender_id?: string | null
           sender_name?: string | null
           sender_type?: Database["public"]["Enums"]["message_sender_type"]
@@ -5546,6 +5549,10 @@ export type Database = {
       marcar_reenvio_link_consulta: {
         Args: { _canal?: string; _consulta_id: string }
         Returns: Json
+      }
+      mark_messages_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
       }
       medico_acesso_efetivo: { Args: { _medico_id: string }; Returns: string }
       medico_aprovar: {

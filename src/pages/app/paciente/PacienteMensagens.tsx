@@ -5,6 +5,7 @@ import {
   AlertTriangle, Search, Inbox, Filter, Check, Settings,
   Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock,
   Send, Loader2, type LucideIcon, User, MessageCircle, Paperclip, Download, Image, X,
+  Eye, EyeOff, ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   listMensagensConversa,
   enviarMensagemPaciente,
   uploadAnexoMensagem,
+  marcarMensagensComoLidas,
   formatTempoRelativo,
   type ConversaPaciente,
   type MensagemPaciente,
@@ -50,10 +52,6 @@ const mensagensMock: MockMsg[] = [
   { id: "m5", categoria: "sistema", titulo: "Bem-vinda ao MedClin", resumo: "Tudo pronto!", corpo: "Complete seu perfil.", data: new Date(Date.now() - 7 * 86400_000).toISOString(), lida: true, cta: { label: "Completar perfil", to: "/app/paciente/perfil" }, remetente: "MedClin" },
 ];
 
-function formatDataCompleta(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
 /* ─── Sender type icon/label ─── */
 const senderMeta: Record<string, { icon: LucideIcon; label: string; align: "left" | "right" }> = {
   paciente:    { icon: User,          label: "Você",        align: "right" },
@@ -65,17 +63,25 @@ const senderMeta: Record<string, { icon: LucideIcon; label: string; align: "left
   lead:        { icon: User,          label: "Lead",        align: "left" },
 };
 
+const CONV_PAGE_SIZE = 20;
+const MSG_PAGE_SIZE = 50;
+
 export default function PacienteMensagens() {
   const { session } = useSession();
   const [searchParams] = useSearchParams();
   const convParam = searchParams.get("conv");
 
   const [conversas, setConversas] = useState<ConversaPaciente[]>([]);
+  const [convsTotal, setConvsTotal] = useState(0);
+  const [convsPage, setConvsPage] = useState(0);
   const [mensagens, setMensagens] = useState<MensagemPaciente[]>([]);
+  const [msgsTotal, setMsgsTotal] = useState(0);
+  const [msgsPage, setMsgsPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(convParam);
   const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
   const [novaMsg, setNovaMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -83,29 +89,44 @@ export default function PacienteMensagens() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const msgsEndRef = useRef<HTMLDivElement>(null);
 
-  // Load conversations
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setBuscaDebounced(busca), 350);
+    return () => clearTimeout(t);
+  }, [busca]);
+
+  // Load conversations (server-side search + pagination)
   useEffect(() => {
     if (!session) return;
     setLoading(true);
-    listConversasPaciente().then((cs) => {
-      setConversas(cs);
-      if (!selectedConvId && cs.length > 0) setSelectedConvId(cs[0].id);
+    listConversasPaciente({ search: buscaDebounced, page: convsPage, pageSize: CONV_PAGE_SIZE }).then((res) => {
+      setConversas(res.data);
+      setConvsTotal(res.total);
+      if (!selectedConvId && res.data.length > 0) setSelectedConvId(res.data[0].id);
       setLoading(false);
     });
-  }, [session]); // eslint-disable-line
+  }, [session, buscaDebounced, convsPage]); // eslint-disable-line
 
   // Load messages when conversation changes
   useEffect(() => {
     if (!selectedConvId || !session) { setMensagens([]); return; }
     setLoadingMsgs(true);
-    listMensagensConversa(selectedConvId).then((ms) => {
-      setMensagens(ms);
+    setMsgsPage(0);
+    listMensagensConversa(selectedConvId, { page: 0, pageSize: MSG_PAGE_SIZE }).then((res) => {
+      setMensagens(res.data);
+      setMsgsTotal(res.total);
       setLoadingMsgs(false);
       setTimeout(() => msgsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     });
+    // Mark messages as read when opening conversation
+    marcarMensagensComoLidas(selectedConvId).then(() => {
+      setConversas((prev) =>
+        prev.map((c) => c.id === selectedConvId ? { ...c, unread_count: 0 } : c)
+      );
+    });
   }, [selectedConvId, session]);
 
-  // Realtime subscription for messages
+  // Realtime subscription for messages — with toast notification
   useEffect(() => {
     if (!selectedConvId || !session) return;
     const channel = supabase
@@ -117,8 +138,69 @@ export default function PacienteMensagens() {
         filter: `conversation_id=eq.${selectedConvId}`,
       }, (payload) => {
         const msg = payload.new as MensagemPaciente;
-        setMensagens((prev) => [...prev, msg]);
+        setMensagens((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+        // Toast notification for incoming messages (not from me)
+        const meta = senderMeta[msg.sender_type];
+        if (meta?.align !== "right") {
+          toast.info(`${msg.sender_name ?? meta?.label ?? "Nova mensagem"}: ${(msg.body ?? "📎 Anexo").slice(0, 60)}`, {
+            duration: 4000,
+          });
+          // Auto-mark as read since user is viewing
+          marcarMensagensComoLidas(selectedConvId);
+        }
         setTimeout(() => msgsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedConvId, session]);
+
+  // Global realtime subscription — notify for ANY new message across all conversations
+  useEffect(() => {
+    if (!session) return;
+    const channel = supabase
+      .channel("global-msgs-paciente")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+      }, (payload) => {
+        const msg = payload.new as any;
+        // Skip if it's the currently viewed conversation (handled above) or sent by me
+        if (msg.conversation_id === selectedConvId) return;
+        const meta = senderMeta[msg.sender_type];
+        if (meta?.align === "right") return;
+        // Update unread count in sidebar
+        setConversas((prev) =>
+          prev.map((c) =>
+            c.id === msg.conversation_id
+              ? { ...c, unread_count: c.unread_count + 1, last_message_preview: msg.body ?? "📎 Anexo", last_message_at: msg.created_at }
+              : c,
+          ),
+        );
+        toast.info(`Nova mensagem de ${msg.sender_name ?? "Atendimento"}`, { duration: 3000 });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [session, selectedConvId]);
+
+  // Realtime: listen to UPDATE on messages (for read receipts from the other side)
+  useEffect(() => {
+    if (!selectedConvId || !session) return;
+    const channel = supabase
+      .channel(`msgs-update-${selectedConvId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${selectedConvId}`,
+      }, (payload) => {
+        const updated = payload.new as MensagemPaciente;
+        setMensagens((prev) =>
+          prev.map((m) => m.id === updated.id ? { ...m, read_at: updated.read_at } : m),
+        );
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -156,25 +238,28 @@ export default function PacienteMensagens() {
     e.target.value = "";
   };
 
-  const convsFiltradas = useMemo(() => {
-    if (!busca.trim()) return conversas;
-    const q = busca.toLowerCase();
-    return conversas.filter((c) =>
-      (c.contact_name ?? "").toLowerCase().includes(q) ||
-      (c.last_message_preview ?? "").toLowerCase().includes(q)
-    );
-  }, [conversas, busca]);
+  const loadMoreMsgs = async () => {
+    if (!selectedConvId) return;
+    const nextPage = msgsPage + 1;
+    setLoadingMsgs(true);
+    const res = await listMensagensConversa(selectedConvId, { page: nextPage, pageSize: MSG_PAGE_SIZE });
+    setMensagens((prev) => [...prev, ...res.data]);
+    setMsgsPage(nextPage);
+    setLoadingMsgs(false);
+  };
 
   const convSelecionada = conversas.find((c) => c.id === selectedConvId);
   const totalNaoLidas = conversas.reduce((s, c) => s + c.unread_count, 0);
+  const hasMoreConvs = conversas.length < convsTotal;
+  const hasMoreMsgs = mensagens.length < msgsTotal;
 
   // ─── Se não há sessão, mostra mock (notificações) ───
   if (!session) {
     return <MockMensagens />;
   }
 
-  // ─── Se não há conversas reais, mostra empty state com mock ───
-  if (!loading && conversas.length === 0) {
+  // ─── Se não há conversas reais, mostra empty state ───
+  if (!loading && conversas.length === 0 && !buscaDebounced) {
     return (
       <div className="space-y-6">
         <PageHeader title="Mensagens" description="Suas conversas com a equipe de atendimento" />
@@ -193,7 +278,6 @@ export default function PacienteMensagens() {
           </Button>
         </div>
 
-        {/* Fallback: notificações do sistema (mock) */}
         <div className="card-elevated p-6">
           <h3 className="font-display text-lg font-semibold flex items-center gap-2 mb-4">
             <Bell className="h-4 w-4 text-primary" /> Notificações recentes
@@ -250,7 +334,7 @@ export default function PacienteMensagens() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                value={busca} onChange={(e) => setBusca(e.target.value)}
+                value={busca} onChange={(e) => { setBusca(e.target.value); setConvsPage(0); }}
                 placeholder="Buscar conversas…" className="pl-9"
               />
             </div>
@@ -261,51 +345,60 @@ export default function PacienteMensagens() {
               <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
               </div>
-            ) : convsFiltradas.length === 0 ? (
+            ) : conversas.length === 0 ? (
               <div className="flex flex-col items-center gap-2 p-10 text-center text-sm text-muted-foreground">
                 <Inbox className="h-8 w-8 opacity-50" /> Nenhuma conversa
               </div>
             ) : (
-              <ul className="divide-y divide-border">
-                {convsFiltradas.map((c) => {
-                  const ativa = c.id === selectedConvId;
-                  const Icon = c.medico_id ? Stethoscope : c.origin === "comercial" ? User : MessageCircle;
-                  return (
-                    <li key={c.id}>
-                      <button
-                        onClick={() => setSelectedConvId(c.id)}
-                        className={cn(
-                          "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-accent/30",
-                          ativa && "bg-accent/40",
-                        )}
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            {c.unread_count > 0 && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                            <p className={cn("truncate text-sm", c.unread_count > 0 ? "font-semibold" : "font-medium text-foreground/80")}>
-                              {c.contact_name ?? "Conversa"}
-                            </p>
+              <>
+                <ul className="divide-y divide-border">
+                  {conversas.map((c) => {
+                    const ativa = c.id === selectedConvId;
+                    const Icon = c.medico_id ? Stethoscope : c.origin === "comercial" ? User : MessageCircle;
+                    return (
+                      <li key={c.id}>
+                        <button
+                          onClick={() => setSelectedConvId(c.id)}
+                          className={cn(
+                            "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-accent/30",
+                            ativa && "bg-accent/40",
+                          )}
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Icon className="h-4 w-4" />
                           </div>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {c.last_message_preview ?? "Sem mensagens"}
-                          </p>
-                          <span className="text-[10px] text-muted-foreground">
-                            {formatTempoRelativo(c.last_message_at)}
-                          </span>
-                        </div>
-                        {c.unread_count > 0 && (
-                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
-                            {c.unread_count}
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              {c.unread_count > 0 && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                              <p className={cn("truncate text-sm", c.unread_count > 0 ? "font-semibold" : "font-medium text-foreground/80")}>
+                                {c.contact_name ?? "Conversa"}
+                              </p>
+                            </div>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {c.last_message_preview ?? "Sem mensagens"}
+                            </p>
+                            <span className="text-[10px] text-muted-foreground">
+                              {formatTempoRelativo(c.last_message_at)}
+                            </span>
+                          </div>
+                          {c.unread_count > 0 && (
+                            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                              {c.unread_count}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {hasMoreConvs && (
+                  <div className="p-3 text-center">
+                    <Button variant="ghost" size="sm" onClick={() => setConvsPage((p) => p + 1)}>
+                      <ChevronDown className="mr-1 h-3.5 w-3.5" /> Carregar mais
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </ScrollArea>
         </section>
@@ -345,7 +438,15 @@ export default function PacienteMensagens() {
               {/* Messages */}
               <ScrollArea className="flex-1 min-h-0">
                 <div className="space-y-3 p-4">
-                  {loadingMsgs ? (
+                  {hasMoreMsgs && (
+                    <div className="text-center pb-2">
+                      <Button variant="ghost" size="sm" onClick={loadMoreMsgs} disabled={loadingMsgs}>
+                        {loadingMsgs ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <ChevronDown className="mr-1 h-3.5 w-3.5 rotate-180" />}
+                        Carregar anteriores
+                      </Button>
+                    </div>
+                  )}
+                  {loadingMsgs && mensagens.length === 0 ? (
                     <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" /> Carregando mensagens…
                     </div>
@@ -377,12 +478,21 @@ export default function PacienteMensagens() {
                                 isMe={isMe}
                               />
                             )}
-                            <p className={cn(
-                              "mt-1 text-[10px]",
-                              isMe ? "text-primary-foreground/60 text-right" : "text-muted-foreground",
+                            <div className={cn(
+                              "mt-1 flex items-center gap-1.5",
+                              isMe ? "justify-end" : "justify-start",
                             )}>
-                              {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                            </p>
+                              <span className={cn(
+                                "text-[10px]",
+                                isMe ? "text-primary-foreground/60" : "text-muted-foreground",
+                              )}>
+                                {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                              {/* Read receipt indicator — only for messages I sent */}
+                              {isMe && (
+                                <ReadReceipt readAt={m.read_at} isMe={isMe} />
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -454,6 +564,20 @@ export default function PacienteMensagens() {
         </section>
       </div>
     </div>
+  );
+}
+
+/* ─── Read Receipt ─── */
+function ReadReceipt({ readAt, isMe }: { readAt: string | null; isMe: boolean }) {
+  if (!isMe) return null;
+  return (
+    <span title={readAt ? `Lido em ${new Date(readAt).toLocaleString("pt-BR")}` : "Enviado"}>
+      {readAt ? (
+        <CheckCircle2 className="h-3 w-3 text-primary-foreground/80" />
+      ) : (
+        <Check className="h-3 w-3 text-primary-foreground/40" />
+      )}
+    </span>
   );
 }
 
