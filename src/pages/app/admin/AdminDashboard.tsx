@@ -190,6 +190,9 @@ export default function AdminDashboard() {
           hint={`${k.consultas_concluidas_hoje ?? 0} concluídas · ${k.consultas_canceladas_hoje ?? 0} canceladas`} />
       </div>
 
+      {/* Receita por origem */}
+      <ReceitaPorOrigem periodo={periodo} />
+
       {/* Alertas do sistema */}
       {data && data.alertas.length > 0 && (
         <div className="grid gap-3 md:grid-cols-3">
