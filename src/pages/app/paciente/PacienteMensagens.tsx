@@ -18,6 +18,7 @@ import {
   listConversasPaciente,
   listMensagensConversa,
   enviarMensagemPaciente,
+  uploadAnexoMensagem,
   formatTempoRelativo,
   type ConversaPaciente,
   type MensagemPaciente,
