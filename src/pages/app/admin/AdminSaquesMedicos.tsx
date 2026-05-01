@@ -37,9 +37,11 @@ export default function AdminSaquesMedicos() {
   const [detalheSaque, setDetalheSaque] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recusarId, setRecusarId] = useState<string | null>(null);
+  const [correcaoId, setCorrecaoId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
   const [configOpen, setConfigOpen] = useState(false);
   const [config, setConfig] = useState<SaqueConfig | null>(null);
+  const [configAnterior, setConfigAnterior] = useState<SaqueConfig | null>(null);
 
   useEffect(() => { load(); loadConfig(); }, [filtroStatus]);
 
