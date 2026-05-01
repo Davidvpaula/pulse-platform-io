@@ -144,6 +144,9 @@ export default function MedicoFinanceiro() {
         <StatCard label="Ticket médio (você)" value={brl(kpis.ticketMedio)} icon={Wallet} />
       </div>
 
+      {/* Receita por origem */}
+      {medicoId && <ReceitaPorOrigem periodo={periodo} medicoId={medicoId} />}
+
       <div className="card-elevated p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
