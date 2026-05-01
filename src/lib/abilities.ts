@@ -116,18 +116,32 @@ export function canAccessPath(profile: ProfileKey, pathname: string): boolean {
 
 export type Capability =
   // Secretaria
-  | "secretaria.supervisor"          // habilita módulos de supervisão (equipe, relatórios)
-  | "secretaria.financeiro"          // ver financeiro/cobranças
-  | "secretaria.reembolso"           // efetuar reembolsos
-  | "comunicacao.acessar"            // ver inbox de WhatsApp/conversas
-  | "comunicacao.todas_conversas"    // ver todas (não apenas as atribuídas)
+  | "secretaria.supervisor"
+  | "secretaria.financeiro"
+  | "secretaria.reembolso"
+  | "comunicacao.acessar"
+  | "comunicacao.todas_conversas"
   // Médico
-  | "medico.comunicacao"             // mensagens vinculadas às próprias consultas
-  | "medico.feegow"                  // abrir prontuário Feegow
-  | "medico.financeiro"              // ver financeiro próprio
+  | "medico.comunicacao"
+  | "medico.feegow"
+  | "medico.financeiro"
   // Empresa
   | "empresa.relatorios"
-  | "empresa.financeiro";
+  | "empresa.financeiro"
+  // Admin / plataforma (espelham as permissões reais do banco usadas no menu)
+  | "financeiro.ver"
+  | "financeiro.editar_comissao"
+  | "financeiro.servicos_gerenciar"
+  | "colaboradores.ver"
+  | "colaboradores.alterar_permissoes"
+  | "relatorios.ver"
+  | "auditoria.ver"
+  | "analises.ver"
+  | "analises.financeiro"
+  | "pacientes.ver"
+  | "medicos.ver"
+  | "medicos.aprovar"
+  | "empresas.ver";
 
 /** Capabilities padrão por perfil — Admin pode customizar por usuário no futuro */
 export const defaultCapabilities: Record<ProfileKey, Capability[]> = {
@@ -139,6 +153,11 @@ export const defaultCapabilities: Record<ProfileKey, Capability[]> = {
     "comunicacao.acessar", "comunicacao.todas_conversas",
     "medico.comunicacao", "medico.feegow", "medico.financeiro",
     "empresa.relatorios", "empresa.financeiro",
+    "financeiro.ver", "financeiro.editar_comissao", "financeiro.servicos_gerenciar",
+    "colaboradores.ver", "colaboradores.alterar_permissoes",
+    "relatorios.ver", "auditoria.ver",
+    "analises.ver", "analises.financeiro",
+    "pacientes.ver", "medicos.ver", "medicos.aprovar", "empresas.ver",
   ],
   empresa: ["empresa.relatorios", "empresa.financeiro"],
 };

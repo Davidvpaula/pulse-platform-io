@@ -1,100 +1,80 @@
-## Objetivo
+## Diagnóstico
 
-Dar ao admin um **painel dedicado para os parâmetros do Atendimento Imediato** (preço, duração, repasse) e fazer com que esses valores **alimentem em tempo real** o calendário compartilhado da página `/atendimento-imediato`. Hoje o calendário roda 100% mock, ignorando o serviço configurado em `app_settings.atendimento_imediato.servico_id`.
+Nada foi apagado. As páginas, rotas e componentes estão **todos presentes** no código:
 
-## Estado atual
+| Item que "sumiu" | Página existente | Rota |
+|---|---|---|
+| Financeiro (visão geral / análise / relatórios) | `AdminFinanceiroCentral.tsx` | `/app/admin/financeiro` |
+| Edição de precificação / taxa da plataforma / comissões | `AdminFinanceiroConfig.tsx` | `/app/admin/financeiro/repasse` |
+| Prévia de repasse | `AdminPreviaRepasse.tsx` | `/app/admin/financeiro/previa-repasse` |
+| Relatório financeiro (download CSV, etc.) | `AdminRelatorioFinanceiro.tsx` | `/app/admin/relatorios/financeiro` |
+| Permissões (adicionar/remover) | `Permissoes.tsx` | `/app/admin/permissoes` |
+| Log de permissões | `PermissoesLog.tsx` | `/app/admin/permissoes/log` |
+| Auditoria interna | `AdminAuditoria.tsx` | `/app/admin/auditoria` |
+| Relatório de auditoria | `AdminRelatorioAuditoria.tsx` | `/app/admin/relatorios/auditoria` |
+| Serviços, Atendimento imediato, Cupons, Planos, Sessões, Segurança, Impersonar | todos existem | todas registradas em `App.tsx` |
 
-- O serviço de Atendimento Imediato já existe como uma linha em `servicos_financeiros` (tipo `pronto_atendimento`), referenciada em `app_settings.atendimento_imediato.servico_id`.
-- A edição é feita via `AdminServicos.tsx` (sheet genérico de qualquer serviço) — funciona, mas é "escondida" e mistura com plano/pacote.
-- O calendário público (`AtendimentoImediato.tsx` + `mockSlotsDoDia`) usa duração fixa de 30 min e nem lê o preço/comissão.
+### Causa raiz
 
-## O que será feito
+O **menu lateral** (`src/layouts/AppLayout.tsx`) filtra itens usando o sistema mock antigo `hasCapability` que vive em `localStorage` (`src/lib/auth.tsx` + `src/lib/abilities.ts`). Esse sistema tem uma lista fechada `Capability` que **não inclui** as permissões reais do banco usadas no menu Admin:
 
-### 1) Página admin dedicada — `AdminAtendimentoImediato`
+- `financeiro.ver`, `financeiro.editar_comissao`, `financeiro.servicos_gerenciar`
+- `colaboradores.alterar_permissoes`
+- `relatorios.ver`, `auditoria.ver`
 
-Nova rota: `/app/admin/atendimento-imediato` (entrada também a partir de `AdminConfiguracoes` e `AdminServicos`, no card emerald que já existe).
+Como `defaultCapabilities.admin` não lista essas chaves, o filtro do menu retorna `false` e **esconde** Financeiro, Serviços, Atendimento imediato, Cupons, Planos, Segurança & Acessos (Permissões), Relatórios e Auditoria — exatamente o que você notou.
 
-Layout em 3 cartões + uma seção de validação:
+As **rotas em si funcionam** (o guard `RequireRoutePermission` consulta o banco e dá bypass para admin). Ou seja: se você digitar `/app/admin/financeiro` na URL, a página abre normalmente. O problema é só de exibição no menu.
 
-**Cartão 1 — Serviço vinculado**
-- Mostra qual serviço está selecionado em `app_settings.atendimento_imediato.servico_id`.
-- Select para trocar (mesmo critério já usado em `AdminServicos`: tipo `pronto_atendimento`, ativo, ≥1 médico aderido).
-- Botão "Criar novo serviço de Pronto Atendimento" (abre o sheet de criação já existente, pré-preenchido com `tipo='pronto_atendimento'`).
+## Plano de correção (1 etapa, ~10 min)
 
-**Cartão 2 — Parâmetros operacionais**
-- Campo "Preço único (R$)" → `valor_paciente_centavos`.
-- Campo "Duração por slot (min, múltiplo de 5)" → `duracao_min`.
-- Botão "Salvar" → `update servicos_financeiros set ... where id = paServicoId`.
-- Bloqueado se nenhum serviço estiver vinculado.
+### 1. Unificar o filtro do menu com a fonte real de permissão
 
-**Cartão 3 — Repasse Médico × Plataforma**
-- Reusa `RepasseSplitInput` (já existente).
-- Modelo `percentual` (campo `comissao_pct`) ou `valor_fixo` (campo `valor_fixo_centavos`).
-- Mostra o split previsto (médico recebe X / plataforma fica com Y) usando o preço atual.
-- Botão "Salvar repasse".
+Em `src/layouts/AppLayout.tsx`, no filtro de itens do menu, fazer **bypass para admin** (idêntico ao que `RequireRoutePermission` já faz):
 
-**Seção 4 — Validação no calendário**
-- Pequeno painel que lista os primeiros slots gerados *já com os parâmetros novos*: hora início → fim (calculado com `duracao_min` salvo), preço, repasse esperado.
-- Link "Abrir calendário público →" para conferir.
-
-Toda alteração emite toast e dispara reload local + um `BroadcastChannel("atendimento_imediato_config_v1")` para que abas abertas do calendário recarreguem.
-
-### 2) Conectar o calendário compartilhado ao serviço real
-
-Editar `src/lib/mocks/atendimentoImediatoMock.ts` para aceitar um parâmetro de duração:
-
-```ts
-export function mockSlotsDoDia(date: Date, duracaoMin: number = MOCK_DURACAO_MIN): MockSlot[]
+```text
+- consulta `useSession().roles` (já disponível via hook existente)
+- se roles inclui "admin" → mostra todos os itens (ignora capability)
+- senão → mantém filtro atual com hasCapability
 ```
 
-Editar `src/pages/public/AtendimentoImediato.tsx`:
-- Novo hook local `useAtendimentoImediatoConfig()` que carrega:
-  - `servico_id` de `app_settings`
-  - linha correspondente em `servicos_financeiros` (preço, duração, modelo, pct/valor_fixo)
-- Usa essa duração na chamada de `mockSlotsDoDia(hoje, cfg.duracao_min)`.
-- Mostra no header da página o **preço único** e a **duração** vindos do banco (não mais hardcoded).
-- No `RodapeReserva`, exibir o valor a pagar (preço configurado).
-- Inscreve no `BroadcastChannel("atendimento_imediato_config_v1")` para refazer o fetch quando admin salvar.
+Isso resolve 100% do problema sem migração e sem mexer em rotas.
 
-### 3) Helpers em `src/lib/clinico.ts`
+### 2. Reconciliar as capabilities mock (limpeza, opcional mas recomendado)
 
-Adicionar pequenos helpers (sem migration):
+Em `src/lib/abilities.ts`:
 
-```ts
-export async function getServicoAtendimentoImediato(): Promise<{
-  servico_id: string | null;
-  preco_centavos: number;
-  duracao_min: number;
-  modelo: "percentual" | "valor_fixo";
-  comissao_pct: number | null;
-  valor_fixo_centavos: number | null;
-} | null>;
+- Estender o tipo `Capability` adicionando: `financeiro.ver`, `financeiro.editar_comissao`, `financeiro.servicos_gerenciar`, `colaboradores.alterar_permissoes`, `relatorios.ver`, `auditoria.ver`, `analises.ver`, `analises.financeiro`, `pacientes.ver`, `medicos.ver`, `medicos.aprovar`, `colaboradores.ver`, `empresas.ver`.
+- Incluir todas elas em `defaultCapabilities.admin`.
 
-export async function updateServicoAtendimentoImediato(patch: Partial<...>): Promise<{ ok: boolean; error?: string }>;
+Assim o sistema mock fica coerente com o real e a alternância de perfil em modo demo (dev) também passa a mostrar tudo.
+
+### 3. Verificação manual
+
+Após o fix, conferir no menu Admin a presença dos blocos:
+
+```text
+Visão geral · Fluxo operacional · Cadastros ▾
+Agendamentos
+Financeiro ▾  ← Visão geral / Repasse e comissões / Prévia de repasse
+Serviços · Atendimento imediato · Cupons · Planos
+Comunicação ▾ · Integrações ▾
+Segurança & Acessos ▾  ← Permissões / Log de permissões / Sessões / Alertas / Impersonar
+Análises ▾ · Relatórios ▾  ← Visão geral / Financeiro / Auditoria
+Auditoria
+Treinamento · Configurações
 ```
 
-### 4) Atalhos de navegação
+### Onde encontrar cada coisa que você sentiu falta
 
-- Em `AdminConfiguracoes.tsx`: adicionar um card na mesma linha do "Repasse financeiro" linkando para a nova página.
-- Em `AdminServicos.tsx`: o card emerald ganha um botão "Abrir painel completo →" levando para a nova rota (mantém o select rápido onde está).
+- **Análise financeira + relatórios + nº médicos atendidos**: `Financeiro → Visão geral` (`AdminFinanceiroCentral`) e `Relatórios → Financeiro` (com export CSV).
+- **Edição de precificação / taxa da plataforma / comissões**: `Financeiro → Repasse e comissões` (`AdminFinanceiroConfig`). A edição de preços de serviços fica em `Serviços` (`AdminServicos`).
+- **Permissões (adicionar/remover)**: `Segurança & Acessos → Permissões` (`/app/admin/permissoes`).
+- **Auditoria interna**: item de menu `Auditoria` no nível raiz e também `Relatórios → Auditoria`.
 
-## Arquivos
+## Arquivos que serão alterados
 
-**Criar**
-- `src/pages/app/admin/AdminAtendimentoImediato.tsx`
+- `src/layouts/AppLayout.tsx` — bypass admin no filtro do menu.
+- `src/lib/abilities.ts` — completar `Capability` e `defaultCapabilities.admin`.
 
-**Editar**
-- `src/App.tsx` (registrar rota)
-- `src/lib/clinico.ts` (helpers)
-- `src/lib/mocks/atendimentoImediatoMock.ts` (aceitar duração custom)
-- `src/pages/public/AtendimentoImediato.tsx` (consumir config real + BroadcastChannel)
-- `src/pages/app/admin/AdminConfiguracoes.tsx` (atalho)
-- `src/pages/app/admin/AdminServicos.tsx` (botão para painel dedicado)
-
-## Garantias
-
-- **Sem migrations** — tudo já existe (`servicos_financeiros`, `app_settings`, RLS, trigger de imutabilidade financeira).
-- **Sem mexer no enum de status** nem em RLS.
-- **Imutabilidade preservada**: alterações no preço/repasse só afetam slots/consultas *novas*; consultas já criadas mantêm snapshot em `consultas_financeiro` (regra global do projeto).
-- **Reflexo automático**: o calendário lê do banco a cada montagem + escuta o BroadcastChannel para recarregar imediatamente quando admin salva em outra aba.
-- **Compatibilidade**: `mockSlotsDoDia(date)` continua funcionando sem o segundo parâmetro (default = 30).
+Nenhuma migração de banco. Nenhum risco para dados.

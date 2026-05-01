@@ -134,13 +134,16 @@ function SidebarBody({
   const profile = profiles[profileKey];
   const { pathname } = useLocation();
   const { hasCapability } = useAuth();
+  const { roles } = useSession();
 
-  const visibleNav = profile.nav.filter(item => {
-    if (item.requiresCapability && !hasCapability(item.requiresCapability as any)) return false;
-    return true;
-  }).map(item => ({
+  // Admin sempre vê o menu completo (mesmo bypass aplicado pelo guard de rota).
+  // O perfil ativo no UI também serve como bypass quando = "admin" (modo demo).
+  const isAdmin = roles.includes("admin") || profileKey === "admin";
+  const allow = (cap?: string) => !cap || isAdmin || hasCapability(cap as any);
+
+  const visibleNav = profile.nav.filter(item => allow(item.requiresCapability)).map(item => ({
     ...item,
-    children: item.children?.filter(c => !c.requiresCapability || hasCapability(c.requiresCapability as any)),
+    children: item.children?.filter(c => allow(c.requiresCapability)),
   }));
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
