@@ -115,7 +115,7 @@ function emptyBeneficio(planoId?: string): Beneficio {
 const toReais = (c: number) => ((c || 0) / 100).toString().replace(".", ",");
 const toCentavos = (s: string) => Math.round(Number(String(s).replace(/\./g, "").replace(",", ".") || 0) * 100);
 
-export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
+export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = false }: Props) {
   const [plano, setPlano] = useState<Plano>(emptyPlano());
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(false);
