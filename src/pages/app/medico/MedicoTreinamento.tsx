@@ -1,56 +1,53 @@
-import { useState } from "react";
-import { Play, CheckCircle2, BookOpen, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Play, CheckCircle2, BookOpen, Clock, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-type Aula = { id: string; titulo: string; duracao: string; descricao: string };
-type Modulo = { id: string; titulo: string; descricao: string; aulas: Aula[] };
-
-const modulos: Modulo[] = [
-  {
-    id: "m1",
-    titulo: "Primeiros passos no Lasmar Telemed",
-    descricao: "Tour pela plataforma e primeiros atendimentos.",
-    aulas: [
-      { id: "a1", titulo: "Visão geral do dashboard", duracao: "4 min", descricao: "Entenda os blocos e o fluxo guiado de atendimento." },
-      { id: "a2", titulo: "Iniciando uma consulta", duracao: "6 min", descricao: "Da agenda ao Google Meet em poucos cliques." },
-      { id: "a3", titulo: "Abrindo o prontuário Feegow", duracao: "3 min", descricao: "Como acessar o prontuário do paciente vinculado." },
-    ],
-  },
-  {
-    id: "m2",
-    titulo: "Boas práticas de telemedicina",
-    descricao: "Orientações clínicas e éticas.",
-    aulas: [
-      { id: "b1", titulo: "Ambiente, câmera e iluminação", duracao: "5 min", descricao: "Padrão visual recomendado para consultas online." },
-      { id: "b2", titulo: "Comunicação empática à distância", duracao: "8 min", descricao: "Técnicas para reduzir distância na telemedicina." },
-    ],
-  },
-  {
-    id: "m3",
-    titulo: "Documentos e prescrição digital",
-    descricao: "Receitas, atestados e assinatura digital.",
-    aulas: [
-      { id: "c1", titulo: "Emitindo receita digital", duracao: "5 min", descricao: "Fluxo passo a passo." },
-      { id: "c2", titulo: "Atestado e relatórios clínicos", duracao: "4 min", descricao: "Modelos e variáveis dinâmicas." },
-    ],
-  },
-];
+import {
+  listModulosComAulas, listMinhasConclusoes,
+  marcarAulaConcluida, desmarcarAulaConcluida,
+  youtubeEmbedUrl, youtubeThumbnail,
+  type ModuloComAulas,
+} from "@/lib/treinamentos";
 
 export default function MedicoTreinamento() {
-  const [concluidas, setConcluidas] = useState<Set<string>>(new Set(["a1"]));
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [modulos, setModulos] = useState<ModuloComAulas[]>([]);
+  const [concluidas, setConcluidas] = useState<Set<string>>(new Set());
+  const [playing, setPlaying] = useState<{ url: string; titulo: string } | null>(null);
 
-  const toggle = (id: string) => {
+  async function carregar() {
+    setLoading(true);
+    const [m, c] = await Promise.all([listModulosComAulas(), listMinhasConclusoes()]);
+    setModulos(m);
+    setConcluidas(c);
+    setLoading(false);
+  }
+
+  useEffect(() => { void carregar(); }, []);
+
+  async function toggle(id: string) {
+    const has = concluidas.has(id);
+    // Otimista
     setConcluidas(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (has) next.delete(id); else next.add(id);
       return next;
     });
-  };
+    const ok = has ? await desmarcarAulaConcluida(id) : await marcarAulaConcluida(id);
+    if (!ok) {
+      toast({ title: "Não foi possível salvar", variant: "destructive" });
+      void carregar();
+    }
+  }
 
   const totalAulas = modulos.reduce((s, m) => s + m.aulas.length, 0);
-  const progresso = Math.round((concluidas.size / totalAulas) * 100);
+  const progresso = totalAulas ? Math.round((concluidas.size / totalAulas) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -83,49 +80,136 @@ export default function MedicoTreinamento() {
         </div>
       </div>
 
-      {/* Módulos */}
-      <div className="space-y-4">
-        {modulos.map(m => (
-          <div key={m.id} className="card-elevated overflow-hidden">
-            <div className="border-b border-border p-5">
-              <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
-              <p className="text-sm text-muted-foreground">{m.descricao}</p>
-            </div>
-            <div className="divide-y divide-border">
-              {m.aulas.map(a => {
-                const done = concluidas.has(a.id);
-                return (
-                  <div key={a.id} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 p-4">
-                    <div className={cn(
-                      "grid h-10 w-10 place-items-center rounded-lg",
-                      done ? "bg-success/10 text-success" : "bg-primary-soft text-primary",
-                    )}>
-                      {done ? <CheckCircle2 className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{a.titulo}</p>
-                      <p className="truncate text-xs text-muted-foreground">{a.descricao}</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" /> {a.duracao}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">Assistir</Button>
-                      <Button size="sm" variant={done ? "ghost" : "default"} className={done ? "" : "bg-gradient-primary hover:opacity-90"} onClick={() => toggle(a.id)}>
-                        {done ? "Desmarcar" : "Concluir"}
-                      </Button>
-                    </div>
+      {loading ? (
+        <div className="card-elevated flex items-center justify-center p-12 text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando treinamento…
+        </div>
+      ) : modulos.length === 0 ? (
+        <div className="card-elevated flex flex-col items-center gap-2 p-12 text-center text-muted-foreground">
+          <AlertCircle className="h-8 w-8 opacity-40" />
+          <p className="text-sm">Nenhum módulo de treinamento disponível ainda.</p>
+          <p className="text-xs">O administrador adicionará conteúdo em breve.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {modulos.map(m => {
+            const aulasDoModulo = m.aulas.length;
+            const feitas = m.aulas.filter(a => concluidas.has(a.id)).length;
+            return (
+              <div key={m.id} className="card-elevated overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-5">
+                  <div>
+                    <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
+                    {m.descricao && <p className="text-sm text-muted-foreground">{m.descricao}</p>}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+                  <div className="text-xs text-muted-foreground">
+                    {feitas} / {aulasDoModulo} concluídas
+                  </div>
+                </div>
+                {aulasDoModulo === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground">Nenhuma aula neste módulo.</div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {m.aulas.map(a => {
+                      const done = concluidas.has(a.id);
+                      const thumb = youtubeThumbnail(a.video_url);
+                      return (
+                        <div key={a.id} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 p-4">
+                          <button
+                            onClick={() => setPlaying({ url: a.video_url, titulo: a.titulo })}
+                            className={cn(
+                              "relative grid h-12 w-20 place-items-center overflow-hidden rounded-lg bg-muted",
+                              "hover:opacity-90 transition",
+                            )}
+                            aria-label={`Assistir ${a.titulo}`}
+                          >
+                            {thumb ? (
+                              <img src={thumb} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <Play className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className="absolute inset-0 grid place-items-center bg-black/30">
+                              <Play className="h-4 w-4 text-white" fill="white" />
+                            </span>
+                          </button>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{a.titulo}</p>
+                            {a.descricao && (
+                              <p className="truncate text-xs text-muted-foreground">{a.descricao}</p>
+                            )}
+                          </div>
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" /> {a.duracao_min ? `${a.duracao_min} min` : "—"}
+                          </span>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm" variant="outline"
+                              onClick={() => setPlaying({ url: a.video_url, titulo: a.titulo })}
+                            >
+                              Assistir
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={done ? "ghost" : "default"}
+                              className={done ? "" : "bg-gradient-primary hover:opacity-90"}
+                              onClick={() => toggle(a.id)}
+                            >
+                              {done ? (
+                                <><CheckCircle2 className="mr-1 h-3.5 w-3.5" />Concluída</>
+                              ) : "Marcar concluída"}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Conteúdo gerenciado pelo Admin — novos módulos aparecem automaticamente.
       </p>
+
+      {/* Player */}
+      <Dialog open={!!playing} onOpenChange={(o) => !o && setPlaying(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{playing?.titulo}</DialogTitle>
+          </DialogHeader>
+          {playing && (() => {
+            const embed = youtubeEmbedUrl(playing.url);
+            if (embed) {
+              return (
+                <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                  <iframe
+                    src={embed}
+                    title={playing.titulo}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-3 p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Não foi possível incorporar este vídeo. Abra em uma nova aba:
+                </p>
+                <Button asChild>
+                  <a href={playing.url} target="_blank" rel="noreferrer">
+                    Abrir vídeo <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

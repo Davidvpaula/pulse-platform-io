@@ -210,6 +210,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye, requiresCapability: "auditoria.ver" },
+      { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
   },

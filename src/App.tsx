@@ -87,6 +87,7 @@ import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
 import AdminSessoes from "@/pages/app/admin/AdminSessoes";
 import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
 import AdminServicos from "@/pages/app/admin/AdminServicos";
+import AdminTreinamentos from "@/pages/app/admin/AdminTreinamentos";
 import MedicoServicos from "@/pages/app/medico/MedicoServicos";
 import TrocarSenha from "@/pages/auth/TrocarSenha";
 import { SecurityWatcher } from "@/components/security/SecurityWatcher";
@@ -245,6 +246,7 @@ const App = () => (
               <Route path="admin/seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminSeguranca /></G>} />
               <Route path="admin/servicos" element={<G perm="financeiro.servicos_gerenciar"><AdminServicos /></G>} />
               <Route path="admin/atendimento-imediato" element={<G perm="financeiro.servicos_gerenciar"><AdminAtendimentoImediato /></G>} />
+              <Route path="admin/treinamentos" element={<G perm="colaboradores.alterar_permissoes"><AdminTreinamentos /></G>} />
               <Route path="admin/analises" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/tempo-real" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/analises/trafego" element={<G perm="analises.ver"><AdminAnalises /></G>} />
