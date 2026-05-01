@@ -19,6 +19,11 @@ type AuthCtx = {
   setProfileKey: (k: ProfileKey) => void;
   user: { name: string; role: string; avatarInitials: string };
   capabilities: Capability[];
+  /**
+   * @deprecated Não usar para decidir menu lateral nem rotas — use
+   * `usePermission` / `usePermissionsBatch` (fonte: has_permission no banco).
+   * Mantido apenas para retrocompatibilidade de 3 widgets internos legados.
+   */
   hasCapability: (c: Capability) => boolean;
   toggleCapability: (c: Capability) => void;
   patientLink: PatientLink;
@@ -30,12 +35,15 @@ const STORAGE_KEY = "lasmar.profile";
 const CAPS_KEY = "lasmar.capabilities";
 const LINK_KEY = "lasmar.patientLink";
 
-// Prioridade quando o usuário tem múltiplos papéis no banco
-const ROLE_PRIORITY: ProfileKey[] = ["admin", "medico", "secretaria", "empresa", "paciente"];
+// Prioridade quando o usuário tem múltiplos papéis no banco.
+// Roles "secretaria" e "supervisor" mapeiam para o perfil "colaborador" (menu dinâmico).
+const ROLE_PRIORITY: ProfileKey[] = ["admin", "medico", "colaborador", "empresa", "paciente"];
 
 function rolesToProfileKey(roles: string[]): ProfileKey | null {
+  // Normaliza roles do banco para ProfileKey
+  const normalized = roles.map(r => (r === "secretaria" || r === "supervisor" ? "colaborador" : r));
   for (const p of ROLE_PRIORITY) {
-    if (roles.includes(p)) return p;
+    if (normalized.includes(p)) return p;
   }
   return null;
 }

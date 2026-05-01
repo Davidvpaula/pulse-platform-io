@@ -85,6 +85,8 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "empresa.dados": ["view", "edit"],
     "financeiro.own": ["view"],
   },
+  // Colaborador: matriz mock vazia. As permissões reais vêm de has_permission no banco.
+  colaborador: {},
 };
 
 export function can(profile: ProfileKey, resource: Resource, action: Action = "view"): boolean {
@@ -99,6 +101,7 @@ export const allowedAreas: Record<ProfileKey, string[]> = {
   paciente: ["/app/paciente"],
   medico: ["/app/medico", "/app/comunicacao"], // comunicação restrita por capability no menu
   secretaria: ["/app/secretaria", "/app/comunicacao"],
+  colaborador: ["/app/colaborador", "/app/secretaria", "/app/comunicacao"],
   admin: ["/app"], // acesso total
   empresa: ["/app/empresa"],
 };
@@ -110,8 +113,17 @@ export function canAccessPath(profile: ProfileKey, pathname: string): boolean {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * CAPABILITIES — flags adicionais liberadas pelo Admin por usuário.
- * Usadas para mostrar/ocultar módulos sem criar dashboards separados.
+ * CAPABILITIES (LEGADO) — flags mock usadas por algumas páginas para mostrar/
+ * ocultar widgets internos. NÃO são mais consultadas para montar o menu lateral
+ * (o menu agora usa has_permission do banco via usePermissionsBatch).
+ *
+ * Este mock é mantido apenas para 3 consumidores legados:
+ *   - SecretariaDashboard (flag "secretaria.supervisor")
+ *   - MedicoDashboard ("medico.financeiro")
+ *   - AdminConfiguracoes ("financeiro.editar_comissao" — read-only check)
+ *
+ * Quando esses 3 lugares migrarem para usePermission, este bloco pode ser
+ * removido inteiro junto com hasCapability/toggleCapability em useAuth.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type Capability =
@@ -128,36 +140,21 @@ export type Capability =
   // Empresa
   | "empresa.relatorios"
   | "empresa.financeiro"
-  // Admin / plataforma (espelham as permissões reais do banco usadas no menu)
-  | "financeiro.ver"
-  | "financeiro.editar_comissao"
-  | "financeiro.servicos_gerenciar"
-  | "colaboradores.ver"
-  | "colaboradores.alterar_permissoes"
-  | "relatorios.ver"
-  | "auditoria.ver"
-  | "analises.ver"
-  | "analises.financeiro"
-  | "pacientes.ver"
-  | "medicos.ver"
-  | "medicos.aprovar"
-  | "empresas.ver";
+  // Espelho mínimo de chave do banco usada por AdminConfiguracoes (legado)
+  | "financeiro.editar_comissao";
 
-/** Capabilities padrão por perfil — Admin pode customizar por usuário no futuro */
+/** Capabilities padrão por perfil — apenas para retrocompatibilidade dos 3 widgets legados. */
 export const defaultCapabilities: Record<ProfileKey, Capability[]> = {
   paciente: [],
   medico: ["medico.comunicacao", "medico.feegow", "medico.financeiro"],
   secretaria: ["comunicacao.acessar", "secretaria.financeiro"],
+  colaborador: ["comunicacao.acessar"],
   admin: [
     "secretaria.supervisor", "secretaria.financeiro", "secretaria.reembolso",
     "comunicacao.acessar", "comunicacao.todas_conversas",
     "medico.comunicacao", "medico.feegow", "medico.financeiro",
     "empresa.relatorios", "empresa.financeiro",
-    "financeiro.ver", "financeiro.editar_comissao", "financeiro.servicos_gerenciar",
-    "colaboradores.ver", "colaboradores.alterar_permissoes",
-    "relatorios.ver", "auditoria.ver",
-    "analises.ver", "analises.financeiro",
-    "pacientes.ver", "medicos.ver", "medicos.aprovar", "empresas.ver",
+    "financeiro.editar_comissao",
   ],
   empresa: ["empresa.relatorios", "empresa.financeiro"],
 };

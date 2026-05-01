@@ -221,6 +221,23 @@ const App = () => (
               {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
               <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
 
+              {/* Colaborador — aliases das mesmas páginas, protegidos por has_permission */}
+              <Route path="colaborador/dashboard" element={<SecretariaDashboard />} />
+              <Route path="colaborador/pacientes" element={<G perm="pacientes.ver"><SecretariaPacientes /></G>} />
+              <Route path="colaborador/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
+              <Route path="colaborador/agenda" element={<G perm="agenda.ver_todas"><SecretariaAgenda /></G>} />
+              <Route path="colaborador/agendamentos" element={<G perm="agenda.ver_todas"><SecretariaAgendamentos /></G>} />
+              <Route path="colaborador/cupons" element={<G perm="financeiro.servicos_gerenciar"><SecretariaCupons /></G>} />
+              <Route path="colaborador/cupons/log" element={<G perm="financeiro.servicos_gerenciar"><CuponsUsoLog /></G>} />
+              <Route path="colaborador/financeiro" element={<G perm="financeiro.ver"><SecretariaFinanceiro /></G>} />
+              <Route path="colaborador/tarefas" element={<Tarefas />} />
+              <Route path="colaborador/equipe" element={<G perm="supervisor.fila_geral"><SupervisorEquipe /></G>} />
+              <Route path="colaborador/relatorios" element={<G perm="relatorios.ver_operacional"><SecretariaRelatorios /></G>} />
+              <Route path="colaborador/produtividade" element={<G perm="supervisor.ver_produtividade"><SupervisorEquipe /></G>} />
+              <Route path="colaborador/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="colaborador/pendencias-integracao" element={<G perm="supervisor.pendencias_feegow"><PendenciasIntegracao /></G>} />
+              <Route path="colaborador/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
+
               {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
               <Route path="admin/usuarios" element={<G perm="pacientes.ver"><AdminUsuarios /></G>} />
