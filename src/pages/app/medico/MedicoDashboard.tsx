@@ -18,6 +18,7 @@ import {
 } from "@/lib/clinico";
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
+import { usePermission } from "@/lib/permissions/usePermission";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

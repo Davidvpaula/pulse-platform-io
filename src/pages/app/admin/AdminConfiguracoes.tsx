@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getAppSetting, type Especialidade } from "@/lib/clinico";
 import { getProviderAtual, type PagamentoProvider } from "@/lib/pagamentos";
-import { useAuth } from "@/lib/auth";
+import { usePermission } from "@/lib/permissions/usePermission";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -45,8 +45,8 @@ function slugify(s: string): string {
 }
 
 export default function AdminConfiguracoes() {
-  const { hasCapability } = useAuth();
-  const podeRepasse = hasCapability("financeiro.editar_comissao" as any);
+  const { has } = usePermission("financeiro.editar_comissao");
+  const podeRepasse = has("financeiro.editar_comissao");
   const [esps, setEsps] = useState<Especialidade[]>([]);
   const [loading, setLoading] = useState(true);
   const [novoNome, setNovoNome] = useState("");
