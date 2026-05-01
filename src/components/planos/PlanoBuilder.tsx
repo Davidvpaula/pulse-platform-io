@@ -275,6 +275,24 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
           </div>
         ) : (
           <div className="space-y-6 mt-4">
+            {/* Aviso de assinantes ativos */}
+            {hasActiveSubscribers && planoId && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-warning">
+                    Este plano possui {subscriberCount} assinante{subscriberCount > 1 ? "s" : ""} ativo{subscriberCount > 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Edições diretas estão bloqueadas. Crie uma nova versão para aplicar alterações — os assinantes atuais continuam na versão vigente.
+                  </p>
+                  <Button size="sm" className="mt-3" onClick={criarNovaVersao} disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
+                    Criar nova versão (v{(plano.versao ?? 1) + 1})
+                  </Button>
+                </div>
+              </div>
+            )}
             {/* Dados básicos */}
             <Card>
               <CardHeader>
