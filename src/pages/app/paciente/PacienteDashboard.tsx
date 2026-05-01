@@ -240,19 +240,19 @@ export default function PacienteDashboard() {
                   <p className="text-xs text-muted-foreground truncate">{c.esp} · {c.data} {c.hora} · {c.modalidade}</p>
                 </div>
                 <StatusBadge status={c.status} />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   {c.linkSala ? (
-                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
                       <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
                         <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
                       </a>
                     </Button>
                   ) : (
-                    <Button size="sm" disabled title="Sala em preparação">
+                    <Button size="sm" disabled title="Sala em preparação" className="flex-1 sm:flex-none">
                       <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
                     </Button>
                   )}
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
                     <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
                   </Button>
                 </div>
