@@ -121,16 +121,32 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [hasActiveSubscribers, setHasActiveSubscribers] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState(0);
+
   useEffect(() => {
     if (!open) return;
     if (planoId) {
       void carregar(planoId);
+      void checkSubscribers(planoId);
     } else {
       setPlano(emptyPlano());
       setBeneficios([]);
+      setHasActiveSubscribers(false);
+      setSubscriberCount(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, planoId]);
+
+  async function checkSubscribers(id: string) {
+    const { count } = await supabase
+      .from("assinaturas")
+      .select("*", { count: "exact", head: true })
+      .eq("plano_id", id)
+      .in("status", ["ativa", "pendente"]);
+    setSubscriberCount(count ?? 0);
+    setHasActiveSubscribers((count ?? 0) > 0);
+  }
 
   async function carregar(id: string) {
     setLoading(true);
