@@ -51,6 +51,7 @@ export default function MedicoFinanceiro() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<FinRow[]>([]);
   const [periodo, setPeriodo] = useState<typeof periodos[number]["key"]>("30d");
+  const [medicoId, setMedicoId] = useState<string | null>(null);
 
   function cutoffDate(): Date | null {
     const d = new Date();
