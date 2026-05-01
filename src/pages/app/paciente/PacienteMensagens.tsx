@@ -78,6 +78,9 @@ export default function PacienteMensagens() {
   const [busca, setBusca] = useState("");
   const [novaMsg, setNovaMsg] = useState("");
   const [sending, setSending] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const msgsEndRef = useRef<HTMLDivElement>(null);
 
   // Load conversations
