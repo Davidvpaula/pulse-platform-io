@@ -12,6 +12,7 @@ import { Trash2, Plus, Save, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SaudeFinanceiraCard } from "./SaudeFinanceiraCard";
+import { BeneficioSelector } from "./BeneficioSelector";
 
 type Plano = any;
 type Beneficio = any;
