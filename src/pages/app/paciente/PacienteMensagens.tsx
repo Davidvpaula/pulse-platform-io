@@ -368,7 +368,15 @@ export default function PacienteMensagens() {
                                 {m.sender_name ?? meta.label}
                               </p>
                             )}
-                            <p className="text-sm whitespace-pre-wrap">{m.body}</p>
+                            {m.body && <p className="text-sm whitespace-pre-wrap">{m.body}</p>}
+                            {m.attachment_url && (
+                              <AttachmentPreview
+                                url={m.attachment_url}
+                                name={m.attachment_name}
+                                type={m.attachment_type}
+                                isMe={isMe}
+                              />
+                            )}
                             <p className={cn(
                               "mt-1 text-[10px]",
                               isMe ? "text-primary-foreground/60 text-right" : "text-muted-foreground",
