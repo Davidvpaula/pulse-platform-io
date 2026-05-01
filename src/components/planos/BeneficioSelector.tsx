@@ -38,11 +38,11 @@ export function BeneficioSelector({ tipo, selectedId, selectedLabel, onSelect }:
 
       if (tipo === "medico") {
         const { data } = await supabase
-          .from("perfis")
-          .select("user_id, nome_completo, tipo_perfil")
-          .eq("tipo_perfil", "medico")
-          .order("nome_completo");
-        opts = (data ?? []).map(p => ({ id: p.user_id, label: p.nome_completo ?? "Sem nome" }));
+          .from("medicos")
+          .select("id, nome, especialidade")
+          .eq("status", "aprovado")
+          .order("nome");
+        opts = (data ?? []).map(p => ({ id: p.id, label: p.nome, sub: p.especialidade }));
       } else if (tipo === "especialidade") {
         const { data } = await supabase
           .from("especialidades")
@@ -53,10 +53,10 @@ export function BeneficioSelector({ tipo, selectedId, selectedLabel, onSelect }:
       } else if (tipo === "servico") {
         const { data } = await supabase
           .from("servicos_financeiros")
-          .select("id, nome, categoria")
+          .select("id, nome, tipo")
           .eq("ativo", true)
           .order("nome");
-        opts = (data ?? []).map(s => ({ id: s.id, label: s.nome, sub: s.categoria }));
+        opts = (data ?? []).map(s => ({ id: s.id, label: s.nome, sub: s.tipo }));
       }
 
       if (active) {
