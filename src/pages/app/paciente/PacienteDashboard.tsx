@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download,
   ChevronRight, Building2, User, MessageCircle, RefreshCw, Bell, AlertTriangle,
-  CheckCircle2, Info, Repeat, Stethoscope, Database as DbIcon,
+  CheckCircle2, Info, Repeat, Stethoscope,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -15,8 +15,6 @@ import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
-import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +50,6 @@ export default function PacienteDashboard() {
   const { patientLink, setPatientLink } = useAuth();
   const { session } = useSession();
   const empresarial = patientLink.tipo === "empresarial";
-  const navigate = useNavigate();
 
   const [dbConsultas, setDbConsultas] = useState<ConsultaItem[] | null>(null);
   useEffect(() => {
@@ -93,37 +90,9 @@ export default function PacienteDashboard() {
         title="Olá, Marina 👋"
         description="Sua central de saúde — ações rápidas, próximas consultas e suporte direto."
         actions={
-          <div className="flex items-center gap-2">
-            {session && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-                <DbIcon className="h-3 w-3" /> Dados em tempo real
-              </span>
-            )}
-            {session && dbConsultas && dbConsultas[0] && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const s = await criarCheckoutSession({
-                      consultaId: dbConsultas[0].id,
-                      valorCentavos: 22000,
-                      descricao: "Consulta de teste",
-                    });
-                    abrirCheckout(s, navigate);
-                  } catch (e: any) {
-                    toast.error(e.message ?? "Falha ao iniciar checkout");
-                  }
-                }}
-                title="Modo simulado para desenvolvimento"
-              >
-                <Wallet className="mr-1.5 h-3.5 w-3.5" /> Testar checkout
-              </Button>
-            )}
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
-            </Button>
-          </div>
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" />Agendar consulta</Link>
+          </Button>
         }
       />
 
@@ -268,19 +237,19 @@ export default function PacienteDashboard() {
                   <p className="text-xs text-muted-foreground truncate">{c.esp} · {c.data} {c.hora} · {c.modalidade}</p>
                 </div>
                 <StatusBadge status={c.status} />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   {c.linkSala ? (
-                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
                       <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
                         <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
                       </a>
                     </Button>
                   ) : (
-                    <Button size="sm" disabled title="Sala em preparação">
+                    <Button size="sm" disabled title="Sala em preparação" className="flex-1 sm:flex-none">
                       <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
                     </Button>
                   )}
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
                     <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
                   </Button>
                 </div>

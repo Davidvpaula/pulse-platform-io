@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Stethoscope, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Database as DbIcon, Loader2, Search, Filter,
+  Loader2, Search, Filter,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -98,16 +98,9 @@ export default function PacienteAgendamentos() {
         title="Meus agendamentos"
         description="Histórico completo de consultas, com ações rápidas para entrar, remarcar ou cancelar."
         actions={
-          <div className="flex items-center gap-2">
-            {session && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-                <DbIcon className="h-3 w-3" /> Dados em tempo real
-              </span>
-            )}
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" /> Nova consulta</Link>
-            </Button>
-          </div>
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" /> Nova consulta</Link>
+          </Button>
         }
       />
 
