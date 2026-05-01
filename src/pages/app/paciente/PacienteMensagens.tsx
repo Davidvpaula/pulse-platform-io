@@ -4,7 +4,7 @@ import {
   Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
   AlertTriangle, Search, Inbox, Filter, Check, Settings,
   Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock,
-  Send, Loader2, type LucideIcon, User, MessageCircle,
+  Send, Loader2, type LucideIcon, User, MessageCircle, Paperclip, Download, Image, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   listConversasPaciente,
   listMensagensConversa,
   enviarMensagemPaciente,
+  uploadAnexoMensagem,
   formatTempoRelativo,
   type ConversaPaciente,
   type MensagemPaciente,
@@ -77,6 +78,9 @@ export default function PacienteMensagens() {
   const [busca, setBusca] = useState("");
   const [novaMsg, setNovaMsg] = useState("");
   const [sending, setSending] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const msgsEndRef = useRef<HTMLDivElement>(null);
 
   // Load conversations
@@ -121,17 +125,36 @@ export default function PacienteMensagens() {
   }, [selectedConvId, session]);
 
   const enviar = useCallback(async () => {
-    if (!novaMsg.trim() || !selectedConvId || sending) return;
+    if ((!novaMsg.trim() && !pendingFile) || !selectedConvId || sending) return;
     setSending(true);
     try {
-      await enviarMensagemPaciente(selectedConvId, novaMsg.trim(), "Paciente");
+      let attachment: { url: string; name: string; type: string } | undefined;
+      if (pendingFile) {
+        setUploading(true);
+        attachment = await uploadAnexoMensagem(pendingFile);
+        setUploading(false);
+        setPendingFile(null);
+      }
+      await enviarMensagemPaciente(selectedConvId, novaMsg.trim(), "Paciente", attachment);
       setNovaMsg("");
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao enviar mensagem");
+      setUploading(false);
     } finally {
       setSending(false);
     }
-  }, [novaMsg, selectedConvId, sending]);
+  }, [novaMsg, selectedConvId, sending, pendingFile]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máximo 10 MB)");
+      return;
+    }
+    setPendingFile(file);
+    e.target.value = "";
+  };
 
   const convsFiltradas = useMemo(() => {
     if (!busca.trim()) return conversas;
@@ -345,7 +368,15 @@ export default function PacienteMensagens() {
                                 {m.sender_name ?? meta.label}
                               </p>
                             )}
-                            <p className="text-sm whitespace-pre-wrap">{m.body}</p>
+                            {m.body && <p className="text-sm whitespace-pre-wrap">{m.body}</p>}
+                            {m.attachment_url && (
+                              <AttachmentPreview
+                                url={m.attachment_url}
+                                name={m.attachment_name}
+                                type={m.attachment_type}
+                                isMe={isMe}
+                              />
+                            )}
                             <p className={cn(
                               "mt-1 text-[10px]",
                               isMe ? "text-primary-foreground/60 text-right" : "text-muted-foreground",
@@ -363,8 +394,35 @@ export default function PacienteMensagens() {
 
               {/* Input */}
               {convSelecionada.status !== "fechada" && convSelecionada.status !== "arquivada" && (
-                <div className="border-t border-border p-3">
+                <div className="border-t border-border p-3 space-y-2">
+                  {pendingFile && (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="truncate flex-1">{pendingFile.name}</span>
+                      <span className="text-xs text-muted-foreground">{(pendingFile.size / 1024).toFixed(0)} KB</span>
+                      <button onClick={() => setPendingFile(null)} className="text-muted-foreground hover:text-foreground">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-end gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                      onChange={handleFileSelect}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Anexar arquivo"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
                     <Textarea
                       value={novaMsg}
                       onChange={(e) => setNovaMsg(e.target.value)}
@@ -378,12 +436,17 @@ export default function PacienteMensagens() {
                     <Button
                       size="icon"
                       className="h-10 w-10 shrink-0 bg-gradient-primary hover:opacity-90"
-                      disabled={!novaMsg.trim() || sending}
+                      disabled={(!novaMsg.trim() && !pendingFile) || sending}
                       onClick={enviar}
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {uploading && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Enviando anexo…
+                    </p>
+                  )}
                 </div>
               )}
             </>
@@ -391,6 +454,43 @@ export default function PacienteMensagens() {
         </section>
       </div>
     </div>
+  );
+}
+
+/* ─── Attachment Preview ─── */
+function AttachmentPreview({ url, name, type, isMe }: { url: string; name: string | null; type: string | null; isMe: boolean }) {
+  const isImage = type?.startsWith("image/");
+  const fileName = name ?? "arquivo";
+
+  if (isImage) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-1.5">
+        <img
+          src={url}
+          alt={fileName}
+          className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border/30"
+          loading="lazy"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "mt-1.5 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition hover:opacity-80",
+        isMe
+          ? "border-primary-foreground/20 text-primary-foreground"
+          : "border-border bg-background text-foreground",
+      )}
+    >
+      <FileText className="h-4 w-4 shrink-0" />
+      <span className="truncate flex-1">{fileName}</span>
+      <Download className="h-3.5 w-3.5 shrink-0 opacity-60" />
+    </a>
   );
 }
 
