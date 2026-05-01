@@ -50,6 +50,7 @@ import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
 import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
 import MedicoPerfil from "@/pages/app/medico/MedicoPerfil";
 import MedicoConsultas from "@/pages/app/medico/MedicoConsultas";
+import MedicoFinanceiro from "@/pages/app/medico/MedicoFinanceiro";
 
 import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
 import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
@@ -57,8 +58,10 @@ import MedicoDocumentos from "@/pages/app/medico/MedicoDocumentos";
 import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
 import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
 import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
+import SecretariaAgendamentos from "@/pages/app/secretaria/SecretariaAgendamentos";
 import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
 import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
+import SecretariaRelatorios from "@/pages/app/secretaria/SecretariaRelatorios";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
@@ -190,7 +193,7 @@ const App = () => (
               <Route path="medico/consultas" element={<MedicoGuard><MedicoConsultas /></MedicoGuard>} />
               <Route path="medico/pacientes" element={<MedicoGuard><MedicoPacientes /></MedicoGuard>} />
               <Route path="medico/documentos" element={<MedicoGuard><MedicoDocumentos /></MedicoGuard>} />
-              <Route path="medico/financeiro" element={<MedicoGuard><Placeholder title="Financeiro" /></MedicoGuard>} />
+              <Route path="medico/financeiro" element={<MedicoGuard><MedicoFinanceiro /></MedicoGuard>} />
               <Route path="medico/perfil" element={<MedicoGuard><MedicoPerfil /></MedicoGuard>} />
               <Route path="medico/configuracoes" element={<MedicoGuard><MedicoConfiguracoes /></MedicoGuard>} />
               <Route path="medico/servicos" element={<MedicoGuard><MedicoServicos /></MedicoGuard>} />
@@ -203,14 +206,14 @@ const App = () => (
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
               <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
               <Route path="secretaria/agenda" element={<SecretariaAgenda />} />
-              <Route path="secretaria/agendamentos" element={<Placeholder title="Agendamentos" />} />
+              <Route path="secretaria/agendamentos" element={<SecretariaAgendamentos />} />
               <Route path="secretaria/cupons" element={<SecretariaCupons />} />
               <Route path="secretaria/cupons/log" element={<CuponsUsoLog />} />
               <Route path="secretaria/comunicacao" element={<Conversas />} />
               <Route path="secretaria/financeiro" element={<SecretariaFinanceiro />} />
               <Route path="secretaria/tarefas" element={<Tarefas />} />
               <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
-              <Route path="secretaria/relatorios" element={<Placeholder title="Relatórios operacionais" description="Visíveis para Secretaria com permissão de supervisão." />} />
+              <Route path="secretaria/relatorios" element={<SecretariaRelatorios />} />
               <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
 
