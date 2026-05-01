@@ -499,7 +499,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
 
             <div className="flex justify-end gap-2 pb-6">
               <Button variant="outline" onClick={onClose}>Cancelar</Button>
-              <Button onClick={salvar} disabled={saving}>
+              <Button onClick={salvar} disabled={saving || (hasActiveSubscribers && !!planoId)}>
                 {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                 Salvar plano
               </Button>
