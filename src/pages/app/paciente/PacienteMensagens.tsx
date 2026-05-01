@@ -457,6 +457,43 @@ export default function PacienteMensagens() {
   );
 }
 
+/* ─── Attachment Preview ─── */
+function AttachmentPreview({ url, name, type, isMe }: { url: string; name: string | null; type: string | null; isMe: boolean }) {
+  const isImage = type?.startsWith("image/");
+  const fileName = name ?? "arquivo";
+
+  if (isImage) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-1.5">
+        <img
+          src={url}
+          alt={fileName}
+          className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border/30"
+          loading="lazy"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "mt-1.5 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition hover:opacity-80",
+        isMe
+          ? "border-primary-foreground/20 text-primary-foreground"
+          : "border-border bg-background text-foreground",
+      )}
+    >
+      <FileText className="h-4 w-4 shrink-0" />
+      <span className="truncate flex-1">{fileName}</span>
+      <Download className="h-3.5 w-3.5 shrink-0 opacity-60" />
+    </a>
+  );
+}
+
 /* ─── Mock fallback (sem sessão) ─── */
 function MockMensagens() {
   return (
