@@ -266,7 +266,21 @@ export default function AdminSaquesMedicos() {
         </DialogContent>
       </Dialog>
 
-      {/* Sheet Detalhe */}
+      {/* Dialog Solicitar Correção */}
+      <Dialog open={!!correcaoId} onOpenChange={() => setCorrecaoId(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Solicitar correção</DialogTitle></DialogHeader>
+          <div><Label>Descreva o que precisa ser corrigido</Label><Textarea value={motivo} onChange={e => setMotivo(e.target.value)} rows={3} /></div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCorrecaoId(null)}>Cancelar</Button>
+            <Button className="bg-warning text-warning-foreground hover:bg-warning/90" onClick={() => {
+              if (correcaoId) mudarStatus(correcaoId, "correcao_solicitada", { motivo_recusa: motivo });
+              setCorrecaoId(null);
+            }}>Solicitar correção</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-[500px] overflow-y-auto">
           <SheetHeader><SheetTitle>Detalhe do saque</SheetTitle></SheetHeader>
