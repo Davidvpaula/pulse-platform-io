@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
 } from "lucide-react";
@@ -20,6 +20,9 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useSession } from "@/lib/session";
 import { ImpersonationBanner } from "@/components/impersonation/ImpersonationBanner";
+import { usePermissionsBatch } from "@/lib/permissions/usePermissionsBatch";
+import { colaboradorMenu, collectMenuKeys, type MenuNode } from "@/lib/menu/menuCatalog";
+import { validateMenuKeys } from "@/lib/menu/validateMenuKeys";
 
 export default function AppLayout() {
   const navigate = useNavigate();
