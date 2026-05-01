@@ -232,13 +232,15 @@ export default function SecretariaAgendamentos() {
 
       <TrocarMedicoDialog
         open={!!trocando}
-        consulta={trocando}
+        consultaId={trocando?.id ?? null}
+        consultaInicio={trocando?.inicio}
+        medicoAtualNome={trocando?.medico_nome ?? null}
         onOpenChange={(o) => !o && setTrocando(null)}
-        onSuccess={() => { setTrocando(null); void carregar(); }}
+        onTrocado={() => { setTrocando(null); void carregar(); }}
       />
       <ConsultaHistoricoDialog
         open={!!historicoCtx}
-        pacienteId={historicoCtx?.id ?? null}
+        consultaId={historicoCtx?.id ?? null}
         onOpenChange={(o) => !o && setHistoricoCtx(null)}
       />
     </div>
