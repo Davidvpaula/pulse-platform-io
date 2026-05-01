@@ -68,21 +68,26 @@ export function SolicitarSaqueDialog({ open, onOpenChange, medicoId, saldo, conf
 
     // Selecionar consultas elegíveis até atingir o valor
     let acumulado = 0;
-    const itensSelecionados: { id: string; valor: number }[] = [];
+    const itensSelecionados: { id: string; valor: number; data: string }[] = [];
     // Precisamos buscar os valores individuais
     const { data: consultas } = await supabase
       .from("consultas_financeiro")
-      .select("id, valor_medico_centavos")
+      .select("id, valor_medico_centavos, data_consulta")
       .in("id", saldo.ids_elegiveis);
 
     for (const c of consultas ?? []) {
       if (acumulado >= centavos && !config.permitir_parcial) break;
       if (acumulado + c.valor_medico_centavos <= centavos || config.permitir_parcial) {
-        itensSelecionados.push({ id: c.id, valor: c.valor_medico_centavos });
+        itensSelecionados.push({ id: c.id, valor: c.valor_medico_centavos, data: c.data_consulta });
         acumulado += c.valor_medico_centavos;
         if (acumulado >= centavos) break;
       }
     }
+
+    // Calcular periodo_inicio e periodo_fim a partir das datas das consultas selecionadas
+    const datas = itensSelecionados.map(i => i.data).filter(Boolean).sort();
+    const periodo_inicio = datas[0] ?? null;
+    const periodo_fim = datas[datas.length - 1] ?? null;
 
     // Criar saque
     const { data: saque, error: saqueErr } = await supabase
@@ -94,6 +99,8 @@ export function SolicitarSaqueDialog({ open, onOpenChange, medicoId, saldo, conf
         dados_bancarios_id: dadosBancarios.id,
         observacao: obs.trim() || null,
         created_by: session?.user.id,
+        periodo_inicio,
+        periodo_fim,
       })
       .select("id")
       .single();
