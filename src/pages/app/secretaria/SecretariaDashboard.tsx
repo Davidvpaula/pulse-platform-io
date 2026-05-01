@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { filaSecretaria, inboxInterno, conversasWpp } from "@/lib/mock";
 import { pendenciasFeegow } from "@/lib/feegow";
-import { useAuth } from "@/lib/auth";
+import { usePermission } from "@/lib/permissions/usePermission";
 import { cn } from "@/lib/utils";
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
@@ -29,8 +29,8 @@ const toneChip: Record<Tone, string> = {
 };
 
 export default function SecretariaDashboard() {
-  const { hasCapability } = useAuth();
-  const isSupervisor = hasCapability("secretaria.supervisor");
+  const { has } = usePermission("supervisor.fila_geral");
+  const isSupervisor = has("supervisor.fila_geral");
   const [filaFiltro, setFilaFiltro] = useState<"todos" | "urgente" | "aguardando">("todos");
 
   const pendFeegow = pendenciasFeegow();
