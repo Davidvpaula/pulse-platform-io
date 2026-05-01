@@ -203,18 +203,6 @@ export default function SecretariaAgendamentos() {
                       </div>
                       <StatusBadge status={toStatusBadge(c.status)} />
                       <div className="flex items-center gap-1">
-                        {c.paciente_telefone && (
-                          <>
-                            <Button variant="ghost" size="icon" asChild title="Ligar">
-                              <a href={`tel:${c.paciente_telefone}`}><Phone className="h-4 w-4" /></a>
-                            </Button>
-                            <Button variant="ghost" size="icon" asChild title="WhatsApp">
-                              <a href={whatsappUrl(c.paciente_telefone, `Olá, sobre sua consulta…`)} target="_blank" rel="noreferrer">
-                                <MessageSquare className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </>
-                        )}
                         <Button
                           variant="ghost" size="icon" title="Trocar médico"
                           onClick={() => setTrocando(c)}
@@ -222,8 +210,8 @@ export default function SecretariaAgendamentos() {
                           <UserCog className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="ghost" size="icon" title="Histórico"
-                          onClick={() => setHistoricoCtx({ id: c.paciente_id })}
+                          variant="ghost" size="icon" title="Histórico da consulta"
+                          onClick={() => setHistoricoCtx({ id: c.id })}
                         >
                           <History className="h-4 w-4" />
                         </Button>
