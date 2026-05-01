@@ -137,9 +137,11 @@ export default function AdminSaquesMedicos() {
         title="Saques Médicos"
         description="Gerencie solicitações de saque dos médicos."
         actions={
-          <Button variant="outline" onClick={() => setConfigOpen(true)}>
-            <Settings className="mr-2 h-4 w-4" /> Configurar regras
-          </Button>
+          <RequirePermission perm="financeiro.saques_config">
+            <Button variant="outline" onClick={() => setConfigOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" /> Configurar regras
+            </Button>
+          </RequirePermission>
         }
       />
 
