@@ -321,15 +321,30 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved }: Props) {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div>
                         <Label>Tipo</Label>
-                        <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v })}>
+                        <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v, medico_id: null, especialidade_id: null, servico_id: null, nome: "" })}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>{BENEF_TIPOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="md:col-span-2">
-                        <Label>Nome</Label>
-                        <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
-                      </div>
+                      {["medico", "especialidade", "servico"].includes(b.tipo) ? (
+                        <BeneficioSelector
+                          tipo={b.tipo}
+                          selectedId={b.tipo === "medico" ? b.medico_id : b.tipo === "especialidade" ? b.especialidade_id : b.servico_id}
+                          selectedLabel={b.nome ?? ""}
+                          onSelect={(id, label) => {
+                            const patch: any = { nome: label };
+                            if (b.tipo === "medico") patch.medico_id = id;
+                            else if (b.tipo === "especialidade") patch.especialidade_id = id;
+                            else if (b.tipo === "servico") patch.servico_id = id;
+                            updateBen(i, patch);
+                          }}
+                        />
+                      ) : (
+                        <div className="md:col-span-2">
+                          <Label>Nome</Label>
+                          <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
+                        </div>
+                      )}
                       <div>
                         <Label>Quantidade</Label>
                         <Input type="number" value={b.quantidade ?? 0} onChange={(e) => updateBen(i, { quantidade: Number(e.target.value) })} disabled={b.ilimitado} />
