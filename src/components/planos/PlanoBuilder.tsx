@@ -281,22 +281,26 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                   <Label>Taxa de adesão (R$)</Label>
                   <Input value={toReais(plano.taxa_adesao_centavos)} onChange={(e) => setField("taxa_adesao_centavos", toCentavos(e.target.value))} />
                 </div>
-                <div>
-                  <Label>Custo operacional (R$/assinante)</Label>
-                  <Input value={toReais(plano.custo_operacional_centavos)} onChange={(e) => setField("custo_operacional_centavos", toCentavos(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Taxa pagamento (%)</Label>
-                  <Input type="number" step="0.1" value={plano.taxa_pagamento_pct ?? 0} onChange={(e) => setField("taxa_pagamento_pct", Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Imposto estimado (%)</Label>
-                  <Input type="number" step="0.1" value={plano.imposto_estimado_pct ?? 0} onChange={(e) => setField("imposto_estimado_pct", Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Desconto geral (%)</Label>
-                  <Input type="number" step="0.1" value={plano.desconto_geral_pct ?? 0} onChange={(e) => setField("desconto_geral_pct", Number(e.target.value))} />
-                </div>
+                {!medicoMode && (
+                  <>
+                    <div>
+                      <Label>Custo operacional (R$/assinante)</Label>
+                      <Input value={toReais(plano.custo_operacional_centavos)} onChange={(e) => setField("custo_operacional_centavos", toCentavos(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Taxa pagamento (%)</Label>
+                      <Input type="number" step="0.1" value={plano.taxa_pagamento_pct ?? 0} onChange={(e) => setField("taxa_pagamento_pct", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Imposto estimado (%)</Label>
+                      <Input type="number" step="0.1" value={plano.imposto_estimado_pct ?? 0} onChange={(e) => setField("imposto_estimado_pct", Number(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Desconto geral (%)</Label>
+                      <Input type="number" step="0.1" value={plano.desconto_geral_pct ?? 0} onChange={(e) => setField("desconto_geral_pct", Number(e.target.value))} />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
