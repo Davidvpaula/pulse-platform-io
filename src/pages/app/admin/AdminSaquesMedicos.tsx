@@ -210,21 +210,35 @@ export default function AdminSaquesMedicos() {
                         {new Date(s.solicitado_em).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="px-4 py-2.5">
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant="ghost" onClick={() => openDetalhe(s)}>
-                            <Eye className="h-3.5 w-3.5" />
-                          </Button>
+                        <div className="flex gap-1.5 flex-wrap">
+                          <RequirePermission perm="financeiro.dados_bancarios_ver">
+                            <Button size="sm" variant="ghost" onClick={() => openDetalhe(s)}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </RequirePermission>
                           {(s.status === "solicitado" || s.status === "em_analise") && (
                             <>
-                              <Button size="sm" variant="outline" className="text-success border-success/40"
-                                onClick={() => mudarStatus(s.id, "aprovado")}>Aprovar</Button>
-                              <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
-                                onClick={() => { setRecusarId(s.id); setMotivo(""); }}>Recusar</Button>
+                              <RequirePermission perm="financeiro.saques_aprovar">
+                                <Button size="sm" variant="outline" className="text-success border-success/40"
+                                  onClick={() => mudarStatus(s.id, "aprovado")}>Aprovar</Button>
+                              </RequirePermission>
+                              <RequirePermission perm="financeiro.saques_recusar">
+                                <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
+                                  onClick={() => { setRecusarId(s.id); setMotivo(""); }}>Recusar</Button>
+                              </RequirePermission>
+                              <RequirePermission perm="financeiro.saques_solicitar_correcao">
+                                <Button size="sm" variant="outline" className="text-warning border-warning/40"
+                                  onClick={() => { setCorrecaoId(s.id); setMotivo(""); }}>
+                                  <RotateCcw className="h-3 w-3 mr-1" /> Correção
+                                </Button>
+                              </RequirePermission>
                             </>
                           )}
                           {s.status === "aprovado" && (
-                            <Button size="sm" variant="outline" className="text-success border-success/40"
-                              onClick={() => mudarStatus(s.id, "pago")}>Marcar pago</Button>
+                            <RequirePermission perm="financeiro.saques_marcar_pago">
+                              <Button size="sm" variant="outline" className="text-success border-success/40"
+                                onClick={() => mudarStatus(s.id, "pago")}>Marcar pago</Button>
+                            </RequirePermission>
                           )}
                         </div>
                       </td>
