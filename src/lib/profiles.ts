@@ -230,10 +230,22 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Perfil", to: "/app/empresa/perfil", icon: Building2 },
     ],
   },
+  /**
+   * Colaborador — perfil DINÂMICO. Não tem nav fixo aqui; o sidebar usa
+   * src/lib/menu/menuCatalog.ts e filtra cada item por has_permission.
+   */
+  colaborador: {
+    key: "colaborador",
+    label: "Colaborador",
+    basePath: "/app/colaborador",
+    accent: "Operação",
+    user: { name: "Colaborador", role: "Colaborador", avatarInitials: "CL" },
+    nav: [], // intencionalmente vazio — o menu é montado pelo menuCatalog + has_permission
+  },
 };
 
 export const profileFromPath = (pathname: string): ProfileKey | null => {
-  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|admin|empresa)/);
+  const m = pathname.match(/^\/app\/(paciente|medico|secretaria|colaborador|admin|empresa)/);
   if (!m) return null;
   return m[1] as ProfileKey;
 };
