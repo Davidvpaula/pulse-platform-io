@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   solicitado: { label: "Solicitado", cls: "border-warning/40 text-warning" },
   em_analise: { label: "Em análise", cls: "border-info/40 text-info" },
+  correcao_solicitada: { label: "Correção solicitada", cls: "border-warning/40 text-warning" },
   aprovado: { label: "Aprovado", cls: "border-success/40 text-success" },
   pago: { label: "Pago", cls: "border-success/40 text-success" },
   recusado: { label: "Recusado", cls: "border-destructive/40 text-destructive" },
@@ -61,8 +62,11 @@ export function SaqueHistorico({ medicoId }: { medicoId: string }) {
                 <td className="px-4 py-2.5">
                   <Badge variant="outline" className={st.cls}>{st.label}</Badge>
                 </td>
-                <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[200px] truncate">
-                  {s.motivo_recusa ?? s.observacao ?? "—"}
+                <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[200px]">
+                  {s.status === "correcao_solicitada" && s.motivo_recusa && (
+                    <span className="block text-warning font-medium mb-0.5">⚠ {s.motivo_recusa}</span>
+                  )}
+                  <span className="truncate block">{s.motivo_recusa && s.status !== "correcao_solicitada" ? s.motivo_recusa : (s.observacao ?? "—")}</span>
                 </td>
               </tr>
             );

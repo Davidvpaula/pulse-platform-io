@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Banknote, CheckCircle2, Clock, XCircle, AlertTriangle, Loader2, Eye, Download, Settings } from "lucide-react";
+import { Banknote, CheckCircle2, Clock, XCircle, AlertTriangle, Loader2, Eye, Download, Settings, RotateCcw } from "lucide-react";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   solicitado: { label: "Solicitado", cls: "border-warning/40 text-warning" },
   em_analise: { label: "Em análise", cls: "border-info/40 text-info" },
+  correcao_solicitada: { label: "Correção solicitada", cls: "border-warning/40 text-warning" },
   aprovado: { label: "Aprovado", cls: "border-success/40 text-success" },
   pago: { label: "Pago", cls: "border-success/40 text-success" },
   recusado: { label: "Recusado", cls: "border-destructive/40 text-destructive" },
@@ -35,15 +37,18 @@ export default function AdminSaquesMedicos() {
   const [detalheSaque, setDetalheSaque] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recusarId, setRecusarId] = useState<string | null>(null);
+  const [correcaoId, setCorrecaoId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
   const [configOpen, setConfigOpen] = useState(false);
   const [config, setConfig] = useState<SaqueConfig | null>(null);
+  const [configAnterior, setConfigAnterior] = useState<SaqueConfig | null>(null);
 
   useEffect(() => { load(); loadConfig(); }, [filtroStatus]);
 
   async function loadConfig() {
     const cfg = await getSaqueConfig();
     setConfig(cfg);
+    setConfigAnterior(cfg);
   }
 
   async function load() {
@@ -108,6 +113,20 @@ export default function AdminSaquesMedicos() {
     for (const u of updates) {
       await supabase.from("app_settings").upsert(u, { onConflict: "key" });
     }
+    // Auditoria da alteração de configuração
+    if (configAnterior) {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("financeiro_auditoria").insert({
+        entidade: "app_settings",
+        entidade_id: "config_saque",
+        acao: "alteracao_config_saque",
+        actor_id: user?.id,
+        valor_anterior: JSON.stringify(configAnterior),
+        valor_novo: JSON.stringify(config),
+        observacao: "Alteração nas regras de liberação de saque",
+      });
+    }
+    setConfigAnterior(config);
     toast.success("Configurações de saque salvas");
     setConfigOpen(false);
   }
@@ -118,9 +137,11 @@ export default function AdminSaquesMedicos() {
         title="Saques Médicos"
         description="Gerencie solicitações de saque dos médicos."
         actions={
-          <Button variant="outline" onClick={() => setConfigOpen(true)}>
-            <Settings className="mr-2 h-4 w-4" /> Configurar regras
-          </Button>
+          <RequirePermission perm="financeiro.saques_config">
+            <Button variant="outline" onClick={() => setConfigOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" /> Configurar regras
+            </Button>
+          </RequirePermission>
         }
       />
 
@@ -140,6 +161,7 @@ export default function AdminSaquesMedicos() {
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="solicitado">Solicitado</SelectItem>
             <SelectItem value="em_analise">Em análise</SelectItem>
+            <SelectItem value="correcao_solicitada">Correção solicitada</SelectItem>
             <SelectItem value="aprovado">Aprovado</SelectItem>
             <SelectItem value="pago">Pago</SelectItem>
             <SelectItem value="recusado">Recusado</SelectItem>
@@ -188,21 +210,35 @@ export default function AdminSaquesMedicos() {
                         {new Date(s.solicitado_em).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="px-4 py-2.5">
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant="ghost" onClick={() => openDetalhe(s)}>
-                            <Eye className="h-3.5 w-3.5" />
-                          </Button>
+                        <div className="flex gap-1.5 flex-wrap">
+                          <RequirePermission perm="financeiro.dados_bancarios_ver">
+                            <Button size="sm" variant="ghost" onClick={() => openDetalhe(s)}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </RequirePermission>
                           {(s.status === "solicitado" || s.status === "em_analise") && (
                             <>
-                              <Button size="sm" variant="outline" className="text-success border-success/40"
-                                onClick={() => mudarStatus(s.id, "aprovado")}>Aprovar</Button>
-                              <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
-                                onClick={() => { setRecusarId(s.id); setMotivo(""); }}>Recusar</Button>
+                              <RequirePermission perm="financeiro.saques_aprovar">
+                                <Button size="sm" variant="outline" className="text-success border-success/40"
+                                  onClick={() => mudarStatus(s.id, "aprovado")}>Aprovar</Button>
+                              </RequirePermission>
+                              <RequirePermission perm="financeiro.saques_recusar">
+                                <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
+                                  onClick={() => { setRecusarId(s.id); setMotivo(""); }}>Recusar</Button>
+                              </RequirePermission>
+                              <RequirePermission perm="financeiro.saques_solicitar_correcao">
+                                <Button size="sm" variant="outline" className="text-warning border-warning/40"
+                                  onClick={() => { setCorrecaoId(s.id); setMotivo(""); }}>
+                                  <RotateCcw className="h-3 w-3 mr-1" /> Correção
+                                </Button>
+                              </RequirePermission>
                             </>
                           )}
                           {s.status === "aprovado" && (
-                            <Button size="sm" variant="outline" className="text-success border-success/40"
-                              onClick={() => mudarStatus(s.id, "pago")}>Marcar pago</Button>
+                            <RequirePermission perm="financeiro.saques_marcar_pago">
+                              <Button size="sm" variant="outline" className="text-success border-success/40"
+                                onClick={() => mudarStatus(s.id, "pago")}>Marcar pago</Button>
+                            </RequirePermission>
                           )}
                         </div>
                       </td>
@@ -230,7 +266,21 @@ export default function AdminSaquesMedicos() {
         </DialogContent>
       </Dialog>
 
-      {/* Sheet Detalhe */}
+      {/* Dialog Solicitar Correção */}
+      <Dialog open={!!correcaoId} onOpenChange={() => setCorrecaoId(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Solicitar correção</DialogTitle></DialogHeader>
+          <div><Label>Descreva o que precisa ser corrigido</Label><Textarea value={motivo} onChange={e => setMotivo(e.target.value)} rows={3} /></div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCorrecaoId(null)}>Cancelar</Button>
+            <Button className="bg-warning text-warning-foreground hover:bg-warning/90" onClick={() => {
+              if (correcaoId) mudarStatus(correcaoId, "correcao_solicitada", { motivo_recusa: motivo });
+              setCorrecaoId(null);
+            }}>Solicitar correção</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-[500px] overflow-y-auto">
           <SheetHeader><SheetTitle>Detalhe do saque</SheetTitle></SheetHeader>

@@ -6042,6 +6042,7 @@ export type Database = {
       saque_status:
         | "solicitado"
         | "em_analise"
+        | "correcao_solicitada"
         | "aprovado"
         | "pago"
         | "recusado"
@@ -6513,6 +6514,7 @@ export const Constants = {
       saque_status: [
         "solicitado",
         "em_analise",
+        "correcao_solicitada",
         "aprovado",
         "pago",
         "recusado",

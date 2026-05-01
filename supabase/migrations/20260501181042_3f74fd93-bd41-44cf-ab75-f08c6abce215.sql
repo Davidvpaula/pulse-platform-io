@@ -1,0 +1,1 @@
+ALTER TYPE saque_status ADD VALUE IF NOT EXISTS 'correcao_solicitada' AFTER 'em_analise';

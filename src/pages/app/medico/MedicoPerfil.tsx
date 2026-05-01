@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { User, Save, Star, MapPin, Stethoscope, Video, AlertTriangle, CheckCircle2, ExternalLink, Landmark, FileText } from "lucide-react";
+import { User, Save, Star, MapPin, Stethoscope, Video, AlertTriangle, CheckCircle2, ExternalLink, Landmark, FileText, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { getMedicoAtual, updateMedicoPerfil, type MedicoRow } from "@/lib/clinic
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
 import { MedicoDadosBancarios } from "@/components/medico/MedicoDadosBancarios";
+import { MedicoDocumentosFiscais } from "@/components/medico/MedicoDocumentosFiscais";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -110,6 +111,7 @@ export default function MedicoPerfil() {
           <TabsTrigger value="publico"><User className="mr-1.5 h-3.5 w-3.5" />Perfil Público</TabsTrigger>
           <TabsTrigger value="pessoal"><FileText className="mr-1.5 h-3.5 w-3.5" />Dados Pessoais</TabsTrigger>
           <TabsTrigger value="bancario"><Landmark className="mr-1.5 h-3.5 w-3.5" />Dados Bancários</TabsTrigger>
+          <TabsTrigger value="fiscal"><Receipt className="mr-1.5 h-3.5 w-3.5" />Documentos Fiscais</TabsTrigger>
         </TabsList>
 
         {/* ── PERFIL PÚBLICO ── */}
@@ -233,6 +235,15 @@ export default function MedicoPerfil() {
         <TabsContent value="bancario">
           <div className="card-elevated p-6">
             {medico ? <MedicoDadosBancarios medicoId={medico.id} /> : (
+              <p className="text-sm text-muted-foreground">Carregando…</p>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── DOCUMENTOS FISCAIS ── */}
+        <TabsContent value="fiscal">
+          <div className="card-elevated p-6">
+            {medico ? <MedicoDocumentosFiscais medicoId={medico.id} /> : (
               <p className="text-sm text-muted-foreground">Carregando…</p>
             )}
           </div>
