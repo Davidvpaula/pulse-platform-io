@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "validate:routes": "node scripts/validate-routes.mjs",
+    "validate:routes:strict": "node scripts/validate-routes.mjs --strict"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
