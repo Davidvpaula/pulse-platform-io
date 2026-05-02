@@ -35,9 +35,8 @@ export default function AdminFinanceiroCentral() {
   const [detalhe, setDetalhe] = useState<any | null>(null);
   const [detalheReembolsos, setDetalheReembolsos] = useState<any[]>([]);
   const [detalheSnapshot, setDetalheSnapshot] = useState<any | null>(null);
-  const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
-  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
-  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+  const [novaCobrancaOpen, setNovaCobrancaOpen] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [loteCancelOpen, setLoteCancelOpen] = useState(false);
   const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
