@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validarCobranca } from "@/lib/validation/cobranca";
+import { brl } from "@/lib/relatorios/utils";
 
-const brl = (c: number) => ((c || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmt = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
 export default function SecretariaFinanceiro() {
@@ -54,7 +54,7 @@ export default function SecretariaFinanceiro() {
   async function abrirNova() {
     setNova({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
     if (!pacientesOpts.length) {
-      const { data: pac } = await supabase.from("pacientes").select("id,nome").order("nome").limit(500);
+      const { data: pac } = await supabase.from("pacientes").select("id,nome_completo").order("nome_completo").limit(500);
       setPacientesOpts(pac || []);
     }
     if (!empresasOpts.length) {
@@ -169,7 +169,7 @@ export default function SecretariaFinanceiro() {
               <Label>Paciente (opcional)</Label>
               <Select value={nova.paciente_id} onValueChange={v => setNova(s => ({ ...s, paciente_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>

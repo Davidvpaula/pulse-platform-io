@@ -72,7 +72,7 @@ function useDashboardData() {
       id: r.id,
       inicio: r.inicio,
       status: r.status,
-      paciente_nome: r.pacientes?.profiles?.nome ?? "Paciente",
+      paciente_nome: r.pacientes?.nome_completo ?? r.pacientes?.profiles?.nome ?? "Paciente",
       paciente_id: r.paciente_id,
       medico_nome: r.medicos?.nome ?? "Médico",
       canal_origem: r.canal_origem,
