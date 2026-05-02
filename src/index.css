@@ -120,4 +120,33 @@
     background-clip: text;
     color: transparent;
   }
+
+  /* ─── B2B / B2C flow indicators ─── */
+  .flow-b2b { --flow-accent: 250 65% 55%; --flow-accent-soft: 250 60% 95%; --flow-label: "B2B"; }
+  .flow-b2c { --flow-accent: 188 80% 42%; --flow-accent-soft: 188 70% 94%; --flow-label: "B2C"; }
+  .flow-admin { --flow-accent: 196 78% 28%; --flow-accent-soft: 196 70% 94%; --flow-label: "Admin"; }
+  .flow-medico { --flow-accent: 152 60% 40%; --flow-accent-soft: 152 55% 93%; --flow-label: "Médico"; }
+  .flow-secretaria { --flow-accent: 35 92% 52%; --flow-accent-soft: 35 80% 94%; --flow-label: "Operação"; }
+  .dark .flow-b2b { --flow-accent: 250 70% 65%; --flow-accent-soft: 250 40% 18%; }
+  .dark .flow-b2c { --flow-accent: 188 80% 55%; --flow-accent-soft: 188 40% 15%; }
+  .dark .flow-admin { --flow-accent: 196 78% 55%; --flow-accent-soft: 196 40% 15%; }
+  .dark .flow-medico { --flow-accent: 152 60% 55%; --flow-accent-soft: 152 35% 15%; }
+  .dark .flow-secretaria { --flow-accent: 35 92% 55%; --flow-accent-soft: 35 40% 15%; }
+
+  .flow-stripe {
+    height: 3px;
+    background: hsl(var(--flow-accent));
+  }
+  .flow-badge {
+    background: hsl(var(--flow-accent-soft));
+    color: hsl(var(--flow-accent));
+    border: 1px solid hsl(var(--flow-accent) / 0.25);
+  }
+  .flow-sidebar-card {
+    background: hsl(var(--flow-accent-soft));
+    border-color: hsl(var(--flow-accent) / 0.2);
+  }
+  .flow-sidebar-card .flow-icon {
+    color: hsl(var(--flow-accent));
+  }
 }
