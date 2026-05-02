@@ -302,6 +302,20 @@ export default function PacienteAgendamentos() {
         voucher={voucherSelecionado}
         onAgendado={() => { setVoucherSelecionado(null); void carregar(); }}
       />
+
+      {avaliarConsulta && (
+        <AvaliarMedicoDialog
+          open={!!avaliarConsulta}
+          onOpenChange={(v) => { if (!v) setAvaliarConsulta(null); }}
+          consulta={{
+            id: avaliarConsulta.id,
+            paciente_id: avaliarConsulta.paciente_id,
+            medico_id: avaliarConsulta.medico_id,
+            medico_nome: avaliarConsulta.medico_nome,
+          }}
+          onAvaliado={() => { setAvaliarConsulta(null); void carregar(); }}
+        />
+      )}
     </div>
   );
 }
