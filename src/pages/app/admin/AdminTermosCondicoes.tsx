@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   FileText, Plus, Eye, ToggleLeft, ToggleRight, Loader2,
-  ChevronDown, ChevronRight, Users, Clock, Shield,
+  ChevronDown, ChevronRight, Users, Clock, Shield, Search, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,12 @@ export default function AdminTermosCondicoes() {
   const [createStatus, setCreateStatus] = useState<"ativo" | "inativo">("inativo");
   const [saving, setSaving] = useState(false);
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTipo, setFilterTipo] = useState<string>("todos");
+  const [filterStatus, setFilterStatus] = useState<string>("todos");
+  const [filterVersao, setFilterVersao] = useState<string>("todas");
+
   // Aceites viewer
   const [viewAceites, setViewAceites] = useState<string | null>(null);
   const [aceites, setAceites] = useState<any[]>([]);
@@ -44,6 +50,34 @@ export default function AdminTermosCondicoes() {
 
   // Preview
   const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
+
+  // Filtered termos
+  const termosFiltrados = useMemo(() => {
+    return termos.filter(t => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = t.titulo.toLowerCase().includes(q);
+        const matchTipo = TERMO_TIPO_LABELS[t.tipo]?.toLowerCase().includes(q);
+        if (!matchTitle && !matchTipo) return false;
+      }
+      if (filterTipo !== "todos" && t.tipo !== filterTipo) return false;
+      if (filterStatus !== "todos" && t.status !== filterStatus) return false;
+      if (filterVersao === "ultima") {
+        const maxV = Math.max(...termos.filter(x => x.tipo === t.tipo).map(x => x.versao));
+        if (t.versao !== maxV) return false;
+      }
+      return true;
+    });
+  }, [termos, searchQuery, filterTipo, filterStatus, filterVersao]);
+
+  const hasActiveFilters = searchQuery || filterTipo !== "todos" || filterStatus !== "todos" || filterVersao !== "todas";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterTipo("todos");
+    setFilterStatus("todos");
+    setFilterVersao("todas");
+  };
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -123,7 +157,7 @@ export default function AdminTermosCondicoes() {
     setShowCreate(true);
   };
 
-  const termosPorTipo = (tipo: TermoTipo) => termos.filter(t => t.tipo === tipo);
+  const termosPorTipo = (tipo: TermoTipo) => termosFiltrados.filter(t => t.tipo === tipo);
   const termoAtivo = (tipo: TermoTipo) => termos.find(t => t.tipo === tipo && t.status === "ativo");
 
   const renderCategoria = (label: string, tipos: TermoTipo[]) => (
@@ -224,10 +258,62 @@ export default function AdminTermosCondicoes() {
     <div className="space-y-6 p-6">
       <PageHeader title="Termos & Condições" description="Gerencie todos os termos legais da plataforma com versionamento completo." />
 
-      <div className="flex justify-end">
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Criar novo termo
-        </Button>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[200px] max-w-sm">
+          <Label className="text-xs text-muted-foreground mb-1 block">Buscar</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por título ou tipo…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div className="min-w-[160px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Tipo</Label>
+          <Select value={filterTipo} onValueChange={setFilterTipo}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {Object.entries(TERMO_TIPO_LABELS).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[130px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="ativo">Ativo</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[130px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Versão</Label>
+          <Select value={filterVersao} onValueChange={setFilterVersao}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              <SelectItem value="ultima">Última versão</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-10">
+            <X className="h-4 w-4 mr-1" /> Limpar
+          </Button>
+        )}
+        <div className="ml-auto">
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Criar novo termo
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="paciente">
