@@ -54,7 +54,7 @@ export default function EmpresaPropostas() {
   const { session } = useSession();
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { medico_nome?: string; especialidade_nome?: string })[]>([]);
-  const [medicos, setMedicos] = useState<{ id: string; full_name: string }[]>([]);
+  const [medicos, setMedicos] = useState<{ id: string; nome: string }[]>([]);
   const [especialidades, setEspecialidades] = useState<{ id: string; nome: string }[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [sending, setSending] = useState(false);
