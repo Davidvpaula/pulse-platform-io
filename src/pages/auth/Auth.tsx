@@ -225,8 +225,11 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="senha-s">Senha</Label>
-                  <Input id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required />
-                  <p className="text-xs text-muted-foreground">Mínimo 8 caracteres</p>
+                  <Input
+                    id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required
+                    value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)}
+                  />
+                  <PasswordStrengthIndicator password={signupPassword} />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
