@@ -1,77 +1,97 @@
 
-# Plano: Gestão de Pacientes (top-level) + Reembolso avulso + Checkup de rotas
+# OAuth Google Calendar + Meet por Médico
 
-## Diagnóstico atual
+## Situação atual
+- A tela `MedicoConfiguracoes.tsx` tem uma seção "Google Meet" com um campo de **link fixo** e um badge "Não conectado" para Google Calendar (estático, sem lógica real).
+- A tabela `medicos` tem `link_sala_padrao` (texto) para o link fixo.
+- Não existe nenhuma infraestrutura OAuth per-user no banco nem no backend.
 
-**Menu Admin** -- "Pacientes" está dentro de "Cadastros" como "Usuários/Pacientes". Conforme a imagem de referência, deveria ser um item top-level separado.
+## O que será implementado
 
-**Reembolso** -- A tabela `reembolsos` existe (colunas: id, consulta_id, pagamento_id, valor_centavos, status enum [solicitado, em_analise, aprovado, recusado, concluido], tipo [total, parcial], motivo, etc.). RPCs `financeiro_reembolso_aprovar` e `financeiro_reembolso_recusar` existem. Porém:
-- Nao existe UI para **solicitar/criar** um reembolso avulso (admin/secretaria)
-- O `PacientePerfil.tsx` mostra reembolsos em lista read-only mas sem botao de acao
+### 1. Migração de banco (nova tabela `medico_google_tokens`)
 
-**Auditoria de banimento** -- A RPC `alterar_status_conta_paciente` ja registra em `pacientes_auditoria`. Falta UI no `PacientePerfil` para ver timeline de mudancas de status (incluindo banimento) e falta o campo `bloqueado_ate` na aba de acoes.
+Tabela para armazenar tokens OAuth de cada médico:
 
-**Rotas** -- `admin/pacientes/:id` existe e aponta para `PacientePerfil`. Rota da lista e `admin/usuarios`. Precisa harmonizar nomenclatura.
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| id | uuid PK | |
+| medico_id | uuid FK medicos.id UNIQUE | 1 token por médico |
+| access_token | text | Token criptografado |
+| refresh_token | text | Para renovação automática |
+| token_expiry | timestamptz | Quando o access_token expira |
+| scopes | text | Escopos autorizados |
+| google_email | text | Email Google conectado |
+| created_at / updated_at | timestamptz | Auditoria |
 
----
+RLS: médico só lê/atualiza o próprio registro.
 
-## Etapa 1 -- Reorganizar menu Admin
+### 2. Edge function `google-oauth` (2 rotas)
 
-Alterar `src/lib/profiles.ts`:
-- Remover "Usuarios/Pacientes" de dentro de "Cadastros"
-- Criar item top-level "Pacientes" com submenu:
-  - "Gestao de pacientes" -> `/app/admin/pacientes` (lista)
-  - "Perfil do paciente" nao precisa de menu (acesso via lista)
-- Manter "Cadastros" apenas com: Medicos, Colaboradores
-- Ajustar "Empresas" ja existente como top-level (ja esta)
-- Adicionar rota `/app/admin/pacientes` no `App.tsx` (redirect ou alias para AdminUsuarios)
-- Atualizar breadcrumbs em `AppBreadcrumb.tsx`
+**POST /google-oauth** com `action`:
 
-## Etapa 2 -- Completar UI de reembolso avulso
+- `action: "get-auth-url"` -- Gera a URL de consentimento OAuth com escopos `calendar.events` + `calendar.readonly`. Retorna URL para o frontend redirecionar.
+- `action: "exchange-code"` -- Recebe o `code` do callback OAuth, troca por access_token + refresh_token via Google, salva na tabela `medico_google_tokens`.
+- `action: "disconnect"` -- Revoga o token no Google e deleta o registro.
+- `action: "status"` -- Retorna se está conectado e qual email.
 
-Criar botao "Solicitar reembolso" no `PacientePerfil.tsx` (aba Financeiro), visivel com `RequirePermission perm="pacientes.reembolsar"`:
-- Dialog com: selecao de consulta/pagamento, tipo (total/parcial), valor, motivo
-- Insert na tabela `reembolsos` com status `solicitado`
-- Tambem adicionar botao na `AdminFinanceiroCentral.tsx` para criar reembolso avulso
+**Nota**: As credenciais OAuth (Client ID + Client Secret) do Google Cloud Console do projeto serão necessárias como secrets. Seguindo a regra do projeto, deixaremos as rotas prontas mas **não pediremos os secrets agora** -- ativação na etapa final de integração.
 
-**Como funciona o reembolso de consulta avulsa:**
-1. Admin/Secretaria abre o perfil do paciente -> aba Financeiro
-2. Clica "Solicitar reembolso" -> seleciona o pagamento da consulta
-3. Escolhe tipo (total/parcial), valor e motivo
-4. O reembolso entra como `solicitado` na fila
-5. Admin aprova via `AdminFinanceiroCentral` (RPCs ja existem)
-6. Integracao com Stripe para estorno real sera feita na etapa de integracao final
+### 3. Edge function `google-create-meet` 
 
-## Etapa 3 -- Auditoria de banimento e acoes de status
+Chamada ao criar/confirmar consulta:
+- Busca o token do médico em `medico_google_tokens`
+- Refresha se expirado
+- Cria evento no Google Calendar com `conferenceData` (Google Meet automático)
+- Retorna o link do Meet gerado
+- Salva o link na consulta (`consultas.link_sala`)
 
-No `PacientePerfil.tsx`:
-- Adicionar botoes de acao de status (Suspender/Bloquear/Banir/Reativar) na aba principal, com dialog de motivo + campo `bloqueado_ate` para bloqueio temporario
-- Usar RPC `alterar_status_conta_paciente` ja existente
-- Garantir que a aba "Auditoria" mostra timeline completa incluindo acoes de banimento com badges coloridos
+### 4. UI -- Seção Google Meet em `MedicoConfiguracoes.tsx`
 
-## Etapa 4 -- Checkup completo de rotas cruzadas
+Substituir a seção atual estática por:
 
-Verificar e corrigir:
-- Links de `AdminUsuarios` -> `PacientePerfil` (ajustar para `/app/admin/pacientes/:id`)
-- Links de `SecretariaPacientes` -> `PacientePerfil` (ja funciona)
-- Links de `PacientePerfil` -> Financeiro (pagamentos, consultas)
-- Links de `AdminFinanceiroCentral` -> paciente (click no nome abre perfil)
-- Links de `AdminAgendamentos` -> paciente e medico
-- Garantir navegacao bidirecional: Paciente <-> Financeiro <-> Agendamento <-> Medico
-- Atualizar `scripts/validate-routes.mjs` se necessario
+- **Não conectado**: Botão "Conectar Google Calendar" que inicia o fluxo OAuth
+- **Conectado**: Mostra email conectado, badge verde, botão "Desconectar"
+- **Tipo de link**: Muda de select para toggle "Fixo / Dinâmico (Google Calendar)"
+  - Fixo: campo de texto (como hoje)
+  - Dinâmico: indica que será gerado automaticamente por consulta
+- **Callback route**: Rota `/medico/google-callback` para receber o code do OAuth
 
----
+### 5. Lógica de consulta -- link dinâmico
 
-## Detalhes tecnicos
+No fluxo de criação de consulta:
+- Se o médico tem token Google válido e tipo "dinâmico": chama `google-create-meet`
+- Senão: usa `link_sala_padrao` fixo (comportamento atual)
 
-**Migrations**: Nenhuma necessaria -- tabela `reembolsos`, RPC de status e colunas `bloqueado_ate` ja existem.
+## Arquitetura do fluxo
 
-**Permissoes**: `pacientes.reembolsar`, `pacientes.banir`, `pacientes.suspender` ja cadastradas em `AdminColaboradores.tsx`.
+```text
+Médico clica "Conectar"
+  -> Frontend chama edge fn "google-oauth" (get-auth-url)
+  -> Redireciona para Google Consent Screen
+  -> Google redireciona para /medico/google-callback?code=xxx
+  -> Frontend chama edge fn "google-oauth" (exchange-code)
+  -> Tokens salvos em medico_google_tokens
+  -> Badge "Conectado" aparece
 
-**Arquivos modificados**:
-- `src/lib/profiles.ts` (menu)
-- `src/App.tsx` (rotas)
-- `src/components/AppBreadcrumb.tsx` (breadcrumbs)
-- `src/pages/app/shared/PacientePerfil.tsx` (reembolso dialog + acoes de status)
-- `src/pages/app/admin/AdminUsuarios.tsx` (links atualizados)
-- `src/pages/app/admin/AdminFinanceiroCentral.tsx` (link para perfil paciente)
+Consulta criada/confirmada:
+  -> Backend verifica se médico tem token Google
+  -> Se sim: cria evento Calendar + Meet link
+  -> Salva link_sala na consulta
+```
+
+## Detalhes de segurança
+- Tokens armazenados server-side (edge functions), nunca expostos ao frontend
+- RLS garante isolamento por médico
+- Refresh automático no backend antes de criar evento
+
+## Secrets necessários (para etapa de integração final)
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+
+## Arquivos afetados
+- **Nova migração**: tabela `medico_google_tokens` + RLS
+- **Nova edge function**: `supabase/functions/google-oauth/index.ts`
+- **Nova edge function**: `supabase/functions/google-create-meet/index.ts`
+- **Editar**: `src/pages/app/medico/MedicoConfiguracoes.tsx` (seção Google Meet)
+- **Nova rota**: página de callback OAuth em `src/pages/app/medico/MedicoGoogleCallback.tsx`
+- **Editar**: Router (App.tsx) para adicionar a rota de callback
