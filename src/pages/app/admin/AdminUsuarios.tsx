@@ -530,13 +530,17 @@ export default function AdminUsuarios() {
             <DialogTitle>
               {acao === "suspenso" && "Suspender conta"}
               {acao === "bloqueado" && "Bloquear conta"}
+              {acao === "banido" && "Banir conta"}
               {acao === "ativo" && "Reativar conta"}
+              {acao === "pendente" && "Marcar como pendente"}
             </DialogTitle>
             <DialogDescription>
               {pacienteAlvo?.nome_completo} — {pacienteAlvo?.cpf ?? "sem CPF"}.{" "}
               {acao === "suspenso" && "Bloqueia novos agendamentos. Documentos e histórico permanecem acessíveis."}
-              {acao === "bloqueado" && "Impede login e novos agendamentos. Use apenas em casos graves."}
+              {acao === "bloqueado" && "Impede login e novos agendamentos. Pode definir data limite para bloqueio temporário."}
+              {acao === "banido" && "Banimento permanente. Impede qualquer acesso à plataforma. Ação grave e irreversível na prática."}
               {acao === "ativo" && "Restaura o acesso completo do paciente à plataforma."}
+              {acao === "pendente" && "Marca o paciente como pendente de verificação."}
             </DialogDescription>
           </DialogHeader>
 
