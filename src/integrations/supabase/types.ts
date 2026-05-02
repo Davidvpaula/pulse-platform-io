@@ -764,6 +764,64 @@ export type Database = {
           },
         ]
       }
+      avaliacoes_medicas: {
+        Row: {
+          avaliacao_publica: boolean
+          comentario: string | null
+          consulta_id: string
+          created_at: string
+          exibir_no_perfil: boolean
+          id: string
+          medico_id: string
+          nota: number
+          paciente_id: string
+        }
+        Insert: {
+          avaliacao_publica?: boolean
+          comentario?: string | null
+          consulta_id: string
+          created_at?: string
+          exibir_no_perfil?: boolean
+          id?: string
+          medico_id: string
+          nota: number
+          paciente_id: string
+        }
+        Update: {
+          avaliacao_publica?: boolean
+          comentario?: string | null
+          consulta_id?: string
+          created_at?: string
+          exibir_no_perfil?: boolean
+          id?: string
+          medico_id?: string
+          nota?: number
+          paciente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_medicas_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_medicas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_medicas_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_flows: {
         Row: {
           active: boolean
@@ -3153,6 +3211,62 @@ export type Database = {
           },
         ]
       }
+      medico_ranking: {
+        Row: {
+          avaliacao_media: number
+          fator_premium: number
+          fator_recencia: number
+          last_activity_at: string | null
+          medico_id: string
+          posicao: number | null
+          ranking_score: number
+          taxa_conversao: number
+          taxa_no_show: number
+          total_agendamentos: number
+          total_atendimentos: number
+          total_avaliacoes: number
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_media?: number
+          fator_premium?: number
+          fator_recencia?: number
+          last_activity_at?: string | null
+          medico_id: string
+          posicao?: number | null
+          ranking_score?: number
+          taxa_conversao?: number
+          taxa_no_show?: number
+          total_agendamentos?: number
+          total_atendimentos?: number
+          total_avaliacoes?: number
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_media?: number
+          fator_premium?: number
+          fator_recencia?: number
+          last_activity_at?: string | null
+          medico_id?: string
+          posicao?: number | null
+          ranking_score?: number
+          taxa_conversao?: number
+          taxa_no_show?: number
+          total_agendamentos?: number
+          total_atendimentos?: number
+          total_avaliacoes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_ranking_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_servicos: {
         Row: {
           aderido_em: string
@@ -4494,6 +4608,51 @@ export type Database = {
           },
         ]
       }
+      ranking_config: {
+        Row: {
+          id: string
+          min_avaliacoes_exibir: number
+          peso_atendimentos: number
+          peso_avaliacao: number
+          peso_conversao: number
+          peso_no_show: number
+          peso_premium: number
+          peso_recencia: number
+          recencia_dias_ativo: number
+          recencia_dias_penalidade: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          min_avaliacoes_exibir?: number
+          peso_atendimentos?: number
+          peso_avaliacao?: number
+          peso_conversao?: number
+          peso_no_show?: number
+          peso_premium?: number
+          peso_recencia?: number
+          recencia_dias_ativo?: number
+          recencia_dias_penalidade?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          min_avaliacoes_exibir?: number
+          peso_atendimentos?: number
+          peso_avaliacao?: number
+          peso_conversao?: number
+          peso_no_show?: number
+          peso_premium?: number
+          peso_recencia?: number
+          recencia_dias_ativo?: number
+          recencia_dias_penalidade?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       reembolso_planos: {
         Row: {
           assinatura_id: string | null
@@ -5623,6 +5782,11 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      recalcular_ranking_medico: {
+        Args: { p_medico_id: string }
+        Returns: undefined
+      }
+      recalcular_ranking_todos: { Args: never; Returns: undefined }
       registrar_auditoria_colaborador: {
         Args: {
           _acao: string
