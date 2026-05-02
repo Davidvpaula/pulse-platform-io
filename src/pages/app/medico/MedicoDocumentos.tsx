@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import {
   FileText, Search, Loader2, Database, FilePlus2, Eye, Calendar,
   CheckCircle2, AlertCircle, Clock, Paperclip, NotebookPen, Filter,
+  Building2, Lock, Unlock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   listDocumentosDoMedico,
   emitirPrescricaoSimulada,
