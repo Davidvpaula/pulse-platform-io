@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { gerarFaturaPdf } from "@/lib/gerarFaturaPdf";
 
 const brl = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -283,9 +284,14 @@ export default function AdminFaturamentoB2B() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => setDetalheAberto(f)}>
-                      <Eye className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" title="Baixar PDF" onClick={() => gerarFaturaPdf(f)}>
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setDetalheAberto(f)}>
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -357,7 +363,8 @@ export default function AdminFaturamentoB2B() {
               )}
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={() => {
-                  toast.info("Em breve: download de NF/boleto");
+                  gerarFaturaPdf(detalheAberto);
+                  toast.success("PDF gerado com sucesso");
                 }}>
                   <Download className="mr-2 h-4 w-4" /> Baixar NF / Boleto
                 </Button>
