@@ -277,6 +277,20 @@ export default function MedicoDocumentos() {
                         <CheckCircle2 className="mr-2 h-4 w-4" /> Emitida
                       </Button>
                     )}
+                    {d.qtd_anexos > 0 && (
+                      <Button
+                        size="sm"
+                        variant={visibMap[d.consulta_id] ? "default" : "outline"}
+                        onClick={() => toggleVisibilidadeEmpresa(d.consulta_id)}
+                        title={visibMap[d.consulta_id] ? "Documentos visíveis para empresa — clique para tornar privado" : "Documentos privados — clique para compartilhar com empresa"}
+                      >
+                        {visibMap[d.consulta_id] ? (
+                          <><Unlock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
+                        ) : (
+                          <><Lock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </li>
               );
