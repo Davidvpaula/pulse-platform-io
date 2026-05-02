@@ -155,6 +155,10 @@ export default function EmpresaPropostas() {
   }
 
   async function enviarProposta() {
+    if (termsEmpresa.needsAcceptance) {
+      termsEmpresa.setShowDialog(true);
+      return;
+    }
     if (!empresaId || !formMedicoId) {
       toast.error("Selecione um médico");
       return;
