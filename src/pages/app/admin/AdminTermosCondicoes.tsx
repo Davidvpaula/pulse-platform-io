@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  FileText, Plus, Eye, ToggleLeft, ToggleRight, Loader2,
+  FileText, Plus, Eye, Edit, ToggleLeft, ToggleRight, Loader2,
   ChevronDown, ChevronRight, Users, Clock, Shield, Search, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  listarTermos, criarTermo, ativarTermo, desativarTermo, listarAceitesDoTermo,
+  listarTermos, criarTermo, ativarTermo, desativarTermo, editarTermo, listarAceitesDoTermo,
   TERMO_TIPO_LABELS, TERMO_CATEGORIAS,
   type TermoRow, type TermoTipo,
 } from "@/lib/termos";
