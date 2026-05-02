@@ -292,7 +292,7 @@ const App = () => (
               <Route path="admin/planos-empresariais" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosEmpresariais /></G>} />
               <Route path="admin/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
               <Route path="admin/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
-              <Route path="admin/termos-condicoes" element={<AdminTermosCondicoes />} />
+              <Route path="admin/termos-condicoes" element={<G perm="termos.gerenciar"><AdminTermosCondicoes /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />

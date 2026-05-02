@@ -28,7 +28,7 @@ export default function EmpresaTermos() {
     setLoading(true);
     try {
       // Empresa uses same terms flow — check for "empresa" category or general terms
-      const todos = await buscarTermosPendentes("paciente"); // empresa reuses paciente category for now
+      const todos = await buscarTermosPendentes("empresa");
       setPendentes(todos);
     } catch {
       setPendentes([]);
