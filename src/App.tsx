@@ -90,6 +90,7 @@ import PermissoesLog from "@/pages/app/admin/PermissoesLog";
 import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
 import AdminSessoes from "@/pages/app/admin/AdminSessoes";
 import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
+import AdminAlertasSeguranca from "@/pages/app/admin/AdminAlertasSeguranca";
 import AdminServicos from "@/pages/app/admin/AdminServicos";
 import AdminTreinamentos from "@/pages/app/admin/AdminTreinamentos";
 import MedicoServicos from "@/pages/app/medico/MedicoServicos";
