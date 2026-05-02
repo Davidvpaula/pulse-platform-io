@@ -45,6 +45,12 @@ type Onboarding = {
   semSala: boolean;
   semEspecialidade: boolean;
   pendente: boolean;
+  treinamentoConcluido: boolean;
+  treinamentoTotal: number;
+  treinamentoFeito: number;
+  perfilIncompleto: boolean;
+  semDadosBancarios: boolean;
+  semTermos: boolean;
 };
 
 export default function MedicoDashboard() {
