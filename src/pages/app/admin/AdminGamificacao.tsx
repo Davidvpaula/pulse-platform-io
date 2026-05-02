@@ -1,48 +1,67 @@
 import { useEffect, useState } from "react";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
+  Crown, Megaphone, ToggleLeft, ToggleRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   getRankingConfig, salvarRankingConfig, recalcularRankingTodos, listarRankingTop,
-  type RankingConfig, type MedicoRanking,
+  listarTodasCampanhas, togglePremiumAdmin,
+  type RankingConfig, type MedicoRanking, type ImpulsionamentoCampanha,
 } from "@/lib/gamificacao";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
+function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
 
 export default function AdminGamificacao() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [recalculando, setRecalculando] = useState(false);
   const [config, setConfig] = useState<RankingConfig | null>(null);
-  const [top, setTop] = useState<(MedicoRanking & { nome?: string })[]>([]);
+  const [top, setTop] = useState<(MedicoRanking & { nome?: string; premium_ativo?: boolean })[]>([]);
+  const [campanhas, setCampanhas] = useState<(ImpulsionamentoCampanha & { nome?: string })[]>([]);
+  const [togglingPremium, setTogglingPremium] = useState<string | null>(null);
 
   const carregar = async () => {
     setLoading(true);
-    const [cfg, ranking] = await Promise.all([
+    const [cfg, ranking, camps] = await Promise.all([
       getRankingConfig(),
       listarRankingTop(15),
+      listarTodasCampanhas(20),
     ]);
     setConfig(cfg);
 
-    // Enriquecer com nomes
-    if (ranking.length) {
-      const ids = ranking.map((r) => r.medico_id);
+    // Enriquecer com nomes e status premium
+    const allMedicoIds = [
+      ...new Set([...ranking.map((r) => r.medico_id), ...camps.map((c) => c.medico_id)]),
+    ];
+    let nomeMap = new Map<string, string>();
+    let premiumMap = new Map<string, boolean>();
+
+    if (allMedicoIds.length) {
       const { data: medicos } = await supabase
         .from("medicos")
         .select("id, nome")
-        .in("id", ids);
-      const nomeMap = new Map((medicos ?? []).map((m) => [m.id, m.nome]));
-      setTop(ranking.map((r) => ({ ...r, nome: nomeMap.get(r.medico_id) ?? "—" })));
-    } else {
-      setTop([]);
+        .in("id", allMedicoIds);
+      nomeMap = new Map((medicos ?? []).map((m) => [m.id, m.nome]));
+
+      const { data: premiums } = await supabase
+        .from("medico_premium" as any)
+        .select("medico_id, ativo")
+        .in("medico_id", allMedicoIds);
+      premiumMap = new Map(((premiums ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
     }
+
+    setTop(ranking.map((r) => ({ ...r, nome: nomeMap.get(r.medico_id) ?? "—", premium_ativo: premiumMap.get(r.medico_id) ?? false })));
+    setCampanhas(camps.map((c) => ({ ...c, nome: nomeMap.get(c.medico_id) ?? "—" })));
     setLoading(false);
   };
 
@@ -81,6 +100,19 @@ export default function AdminGamificacao() {
     }
   };
 
+  const handleTogglePremium = async (medicoId: string, ativo: boolean) => {
+    setTogglingPremium(medicoId);
+    try {
+      await togglePremiumAdmin(medicoId, ativo, "conquistado");
+      setTop((prev) => prev.map((r) => r.medico_id === medicoId ? { ...r, premium_ativo: ativo } : r));
+      toast.success(ativo ? "Premium ativado" : "Premium desativado");
+    } catch {
+      toast.error("Erro ao alterar premium");
+    } finally {
+      setTogglingPremium(null);
+    }
+  };
+
   const updatePeso = (key: keyof RankingConfig, val: string) => {
     if (!config) return;
     setConfig({ ...config, [key]: parseFloat(val) || 0 });
@@ -105,7 +137,7 @@ export default function AdminGamificacao() {
     <div className="space-y-6">
       <PageHeader
         title="Gamificação & Ranking"
-        description="Configure pesos do ranking, monitore médicos e recalcule posições."
+        description="Configure pesos do ranking, gerencie premium, monitore campanhas e recalcule posições."
         actions={
           <Button onClick={recalcular} disabled={recalculando} variant="outline">
             {recalculando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
@@ -121,7 +153,6 @@ export default function AdminGamificacao() {
             <Settings className="h-5 w-5 text-primary" />
             <h3 className="font-display text-lg font-semibold">Pesos do Ranking</h3>
           </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
             {[
               { key: "peso_avaliacao" as const, label: "Avaliação média", desc: "Peso das estrelas" },
@@ -129,39 +160,23 @@ export default function AdminGamificacao() {
               { key: "peso_conversao" as const, label: "Conversão", desc: "Concluídas / agendadas" },
               { key: "peso_no_show" as const, label: "No-show", desc: "Penalidade por faltas" },
               { key: "peso_recencia" as const, label: "Recência", desc: "Atividade recente" },
-              { key: "peso_premium" as const, label: "Premium", desc: "Bônus premium (fase 3)" },
+              { key: "peso_premium" as const, label: "Premium", desc: "Bônus 1.2x para premium ativos" },
             ].map(({ key, label, desc }) => (
               <div key={key} className="space-y-1">
                 <Label className="text-xs">{label}</Label>
-                <Input
-                  type="number"
-                  step="0.05"
-                  min="0"
-                  max="1"
-                  value={config?.[key] ?? 0}
-                  onChange={(e) => updatePeso(key, e.target.value)}
-                  className="font-mono"
-                />
+                <Input type="number" step="0.05" min="0" max="1" value={config?.[key] ?? 0} onChange={(e) => updatePeso(key, e.target.value)} className="font-mono" />
                 <p className="text-[10px] text-muted-foreground">{desc}</p>
               </div>
             ))}
           </div>
-
           <div className="flex items-center justify-between border-t border-border pt-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Soma:</span>
-              <Badge className={somaOk ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}>
-                {soma.toFixed(2)}
-              </Badge>
-              {!somaOk && (
-                <span className="text-xs text-destructive flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" /> Deve ser 1.00
-                </span>
-              )}
+              <Badge className={somaOk ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}>{soma.toFixed(2)}</Badge>
+              {!somaOk && <span className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Deve ser 1.00</span>}
             </div>
             <Button onClick={salvar} disabled={saving || !somaOk} size="sm">
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Salvar
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Salvar
             </Button>
           </div>
         </div>
@@ -172,48 +187,26 @@ export default function AdminGamificacao() {
             <Trophy className="h-5 w-5 text-primary" />
             <h3 className="font-display text-lg font-semibold">Configurações</h3>
           </div>
-
           <div className="space-y-4">
             <div className="space-y-1">
               <Label className="text-xs">Mínimo de avaliações para exibir</Label>
-              <Input
-                type="number"
-                min="1"
-                value={config?.min_avaliacoes_exibir ?? 5}
-                onChange={(e) => config && setConfig({ ...config, min_avaliacoes_exibir: parseInt(e.target.value) || 5 })}
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Até atingir esse número, o médico aparece como "Novo na plataforma"
-              </p>
+              <Input type="number" min="1" value={config?.min_avaliacoes_exibir ?? 5} onChange={(e) => config && setConfig({ ...config, min_avaliacoes_exibir: parseInt(e.target.value) || 5 })} />
+              <p className="text-[10px] text-muted-foreground">Até atingir esse número, o médico aparece como "Novo na plataforma"</p>
             </div>
-
             <div className="space-y-1">
               <Label className="text-xs">Dias para considerar ativo</Label>
-              <Input
-                type="number"
-                min="1"
-                value={config?.recencia_dias_ativo ?? 30}
-                onChange={(e) => config && setConfig({ ...config, recencia_dias_ativo: parseInt(e.target.value) || 30 })}
-              />
+              <Input type="number" min="1" value={config?.recencia_dias_ativo ?? 30} onChange={(e) => config && setConfig({ ...config, recencia_dias_ativo: parseInt(e.target.value) || 30 })} />
             </div>
-
             <div className="space-y-1">
               <Label className="text-xs">Dias para penalidade de inatividade</Label>
-              <Input
-                type="number"
-                min="1"
-                value={config?.recencia_dias_penalidade ?? 70}
-                onChange={(e) => config && setConfig({ ...config, recencia_dias_penalidade: parseInt(e.target.value) || 70 })}
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Após esse período sem atividade, fator de recência cai para 0.5
-              </p>
+              <Input type="number" min="1" value={config?.recencia_dias_penalidade ?? 70} onChange={(e) => config && setConfig({ ...config, recencia_dias_penalidade: parseInt(e.target.value) || 70 })} />
+              <p className="text-[10px] text-muted-foreground">Após esse período sem atividade, fator de recência cai para 0.5</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Top ranking */}
+      {/* Top ranking com toggle premium */}
       <div className="card-elevated p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -234,38 +227,88 @@ export default function AdminGamificacao() {
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <th className="pb-2 pr-3">#</th>
                   <th className="pb-2 pr-3">Médico</th>
-                  <th className="pb-2 pr-3 text-center">
-                    <Star className="h-3 w-3 inline" /> Nota
-                  </th>
-                  <th className="pb-2 pr-3 text-center">Avaliações</th>
+                  <th className="pb-2 pr-3 text-center"><Star className="h-3 w-3 inline" /> Nota</th>
+                  <th className="pb-2 pr-3 text-center">Aval.</th>
                   <th className="pb-2 pr-3 text-center">Atend.</th>
-                  <th className="pb-2 pr-3 text-center">Conversão</th>
+                  <th className="pb-2 pr-3 text-center">Conv.</th>
                   <th className="pb-2 pr-3 text-center">No-show</th>
+                  <th className="pb-2 pr-3 text-center"><Crown className="h-3 w-3 inline text-amber-500" /> Premium</th>
                   <th className="pb-2 text-right">Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {top.map((r) => (
                   <tr key={r.medico_id} className="hover:bg-muted/30">
-                    <td className="py-2.5 pr-3 font-semibold text-primary">
-                      {r.posicao ?? "—"}
-                    </td>
-                    <td className="py-2.5 pr-3 font-medium truncate max-w-[200px]">
-                      {r.nome}
-                    </td>
+                    <td className="py-2.5 pr-3 font-semibold text-primary">{r.posicao ?? "—"}</td>
+                    <td className="py-2.5 pr-3 font-medium truncate max-w-[200px]">{r.nome}</td>
                     <td className="py-2.5 pr-3 text-center">
-                      <span className="inline-flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-warning text-warning" />
-                        {r.avaliacao_media.toFixed(1)}
-                      </span>
+                      <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" />{r.avaliacao_media.toFixed(1)}</span>
                     </td>
                     <td className="py-2.5 pr-3 text-center">{r.total_avaliacoes}</td>
                     <td className="py-2.5 pr-3 text-center">{r.total_atendimentos}</td>
                     <td className="py-2.5 pr-3 text-center">{pct(r.taxa_conversao)}</td>
                     <td className="py-2.5 pr-3 text-center">{pct(r.taxa_no_show)}</td>
-                    <td className="py-2.5 text-right font-mono font-semibold">
-                      {r.ranking_score.toFixed(2)}
+                    <td className="py-2.5 pr-3 text-center">
+                      <Switch
+                        checked={r.premium_ativo ?? false}
+                        disabled={togglingPremium === r.medico_id}
+                        onCheckedChange={(v) => handleTogglePremium(r.medico_id, v)}
+                      />
                     </td>
+                    <td className="py-2.5 text-right font-mono font-semibold">{r.ranking_score.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Campanhas de impulsionamento */}
+      <div className="card-elevated p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg font-semibold">Campanhas de Impulsionamento</h3>
+          </div>
+          <Badge variant="secondary">{campanhas.length} campanhas</Badge>
+        </div>
+
+        {campanhas.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            Nenhuma campanha de impulsionamento criada por médicos ainda.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-3">Médico</th>
+                  <th className="pb-2 pr-3">Campanha</th>
+                  <th className="pb-2 pr-3 text-center">Status</th>
+                  <th className="pb-2 pr-3 text-right">Orçamento</th>
+                  <th className="pb-2 pr-3 text-right">Gasto</th>
+                  <th className="pb-2 pr-3 text-center">Cliques</th>
+                  <th className="pb-2 text-right">CPC</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {campanhas.map((c) => (
+                  <tr key={c.id} className="hover:bg-muted/30">
+                    <td className="py-2.5 pr-3 font-medium truncate max-w-[150px]">{(c as any).nome}</td>
+                    <td className="py-2.5 pr-3 truncate max-w-[150px]">{c.titulo}</td>
+                    <td className="py-2.5 pr-3 text-center">
+                      <Badge className={cn("text-[10px]",
+                        c.status === "ativa" ? "bg-success/15 text-success" :
+                        c.status === "pausada" ? "bg-warning/15 text-warning" :
+                        c.status === "encerrada" ? "bg-muted text-muted-foreground" :
+                        "bg-destructive/15 text-destructive"
+                      )}>{c.status}</Badge>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right font-mono">{brl(c.orcamento_centavos)}</td>
+                    <td className="py-2.5 pr-3 text-right font-mono">{brl(c.gasto_centavos)}</td>
+                    <td className="py-2.5 pr-3 text-center">{c.cliques}</td>
+                    <td className="py-2.5 text-right font-mono">{brl(c.cpc_centavos)}</td>
                   </tr>
                 ))}
               </tbody>
