@@ -1,79 +1,206 @@
-import { Wallet, Download, FileText } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Wallet, Download, FileText, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { getKpis, getPerfil, listFaturas, brl, STATUS_FATURA_LABEL } from "@/lib/empresa";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { brl } from "@/lib/relatorios/utils";
+
+const STATUS_LABEL: Record<string, string> = {
+  paga: "Paga",
+  em_aberto: "Em aberto",
+  atrasada: "Atrasada",
+  cancelada: "Cancelada",
+};
+
+const STATUS_CLASS: Record<string, string> = {
+  paga: "bg-success/10 text-success",
+  em_aberto: "bg-warning/10 text-warning",
+  atrasada: "bg-destructive/10 text-destructive",
+  cancelada: "bg-muted text-muted-foreground",
+};
+
+type Fatura = {
+  id: string;
+  competencia_mes: number;
+  competencia_ano: number;
+  vencimento: string;
+  valor_total_centavos: number;
+  qtd_funcionarios: number;
+  qtd_consultas: number;
+  status: string;
+  pago_em: string | null;
+  observacoes: string | null;
+};
 
 export default function EmpresaFinanceiro() {
-  const kpis = getKpis();
-  const perfil = getPerfil();
-  const faturas = listFaturas();
-  const consumoPercent = perfil.vidasContratadas === 0 ? 0 : Math.round((kpis.ativos / perfil.vidasContratadas) * 100);
+  const [faturas, setFaturas] = useState<Fatura[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [empresaId, setEmpresaId] = useState<string | null>(null);
+  const [empresaNome, setEmpresaNome] = useState("");
+
+  const carregar = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+
+      // Buscar empresa do usuário via empresas_funcionarios ou pacientes.empresa_id
+      let eid: string | null = null;
+      const { data: empFunc } = await supabase
+        .from("empresas_funcionarios")
+        .select("empresa_id")
+        .eq("paciente_id", u.user.id)
+        .limit(1)
+        .maybeSingle();
+      eid = empFunc?.empresa_id ?? null;
+
+      if (!eid) {
+        const { data: pac } = await supabase
+          .from("pacientes")
+          .select("empresa_id")
+          .eq("user_id", u.user.id)
+          .maybeSingle();
+        eid = pac?.empresa_id ?? null;
+      }
+
+      if (!eid) {
+        setLoading(false);
+        return;
+      }
+
+      // Buscar nome da empresa
+      const { data: emp } = await supabase
+        .from("empresas")
+        .select("id, nome_fantasia, razao_social")
+        .eq("id", eid)
+        .maybeSingle();
+
+      setEmpresaId(eid);
+      setEmpresaNome(emp?.nome_fantasia || emp?.razao_social || "");
+
+      const { data: fats, error } = await supabase
+        .from("empresas_faturas")
+        .select("*")
+        .eq("empresa_id", eid)
+        .order("competencia_ano", { ascending: false })
+        .order("competencia_mes", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setFaturas((fats as Fatura[]) || []);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao carregar faturas");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const totalPago = faturas.filter(f => f.status === "paga").reduce((s, f) => s + f.valor_total_centavos, 0);
+  const totalAberto = faturas.filter(f => f.status === "em_aberto" || f.status === "atrasada").reduce((s, f) => s + f.valor_total_centavos, 0);
+  const ultimaFatura = faturas[0];
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Financeiro</p>
-        <h1 className="font-display text-2xl font-bold">Faturas e consumo</h1>
-        <p className="text-sm text-muted-foreground">{perfil.plano} · {perfil.vidasContratadas} vidas contratadas · ciclo dia {perfil.cicloFechamento}</p>
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Financeiro</p>
+          <h1 className="font-display text-2xl font-bold">Faturas e consumo</h1>
+          {empresaNome && <p className="text-sm text-muted-foreground">{empresaNome}</p>}
+        </div>
+        <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Atualizar
+        </Button>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-elevated p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Valor mensal</p>
-            <Wallet className="h-4 w-4 text-primary" />
+      {/* KPIs */}
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="card-elevated p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total pago</p>
+              <Wallet className="h-4 w-4 text-primary" />
+            </div>
+            <p className="mt-2 text-2xl font-bold">{brl(totalPago)}</p>
+            <p className="text-[11px] text-muted-foreground">{faturas.filter(f => f.status === "paga").length} faturas pagas</p>
           </div>
-          <p className="mt-2 text-2xl font-bold">{brl(kpis.custoMensal)}</p>
-          <p className="text-[11px] text-muted-foreground">{kpis.ativos} colaboradores ativos × {brl(perfil.precoPorVida)}</p>
-        </div>
-        <div className="card-elevated p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custo por colaborador</p>
-          <p className="mt-2 text-2xl font-bold">{brl(kpis.custoMedioColaborador)}</p>
-          <p className="text-[11px] text-muted-foreground">Média no ciclo corrente</p>
-        </div>
-        <div className="card-elevated p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consumo do plano</p>
-          <p className="mt-2 text-2xl font-bold">{consumoPercent}%</p>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className={`h-full ${consumoPercent > 90 ? "bg-warning" : "bg-gradient-primary"}`} style={{ width: `${Math.min(consumoPercent, 100)}%` }} />
+          <div className="card-elevated p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Em aberto</p>
+            <p className="mt-2 text-2xl font-bold">{brl(totalAberto)}</p>
+            <p className="text-[11px] text-muted-foreground">{faturas.filter(f => f.status === "em_aberto" || f.status === "atrasada").length} faturas pendentes</p>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">{kpis.ativos} de {perfil.vidasContratadas} vidas</p>
+          <div className="card-elevated p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Última fatura</p>
+            <p className="mt-2 text-2xl font-bold">
+              {ultimaFatura ? `${String(ultimaFatura.competencia_mes).padStart(2, "0")}/${ultimaFatura.competencia_ano}` : "—"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {ultimaFatura ? `${ultimaFatura.qtd_funcionarios} vidas · ${brl(ultimaFatura.valor_total_centavos)}` : "Nenhuma fatura"}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
+      {/* Tabela de faturas */}
       <section className="card-elevated p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Histórico de faturas</h2>
-        </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr><th className="pb-2 pr-3">Competência</th><th className="pb-2 pr-3">Vidas</th><th className="pb-2 pr-3">Valor</th><th className="pb-2 pr-3">Emissão</th><th className="pb-2 pr-3">Status</th><th className="pb-2 text-right">Ações</th></tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {faturas.slice().reverse().map(f => (
-                <tr key={f.id}>
-                  <td className="py-3 pr-3 font-medium">{f.competencia}</td>
-                  <td className="py-3 pr-3">{f.vidas}</td>
-                  <td className="py-3 pr-3">{brl(f.valor)}</td>
-                  <td className="py-3 pr-3 text-muted-foreground">{f.emitidaEm}</td>
-                  <td className="py-3 pr-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      f.status === "paga" ? "bg-success/10 text-success" :
-                      f.status === "em_aberto" ? "bg-warning/10 text-warning" :
-                      "bg-destructive/10 text-destructive"
-                    }`}>{STATUS_FATURA_LABEL[f.status]}</span>
-                  </td>
-                  <td className="py-3 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => toast({ title: "Em breve", description: "Download de boleto/NF." })}>
-                      <Download className="mr-1 h-3.5 w-3.5" /> Baixar
-                    </Button>
-                  </td>
+        <h2 className="font-display text-lg font-semibold flex items-center gap-2 mb-4">
+          <FileText className="h-4 w-4 text-primary" /> Histórico de faturas
+        </h2>
+        {loading ? (
+          <div className="space-y-3">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full rounded" />)}
+          </div>
+        ) : faturas.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">Nenhuma fatura encontrada.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="pb-2 pr-3">Competência</th>
+                  <th className="pb-2 pr-3">Vidas</th>
+                  <th className="pb-2 pr-3">Consultas</th>
+                  <th className="pb-2 pr-3">Valor</th>
+                  <th className="pb-2 pr-3">Vencimento</th>
+                  <th className="pb-2 pr-3">Status</th>
+                  <th className="pb-2 text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {faturas.map(f => (
+                  <tr key={f.id}>
+                    <td className="py-3 pr-3 font-medium">
+                      {String(f.competencia_mes).padStart(2, "0")}/{f.competencia_ano}
+                    </td>
+                    <td className="py-3 pr-3">{f.qtd_funcionarios}</td>
+                    <td className="py-3 pr-3">{f.qtd_consultas}</td>
+                    <td className="py-3 pr-3">{brl(f.valor_total_centavos)}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">
+                      {new Date(f.vencimento).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="py-3 pr-3">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_CLASS[f.status] || ""}`}>
+                        {STATUS_LABEL[f.status] || f.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <Button size="sm" variant="ghost" onClick={() => toast.info("Download de boleto/NF será habilitado em breve.")}>
+                        <Download className="mr-1 h-3.5 w-3.5" /> Baixar
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

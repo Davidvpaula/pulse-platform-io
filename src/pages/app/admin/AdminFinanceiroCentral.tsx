@@ -12,8 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { validarCobranca } from "@/lib/validation/cobranca";
 import { brl, downloadCSV } from "@/lib/relatorios/utils";
+import { NovaCobrancaDialog } from "@/components/financeiro/NovaCobrancaDialog";
 
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
@@ -35,9 +35,7 @@ export default function AdminFinanceiroCentral() {
   const [detalhe, setDetalhe] = useState<any | null>(null);
   const [detalheReembolsos, setDetalheReembolsos] = useState<any[]>([]);
   const [detalheSnapshot, setDetalheSnapshot] = useState<any | null>(null);
-  const [novaCobranca, setNovaCobranca] = useState<{ open: boolean; descricao: string; valor: string; vencimento: string; paciente_id: string; empresa_id: string; observacao: string }>({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
-  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
-  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
+  const [novaCobrancaOpen, setNovaCobrancaOpen] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [loteCancelOpen, setLoteCancelOpen] = useState(false);
   const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
@@ -130,43 +128,6 @@ export default function AdminFinanceiroCentral() {
     } catch {}
   }
 
-  async function abrirNovaCobranca() {
-    setNovaCobranca({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
-    if (!pacientesOpts.length) {
-      const { data: pac } = await supabase.from("pacientes").select("id,nome_completo").order("nome_completo").limit(500);
-      setPacientesOpts(pac || []);
-    }
-    if (!empresasOpts.length) {
-      const { data: emp } = await supabase.from("empresas").select("id,razao_social,nome_fantasia").order("razao_social").limit(500);
-      setEmpresasOpts(emp || []);
-    }
-  }
-
-  async function criarCobranca() {
-    const r = validarCobranca({
-      descricao: novaCobranca.descricao,
-      valor: novaCobranca.valor,
-      vencimento: novaCobranca.vencimento,
-      observacao: novaCobranca.observacao,
-      paciente_id: novaCobranca.paciente_id,
-      empresa_id: novaCobranca.empresa_id,
-    });
-    if (r.ok === false) { toast.error(r.erro); return; }
-    try {
-      const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: novaCobranca.descricao.trim(),
-        valor_centavos: r.valor_centavos,
-        vencimento: novaCobranca.vencimento || null,
-        paciente_id: novaCobranca.paciente_id || null,
-        observacao: novaCobranca.observacao?.trim() || null,
-        status: "ativo",
-      } as any);
-      if (error) throw error;
-      toast.success("Cobrança criada");
-      setNovaCobranca(s => ({ ...s, open: false }));
-      carregar();
-    } catch (e: any) { toast.error(e.message || "Erro ao criar cobrança"); }
-  }
 
 
   const carregar = useCallback(async () => {
@@ -419,7 +380,7 @@ export default function AdminFinanceiroCentral() {
                 </SelectContent>
               </Select>
             </div>
-            <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
+            <Button size="sm" onClick={() => setNovaCobrancaOpen(true)}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
@@ -561,37 +522,12 @@ export default function AdminFinanceiroCentral() {
       </Dialog>
 
       {/* Nova cobrança manual */}
-      <Dialog open={novaCobranca.open} onOpenChange={o => setNovaCobranca(s => ({ ...s, open: o }))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova cobrança manual</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
-            </div>
-            <div>
-              <Label>Paciente (opcional)</Label>
-              <Select value={novaCobranca.paciente_id} onValueChange={v => setNovaCobranca(s => ({ ...s, paciente_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Empresa (opcional)</Label>
-              <Select value={novaCobranca.empresa_id} onValueChange={v => setNovaCobranca(s => ({ ...s, empresa_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione uma empresa" /></SelectTrigger>
-                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>Observação</Label><Textarea value={novaCobranca.observacao} onChange={e => setNovaCobranca(s => ({ ...s, observacao: e.target.value }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNovaCobranca(s => ({ ...s, open: false }))}>Cancelar</Button>
-            <Button onClick={criarCobranca}>Criar cobrança</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NovaCobrancaDialog
+        open={novaCobrancaOpen}
+        onOpenChange={setNovaCobrancaOpen}
+        onCreated={carregar}
+        title="Nova cobrança manual"
+      />
     </div>
   );
 }

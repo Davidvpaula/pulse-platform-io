@@ -1,18 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link2, RefreshCw, Loader2, Download } from "lucide-react";
+import { Link2, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { validarCobranca } from "@/lib/validation/cobranca";
 import { brl } from "@/lib/relatorios/utils";
+import { NovaCobrancaDialog } from "@/components/financeiro/NovaCobrancaDialog";
 
 const fmt = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
@@ -23,9 +19,7 @@ export default function SecretariaFinanceiro() {
   const [podeCobrar, setPodeCobrar] = useState(false);
   const [podeVer, setPodeVer] = useState(false);
 
-  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
-  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
-  const [nova, setNova] = useState({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+  const [novaOpen, setNovaOpen] = useState(false);
 
   const checarPermissoes = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -51,43 +45,6 @@ export default function SecretariaFinanceiro() {
 
   useEffect(() => { checarPermissoes(); carregar(); }, [checarPermissoes, carregar]);
 
-  async function abrirNova() {
-    setNova({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
-    if (!pacientesOpts.length) {
-      const { data: pac } = await supabase.from("pacientes").select("id,nome_completo").order("nome_completo").limit(500);
-      setPacientesOpts(pac || []);
-    }
-    if (!empresasOpts.length) {
-      const { data: emp } = await supabase.from("empresas").select("id,razao_social,nome_fantasia").order("razao_social").limit(500);
-      setEmpresasOpts(emp || []);
-    }
-  }
-
-  async function criar() {
-    const r = validarCobranca({
-      descricao: nova.descricao,
-      valor: nova.valor,
-      vencimento: nova.vencimento,
-      observacao: nova.observacao,
-      paciente_id: nova.paciente_id,
-      empresa_id: nova.empresa_id,
-    });
-    if (r.ok === false) { toast.error(r.erro); return; }
-    try {
-      const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: nova.descricao.trim(),
-        valor_centavos: r.valor_centavos,
-        vencimento: nova.vencimento || null,
-        paciente_id: nova.paciente_id || null,
-        observacao: nova.observacao?.trim() || null,
-        status: "ativo",
-      } as any);
-      if (error) throw error;
-      toast.success("Cobrança criada");
-      setNova(s => ({ ...s, open: false }));
-      carregar();
-    } catch (e: any) { toast.error(e.message || "Erro"); }
-  }
 
   if (!podeVer && !podeCobrar) {
     return (
@@ -108,7 +65,7 @@ export default function SecretariaFinanceiro() {
         <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}Atualizar
         </Button>
-        {podeCobrar && <Button size="sm" onClick={abrirNova}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>}
+        {podeCobrar && <Button size="sm" onClick={() => setNovaOpen(true)}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>}
       </div>
 
       <Tabs defaultValue="pagamentos">
@@ -121,16 +78,25 @@ export default function SecretariaFinanceiro() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr><th className="text-left p-2">Valor</th><th className="text-left p-2">Status</th><th className="text-left p-2">Forma</th><th className="text-left p-2">Pago em</th><th className="text-left p-2">Criado em</th></tr></thead>
               <tbody>
-                {pagamentos.map(p => (
-                  <tr key={p.id} className="border-t">
-                    <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
-                    <td className="p-2"><Badge variant="outline">{p.status}</Badge></td>
-                    <td className="p-2">{p.metodo || p.forma || "—"}</td>
-                    <td className="p-2">{fmt(p.data_pagamento || p.paid_at)}</td>
-                    <td className="p-2">{fmt(p.created_at)}</td>
-                  </tr>
-                ))}
-                {!pagamentos.length && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhum pagamento</td></tr>}
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-t">
+                      {[1,2,3,4,5].map(j => <td key={j} className="p-2"><Skeleton className="h-4 w-full" /></td>)}
+                    </tr>
+                  ))
+                ) : pagamentos.length === 0 ? (
+                  <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhum pagamento</td></tr>
+                ) : (
+                  pagamentos.map(p => (
+                    <tr key={p.id} className="border-t">
+                      <td className="p-2">{brl(p.valor_bruto_centavos || p.valor_centavos)}</td>
+                      <td className="p-2"><Badge variant="outline">{p.status}</Badge></td>
+                      <td className="p-2">{p.metodo || p.forma || "—"}</td>
+                      <td className="p-2">{fmt(p.data_pagamento || p.paid_at)}</td>
+                      <td className="p-2">{fmt(p.created_at)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -140,53 +106,36 @@ export default function SecretariaFinanceiro() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th><th className="text-left p-2">Criado em</th></tr></thead>
               <tbody>
-                {links.map(l => (
-                  <tr key={l.id} className="border-t">
-                    <td className="p-2">{l.descricao}</td>
-                    <td className="p-2">{brl(l.valor_centavos)}</td>
-                    <td className="p-2">{l.vencimento || "—"}</td>
-                    <td className="p-2"><Badge variant="outline">{l.status}</Badge></td>
-                    <td className="p-2">{fmt(l.created_at)}</td>
-                  </tr>
-                ))}
-                {!links.length && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhuma cobrança</td></tr>}
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-t">
+                      {[1,2,3,4,5].map(j => <td key={j} className="p-2"><Skeleton className="h-4 w-full" /></td>)}
+                    </tr>
+                  ))
+                ) : links.length === 0 ? (
+                  <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhuma cobrança</td></tr>
+                ) : (
+                  links.map(l => (
+                    <tr key={l.id} className="border-t">
+                      <td className="p-2">{l.descricao}</td>
+                      <td className="p-2">{brl(l.valor_centavos)}</td>
+                      <td className="p-2">{l.vencimento || "—"}</td>
+                      <td className="p-2"><Badge variant="outline">{l.status}</Badge></td>
+                      <td className="p-2">{fmt(l.created_at)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </TabsContent>
       </Tabs>
 
-      <Dialog open={nova.open} onOpenChange={o => setNova(s => ({ ...s, open: o }))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova cobrança</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Descrição</Label><Input value={nova.descricao} onChange={e => setNova(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>Valor (R$)</Label><Input value={nova.valor} onChange={e => setNova(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={nova.vencimento} onChange={e => setNova(s => ({ ...s, vencimento: e.target.value }))} /></div>
-            </div>
-            <div>
-              <Label>Paciente (opcional)</Label>
-              <Select value={nova.paciente_id} onValueChange={v => setNova(s => ({ ...s, paciente_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Empresa (opcional)</Label>
-              <Select value={nova.empresa_id} onValueChange={v => setNova(s => ({ ...s, empresa_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>Observação</Label><Textarea value={nova.observacao} onChange={e => setNova(s => ({ ...s, observacao: e.target.value }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNova(s => ({ ...s, open: false }))}>Cancelar</Button>
-            <Button onClick={criar}>Criar cobrança</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NovaCobrancaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        onCreated={carregar}
+      />
     </div>
   );
 }
