@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, X, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 type Medico = { id: string; nome: string; especialidade: string };
 type DescontoRegra = { qtd_medicos_min: number; desconto_pct: number };
