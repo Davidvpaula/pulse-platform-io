@@ -69,7 +69,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/relatorios/auditoria":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Auditoria" }],
 
   // ── Admin: Gamificação (já existia inline, agora centralizado) ──
-  "/app/admin/gamificacao":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação" }, { label: "Configuração & Ranking" }],
+  "/app/admin/gamificacao":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Configuração & Ranking" }],
   "/app/admin/gamificacao/financeiro": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Financeiro" }],
 
   // ── Admin: itens soltos com breadcrumb simples ──
@@ -143,15 +143,17 @@ export function AppBreadcrumb() {
       <BreadcrumbList>
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1;
+          const isSelfLink = crumb.to === pathname;
+          const showAsLink = !isLast && crumb.to && !isSelfLink;
           return (
             <BreadcrumbItem key={i}>
               {i > 0 && <BreadcrumbSeparator className="mr-1.5" />}
-              {isLast || !crumb.to ? (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              ) : (
+              {showAsLink ? (
                 <BreadcrumbLink asChild>
-                  <Link to={crumb.to}>{crumb.label}</Link>
+                  <Link to={crumb.to!}>{crumb.label}</Link>
                 </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
               )}
             </BreadcrumbItem>
           );
