@@ -22,6 +22,8 @@ import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
+import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
+import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
