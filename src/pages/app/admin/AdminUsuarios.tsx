@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, Search, Plus, Filter, MoreHorizontal, Eye, Pencil, Calendar,
   MessageSquare, History, Pause, Ban, Play, AlertCircle, Loader2, Shield,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShieldOff, Clock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
