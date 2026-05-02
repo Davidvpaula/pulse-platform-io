@@ -1,11 +1,11 @@
 /** Tipo genérico de slot usado pelo módulo de Atendimento Imediato (PA). */
 export type PASlot = {
-  key: string;        // ISO do início — chave única
-  slot_id: string;    // UUID do agenda_slots
+  key: string;          // ISO do início — chave única
   inicio: Date;
   fim: Date;
-  medico_id: string;
-  total_vagas: number;
+  slot_id?: string;     // UUID do agenda_slots (ausente em previews)
+  medico_id?: string;
+  total_vagas?: number; // 0 = lotado
 };
 
 export type PAReserva = {
