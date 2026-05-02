@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Loader2, Clock, Stethoscope, ArrowRight } from "lucide-react";
+import { Loader2, Clock, Stethoscope, ArrowRight, Star, Crown, Megaphone } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 type Servico = {
   id: string;
@@ -20,6 +24,11 @@ type MedicoItem = {
   especialidade: string | null;
   proximo_slot_id: string | null;
   proximo_slot_iso: string | null;
+  avaliacao_media?: number;
+  total_avaliacoes?: number;
+  is_premium?: boolean;
+  is_patrocinado?: boolean;
+  ranking_score?: number;
 };
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
