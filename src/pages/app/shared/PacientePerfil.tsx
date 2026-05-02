@@ -459,6 +459,36 @@ export default function PacientePerfil() {
             ))}
           </div>
         )}
+        <div className="ml-auto flex gap-2">
+          {pac.status_conta !== "suspenso" && pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-warning/40 text-warning" onClick={() => openStatusAction("suspenso", "Suspenso")}>
+                <Pause className="h-3.5 w-3.5 mr-1" />Suspender
+              </Button>
+            </RequirePermission>
+          )}
+          {pac.status_conta !== "bloqueado" && pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-destructive/40 text-destructive" onClick={() => openStatusAction("bloqueado", "Bloqueado")}>
+                <ShieldOff className="h-3.5 w-3.5 mr-1" />Bloquear
+              </Button>
+            </RequirePermission>
+          )}
+          {pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.banir">
+              <Button size="sm" variant="destructive" onClick={() => openStatusAction("banido", "Banido")}>
+                <Ban className="h-3.5 w-3.5 mr-1" />Banir
+              </Button>
+            </RequirePermission>
+          )}
+          {["suspenso", "bloqueado", "banido"].includes(pac.status_conta) && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-success/40 text-success" onClick={() => openStatusAction("ativo", "Ativo")}>
+                <Play className="h-3.5 w-3.5 mr-1" />Reativar
+              </Button>
+            </RequirePermission>
+          )}
+        </div>
       </div>
 
       {/* TABS */}
