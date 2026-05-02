@@ -158,6 +158,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         requiresCapability: "financeiro.servicos_gerenciar",
         children: [
           { label: "Planos da plataforma", to: "/app/admin/planos" },
+          { label: "Planos empresariais", to: "/app/admin/planos-empresariais" },
           { label: "Planos de médicos", to: "/app/admin/planos-medicos" },
           { label: "Cancelamentos", to: "/app/admin/planos-cancelamentos" },
         ],
