@@ -197,7 +197,12 @@ export default function AdminGamificacaoFinanceiro() {
             <BarChart3 className="h-5 w-5 text-primary" />
             <h3 className="font-display text-lg font-semibold">Campanhas CPC — ROI</h3>
           </div>
-          <Badge variant="secondary">{campanhas.length} total</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{campanhas.length} total</Badge>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={exportCampanhas} title="Exportar CSV">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         {campanhas.length === 0 ? (
