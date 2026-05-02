@@ -6192,6 +6192,25 @@ export type Database = {
         }
         Returns: string
       }
+      fn_pa_confirmar_reserva: {
+        Args: { _paciente_id?: string; _slot_id: string }
+        Returns: Json
+      }
+      fn_pa_reservar_slot: {
+        Args: { _paciente_id?: string; _slot_inicio: string }
+        Returns: Json
+      }
+      fn_pa_slots_disponiveis: {
+        Args: { _data?: string }
+        Returns: {
+          fim: string
+          inicio: string
+          medico_id: string
+          modalidade: string
+          slot_id: string
+          total_vagas: number
+        }[]
+      }
       fn_ranking_medico_servico: {
         Args: {
           _limit?: number

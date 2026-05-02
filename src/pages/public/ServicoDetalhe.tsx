@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { Link, useParams } from "react-router-dom";
 import { Loader2, Clock, Stethoscope, ArrowRight, Star, Crown, Megaphone } from "lucide-react";
 import PageShell from "@/components/PageShell";
@@ -33,7 +34,7 @@ type MedicoItem = {
   ranking_score?: number;
 };
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
@@ -80,38 +81,46 @@ export default function ServicoDetalhe() {
         return;
       }
 
-      // Fetch médicos, ranking e premium em paralelo
-      const [medsRes, rankingRes, premiumRes, campanhasRes] = await Promise.all([
+      // Fetch médicos, ranking, premium, campanhas e próximos slots em paralelo (batch)
+      const [medsRes, rankingRes, premiumRes, campanhasRes, slotsRes] = await Promise.all([
         supabase.from("medicos").select("id,nome,especialidade").in("id", ids),
         supabase.from("medico_ranking" as any).select("medico_id,avaliacao_media,total_avaliacoes,ranking_score").in("medico_id", ids),
         supabase.from("medico_premium" as any).select("medico_id,ativo").in("medico_id", ids),
         supabase.from("impulsionamento_campanhas" as any).select("id,medico_id").eq("status", "ativa").in("medico_id", ids),
+        // Batch: buscar próximos slots de todos os médicos de uma vez
+        supabase
+          .from("agenda_slots")
+          .select("id,inicio,medico_id")
+          .in("medico_id", ids)
+          .eq("status", "disponivel")
+          .gte("inicio", new Date().toISOString())
+          .order("inicio", { ascending: true }),
       ]);
 
       const rankMap = new Map(((rankingRes.data ?? []) as any[]).map((r) => [r.medico_id, r]));
       const premMap = new Map(((premiumRes.data ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
       const adsMap = new Map(((campanhasRes.data ?? []) as any[]).map((c) => [c.medico_id, c.id]));
 
+      // Primeiro slot disponível por médico
+      const slotMap = new Map<string, { id: string; inicio: string }>();
+      for (const sl of (slotsRes.data ?? []) as any[]) {
+        if (!slotMap.has(sl.medico_id)) {
+          slotMap.set(sl.medico_id, { id: sl.id, inicio: sl.inicio });
+        }
+      }
+
       const cards: MedicoItem[] = [];
       for (const id of ids) {
         const m = (medsRes.data ?? []).find((x: any) => x.id === id);
         if (!m) continue;
-        const { data: slot } = await supabase
-          .from("agenda_slots")
-          .select("id,inicio")
-          .eq("medico_id", id)
-          .eq("status", "disponivel")
-          .gte("inicio", new Date().toISOString())
-          .order("inicio", { ascending: true })
-          .limit(1)
-          .maybeSingle();
         const rk = rankMap.get(id);
+        const nextSlot = slotMap.get(id);
         cards.push({
           medico_id: id,
           nome: (m as any).nome,
           especialidade: (m as any).especialidade ?? null,
-          proximo_slot_id: slot?.id ?? null,
-          proximo_slot_iso: slot?.inicio ?? null,
+          proximo_slot_id: nextSlot?.id ?? null,
+          proximo_slot_iso: nextSlot?.inicio ?? null,
           avaliacao_media: rk?.avaliacao_media ?? 0,
           total_avaliacoes: rk?.total_avaliacoes ?? 0,
           ranking_score: rk?.ranking_score ?? 0,

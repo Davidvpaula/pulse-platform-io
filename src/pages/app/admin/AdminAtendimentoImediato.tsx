@@ -33,7 +33,7 @@ import {
   type AtendimentoImediatoConfig,
 } from "@/lib/clinico";
 import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
-import { mockSlotsDoDia } from "@/lib/mocks/atendimentoImediatoMock";
+import { fmtHora } from "@/lib/format";
 
 type ElegivelRow = {
   id: string;
@@ -44,8 +44,6 @@ type ElegivelRow = {
 };
 
 
-const fmtHora = (d: Date) =>
-  d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 export default function AdminAtendimentoImediato() {
   const [loading, setLoading] = useState(true);
@@ -170,7 +168,15 @@ export default function AdminAtendimentoImediato() {
   // Preview dos slots gerados com a duração corrente
   const previewSlots = useMemo(() => {
     const hoje = new Date();
-    return mockSlotsDoDia(hoje, duracao).slice(0, 6);
+    const result: { key: string; inicio: Date; fim: Date }[] = [];
+    for (let offset = 0; offset < 6; offset++) {
+      const inicio = new Date(hoje);
+      inicio.setHours(8, 0, 0, 0);
+      inicio.setMinutes(offset * duracao);
+      const fim = new Date(inicio.getTime() + duracao * 60_000);
+      result.push({ key: inicio.toISOString(), inicio, fim });
+    }
+    return result;
   }, [duracao]);
 
   if (loading) {

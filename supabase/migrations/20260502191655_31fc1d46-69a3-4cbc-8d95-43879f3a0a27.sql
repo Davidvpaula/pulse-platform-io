@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.fn_audit_servicos_financeiros() FROM anon;
