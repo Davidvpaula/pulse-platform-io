@@ -72,6 +72,13 @@ export type Database = {
             referencedRelation: "servicos_financeiros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agenda_slots_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ai_logs: {
@@ -5818,6 +5825,42 @@ export type Database = {
           risco: string | null
           valor_anterior: string | null
           valor_novo: string | null
+        }
+        Relationships: []
+      }
+      servicos_publicos: {
+        Row: {
+          ativo: boolean | null
+          descricao_publica: string | null
+          duracao_min: number | null
+          id: string | null
+          nome: string | null
+          prioridade: number | null
+          slug: string | null
+          tipo: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
+          valor_paciente_centavos: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          descricao_publica?: string | null
+          duracao_min?: number | null
+          id?: string | null
+          nome?: string | null
+          prioridade?: number | null
+          slug?: string | null
+          tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
+          valor_paciente_centavos?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          descricao_publica?: string | null
+          duracao_min?: number | null
+          id?: string | null
+          nome?: string | null
+          prioridade?: number | null
+          slug?: string | null
+          tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
+          valor_paciente_centavos?: number | null
         }
         Relationships: []
       }

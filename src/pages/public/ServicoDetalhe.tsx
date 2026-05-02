@@ -45,12 +45,12 @@ export default function ServicoDetalhe() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data: s } = await supabase
-        .from("servicos_financeiros")
+      const { data: s } = await (supabase as any)
+        .from("servicos_publicos")
         .select("id,nome,descricao_publica,duracao_min,valor_paciente_centavos,ativo")
         .eq("slug", slug)
         .maybeSingle();
-      if (!s || !s.ativo) {
+      if (!s || !(s as any).ativo) {
         setLoading(false);
         return;
       }

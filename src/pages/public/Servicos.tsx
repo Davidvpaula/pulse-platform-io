@@ -24,11 +24,10 @@ export default function Servicos() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("servicos_financeiros")
+      const { data } = await (supabase as any)
+        .from("servicos_publicos")
         .select("id,slug,nome,tipo,descricao_publica,duracao_min,valor_paciente_centavos,prioridade")
-        .eq("ativo", true)
-        .neq("tipo", "pronto_atendimento") // PA tem porta própria /atendimento-imediato
+        .neq("tipo", "pronto_atendimento")
         .order("prioridade")
         .order("nome");
       setServicos((data ?? []) as Servico[]);
