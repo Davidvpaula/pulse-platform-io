@@ -34,7 +34,7 @@ export default function Auth() {
     (params.get("modo") as "login" | "cadastro") ?? "login",
   );
   const [loading, setLoading] = useState(false);
-
+  const [signupPassword, setSignupPassword] = useState("");
   // já logado? manda pro destino padrão
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
