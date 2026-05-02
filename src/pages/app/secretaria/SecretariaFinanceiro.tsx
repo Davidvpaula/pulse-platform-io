@@ -106,16 +106,25 @@ export default function SecretariaFinanceiro() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40"><tr><th className="text-left p-2">Descrição</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Vencimento</th><th className="text-left p-2">Status</th><th className="text-left p-2">Criado em</th></tr></thead>
               <tbody>
-                {links.map(l => (
-                  <tr key={l.id} className="border-t">
-                    <td className="p-2">{l.descricao}</td>
-                    <td className="p-2">{brl(l.valor_centavos)}</td>
-                    <td className="p-2">{l.vencimento || "—"}</td>
-                    <td className="p-2"><Badge variant="outline">{l.status}</Badge></td>
-                    <td className="p-2">{fmt(l.created_at)}</td>
-                  </tr>
-                ))}
-                {!links.length && <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhuma cobrança</td></tr>}
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-t">
+                      {[1,2,3,4,5].map(j => <td key={j} className="p-2"><Skeleton className="h-4 w-full" /></td>)}
+                    </tr>
+                  ))
+                ) : links.length === 0 ? (
+                  <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Nenhuma cobrança</td></tr>
+                ) : (
+                  links.map(l => (
+                    <tr key={l.id} className="border-t">
+                      <td className="p-2">{l.descricao}</td>
+                      <td className="p-2">{brl(l.valor_centavos)}</td>
+                      <td className="p-2">{l.vencimento || "—"}</td>
+                      <td className="p-2"><Badge variant="outline">{l.status}</Badge></td>
+                      <td className="p-2">{fmt(l.created_at)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
