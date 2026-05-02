@@ -53,12 +53,27 @@ export default function MedicoDocumentos() {
   const [loading, setLoading] = useState(false);
   const [emitindo, setEmitindo] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocumentoMedico[]>([]);
+  // Mapa consulta_id -> visibilidade_empresa dos anexos
+  const [visibMap, setVisibMap] = useState<Record<string, boolean>>({});
 
   async function carregar() {
     if (!session) { setDocs([]); return; }
     setLoading(true);
     const r = await listDocumentosDoMedico();
     setDocs(r);
+    // Carregar visibilidade dos anexos
+    const ids = r.filter(d => d.qtd_anexos > 0).map(d => d.consulta_id);
+    if (ids.length > 0) {
+      const { data: anexos } = await supabase
+        .from("anexos_consulta")
+        .select("consulta_id, visibilidade_empresa")
+        .in("consulta_id", ids);
+      const map: Record<string, boolean> = {};
+      (anexos ?? []).forEach((a: any) => {
+        if (a.visibilidade_empresa) map[a.consulta_id] = true;
+      });
+      setVisibMap(map);
+    }
     setLoading(false);
   }
 
