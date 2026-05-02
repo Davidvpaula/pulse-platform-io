@@ -425,6 +425,13 @@ function ContaSeguranca({ emailAtual, onEmailChange }: { emailAtual: string; onE
     if (novaSenha.length < 8) { toast.error("Nova senha precisa de no mínimo 8 caracteres."); return; }
     if (novaSenha !== confSenha) { toast.error("Confirmação de senha não confere."); return; }
     setTrocandoSenha(true);
+    // Valida contra password_policy
+    const validation = await validatePassword(novaSenha);
+    if (!validation.valid) {
+      setTrocandoSenha(false);
+      toast.error("Senha: " + validation.errors.join(", "));
+      return;
+    }
     // Re-autentica para validar a senha atual
     const reauth = await supabase.auth.signInWithPassword({ email: emailAtual, password: senhaAtual });
     if (reauth.error) {
