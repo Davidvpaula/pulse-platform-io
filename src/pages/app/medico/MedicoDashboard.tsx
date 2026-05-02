@@ -447,6 +447,45 @@ export default function MedicoDashboard() {
         </div>
       )}
 
+      {/* Ranking & Saldo de Crescimento */}
+      {isMedico && (
+        <Link to="/app/medico/gamificacao" className="card-elevated p-5 transition hover:border-primary/40 block">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-warning" />
+              <h3 className="font-display text-base font-semibold">Ranking & Crescimento</h3>
+            </div>
+            <span className="text-xs text-primary font-medium">Ver detalhes →</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-bold text-lg mb-1">
+                {rankingData?.posicao ? `#${rankingData.posicao}` : "—"}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Posição</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{rankingData?.ranking_score?.toFixed(1) ?? "—"}</p>
+              <p className="text-[11px] text-muted-foreground">Score</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Star className="h-4 w-4 fill-warning text-warning" />
+                <span className="text-2xl font-bold">{rankingData?.avaliacao_media?.toFixed(1) ?? "—"}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{rankingData?.total_avaliacoes ?? 0} avaliações</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Award className="h-4 w-4 text-primary" />
+                <span className="text-2xl font-bold">{saldoCrescimento.toFixed(0)}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Saldo (pts)</p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Próximas consultas reais */}
         <div className="card-elevated p-6 lg:col-span-2">
