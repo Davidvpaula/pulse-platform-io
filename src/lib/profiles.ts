@@ -161,8 +161,15 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Saques médicos", to: "/app/admin/financeiro/saques-medicos", requiresCapability: "financeiro.saques.ver" },
         ],
       },
-      { label: "Serviços", to: "/app/admin/servicos", icon: Stethoscope, requiresCapability: "financeiro.servicos_gerenciar" },
-      { label: "Atendimento imediato", to: "/app/admin/atendimento-imediato", icon: Activity, requiresCapability: "financeiro.servicos_gerenciar" },
+      {
+        label: "Serviços",
+        icon: Stethoscope,
+        requiresCapability: "financeiro.servicos_gerenciar",
+        children: [
+          { label: "Catálogo de serviços", to: "/app/admin/servicos" },
+          { label: "Atendimento imediato", to: "/app/admin/atendimento-imediato" },
+        ],
+      },
       { label: "Cupons", to: "/app/admin/cupons", icon: Tag, requiresCapability: "financeiro.servicos_gerenciar" },
       {
         label: "Planos",
