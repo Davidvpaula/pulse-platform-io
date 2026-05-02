@@ -183,7 +183,20 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
 
 export function AppBreadcrumb() {
   const { pathname } = useLocation();
-  const crumbs = BREADCRUMB_MAP[pathname];
+
+  // Try exact match first, then pattern match for dynamic routes
+  let crumbs = BREADCRUMB_MAP[pathname];
+  if (!crumbs) {
+    for (const [pattern, value] of Object.entries(BREADCRUMB_MAP)) {
+      if (pattern.includes(":")) {
+        const regex = new RegExp("^" + pattern.replace(/:[^/]+/g, "[^/]+") + "$");
+        if (regex.test(pathname)) {
+          crumbs = value;
+          break;
+        }
+      }
+    }
+  }
 
   if (!crumbs || crumbs.length <= 1) return null;
 
