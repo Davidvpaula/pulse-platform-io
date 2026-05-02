@@ -157,7 +157,7 @@ export default function AdminTermosCondicoes() {
     setShowCreate(true);
   };
 
-  const termosPorTipo = (tipo: TermoTipo) => termos.filter(t => t.tipo === tipo);
+  const termosPorTipo = (tipo: TermoTipo) => termosFiltrados.filter(t => t.tipo === tipo);
   const termoAtivo = (tipo: TermoTipo) => termos.find(t => t.tipo === tipo && t.status === "ativo");
 
   const renderCategoria = (label: string, tipos: TermoTipo[]) => (
