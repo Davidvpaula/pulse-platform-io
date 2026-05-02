@@ -100,7 +100,14 @@ export default function MedicoTreinamento() {
               <div key={m.id} className="card-elevated overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-5">
                   <div>
-                    <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
+                      {m.obrigatorio && (
+                        <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
+                          <ShieldCheck className="mr-1 h-3 w-3" /> Obrigatório
+                        </Badge>
+                      )}
+                    </div>
                     {m.descricao && <p className="text-sm text-muted-foreground">{m.descricao}</p>}
                   </div>
                   <div className="text-xs text-muted-foreground">
