@@ -354,6 +354,7 @@ export type Database = {
           storage_path: string
           tamanho_bytes: number | null
           uploader_id: string
+          visibilidade_empresa: boolean
         }
         Insert: {
           consulta_id: string
@@ -365,6 +366,7 @@ export type Database = {
           storage_path: string
           tamanho_bytes?: number | null
           uploader_id: string
+          visibilidade_empresa?: boolean
         }
         Update: {
           consulta_id?: string
@@ -376,6 +378,7 @@ export type Database = {
           storage_path?: string
           tamanho_bytes?: number | null
           uploader_id?: string
+          visibilidade_empresa?: boolean
         }
         Relationships: [
           {

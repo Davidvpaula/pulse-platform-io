@@ -1,0 +1,1 @@
+ALTER TABLE public.anexos_consulta ADD COLUMN IF NOT EXISTS visibilidade_empresa BOOLEAN NOT NULL DEFAULT false;
