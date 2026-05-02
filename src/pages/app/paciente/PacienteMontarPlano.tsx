@@ -60,7 +60,7 @@ export default function PacienteMontarPlano() {
   const valorBruto = selectedIds.size * valorBasePorMedico;
   const valorFinal = Math.round(valorBruto * (1 - descontoPct / 100));
 
-  const toReais = (c: number) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+  
 
   const filtered = medicos.filter(m =>
     !busca || m.nome.toLowerCase().includes(busca.toLowerCase()) || m.especialidade.toLowerCase().includes(busca.toLowerCase())

@@ -121,7 +121,7 @@ export default function MedicoPlanos() {
     }
   }
 
-  const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+  
 
   const canCancel = (p: any) => ["ativo", "inativo"].includes(p.status);
 

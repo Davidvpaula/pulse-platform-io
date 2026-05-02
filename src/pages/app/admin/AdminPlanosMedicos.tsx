@@ -35,7 +35,7 @@ export default function AdminPlanosMedicos() {
 
   useEffect(() => { load(); }, []);
 
-  const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+  
 
   async function toggleAprovacao(p: any) {
     const novo = !p.aprovado_admin;

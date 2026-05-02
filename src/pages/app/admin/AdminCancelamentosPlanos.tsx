@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelado: "bg-red-100 text-red-800",
 };
 
-const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+
 
 export default function AdminCancelamentosPlanos() {
   const [eventos, setEventos] = useState<any[]>([]);
