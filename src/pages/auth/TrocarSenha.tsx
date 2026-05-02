@@ -25,6 +25,7 @@ export default function TrocarSenha() {
   const navigate = useNavigate();
   const [policy, setPolicy] = useState<{ min_length: number; expiration_days: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [senha, setSenha] = useState("");
 
   useEffect(() => {
     if (!loading && !session) navigate("/auth", { replace: true });
