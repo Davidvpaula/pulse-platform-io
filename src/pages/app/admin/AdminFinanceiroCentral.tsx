@@ -12,8 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { validarCobranca } from "@/lib/validation/cobranca";
 import { brl, downloadCSV } from "@/lib/relatorios/utils";
+import { NovaCobrancaDialog } from "@/components/financeiro/NovaCobrancaDialog";
 
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
