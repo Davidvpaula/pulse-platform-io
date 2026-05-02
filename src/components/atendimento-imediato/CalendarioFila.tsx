@@ -1,15 +1,12 @@
 import { Sun, Sunset, Moon } from "lucide-react";
 import SlotCelula, { type SlotEstado } from "./SlotCelula";
-import {
-  turnoDoSlot,
-  type MockSlot,
-} from "@/lib/mocks/atendimentoImediatoMock";
+import { turnoDoSlot, type PASlot } from "@/lib/pa-types";
 
 type Props = {
-  slots: MockSlot[];
+  slots: PASlot[];
   estadoPorSlot: Map<string, { estado: SlotEstado; vagas: number; capacidade: number }>;
   destacar: string | null;
-  onPick: (slot: MockSlot) => void;
+  onPick: (slot: PASlot) => void;
 };
 
 const TURNOS = [
@@ -36,8 +33,8 @@ export default function CalendarioFila({ slots, estadoPorSlot, destacar, onPick 
               {doTurno.map((s) => {
                 const info = estadoPorSlot.get(s.key) ?? {
                   estado: "livre" as SlotEstado,
-                  vagas: s.medicosDisponiveis.length,
-                  capacidade: s.medicosDisponiveis.length,
+                  vagas: s.total_vagas,
+                  capacidade: s.total_vagas,
                 };
                 return (
                   <SlotCelula
