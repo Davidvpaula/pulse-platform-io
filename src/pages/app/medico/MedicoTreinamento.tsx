@@ -50,12 +50,30 @@ export default function MedicoTreinamento() {
   const totalAulas = modulos.reduce((s, m) => s + m.aulas.length, 0);
   const progresso = totalAulas ? Math.round((concluidas.size / totalAulas) * 100) : 0;
 
+  // Mandatory training check
+  const obrigatorios = modulos.filter(m => m.obrigatorio);
+  const aulasObrigatorias = obrigatorios.flatMap(m => m.aulas);
+  const obrigFaltando = aulasObrigatorias.filter(a => !concluidas.has(a.id)).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Treinamento"
         description="Vídeos, aulas e boas práticas para uso da plataforma."
       />
+
+      {/* Aviso de treinamento obrigatório pendente */}
+      {obrigFaltando > 0 && (
+        <div className="card-elevated border-l-4 border-l-destructive p-4 flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Você precisa concluir o treinamento para aparecer para pacientes</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {obrigFaltando} aula{obrigFaltando > 1 ? "s" : ""} obrigatória{obrigFaltando > 1 ? "s" : ""} pendente{obrigFaltando > 1 ? "s" : ""}. Assista e confirme cada uma.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Progresso geral */}
       <div className="card-elevated p-6">
