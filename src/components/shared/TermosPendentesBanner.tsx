@@ -12,6 +12,7 @@ import {
   buscarTermosPendentes, registrarAceite, TERMO_TIPO_LABELS,
   type TermoRow,
 } from "@/lib/termos";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 /**
  * Verifica periodicamente se há termos pendentes de aceite e exibe
@@ -114,7 +115,7 @@ export default function TermosPendentesBanner() {
           <ScrollArea className="flex-1 max-h-[55vh] border rounded-md p-4">
             <div
               className="prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: current?.conteudo ?? "" }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(current?.conteudo ?? "") }}
             />
           </ScrollArea>
 
