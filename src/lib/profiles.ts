@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy, Send,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -76,6 +76,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Meus Planos", to: "/app/medico/planos", icon: BadgeCheck },
       { label: "Gamificação & Ranking", to: "/app/medico/gamificacao", icon: Trophy },
       { label: "Corporativo", to: "/app/medico/corporativo", icon: Building2 },
+      { label: "Propostas", to: "/app/medico/propostas", icon: Send },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],
@@ -145,6 +146,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Gestão B2B", to: "/app/admin/gestao-b2b" },
           { label: "Planos empresariais", to: "/app/admin/planos-empresariais" },
           { label: "Faturamento", to: "/app/admin/faturamento-b2b" },
+          { label: "Propostas B2B", to: "/app/admin/propostas-b2b" },
           { label: "Relatórios", to: "/app/admin/relatorios-b2b" },
         ],
       },
@@ -261,6 +263,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Documentos", to: "/app/empresa/documentos", icon: FileText },
       { label: "Relatórios", to: "/app/empresa/relatorios", icon: FileBarChart },
       { label: "Financeiro", to: "/app/empresa/financeiro", icon: Wallet },
+      { label: "Propostas", to: "/app/empresa/propostas", icon: Send },
       { label: "Termos", to: "/app/empresa/termos", icon: ShieldCheck },
       { label: "Perfil", to: "/app/empresa/perfil", icon: Building2 },
     ],

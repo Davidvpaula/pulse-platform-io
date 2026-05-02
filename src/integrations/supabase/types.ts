@@ -4936,6 +4936,120 @@ export type Database = {
           },
         ]
       }
+      propostas_empresa_medico: {
+        Row: {
+          admin_id: string | null
+          aprovado_em: string | null
+          created_at: string
+          empresa_id: string
+          especialidade_id: string | null
+          id: string
+          medico_id: string
+          mensagem_empresa: string | null
+          mensagem_medico: string | null
+          observacao_admin: string | null
+          plano_gerado_id: string | null
+          qtd_atendimentos: number | null
+          respondido_em: string | null
+          status: Database["public"]["Enums"]["proposta_empresa_status"]
+          taxa_plataforma_pct: number | null
+          termo_empresa_aceito: boolean
+          termo_empresa_versao: number | null
+          termo_medico_aceito: boolean
+          termo_medico_versao: number | null
+          tipo_contrato: Database["public"]["Enums"]["proposta_tipo_contrato"]
+          updated_at: string
+          valor_ajustado_centavos: number | null
+          valor_mensal_centavos: number
+        }
+        Insert: {
+          admin_id?: string | null
+          aprovado_em?: string | null
+          created_at?: string
+          empresa_id: string
+          especialidade_id?: string | null
+          id?: string
+          medico_id: string
+          mensagem_empresa?: string | null
+          mensagem_medico?: string | null
+          observacao_admin?: string | null
+          plano_gerado_id?: string | null
+          qtd_atendimentos?: number | null
+          respondido_em?: string | null
+          status?: Database["public"]["Enums"]["proposta_empresa_status"]
+          taxa_plataforma_pct?: number | null
+          termo_empresa_aceito?: boolean
+          termo_empresa_versao?: number | null
+          termo_medico_aceito?: boolean
+          termo_medico_versao?: number | null
+          tipo_contrato?: Database["public"]["Enums"]["proposta_tipo_contrato"]
+          updated_at?: string
+          valor_ajustado_centavos?: number | null
+          valor_mensal_centavos: number
+        }
+        Update: {
+          admin_id?: string | null
+          aprovado_em?: string | null
+          created_at?: string
+          empresa_id?: string
+          especialidade_id?: string | null
+          id?: string
+          medico_id?: string
+          mensagem_empresa?: string | null
+          mensagem_medico?: string | null
+          observacao_admin?: string | null
+          plano_gerado_id?: string | null
+          qtd_atendimentos?: number | null
+          respondido_em?: string | null
+          status?: Database["public"]["Enums"]["proposta_empresa_status"]
+          taxa_plataforma_pct?: number | null
+          termo_empresa_aceito?: boolean
+          termo_empresa_versao?: number | null
+          termo_medico_aceito?: boolean
+          termo_medico_versao?: number | null
+          tipo_contrato?: Database["public"]["Enums"]["proposta_tipo_contrato"]
+          updated_at?: string
+          valor_ajustado_centavos?: number | null
+          valor_mensal_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propostas_empresa_medico_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_empresa_medico_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_empresa_medico_especialidade_id_fkey"
+            columns: ["especialidade_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_empresa_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_empresa_medico_plano_gerado_id_fkey"
+            columns: ["plano_gerado_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ranking_config: {
         Row: {
           cpc_padrao_centavos: number
@@ -6670,6 +6784,16 @@ export type Database = {
         | "arquivado"
         | "encerramento_pendente"
         | "encerrado"
+      proposta_empresa_status:
+        | "criada"
+        | "em_analise"
+        | "aprovada_admin"
+        | "enviada_medico"
+        | "aceita"
+        | "recusada"
+        | "convertida"
+        | "cancelada"
+      proposta_tipo_contrato: "mensal" | "pacote" | "recorrente"
       reembolso_status:
         | "solicitado"
         | "em_analise"
@@ -6720,6 +6844,8 @@ export type Database = {
         | "gamificacao_premium"
         | "criacao_plano_medico"
         | "uso_feegow"
+        | "proposta_empresa"
+        | "proposta_medico"
       tipo_conta_bancaria: "corrente" | "poupanca"
       tipo_pessoa: "pf" | "pj"
       whatsapp_instance_status:
@@ -7150,6 +7276,17 @@ export const Constants = {
         "encerramento_pendente",
         "encerrado",
       ],
+      proposta_empresa_status: [
+        "criada",
+        "em_analise",
+        "aprovada_admin",
+        "enviada_medico",
+        "aceita",
+        "recusada",
+        "convertida",
+        "cancelada",
+      ],
+      proposta_tipo_contrato: ["mensal", "pacote", "recorrente"],
       reembolso_status: [
         "solicitado",
         "em_analise",
@@ -7204,6 +7341,8 @@ export const Constants = {
         "gamificacao_premium",
         "criacao_plano_medico",
         "uso_feegow",
+        "proposta_empresa",
+        "proposta_medico",
       ],
       tipo_conta_bancaria: ["corrente", "poupanca"],
       tipo_pessoa: ["pf", "pj"],

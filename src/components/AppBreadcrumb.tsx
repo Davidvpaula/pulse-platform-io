@@ -62,6 +62,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/gestao-b2b":      [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B" }],
   "/app/admin/relatorios-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Relatórios" }],
   "/app/admin/faturamento-b2b": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Faturamento" }],
+  "/app/admin/propostas-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Propostas B2B" }],
   "/app/admin/contrato-b2b/:id": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B", to: "/app/admin/gestao-b2b" }, { label: "Detalhes do Contrato" }],
 
   // ── Admin: Financeiro ──
@@ -134,6 +135,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/medico/dashboard":       [{ label: "Médico" }, { label: "Dashboard" }],
   "/app/medico/agenda":          [medico(), { label: "Agenda" }],
   "/app/medico/corporativo":     [medico(), { label: "Corporativo" }],
+  "/app/medico/propostas":       [medico(), { label: "Propostas Comerciais" }],
   "/app/medico/horarios":        [medico(), { label: "Meus horários" }],
   "/app/medico/consultas":       [medico(), { label: "Consultas" }],
   "/app/medico/servicos":        [medico(), { label: "Serviços da plataforma" }],
@@ -177,6 +179,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/empresa/documentos":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Documentos" }],
   "/app/empresa/relatorios":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Relatórios" }],
   "/app/empresa/financeiro":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Financeiro" }],
+  "/app/empresa/propostas":    [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Propostas Comerciais" }],
   "/app/empresa/termos":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Termos" }],
   "/app/empresa/perfil":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Perfil" }],
 };

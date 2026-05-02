@@ -119,7 +119,10 @@ import AdminGestaoB2B from "@/pages/app/admin/AdminGestaoB2B";
 import AdminRelatoriosB2B from "@/pages/app/admin/AdminRelatoriosB2B";
 import AdminFaturamentoB2B from "@/pages/app/admin/AdminFaturamentoB2B";
 import AdminContratoDetalhes from "@/pages/app/admin/AdminContratoDetalhes";
+import AdminPropostasB2B from "@/pages/app/admin/AdminPropostasB2B";
 import MedicoCorporativo from "@/pages/app/medico/MedicoCorporativo";
+import MedicoPropostas from "@/pages/app/medico/MedicoPropostas";
+import EmpresaPropostas from "@/pages/app/empresa/EmpresaPropostas";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
@@ -224,6 +227,7 @@ const App = () => (
               <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
 
               <Route path="medico/corporativo" element={<MedicoGuard><MedicoCorporativo /></MedicoGuard>} />
+              <Route path="medico/propostas" element={<MedicoGuard><MedicoPropostas /></MedicoGuard>} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
@@ -271,6 +275,7 @@ const App = () => (
               <Route path="admin/relatorios-b2b" element={<G perm="empresas.ver"><AdminRelatoriosB2B /></G>} />
               <Route path="admin/faturamento-b2b" element={<G perm="empresas.ver"><AdminFaturamentoB2B /></G>} />
               <Route path="admin/contrato-b2b/:id" element={<G perm="empresas.ver"><AdminContratoDetalhes /></G>} />
+              <Route path="admin/propostas-b2b" element={<G perm="empresas.ver"><AdminPropostasB2B /></G>} />
               <Route path="admin/agendamentos" element={<G perm="agenda.ver_todas"><AdminAgendamentos /></G>} />
               <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
@@ -328,6 +333,7 @@ const App = () => (
               <Route path="empresa/financeiro" element={<EmpresaFinanceiro />} />
               <Route path="empresa/documentos" element={<EmpresaDocumentos />} />
               <Route path="empresa/termos" element={<EmpresaTermos />} />
+              <Route path="empresa/propostas" element={<EmpresaPropostas />} />
               <Route path="empresa/perfil" element={<EmpresaPerfilPage />} />
 
               {/* Comunicação */}
