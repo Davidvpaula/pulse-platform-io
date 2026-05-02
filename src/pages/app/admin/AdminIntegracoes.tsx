@@ -434,6 +434,12 @@ function CardIntegracao({ intg, onTestar, onConfig }: {
           {intg.modo_simulado && <Badge variant="outline" className="text-xs"><TestTube2 className="mr-1 h-3 w-3" />Simulado</Badge>}
           {!intg.ativo && <Badge variant="outline" className="text-xs">Pausada</Badge>}
         </div>
+        {intg.secrets_keys && intg.secrets_keys.length > 0 && intg.status !== "conectado" && (
+          <div className="rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+            <Shield className="mr-1 inline h-3 w-3" />
+            Secrets pendentes: {intg.secrets_keys.join(", ")}
+          </div>
+        )}
       </CardContent>
       <div className="flex gap-2 border-t border-border p-3">
         <Button size="sm" variant="outline" className="flex-1" onClick={() => onConfig(intg)}>
