@@ -252,6 +252,11 @@ export default function AdminTermosCondicoes() {
                               <Button size="icon" variant="ghost" title="Visualizar" onClick={() => setPreviewTermo(t)}>
                                 <Eye className="h-4 w-4" />
                               </Button>
+                              {t.status === "inativo" && (
+                                <Button size="icon" variant="ghost" title="Editar rascunho" onClick={() => handleOpenEdit(t)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button size="icon" variant="ghost" title={t.status === "ativo" ? "Desativar" : "Ativar"} onClick={() => handleToggle(t)}>
                                 {t.status === "ativo" ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4" />}
                               </Button>
