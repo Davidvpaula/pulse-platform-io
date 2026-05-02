@@ -106,6 +106,12 @@ export default function MedicoGamificacao() {
           icon={Users}
           hint={`${ranking?.total_agendamentos ?? 0} agendamentos no total`}
         />
+        <StatCard
+          label="Saldo crescimento"
+          value={saldoCrescimento.toFixed(0)}
+          icon={Award}
+          hint="Pontos acumulados por performance"
+        />
       </div>
 
       {/* Detalhes performance */}
