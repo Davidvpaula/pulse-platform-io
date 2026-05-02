@@ -81,18 +81,20 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
       <div className="flex flex-1 w-full">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+        <div className="flow-stripe w-full" />
+        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
-            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+            <div className="flow-stripe w-full" />
+            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
           </aside>
         </div>
       )}
