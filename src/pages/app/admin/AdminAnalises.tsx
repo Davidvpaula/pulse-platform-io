@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  Activity, Users, TrendingUp, Wallet, Target, Eye, MousePointerClick, Smartphone,
-  Globe, Plus, Loader2, ArrowUp, ArrowDown, RefreshCw, Download,
+  Activity, Users, TrendingUp, Wallet, Target, Eye, Smartphone,
+  Globe, Plus, Loader2, ArrowUp, ArrowDown, RefreshCw, Download, Edit2, Power,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -34,7 +36,6 @@ function pct(now: number, prev: number) {
   if (!prev) return now > 0 ? 100 : 0;
   return Math.round(((now - prev) / prev) * 100);
 }
-
 
 function downloadCSV(filename: string, rows: any[]) {
   if (!rows.length) return;
@@ -63,6 +64,7 @@ export default function AdminAnalises() {
   const [campanhas, setCampanhas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [novaCampanha, setNovaCampanha] = useState(false);
+  const [editCampanha, setEditCampanha] = useState<any | null>(null);
 
   async function carregar() {
     setLoading(true);
@@ -88,20 +90,36 @@ export default function AdminAnalises() {
     setTempoReal(data);
   }
 
+  async function toggleCampanhaAtivo(id: string, ativo: boolean) {
+    const { error } = await supabase.from("marketing_campaigns").update({ ativo: !ativo }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(ativo ? "Campanha desativada" : "Campanha ativada");
+    carregar();
+  }
+
   useEffect(() => { carregar(); }, [periodo]);
 
-  // polling tempo real
   useEffect(() => {
     carregarTempoReal();
     const id = setInterval(carregarTempoReal, 10_000);
     return () => clearInterval(id);
   }, []);
 
+  // CSV helpers for each tab
+  const overviewCSV = () => {
+    if (!overview) return;
+    downloadCSV("analises_overview.csv", [{
+      sessoes: overview.sessoes, visitantes_unicos: overview.visitantes_unicos,
+      conversoes: overview.conversoes, receita: overview.receita,
+      taxa_conversao: overview.taxa_conversao, ticket_medio: overview.ticket_medio,
+    }]);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Análises"
-        description="Painel estratégico — tráfego, conversão, receita por canal e ROI de marketing. (Diferente de Relatórios, que é operacional.)"
+        description="Painel estratégico — tráfego, conversão, receita por canal e ROI de marketing."
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -132,8 +150,11 @@ export default function AdminAnalises() {
 
         {/* === VISÃO GERAL === */}
         <TabsContent value="overview" className="space-y-4">
-          {loading ? <Loading /> : (
+          {loading ? <KpiSkeleton count={6} /> : (
             <>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={overviewCSV}><Download className="h-3 w-3 mr-1" /> CSV</Button>
+              </div>
               <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
                 <Kpi icon={Eye} label="Sessões" value={overview?.sessoes ?? 0} delta={pct(overview?.sessoes ?? 0, overview?.sessoes_prev ?? 0)} />
                 <Kpi icon={Users} label="Visitantes únicos" value={overview?.visitantes_unicos ?? 0} delta={pct(overview?.visitantes_unicos ?? 0, overview?.visitantes_unicos_prev ?? 0)} />
@@ -210,8 +231,11 @@ export default function AdminAnalises() {
 
         {/* === TRÁFEGO === */}
         <TabsContent value="trafego" className="space-y-4">
-          {loading ? <Loading /> : (
+          {loading ? <KpiSkeleton count={4} /> : (
             <>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => downloadCSV("trafego_origem.csv", trafego?.origem || [])}><Download className="h-3 w-3 mr-1" /> CSV Origens</Button>
+              </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <Kpi icon={Eye} label="Sessões" value={overview?.sessoes ?? 0} />
                 <Kpi icon={Users} label="Únicos" value={overview?.visitantes_unicos ?? 0} />
@@ -256,11 +280,16 @@ export default function AdminAnalises() {
           )}
         </TabsContent>
 
-        {/* === COMPORTAMENTO (placeholder funcional com páginas mais acessadas) === */}
+        {/* === COMPORTAMENTO === */}
         <TabsContent value="comportamento" className="space-y-4">
-          {loading ? <Loading /> : (
+          {loading ? <KpiSkeleton count={1} /> : (
             <Card>
-              <CardHeader><CardTitle>Páginas mais acessadas</CardTitle></CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Páginas mais acessadas</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => downloadCSV("comportamento_paginas.csv", conversao?.por_pagina || [])}>
+                  <Download className="h-3 w-3 mr-1" /> CSV
+                </Button>
+              </CardHeader>
               <CardContent>
                 {conversao?.por_pagina?.length ? (
                   <table className="min-w-full text-sm">
@@ -285,17 +314,19 @@ export default function AdminAnalises() {
                   </table>
                 ) : <Empty />}
               </CardContent>
-              <CardContent className="border-t border-border text-xs text-muted-foreground">
-                💡 Tempo médio na página, taxa de rejeição e fluxo de navegação estarão disponíveis na próxima rodada — exigem agregações temporais mais elaboradas.
-              </CardContent>
             </Card>
           )}
         </TabsContent>
 
         {/* === CONVERSÃO === */}
         <TabsContent value="conversao" className="space-y-4">
-          {loading ? <Loading /> : (
+          {loading ? <KpiSkeleton count={2} /> : (
             <>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => downloadCSV("conversao_por_servico.csv", conversao?.por_servico || [])}>
+                  <Download className="h-3 w-3 mr-1" /> CSV Serviços
+                </Button>
+              </div>
               <Card>
                 <CardHeader><CardTitle>Funil de conversão</CardTitle></CardHeader>
                 <CardContent>
@@ -350,7 +381,7 @@ export default function AdminAnalises() {
 
         {/* === FINANCEIRO === */}
         <TabsContent value="financeiro" className="space-y-4">
-          {loading ? <Loading /> : (
+          {loading ? <KpiSkeleton count={3} /> : (
             <RequirePermission perm="analises.financeiro" showFallback>
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-3">
@@ -382,7 +413,12 @@ export default function AdminAnalises() {
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle>Receita por serviço</CardTitle></CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle>Receita por serviço</CardTitle>
+                      <Button variant="ghost" size="sm" onClick={() => downloadCSV("receita_servico.csv", financeiro?.receita_por_servico || [])}>
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    </CardHeader>
                     <CardContent>
                       {financeiro?.receita_por_servico?.length ? (
                         <table className="min-w-full text-sm">
@@ -405,7 +441,12 @@ export default function AdminAnalises() {
                 </div>
 
                 <Card>
-                  <CardHeader><CardTitle>ROI das campanhas (manual)</CardTitle></CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>ROI das campanhas</CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => downloadCSV("roi_campanhas.csv", financeiro?.roi_campanhas || [])}>
+                      <Download className="h-3 w-3" />
+                    </Button>
+                  </CardHeader>
                   <CardContent>
                     {financeiro?.roi_campanhas?.length ? (
                       <table className="min-w-full text-sm">
@@ -446,7 +487,10 @@ export default function AdminAnalises() {
         <TabsContent value="marketing" className="space-y-4">
           <RequirePermission perm="analises.marketing" showFallback>
             <div className="space-y-4">
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => downloadCSV("campanhas.csv", campanhas)}>
+                  <Download className="h-3 w-3 mr-1" /> CSV
+                </Button>
                 <Button onClick={() => setNovaCampanha(true)}><Plus className="mr-1 h-3 w-3" /> Nova campanha</Button>
               </div>
               <Card>
@@ -459,9 +503,10 @@ export default function AdminAnalises() {
                           <th className="p-2 text-left">Nome</th>
                           <th className="p-2 text-left">Canal</th>
                           <th className="p-2 text-left">UTM source</th>
-                          <th className="p-2 text-left">UTM campanha</th>
                           <th className="p-2 text-left">Período</th>
                           <th className="p-2 text-right">Custo</th>
+                          <th className="p-2 text-center">Status</th>
+                          <th className="p-2 text-center">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -470,11 +515,23 @@ export default function AdminAnalises() {
                             <td className="p-2 font-medium">{c.nome}</td>
                             <td className="p-2 capitalize">{c.canal.replace("_", " ")}</td>
                             <td className="p-2 font-mono text-xs">{c.utm_source || "—"}</td>
-                            <td className="p-2 font-mono text-xs">{c.utm_campaign || "—"}</td>
-                            <td className="p-2 text-xs">
-                              {c.inicio || "?"} → {c.fim || "—"}
-                            </td>
+                            <td className="p-2 text-xs">{c.inicio || "?"} → {c.fim || "—"}</td>
                             <td className="p-2 text-right">{brl(Number(c.custo_total))}</td>
+                            <td className="p-2 text-center">
+                              <Badge className={c.ativo !== false ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}>
+                                {c.ativo !== false ? "Ativa" : "Inativa"}
+                              </Badge>
+                            </td>
+                            <td className="p-2 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button size="icon" variant="ghost" onClick={() => setEditCampanha(c)} title="Editar">
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button size="icon" variant="ghost" onClick={() => toggleCampanhaAtivo(c.id, c.ativo !== false)} title={c.ativo !== false ? "Desativar" : "Ativar"}>
+                                  <Power className={`h-3.5 w-3.5 ${c.ativo !== false ? "text-success" : "text-muted-foreground"}`} />
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -488,28 +545,64 @@ export default function AdminAnalises() {
 
         {/* === COMPARATIVO === */}
         <TabsContent value="comparativo" className="space-y-4">
-          {loading ? <Loading /> : (
-            <Card>
-              <CardHeader><CardTitle>Comparativo: período atual vs anterior</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Comp label="Sessões" agora={overview?.sessoes ?? 0} antes={overview?.sessoes_prev ?? 0} />
-                  <Comp label="Visitantes únicos" agora={overview?.visitantes_unicos ?? 0} antes={overview?.visitantes_unicos_prev ?? 0} />
-                  <Comp label="Conversões" agora={overview?.conversoes ?? 0} antes={overview?.conversoes_prev ?? 0} />
-                  <Comp label="Receita" agora={Number(overview?.receita ?? 0)} antes={Number(overview?.receita_prev ?? 0)} brlFmt />
-                </div>
-              </CardContent>
-            </Card>
+          {loading ? <KpiSkeleton count={4} /> : (
+            <>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => downloadCSV("comparativo.csv", [{
+                  sessoes_atual: overview?.sessoes, sessoes_anterior: overview?.sessoes_prev,
+                  unicos_atual: overview?.visitantes_unicos, unicos_anterior: overview?.visitantes_unicos_prev,
+                  conversoes_atual: overview?.conversoes, conversoes_anterior: overview?.conversoes_prev,
+                  receita_atual: overview?.receita, receita_anterior: overview?.receita_prev,
+                }])}>
+                  <Download className="h-3 w-3 mr-1" /> CSV
+                </Button>
+              </div>
+              <Card>
+                <CardHeader><CardTitle>Comparativo: período atual vs anterior</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Comp label="Sessões" agora={overview?.sessoes ?? 0} antes={overview?.sessoes_prev ?? 0} />
+                    <Comp label="Visitantes únicos" agora={overview?.visitantes_unicos ?? 0} antes={overview?.visitantes_unicos_prev ?? 0} />
+                    <Comp label="Conversões" agora={overview?.conversoes ?? 0} antes={overview?.conversoes_prev ?? 0} />
+                    <Comp label="Receita" agora={Number(overview?.receita ?? 0)} antes={Number(overview?.receita_prev ?? 0)} brlFmt />
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
         </TabsContent>
       </Tabs>
 
-      <NovaCampanhaSheet open={novaCampanha} onOpenChange={setNovaCampanha} onSaved={carregar} />
+      <CampanhaSheet
+        open={novaCampanha}
+        onOpenChange={setNovaCampanha}
+        onSaved={carregar}
+      />
+      <CampanhaSheet
+        open={!!editCampanha}
+        onOpenChange={(v) => { if (!v) setEditCampanha(null); }}
+        onSaved={() => { setEditCampanha(null); carregar(); }}
+        campanha={editCampanha}
+      />
     </div>
   );
 }
 
 /* ---------------- COMPONENTES ---------------- */
+
+function KpiSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className={`grid gap-3 md:grid-cols-3 ${count >= 6 ? "lg:grid-cols-6" : count >= 4 ? "lg:grid-cols-4" : ""}`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="card-elevated p-4 space-y-2">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-3 w-28" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Kpi({ icon: Icon, label, value, delta }: any) {
   return (
@@ -529,12 +622,6 @@ function Kpi({ icon: Icon, label, value, delta }: any) {
   );
 }
 
-function Loading() {
-  return <div className="flex items-center justify-center p-12 text-muted-foreground">
-    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
-  </div>;
-}
-
 function Empty({ texto = "Sem dados no período selecionado" }: { texto?: string }) {
   return <div className="py-8 text-center text-sm text-muted-foreground">{texto}</div>;
 }
@@ -550,7 +637,7 @@ function Funil({ dados }: { dados: any }) {
   return (
     <div className="space-y-2">
       {steps.map((s, i) => {
-        const pct = Math.round((s.v / max) * 100);
+        const p = Math.round((s.v / max) * 100);
         const conv = i > 0 && steps[i - 1].v > 0 ? Math.round((s.v / steps[i - 1].v) * 100) : null;
         return (
           <div key={s.label}>
@@ -561,7 +648,7 @@ function Funil({ dados }: { dados: any }) {
               </span>
             </div>
             <div className="mt-1 h-3 overflow-hidden rounded-full bg-muted">
-              <div className={`h-full ${s.color}`} style={{ width: `${pct}%` }} />
+              <div className={`h-full ${s.color}`} style={{ width: `${p}%` }} />
             </div>
           </div>
         );
@@ -593,18 +680,41 @@ function Comp({ label, agora, antes, brlFmt }: { label: string; agora: number; a
   );
 }
 
-function NovaCampanhaSheet({ open, onOpenChange, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+/* ── Sheet de Campanha (criar + editar) ── */
+
+function CampanhaSheet({ open, onOpenChange, onSaved, campanha }: {
+  open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void; campanha?: any;
+}) {
+  const isEdit = !!campanha;
   const [form, setForm] = useState({
     nome: "", canal: "google_ads", utm_source: "", utm_medium: "", utm_campaign: "",
     custo_total: "0", inicio: "", fim: "", observacoes: "",
   });
   const [salvando, setSalvando] = useState(false);
 
+  useEffect(() => {
+    if (campanha) {
+      setForm({
+        nome: campanha.nome ?? "",
+        canal: campanha.canal ?? "google_ads",
+        utm_source: campanha.utm_source ?? "",
+        utm_medium: campanha.utm_medium ?? "",
+        utm_campaign: campanha.utm_campaign ?? "",
+        custo_total: String(campanha.custo_total ?? 0),
+        inicio: campanha.inicio ?? "",
+        fim: campanha.fim ?? "",
+        observacoes: campanha.observacoes ?? "",
+      });
+    } else {
+      setForm({ nome: "", canal: "google_ads", utm_source: "", utm_medium: "", utm_campaign: "", custo_total: "0", inicio: "", fim: "", observacoes: "" });
+    }
+  }, [campanha, open]);
+
   async function salvar() {
     if (!form.nome) { toast.error("Nome obrigatório"); return; }
     setSalvando(true);
-    const { data: auth } = await supabase.auth.getUser();
-    const { error } = await supabase.from("marketing_campaigns").insert({
+
+    const payload = {
       nome: form.nome,
       canal: form.canal,
       utm_source: form.utm_source || null,
@@ -614,20 +724,27 @@ function NovaCampanhaSheet({ open, onOpenChange, onSaved }: { open: boolean; onO
       inicio: form.inicio || null,
       fim: form.fim || null,
       observacoes: form.observacoes || null,
-      created_by: auth.user?.id ?? null,
-    });
+    };
+
+    let error: any;
+    if (isEdit) {
+      ({ error } = await supabase.from("marketing_campaigns").update(payload).eq("id", campanha.id));
+    } else {
+      const { data: auth } = await supabase.auth.getUser();
+      ({ error } = await supabase.from("marketing_campaigns").insert({ ...payload, created_by: auth.user?.id ?? null }));
+    }
+
     setSalvando(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Campanha cadastrada");
+    toast.success(isEdit ? "Campanha atualizada" : "Campanha cadastrada");
     onOpenChange(false);
-    setForm({ nome: "", canal: "google_ads", utm_source: "", utm_medium: "", utm_campaign: "", custo_total: "0", inicio: "", fim: "", observacoes: "" });
     onSaved();
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto sm:max-w-lg">
-        <SheetHeader><SheetTitle>Nova campanha</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{isEdit ? "Editar campanha" : "Nova campanha"}</SheetTitle></SheetHeader>
         <div className="mt-4 space-y-3">
           <div><Label>Nome</Label><Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} /></div>
           <div><Label>Canal</Label>
@@ -653,8 +770,13 @@ function NovaCampanhaSheet({ open, onOpenChange, onSaved }: { open: boolean; onO
             <div><Label className="text-xs">Início</Label><Input type="date" value={form.inicio} onChange={e => setForm({ ...form, inicio: e.target.value })} /></div>
             <div><Label className="text-xs">Fim</Label><Input type="date" value={form.fim} onChange={e => setForm({ ...form, fim: e.target.value })} /></div>
           </div>
+          <div>
+            <Label className="text-xs">Observações</Label>
+            <Input value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} placeholder="Notas internas..." />
+          </div>
           <Button className="w-full" onClick={salvar} disabled={salvando}>
-            {salvando ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null} Salvar
+            {salvando ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+            {isEdit ? "Salvar alterações" : "Cadastrar campanha"}
           </Button>
         </div>
       </SheetContent>
