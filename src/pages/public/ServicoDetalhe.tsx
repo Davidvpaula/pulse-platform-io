@@ -164,29 +164,70 @@ export default function ServicoDetalhe() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-3">Profissionais disponíveis</h2>
-          {medicos.length === 0 ? (
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Profissionais disponíveis</h2>
+            <Select value={ordenacao} onValueChange={(v) => setOrdenacao(v as any)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ranking">Melhor ranking</SelectItem>
+                <SelectItem value="avaliacao">Mais bem avaliados</SelectItem>
+                <SelectItem value="preco">Menor preço</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {sortedMedicos.length === 0 ? (
             <div className="card-elevated p-8 text-center text-muted-foreground">
               Nenhum profissional vinculado a este serviço no momento.
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
-              {medicos.map((m) => (
-                <div key={m.medico_id} className="card-elevated p-4 flex items-center gap-3">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
+              {/* Patrocinados primeiro */}
+              {sortedMedicos.map((m) => (
+                <div key={m.medico_id} className={cn(
+                  "card-elevated p-4 flex items-center gap-3 relative",
+                  m.is_patrocinado && "border border-primary/20",
+                )}>
+                  {m.is_patrocinado && (
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-primary/10 text-primary text-[10px] gap-1">
+                        <Megaphone className="h-3 w-3" /> Patrocinado
+                      </Badge>
+                    </div>
+                  )}
+                  <div className={cn(
+                    "grid h-12 w-12 place-items-center rounded-full font-bold text-primary-foreground shrink-0",
+                    m.is_premium ? "bg-gradient-to-br from-amber-500 to-yellow-400" : "bg-gradient-primary",
+                  )}>
                     {m.nome.split(" ").map((s) => s[0]).slice(0, 2).join("")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">Dr(a). {m.nome}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium truncate">Dr(a). {m.nome}</p>
+                      {m.is_premium && (
+                        <Crown className="h-4 w-4 text-amber-500 shrink-0" title="Premium" />
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       <Stethoscope className="h-3 w-3 inline mr-1" />
                       {m.especialidade ?? "Clínica"}
                     </p>
-                    {m.proximo_slot_iso && (
-                      <p className="text-xs text-emerald-600 mt-1">
-                        Próximo: {new Date(m.proximo_slot_iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-3 mt-1">
+                      {(m.total_avaliacoes ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <Star className="h-3 w-3 fill-warning text-warning" />
+                          {(m.avaliacao_media ?? 0).toFixed(1)}
+                          <span className="text-muted-foreground">({m.total_avaliacoes})</span>
+                        </span>
+                      )}
+                      {m.proximo_slot_iso && (
+                        <p className="text-xs text-emerald-600">
+                          Próximo: {new Date(m.proximo_slot_iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   {m.proximo_slot_id ? (
                     <Button size="sm" asChild>
