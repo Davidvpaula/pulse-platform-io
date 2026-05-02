@@ -203,6 +203,11 @@ export default function MedicoConsultas() {
                       {c.paciente_nome ?? "Paciente"}
                     </p>
                     <StatusBadge status={status} />
+                    {c.empresa_id && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                        <Building2 className="h-3 w-3" /> Corporativo
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
                     <Stethoscope className="h-3.5 w-3.5" />
