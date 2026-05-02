@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { integracoes } from "@/lib/mock";
+
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState<VisaoGeral | null>(null);
   const [loading, setLoading] = useState(true);
   const [servicos, setServicos] = useState<ServicosResumo | null>(null);
+  const [integracoes, setIntegracoes] = useState<{ nome: string; desc: string; status: string; cor: string }[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +96,35 @@ export default function AdminDashboard() {
         overrides_pendentes: pend ?? 0,
         ticket_medio_centavos: ticket,
       });
+    })();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: rows } = await supabase
+        .from("integracoes_config")
+        .select("nome,descricao,status,modo_simulado")
+        .eq("ativo", true)
+        .order("nome");
+      if (!active) return;
+      const STATUS_MAP: Record<string, { label: string; cor: string }> = {
+        conectado: { label: "Conectado", cor: "info" },
+        simulado: { label: "Modo simulado", cor: "warning" },
+        erro: { label: "Erro", cor: "destructive" },
+        nao_configurado: { label: "Não configurado", cor: "muted" },
+        aguardando_configuracao: { label: "Aguardando configuração", cor: "warning" },
+        manutencao: { label: "Manutenção", cor: "muted" },
+      };
+      setIntegracoes(
+        (rows ?? []).map((r: any) => {
+          const s = r.modo_simulado
+            ? { label: "Modo simulado", cor: "warning" }
+            : STATUS_MAP[r.status] ?? { label: r.status, cor: "muted" };
+          return { nome: r.nome, desc: r.descricao ?? "", status: s.label, cor: s.cor };
+        })
+      );
     })();
     return () => { active = false; };
   }, []);
@@ -343,6 +373,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-muted-foreground">{i.desc}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  i.cor === "destructive" ? "bg-destructive/10 text-destructive" :
                   i.cor === "warning" ? "bg-warning/10 text-warning" :
                   i.cor === "info" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"
                 }`}>
