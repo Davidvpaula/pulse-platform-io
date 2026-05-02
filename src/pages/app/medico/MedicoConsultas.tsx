@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Loader2, Search, Play, User, Stethoscope, History,
+  Loader2, Search, Play, User, Stethoscope, History, Building2,
 } from "lucide-react";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
