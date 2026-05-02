@@ -5456,6 +5456,54 @@ export type Database = {
           },
         ]
       }
+      security_alerts: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          detalhes: Json | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          lida: boolean
+          lida_em: string | null
+          lida_por: string | null
+          severidade: string
+          tipo: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          detalhes?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          lida?: boolean
+          lida_em?: string | null
+          lida_por?: string | null
+          severidade?: string
+          tipo: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          detalhes?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          lida?: boolean
+          lida_em?: string | null
+          lida_por?: string | null
+          severidade?: string
+          tipo?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       servicos_financeiros: {
         Row: {
           ativo: boolean
@@ -6607,6 +6655,7 @@ export type Database = {
         Args: { _pagamento_id: string }
         Returns: Json
       }
+      security_generate_alerts: { Args: never; Returns: Json }
       session_heartbeat: {
         Args: {
           _device_label?: string
