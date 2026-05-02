@@ -88,6 +88,14 @@ export default function MedicoDashboard() {
     if (!medico) { setLoading(false); return; }
     setMedicoNome(medico.nome ?? "");
 
+    // Gamificação: ranking + saldo (em paralelo com o resto)
+    const [rankRes, saldoRes] = await Promise.all([
+      getRankingMedico(medico.id),
+      getSaldoAtual(medico.id),
+    ]);
+    setRankingData(rankRes);
+    setSaldoCrescimento(saldoRes);
+
     // Onboarding: link de sala + ao menos 1 vínculo de especialidade ativo
     const { count: vinculos } = await supabase
       .from("medico_especialidades")
