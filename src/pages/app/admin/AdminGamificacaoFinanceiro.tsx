@@ -1,16 +1,29 @@
 import { useEffect, useState } from "react";
 import {
-  Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap,
+  Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap, Download,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   listarTodasCampanhas, listarTodosPremium, getConversoesPorCampanha,
   type ImpulsionamentoCampanha, type MedicoPremium,
 } from "@/lib/gamificacao";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+function downloadCsv(filename: string, header: string[], rows: string[][]) {
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const csv = [header.map(escape).join(","), ...rows.map(r => r.map(escape).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
@@ -57,11 +70,66 @@ export default function AdminGamificacaoFinanceiro() {
   const premiumsAtivos = premiums.filter((p) => p.ativo).length;
   const taxaConvGlobal = totalCliques > 0 ? totalConversoes / totalCliques : 0;
 
+  const exportKpis = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-kpis-${hoje}.csv`,
+      ["Métrica", "Valor"],
+      [
+        ["Receita CPC total", brl(totalGastoCPC)],
+        ["Orçamento CPC total", brl(totalOrcamentoCPC)],
+        ["Cliques totais", String(totalCliques)],
+        ["Conversões", String(totalConversoes)],
+        ["Taxa de conversão", pct(taxaConvGlobal)],
+        ["Premium ativos", String(premiumsAtivos)],
+        ["Premium total", String(premiums.length)],
+        ["Campanhas total", String(campanhas.length)],
+        ["Campanhas ativas", String(campanhasAtivas)],
+      ],
+    );
+  };
+
+  const exportCampanhas = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-campanhas-${hoje}.csv`,
+      ["Médico", "Campanha", "Status", "Orçamento", "Gasto", "Cliques", "Conversões", "CPC", "ROI %"],
+      campanhas.map(c => [
+        c.nome ?? "—",
+        c.titulo,
+        c.status,
+        brl(c.orcamento_centavos),
+        brl(c.gasto_centavos),
+        String(c.cliques),
+        String(c.conversoes ?? 0),
+        brl(c.cpc_centavos),
+        c.cliques > 0 ? ((c.conversoes ?? 0) / c.cliques * 100).toFixed(1) : "0.0",
+      ]),
+    );
+  };
+
+  const exportPremium = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-premium-${hoje}.csv`,
+      ["Médico", "Status", "Tipo", "Início", "Fim"],
+      premiums.map(p => [
+        p.nome ?? "—",
+        p.ativo ? "Ativo" : "Inativo",
+        p.tipo,
+        p.inicio ? new Date(p.inicio).toLocaleDateString("pt-BR") : "—",
+        p.fim ? new Date(p.fim).toLocaleDateString("pt-BR") : "Sem prazo",
+      ]),
+    );
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Financeiro da Gamificação"
         description="Receita de assinaturas premium, consumo CPC, conversões e métricas de ROI."
+        actions={
+          <Button variant="outline" size="sm" onClick={exportKpis}>
+            <Download className="mr-1.5 h-3.5 w-3.5" /> Exportar KPIs
+          </Button>
+        }
       />
 
       {/* KPIs */}
@@ -80,7 +148,12 @@ export default function AdminGamificacaoFinanceiro() {
             <Crown className="h-5 w-5 text-amber-500" />
             <h3 className="font-display text-lg font-semibold">Membros Premium</h3>
           </div>
-          <Badge variant="secondary">{premiumsAtivos} ativos</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{premiumsAtivos} ativos</Badge>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={exportPremium} title="Exportar CSV">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         {premiums.length === 0 ? (
@@ -124,7 +197,12 @@ export default function AdminGamificacaoFinanceiro() {
             <BarChart3 className="h-5 w-5 text-primary" />
             <h3 className="font-display text-lg font-semibold">Campanhas CPC — ROI</h3>
           </div>
-          <Badge variant="secondary">{campanhas.length} total</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{campanhas.length} total</Badge>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={exportCampanhas} title="Exportar CSV">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         {campanhas.length === 0 ? (
