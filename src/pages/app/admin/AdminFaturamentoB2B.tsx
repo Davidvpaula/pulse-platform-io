@@ -327,11 +327,17 @@ export default function AdminFaturamentoB2B() {
           <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="text-left px-4 py-3">Empresa</th>
-              <th className="text-left px-3 py-3">Competência</th>
-              <th className="text-right px-3 py-3">Valor</th>
+              <th className="text-left px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("competencia")}>
+                Competência <SortIcon col="competencia" />
+              </th>
+              <th className="text-right px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("valor")}>
+                Valor <SortIcon col="valor" />
+              </th>
               <th className="text-right px-3 py-3">Funcionários</th>
               <th className="text-right px-3 py-3">Consultas</th>
-              <th className="text-left px-3 py-3">Vencimento</th>
+              <th className="text-left px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("vencimento")}>
+                Vencimento <SortIcon col="vencimento" />
+              </th>
               <th className="text-left px-3 py-3">Pago em</th>
               <th className="text-left px-3 py-3">Status</th>
               <th className="text-right px-4 py-3">Ações</th>
