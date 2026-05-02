@@ -28,6 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function MedicoPlanos() {
   const { session } = useSession();
+  const termsPlano = useTermsCheck("criacao_plano_medico");
   const uid = session?.user?.id;
   const [planos, setPlanos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +73,13 @@ export default function MedicoPlanos() {
 
   useEffect(() => { load(); loadTermos(); }, [uid]);
 
-  function novoPlano() { setShowTermos(true); }
+  function novoPlano() {
+    if (termsPlano.needsAcceptance) {
+      termsPlano.setShowDialog(true);
+      return;
+    }
+    setShowTermos(true);
+  }
   function aceitarTermos() { setShowTermos(false); setEditId(null); setBuilderOpen(true); }
 
   async function openCancelDialog(p: any) {
