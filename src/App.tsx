@@ -64,6 +64,7 @@ import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
 import SecretariaRelatorios from "@/pages/app/secretaria/SecretariaRelatorios";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
+import AdminTermosCondicoes from "@/pages/app/admin/AdminTermosCondicoes";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
 import AdminUsuarios from "@/pages/app/admin/AdminUsuarios";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
