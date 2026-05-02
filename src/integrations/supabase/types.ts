@@ -6083,13 +6083,15 @@ export type Database = {
         Returns: Json
       }
       financeiro_pagamento_cancelar: {
-        Args: { _motivo: string; _pagamento_id: string }
-        Returns: string
+        Args: { _motivo?: string; _pagamento_id: string }
+        Returns: undefined
       }
-      financeiro_pagamento_confirmar: {
-        Args: { _observacao?: string; _pagamento_id: string }
-        Returns: string
-      }
+      financeiro_pagamento_confirmar:
+        | { Args: { _pagamento_id: string }; Returns: undefined }
+        | {
+            Args: { _observacao?: string; _pagamento_id: string }
+            Returns: string
+          }
       financeiro_reembolsar_consulta: {
         Args: { _consulta_id: string; _motivo: string; _observacao?: string }
         Returns: Json
