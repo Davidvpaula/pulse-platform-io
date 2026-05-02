@@ -83,6 +83,7 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
         acao: value ? "concedida" : "revogada",
         valor_antes: { ativo: !value },
         valor_depois: { ativo: value },
+        changed_by: session?.user?.id ?? null,
       });
       toast.success(value ? "Permissão concedida" : "Permissão removida");
     } catch (e: any) {
