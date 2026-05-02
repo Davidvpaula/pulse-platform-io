@@ -88,7 +88,7 @@ export async function listarAvaliacoesMedico(medico_id: string): Promise<Avaliac
     .eq("medico_id", medico_id)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as AvaliacaoMedica[];
+  return (data ?? []) as unknown as AvaliacaoMedica[];
 }
 
 export async function toggleExibirNoPerfil(avaliacao_id: string, exibir: boolean) {
@@ -107,7 +107,7 @@ export async function getRankingMedico(medico_id: string): Promise<MedicoRanking
     .select("*")
     .eq("medico_id", medico_id)
     .maybeSingle();
-  return data as MedicoRanking | null;
+  return data as unknown as MedicoRanking | null;
 }
 
 export async function listarRankingTop(limit = 20): Promise<MedicoRanking[]> {
@@ -116,7 +116,7 @@ export async function listarRankingTop(limit = 20): Promise<MedicoRanking[]> {
     .select("*")
     .order("ranking_score", { ascending: false })
     .limit(limit);
-  return (data ?? []) as MedicoRanking[];
+  return (data ?? []) as unknown as MedicoRanking[];
 }
 
 /* ── Config Admin ── */
@@ -127,7 +127,7 @@ export async function getRankingConfig(): Promise<RankingConfig | null> {
     .select("*")
     .limit(1)
     .maybeSingle();
-  return data as RankingConfig | null;
+  return data as unknown as RankingConfig | null;
 }
 
 export async function salvarRankingConfig(config: Partial<RankingConfig> & { id: string }) {
