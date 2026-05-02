@@ -28,18 +28,21 @@ export default function MedicoGamificacao() {
   const [ranking, setRanking] = useState<MedicoRanking | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoMedica[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
     setLoading(true);
     const medico = await getMedicoAtual();
     if (!medico) { setLoading(false); return; }
-    const [r, a] = await Promise.all([
+    const [r, a, saldo] = await Promise.all([
       getRankingMedico(medico.id),
       listarAvaliacoesMedico(medico.id),
+      getSaldoAtual(medico.id),
     ]);
     setRanking(r);
     setAvaliacoes(a);
+    setSaldoCrescimento(saldo);
     setLoading(false);
   };
 
