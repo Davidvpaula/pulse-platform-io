@@ -44,43 +44,6 @@ export default function SecretariaFinanceiro() {
 
   useEffect(() => { checarPermissoes(); carregar(); }, [checarPermissoes, carregar]);
 
-  async function abrirNova() {
-    setNova({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
-    if (!pacientesOpts.length) {
-      const { data: pac } = await supabase.from("pacientes").select("id,nome_completo").order("nome_completo").limit(500);
-      setPacientesOpts(pac || []);
-    }
-    if (!empresasOpts.length) {
-      const { data: emp } = await supabase.from("empresas").select("id,razao_social,nome_fantasia").order("razao_social").limit(500);
-      setEmpresasOpts(emp || []);
-    }
-  }
-
-  async function criar() {
-    const r = validarCobranca({
-      descricao: nova.descricao,
-      valor: nova.valor,
-      vencimento: nova.vencimento,
-      observacao: nova.observacao,
-      paciente_id: nova.paciente_id,
-      empresa_id: nova.empresa_id,
-    });
-    if (r.ok === false) { toast.error(r.erro); return; }
-    try {
-      const { error } = await supabase.from("cobrancas_links").insert({
-        descricao: nova.descricao.trim(),
-        valor_centavos: r.valor_centavos,
-        vencimento: nova.vencimento || null,
-        paciente_id: nova.paciente_id || null,
-        observacao: nova.observacao?.trim() || null,
-        status: "ativo",
-      } as any);
-      if (error) throw error;
-      toast.success("Cobrança criada");
-      setNova(s => ({ ...s, open: false }));
-      carregar();
-    } catch (e: any) { toast.error(e.message || "Erro"); }
-  }
 
   if (!podeVer && !podeCobrar) {
     return (
