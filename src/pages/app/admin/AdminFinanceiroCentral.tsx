@@ -60,7 +60,7 @@ export default function AdminFinanceiroCentral() {
   const [lkStatus, setLkStatus] = useState<string>("todos");
   const [lkPage, setLkPage] = useState(1);
 
-  const nomePaciente = (p: any) => p?.paciente?.nome || "";
+  const nomePaciente = (p: any) => p?.paciente?.nome_completo || p?.paciente?.nome || "";
   const nomeMedico = (p: any) => p?.medico?.nome || "";
   const nomeEmpresa = (p: any) => p?.empresa?.nome_fantasia || p?.empresa?.razao_social || "";
   const matchBusca = (q: string, ...campos: string[]) => {
@@ -141,7 +141,7 @@ export default function AdminFinanceiroCentral() {
   async function abrirNovaCobranca() {
     setNovaCobranca({ open: true, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
     if (!pacientesOpts.length) {
-      const { data: pac } = await supabase.from("pacientes").select("id,nome").order("nome").limit(500);
+      const { data: pac } = await supabase.from("pacientes").select("id,nome_completo").order("nome_completo").limit(500);
       setPacientesOpts(pac || []);
     }
     if (!empresasOpts.length) {
@@ -182,11 +182,11 @@ export default function AdminFinanceiroCentral() {
     try {
       const { data: d } = await supabase.rpc("financeiro_central_dashboard" as any, { _inicio: inicio, _fim: fim });
       setDash(d);
-      const { data: p } = await supabase.from("pagamentos").select("*, paciente:pacientes(id,nome), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500);
+      const { data: p } = await supabase.from("pagamentos").select("*, paciente:pacientes(id,nome_completo), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500);
       setPagamentos(p || []);
       const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(200);
       setReembolsos(r || []);
-      const { data: l } = await supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome)").order("created_at", { ascending: false }).limit(500);
+      const { data: l } = await supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome_completo)").order("created_at", { ascending: false }).limit(500);
       setLinks(l || []);
       const { data: f } = await supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100);
       setRepasses(f || []);
@@ -582,7 +582,7 @@ export default function AdminFinanceiroCentral() {
               <Label>Paciente (opcional)</Label>
               <Select value={novaCobranca.paciente_id} onValueChange={v => setNovaCobranca(s => ({ ...s, paciente_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
