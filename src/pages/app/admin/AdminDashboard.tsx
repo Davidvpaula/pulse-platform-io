@@ -100,6 +100,35 @@ export default function AdminDashboard() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: rows } = await supabase
+        .from("integracoes_config")
+        .select("nome,descricao,status,modo_simulado")
+        .eq("ativo", true)
+        .order("nome");
+      if (!active) return;
+      const STATUS_MAP: Record<string, { label: string; cor: string }> = {
+        conectado: { label: "Conectado", cor: "info" },
+        simulado: { label: "Modo simulado", cor: "warning" },
+        erro: { label: "Erro", cor: "destructive" },
+        nao_configurado: { label: "Não configurado", cor: "muted" },
+        aguardando_configuracao: { label: "Aguardando configuração", cor: "warning" },
+        manutencao: { label: "Manutenção", cor: "muted" },
+      };
+      setIntegracoes(
+        (rows ?? []).map((r: any) => {
+          const s = r.modo_simulado
+            ? { label: "Modo simulado", cor: "warning" }
+            : STATUS_MAP[r.status] ?? { label: r.status, cor: "muted" };
+          return { nome: r.nome, desc: r.descricao ?? "", status: s.label, cor: s.cor };
+        })
+      );
+    })();
+    return () => { active = false; };
+  }, []);
+
 
   const k = data?.kpis ?? {};
   const p = data?.pendencias ?? {};
