@@ -18,9 +18,33 @@ import {
 } from "@/lib/gamificacao";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
 function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
+
+type AuditTipo = "peso" | "premium" | "cpc" | "saldo" | "recalculo";
+
+const AUDIT_MOCK: { id: string; data: string; usuario: string; tipo: AuditTipo; campo: string; anterior: string; novo: string }[] = [
+  { id: "a1", data: "2026-05-02T13:40:00Z", usuario: "Carlos Mendes", tipo: "peso", campo: "peso_avaliacao", anterior: "0.25", novo: "0.30" },
+  { id: "a2", data: "2026-05-02T13:40:00Z", usuario: "Carlos Mendes", tipo: "peso", campo: "peso_recencia", anterior: "0.15", novo: "0.10" },
+  { id: "a3", data: "2026-05-01T10:15:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_min_atendimentos", anterior: "30", novo: "50" },
+  { id: "a4", data: "2026-05-01T10:15:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_min_avaliacao", anterior: "3.5", novo: "4.0" },
+  { id: "a5", data: "2026-04-28T16:00:00Z", usuario: "Carlos Mendes", tipo: "cpc", campo: "cpc_padrao_centavos", anterior: "30", novo: "50" },
+  { id: "a6", data: "2026-04-28T15:55:00Z", usuario: "Carlos Mendes", tipo: "recalculo", campo: "ranking_completo", anterior: "—", novo: "15 médicos recalculados" },
+  { id: "a7", data: "2026-04-25T09:30:00Z", usuario: "Carlos Mendes", tipo: "saldo", campo: "saldo_por_consulta", anterior: "5", novo: "10" },
+  { id: "a8", data: "2026-04-20T14:10:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_max_no_show", anterior: "0.15", novo: "0.10" },
+];
+
+const AUDIT_TIPO_LABEL: Record<AuditTipo, { label: string; cls: string }> = {
+  peso:      { label: "Peso ranking", cls: "bg-primary/15 text-primary" },
+  premium:   { label: "Regra premium", cls: "bg-amber-500/15 text-amber-600" },
+  cpc:       { label: "CPC", cls: "bg-emerald-500/15 text-emerald-600" },
+  saldo:     { label: "Saldo", cls: "bg-violet-500/15 text-violet-600" },
+  recalculo: { label: "Recálculo", cls: "bg-blue-500/15 text-blue-600" },
+};
 
 export default function AdminGamificacao() {
   const [loading, setLoading] = useState(true);
@@ -30,6 +54,7 @@ export default function AdminGamificacao() {
   const [top, setTop] = useState<(MedicoRanking & { nome?: string; premium_ativo?: boolean })[]>([]);
   const [campanhas, setCampanhas] = useState<(ImpulsionamentoCampanha & { nome?: string; conversoes?: number })[]>([]);
   const [togglingPremium, setTogglingPremium] = useState<string | null>(null);
+  const [auditFiltro, setAuditFiltro] = useState<AuditTipo | "todos">("todos");
 
   const carregar = async () => {
     setLoading(true);
