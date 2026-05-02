@@ -265,6 +265,8 @@ const App = () => (
               <Route path="admin/colaboradores" element={<G perm="colaboradores.ver"><AdminColaboradores /></G>} />
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
               <Route path="admin/empresas" element={<G perm="empresas.ver"><AdminEmpresas /></G>} />
+              <Route path="admin/gestao-b2b" element={<G perm="empresas.ver"><AdminGestaoB2B /></G>} />
+              <Route path="admin/relatorios-b2b" element={<G perm="empresas.ver"><AdminRelatoriosB2B /></G>} />
               <Route path="admin/agendamentos" element={<G perm="agenda.ver_todas"><AdminAgendamentos /></G>} />
               <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
