@@ -354,6 +354,7 @@ export type Database = {
           storage_path: string
           tamanho_bytes: number | null
           uploader_id: string
+          visibilidade_empresa: boolean
         }
         Insert: {
           consulta_id: string
@@ -365,6 +366,7 @@ export type Database = {
           storage_path: string
           tamanho_bytes?: number | null
           uploader_id: string
+          visibilidade_empresa?: boolean
         }
         Update: {
           consulta_id?: string
@@ -376,6 +378,7 @@ export type Database = {
           storage_path?: string
           tamanho_bytes?: number | null
           uploader_id?: string
+          visibilidade_empresa?: boolean
         }
         Relationships: [
           {
@@ -1809,6 +1812,51 @@ export type Database = {
           visibilidade_empresa?: boolean
         }
         Relationships: []
+      }
+      empresa_medicos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          id: string
+          medico_id: string
+          preco_consulta_centavos: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          id?: string
+          medico_id: string
+          preco_consulta_centavos?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          medico_id?: string
+          preco_consulta_centavos?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_medicos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       empresas: {
         Row: {

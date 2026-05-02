@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import {
   FileText, Search, Loader2, Database, FilePlus2, Eye, Calendar,
   CheckCircle2, AlertCircle, Clock, Paperclip, NotebookPen, Filter,
+  Building2, Lock, Unlock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   listDocumentosDoMedico,
   emitirPrescricaoSimulada,
@@ -51,12 +53,27 @@ export default function MedicoDocumentos() {
   const [loading, setLoading] = useState(false);
   const [emitindo, setEmitindo] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocumentoMedico[]>([]);
+  // Mapa consulta_id -> visibilidade_empresa dos anexos
+  const [visibMap, setVisibMap] = useState<Record<string, boolean>>({});
 
   async function carregar() {
     if (!session) { setDocs([]); return; }
     setLoading(true);
     const r = await listDocumentosDoMedico();
     setDocs(r);
+    // Carregar visibilidade dos anexos
+    const ids = r.filter(d => d.qtd_anexos > 0).map(d => d.consulta_id);
+    if (ids.length > 0) {
+      const { data: anexos } = await supabase
+        .from("anexos_consulta")
+        .select("consulta_id, visibilidade_empresa")
+        .in("consulta_id", ids);
+      const map: Record<string, boolean> = {};
+      (anexos ?? []).forEach((a: any) => {
+        if (a.visibilidade_empresa) map[a.consulta_id] = true;
+      });
+      setVisibMap(map);
+    }
     setLoading(false);
   }
 
@@ -99,6 +116,20 @@ export default function MedicoDocumentos() {
     }
     toast.success("Prescrição simulada emitida");
     carregar();
+  }
+
+  async function toggleVisibilidadeEmpresa(consultaId: string) {
+    const novoValor = !visibMap[consultaId];
+    const { error } = await supabase
+      .from("anexos_consulta")
+      .update({ visibilidade_empresa: novoValor } as any)
+      .eq("consulta_id", consultaId);
+    if (error) {
+      toast.error("Erro ao alterar visibilidade");
+      return;
+    }
+    setVisibMap(prev => ({ ...prev, [consultaId]: novoValor }));
+    toast.success(novoValor ? "Documentos compartilhados com empresa" : "Documentos marcados como privados");
   }
 
   return (
@@ -244,6 +275,20 @@ export default function MedicoDocumentos() {
                         title="Já existe prescrição para esta consulta"
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" /> Emitida
+                      </Button>
+                    )}
+                    {d.qtd_anexos > 0 && (
+                      <Button
+                        size="sm"
+                        variant={visibMap[d.consulta_id] ? "default" : "outline"}
+                        onClick={() => toggleVisibilidadeEmpresa(d.consulta_id)}
+                        title={visibMap[d.consulta_id] ? "Documentos visíveis para empresa — clique para tornar privado" : "Documentos privados — clique para compartilhar com empresa"}
+                      >
+                        {visibMap[d.consulta_id] ? (
+                          <><Unlock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
+                        ) : (
+                          <><Lock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
+                        )}
                       </Button>
                     )}
                   </div>

@@ -73,6 +73,12 @@ const PERIODOS = [
   ["total", "Total do plano"],
 ] as const;
 
+const SLA_OPTIONS = [
+  ["padrao", "Padrão"],
+  ["prioritario", "Prioritário"],
+  ["vip", "VIP"],
+] as const;
+
 function emptyPlano(): Plano {
   return {
     nome: "",
@@ -94,6 +100,11 @@ function emptyPlano(): Plano {
     destacado: false,
     ordem_exibicao: 0,
     cta_texto: "Quero esse plano",
+    valor_por_vida_centavos: null,
+    coparticipacao_pct: null,
+    sla_prioridade: "padrao",
+    especialidades_liberadas: [],
+    regras_uso_json: null,
   };
 }
 
@@ -379,7 +390,44 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
               </CardContent>
             </Card>
 
-            {/* Benefícios */}
+            {/* Campos B2B — visíveis quando público = empresa ou ambos, ou categoria = empresarial */}
+            {(plano.publico === "empresa" || plano.publico === "ambos" || plano.categoria === "empresarial") && !medicoMode && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Configurações empresariais (B2B)</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div>
+                    <Label>Valor por vida (R$)</Label>
+                    <Input value={toReais(plano.valor_por_vida_centavos ?? 0)} onChange={(e) => setField("valor_por_vida_centavos", toCentavos(e.target.value))} />
+                  </div>
+                  <div>
+                    <Label>Coparticipação (%)</Label>
+                    <Input type="number" step="0.1" value={plano.coparticipacao_pct ?? 0} onChange={(e) => setField("coparticipacao_pct", Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <Label>SLA / Prioridade</Label>
+                    <Select value={plano.sla_prioridade ?? "padrao"} onValueChange={(v) => setField("sla_prioridade", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{SLA_OPTIONS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label>Regras de uso (JSON ou texto livre)</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder='Ex.: {"limite_mensal": 4, "carencia_dias": 30}'
+                      value={plano.regras_uso_json ? (typeof plano.regras_uso_json === "string" ? plano.regras_uso_json : JSON.stringify(plano.regras_uso_json, null, 2)) : ""}
+                      onChange={(e) => {
+                        try { setField("regras_uso_json", JSON.parse(e.target.value)); }
+                        catch { setField("regras_uso_json", e.target.value as any); }
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">Benefícios inclusos</CardTitle>

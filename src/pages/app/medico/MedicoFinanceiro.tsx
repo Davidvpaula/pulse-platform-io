@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter, Banknote, CalendarClock, ArrowDownToLine } from "lucide-react";
+import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter, Banknote, CalendarClock, ArrowDownToLine, Building2, User } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ type FinRow = {
   valor_plataforma_centavos: number;
   status: string;
   paciente_nome?: string | null;
+  empresa_id?: string | null;
 };
 
 const periodos = [
@@ -78,7 +79,7 @@ export default function MedicoFinanceiro() {
       .select(`
         id, consulta_id, data_consulta, servico_nome_snapshot, modelo_aplicado,
         comissao_pct_aplicada, valor_bruto_centavos, valor_medico_centavos,
-        valor_plataforma_centavos, status,
+        valor_plataforma_centavos, status, empresa_id,
         consultas:consulta_id (
           pacientes:paciente_id ( user_id )
         )
@@ -118,6 +119,7 @@ export default function MedicoFinanceiro() {
       valor_plataforma_centavos: r.valor_plataforma_centavos,
       status: r.status,
       paciente_nome: r.consultas?.pacientes?.user_id ? nomes[r.consultas.pacientes.user_id] ?? null : null,
+      empresa_id: r.empresa_id ?? null,
     })));
     setLoading(false);
   }
@@ -158,7 +160,45 @@ export default function MedicoFinanceiro() {
         <StatCard label="Ticket médio (você)" value={brl(kpis.ticketMedio)} icon={Wallet} />
       </div>
 
-      {/* ── SEÇÃO DE SAQUE ── */}
+      {/* ── SEPARAÇÃO B2B vs B2C ── */}
+      {rows.length > 0 && (() => {
+        const b2b = rows.filter(r => !!r.empresa_id);
+        const b2c = rows.filter(r => !r.empresa_id);
+        const totalB2B = b2b.reduce((s, r) => s + r.valor_medico_centavos, 0);
+        const totalB2C = b2c.reduce((s, r) => s + r.valor_medico_centavos, 0);
+        const total = totalB2B + totalB2C;
+        if (b2b.length === 0 && b2c.length === 0) return null;
+        return (
+          <div className="card-elevated p-5">
+            <h3 className="text-sm font-semibold mb-3">Receita por origem</h3>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <User className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Particular (B2C)</p>
+                  <p className="text-lg font-bold">{brl(totalB2C)}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{b2c.length} consultas</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <Building2 className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Corporativo (B2B)</p>
+                  <p className="text-lg font-bold">{brl(totalB2B)}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{b2b.length} consultas</span>
+              </div>
+            </div>
+            {total > 0 && (
+              <div className="mt-3 h-2 flex rounded-full overflow-hidden bg-muted">
+                <div className="bg-muted-foreground/40 transition-all" style={{ width: `${Math.round((totalB2C / total) * 100)}%` }} />
+                <div className="bg-primary transition-all" style={{ width: `${Math.round((totalB2B / total) * 100)}%` }} />
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {saldo && saqueConfig && medicoId && (
         <div className="card-elevated p-6 space-y-4">
           <div className="flex items-center justify-between">
