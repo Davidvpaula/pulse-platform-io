@@ -267,23 +267,127 @@ export default function MedicoConfiguracoes() {
         }
       />
 
-      <Section icon={Video} title="Google Meet">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <Field label="Link fixo de atendimento" hint="Em breve: integração com Google Agenda para link dinâmico por consulta.">
-              <Input defaultValue="https://meet.google.com/dr-rafael-lasmar" />
-            </Field>
+      <Section icon={Video} title="Google Meet & Calendar">
+        {googleLoading ? (
+          <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando conexão Google…
           </div>
-          <Field label="Tipo de link">
-            <select className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
-              <option>Fixo</option>
-              <option disabled>Dinâmico (Google Agenda) — em breve</option>
-            </select>
-          </Field>
-          <Field label="Google Calendar conectado">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-xs text-warning">Não conectado</span>
-          </Field>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Status da conexão */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-full",
+                  googleStatus.connected ? "bg-success/15" : "bg-muted"
+                )}>
+                  {googleStatus.connected
+                    ? <CheckCircle2 className="h-5 w-5 text-success" />
+                    : <Link2 className="h-5 w-5 text-muted-foreground" />}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">
+                    {googleStatus.connected ? "Google Calendar conectado" : "Google Calendar não conectado"}
+                  </p>
+                  {googleStatus.connected && googleStatus.google_email && (
+                    <p className="text-xs text-muted-foreground">{googleStatus.google_email}</p>
+                  )}
+                  {!googleStatus.connected && (
+                    <p className="text-xs text-muted-foreground">
+                      Conecte para gerar salas Meet dinâmicas por consulta.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div>
+                {googleStatus.connected ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGoogleDisconnect}
+                    disabled={googleActionLoading}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    {googleActionLoading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Unlink className="mr-1.5 h-3.5 w-3.5" />}
+                    Desconectar
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleGoogleConnect}
+                    disabled={googleActionLoading}
+                    className="bg-gradient-primary hover:opacity-90"
+                  >
+                    {googleActionLoading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="mr-1.5 h-3.5 w-3.5" />}
+                    Conectar Google Calendar
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Tipo de sala */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Tipo de link de vídeo">
+                <div className="flex gap-3">
+                  <label className={cn(
+                    "flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition",
+                    googleStatus.tipo_sala === "fixo"
+                      ? "border-primary bg-primary/5 font-medium"
+                      : "border-border hover:border-primary/40"
+                  )}>
+                    <input
+                      type="radio"
+                      name="tipo_sala"
+                      className="accent-primary"
+                      checked={googleStatus.tipo_sala === "fixo"}
+                      onChange={() => setGoogleStatus(prev => ({ ...prev, tipo_sala: "fixo" }))}
+                    />
+                    Fixo
+                  </label>
+                  <label className={cn(
+                    "flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition",
+                    googleStatus.tipo_sala === "dinamico"
+                      ? "border-primary bg-primary/5 font-medium"
+                      : "border-border hover:border-primary/40",
+                    !googleStatus.connected && "opacity-50 cursor-not-allowed"
+                  )}>
+                    <input
+                      type="radio"
+                      name="tipo_sala"
+                      className="accent-primary"
+                      checked={googleStatus.tipo_sala === "dinamico"}
+                      disabled={!googleStatus.connected}
+                      onChange={() => setGoogleStatus(prev => ({ ...prev, tipo_sala: "dinamico" }))}
+                    />
+                    Dinâmico (Google Meet)
+                  </label>
+                </div>
+              </Field>
+
+              {googleStatus.tipo_sala === "fixo" && (
+                <Field label="Link fixo de atendimento" hint="Cole seu link permanente do Google Meet.">
+                  <Input
+                    value={linkSala}
+                    onChange={(e) => setLinkSala(e.target.value)}
+                    placeholder="https://meet.google.com/xxx-xxx-xxx"
+                  />
+                </Field>
+              )}
+
+              {googleStatus.tipo_sala === "dinamico" && (
+                <Field label="Como funciona">
+                  <div className="rounded-lg border border-primary/20 bg-primary-soft/30 p-3 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground">Link gerado automaticamente</p>
+                    <p className="mt-1">
+                      A cada consulta confirmada, um evento será criado no seu Google Calendar
+                      com uma sala Meet exclusiva. O link é enviado ao paciente automaticamente.
+                    </p>
+                  </div>
+                </Field>
+              )}
+            </div>
+          </div>
+        )}
       </Section>
 
       <Section
