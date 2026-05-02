@@ -24,8 +24,8 @@ export default function Servicos() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("servicos_publicos" as any)
+      const { data } = await (supabase as any)
+        .from("servicos_publicos")
         .select("id,slug,nome,tipo,descricao_publica,duracao_min,valor_paciente_centavos,prioridade")
         .neq("tipo", "pronto_atendimento")
         .order("prioridade")
