@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/lib/session";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function MatrizPermissoes({ scope, scopeValue }: Props) {
+  const { session } = useSession();
   const [catalog, setCatalog] = useState<Perm[]>([]);
   const [ativos, setAtivos] = useState<Set<string>>(new Set());
   const [busca, setBusca] = useState("");
@@ -81,6 +83,7 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
         acao: value ? "concedida" : "revogada",
         valor_antes: { ativo: !value },
         valor_depois: { ativo: value },
+        changed_by: session?.user?.id ?? null,
       });
       toast.success(value ? "Permissão concedida" : "Permissão removida");
     } catch (e: any) {
