@@ -304,6 +304,14 @@ export default function MedicoCorporativo() {
         <TabsList>
           <TabsTrigger value="consultas">Consultas ({consultasFiltradas.length})</TabsTrigger>
           <TabsTrigger value="pacientes">Pacientes ({pacientesFiltrados.length})</TabsTrigger>
+          <TabsTrigger value="propostas">
+            Propostas ({propostasB2B.length})
+            {propostasB2B.filter(p => p.status === "enviada_medico").length > 0 && (
+              <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                {propostasB2B.filter(p => p.status === "enviada_medico").length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="consultas">
