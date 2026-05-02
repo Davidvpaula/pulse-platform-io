@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
 import { MedicoDadosBancarios } from "@/components/medico/MedicoDadosBancarios";
 import { MedicoDocumentosFiscais } from "@/components/medico/MedicoDocumentosFiscais";
+import MeusAceites from "@/components/shared/MeusAceites";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -112,6 +113,7 @@ export default function MedicoPerfil() {
           <TabsTrigger value="pessoal"><FileText className="mr-1.5 h-3.5 w-3.5" />Dados Pessoais</TabsTrigger>
           <TabsTrigger value="bancario"><Landmark className="mr-1.5 h-3.5 w-3.5" />Dados Bancários</TabsTrigger>
           <TabsTrigger value="fiscal"><Receipt className="mr-1.5 h-3.5 w-3.5" />Documentos Fiscais</TabsTrigger>
+          <TabsTrigger value="termos"><FileText className="mr-1.5 h-3.5 w-3.5" />Termos</TabsTrigger>
         </TabsList>
 
         {/* ── PERFIL PÚBLICO ── */}
@@ -247,6 +249,10 @@ export default function MedicoPerfil() {
               <p className="text-sm text-muted-foreground">Carregando…</p>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="termos">
+          <MeusAceites />
         </TabsContent>
       </Tabs>
     </div>

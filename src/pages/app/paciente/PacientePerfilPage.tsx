@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import MeusAceites from "@/components/shared/MeusAceites";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -222,11 +223,12 @@ export default function PacientePerfilPage() {
         </div>
       ) : (
         <Tabs defaultValue="dados" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="saude">Saúde</TabsTrigger>
             <TabsTrigger value="conta">Conta & senha</TabsTrigger>
+            <TabsTrigger value="termos">Termos</TabsTrigger>
           </TabsList>
 
           <form onSubmit={salvar} className="space-y-6">
@@ -375,6 +377,10 @@ export default function PacientePerfilPage() {
 
             <TabsContent value="conta" className="space-y-6">
               <ContaSeguranca emailAtual={email} onEmailChange={setEmail} />
+            </TabsContent>
+
+            <TabsContent value="termos">
+              <MeusAceites />
             </TabsContent>
 
             <div className="flex justify-end">
