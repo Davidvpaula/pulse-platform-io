@@ -79,7 +79,7 @@ export default function MedicoFinanceiro() {
       .select(`
         id, consulta_id, data_consulta, servico_nome_snapshot, modelo_aplicado,
         comissao_pct_aplicada, valor_bruto_centavos, valor_medico_centavos,
-        valor_plataforma_centavos, status,
+        valor_plataforma_centavos, status, empresa_id,
         consultas:consulta_id (
           pacientes:paciente_id ( user_id )
         )
