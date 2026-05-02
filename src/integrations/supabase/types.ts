@@ -3389,6 +3389,50 @@ export type Database = {
           },
         ]
       }
+      medico_google_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          google_email: string | null
+          id: string
+          medico_id: string
+          refresh_token: string
+          scopes: string
+          token_expiry: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          google_email?: string | null
+          id?: string
+          medico_id: string
+          refresh_token: string
+          scopes?: string
+          token_expiry: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          google_email?: string | null
+          id?: string
+          medico_id?: string
+          refresh_token?: string
+          scopes?: string
+          token_expiry?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_google_tokens_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_nfes: {
         Row: {
           arquivo_url: string | null
@@ -3660,6 +3704,7 @@ export type Database = {
           suspenso_ate: string | null
           suspenso_indeterminado: boolean
           telefone: string | null
+          tipo_sala: string
           updated_at: string
           user_id: string
         }
@@ -3699,6 +3744,7 @@ export type Database = {
           suspenso_ate?: string | null
           suspenso_indeterminado?: boolean
           telefone?: string | null
+          tipo_sala?: string
           updated_at?: string
           user_id: string
         }
@@ -3738,6 +3784,7 @@ export type Database = {
           suspenso_ate?: string | null
           suspenso_indeterminado?: boolean
           telefone?: string | null
+          tipo_sala?: string
           updated_at?: string
           user_id?: string
         }
