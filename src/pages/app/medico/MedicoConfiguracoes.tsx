@@ -135,6 +135,11 @@ export default function MedicoConfiguracoes() {
 
   // Atendimento dinâmico
   const [loadingAt, setLoadingAt] = useState(true);
+  const [savingAt, setSavingAt] = useState(false);
+  const [especialidades, setEspecialidades] = useState<Especialidade[]>([]);
+  const [linhas, setLinhas] = useState<Record<string, LinhaEsp>>({});
+  const [paDuracao, setPaDuracao] = useState<number>(15);
+  const [devMode, setDevMode] = useState(false);
 
   useEffect(() => {
     (async () => {
