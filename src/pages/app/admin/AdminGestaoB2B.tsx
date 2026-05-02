@@ -314,7 +314,7 @@ export default function AdminGestaoB2B() {
               )}
               {contratos
                 .filter(c => c.status === "ativo" && c.limite_consultas_mes > 0)
-                .sort((a, b) => (b.vidas_ativas / b.vidas_contratadas) - (a.vidas_ativas / a.vidas_contratadas))
+                .sort((a, b) => (b.qtd_funcionarios / b.limite_consultas_mes) - (a.qtd_funcionarios / a.limite_consultas_mes))
                 .map(c => {
                   const pct = Math.round((c.qtd_funcionarios / c.limite_consultas_mes) * 100);
                   const isOver = pct > 100;
