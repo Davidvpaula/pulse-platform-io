@@ -144,6 +144,15 @@ export default function ServicoDetalhe() {
     );
   }
 
+  // Sort: patrocinados always first, then by selected criteria
+  const sortedMedicos = [...medicos].sort((a, b) => {
+    if (a.is_patrocinado && !b.is_patrocinado) return -1;
+    if (!a.is_patrocinado && b.is_patrocinado) return 1;
+    if (ordenacao === "avaliacao") return (b.avaliacao_media ?? 0) - (a.avaliacao_media ?? 0);
+    if (ordenacao === "preco") return 0; // same price for the service
+    return (b.ranking_score ?? 0) - (a.ranking_score ?? 0);
+  });
+
   return (
     <PageShell
       title={servico.nome}
