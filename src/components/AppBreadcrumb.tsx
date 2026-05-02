@@ -69,7 +69,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/relatorios/auditoria":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Auditoria" }],
 
   // ── Admin: Gamificação (já existia inline, agora centralizado) ──
-  "/app/admin/gamificacao":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação" }, { label: "Configuração & Ranking" }],
+  "/app/admin/gamificacao":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Configuração & Ranking" }],
   "/app/admin/gamificacao/financeiro": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Financeiro" }],
 
   // ── Admin: itens soltos com breadcrumb simples ──
