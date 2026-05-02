@@ -16,13 +16,10 @@ import { toast } from "sonner";
 import {
   listCupons, deleteCupom, toggleCupomAtivo,
   type CupomDetalhado,
-} from "@/lib/clinico";
+} from "@/lib/cupons";
+import { formatBRL } from "@/lib/pagamentos";
 import CupomDialog from "@/components/secretaria/CupomDialog";
 import { useSession } from "@/lib/session";
-
-function formatBRL(centavos: number) {
-  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 function formatData(d?: string | null) {
   if (!d) return "—";
   try { return new Date(d).toLocaleDateString("pt-BR"); } catch { return d; }

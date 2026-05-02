@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 import {
   createCupom, updateCupom, listMedicosResumo, listEspecialidadesResumo,
   type CupomDetalhado, type CupomEscopo, type CupomTipo,
-} from "@/lib/clinico";
+} from "@/lib/cupons";
 
 const schema = z.object({
   codigo: z.string().trim().min(3, "Mínimo 3 caracteres").max(40),
