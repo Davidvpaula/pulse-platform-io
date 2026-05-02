@@ -46,20 +46,39 @@ export default function EmpresaFinanceiro() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
 
-      // Buscar empresa do usuário
-      const { data: emp } = await supabase
-        .from("empresas")
-        .select("id, nome_fantasia, razao_social")
-        .eq("responsavel_user_id", u.user.id)
+      // Buscar empresa do usuário via empresas_funcionarios ou pacientes.empresa_id
+      let eid: string | null = null;
+      const { data: empFunc } = await supabase
+        .from("empresas_funcionarios")
+        .select("empresa_id")
+        .eq("paciente_id", u.user.id)
+        .limit(1)
         .maybeSingle();
+      eid = empFunc?.empresa_id ?? null;
 
-      if (!emp) {
+      if (!eid) {
+        const { data: pac } = await supabase
+          .from("pacientes")
+          .select("empresa_id")
+          .eq("user_id", u.user.id)
+          .maybeSingle();
+        eid = pac?.empresa_id ?? null;
+      }
+
+      if (!eid) {
         setLoading(false);
         return;
       }
 
-      setEmpresaId(emp.id);
-      setEmpresaNome(emp.nome_fantasia || emp.razao_social);
+      // Buscar nome da empresa
+      const { data: emp } = await supabase
+        .from("empresas")
+        .select("id, nome_fantasia, razao_social")
+        .eq("id", eid)
+        .maybeSingle();
+
+      setEmpresaId(eid);
+      setEmpresaNome(emp?.nome_fantasia || emp?.razao_social || "");
 
       const { data: fats, error } = await supabase
         .from("empresas_faturas")
