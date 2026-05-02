@@ -34,6 +34,7 @@ import {
 } from "@/lib/clinico";
 import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 import { fmtHora } from "@/lib/format";
+import type { PASlot } from "@/lib/pa-types";
 
 type ElegivelRow = {
   id: string;
@@ -166,9 +167,9 @@ export default function AdminAtendimentoImediato() {
   }, [precoReais, modelo, comissaoPct, valorFixoReais]);
 
   // Preview dos slots gerados com a duração corrente
-  const previewSlots = useMemo(() => {
+  const previewSlots = useMemo((): PASlot[] => {
     const hoje = new Date();
-    const result: { key: string; inicio: Date; fim: Date }[] = [];
+    const result: PASlot[] = [];
     for (let offset = 0; offset < 6; offset++) {
       const inicio = new Date(hoje);
       inicio.setHours(8, 0, 0, 0);
