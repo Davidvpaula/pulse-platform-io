@@ -317,7 +317,7 @@ export default function AdminFaturamentoB2B() {
               {empresasUnicas.map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground">{lista.length} resultado(s)</span>
+          <span className="text-xs text-muted-foreground">{listaFiltrada.length} resultado(s)</span>
         </div>
       </div>
 
