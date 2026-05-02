@@ -138,6 +138,17 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       },
       { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
       {
+        label: "Empresas",
+        icon: Building2,
+        children: [
+          { label: "Cadastro", to: "/app/admin/empresas" },
+          { label: "Gestão B2B", to: "/app/admin/gestao-b2b" },
+          { label: "Planos empresariais", to: "/app/admin/planos-empresariais" },
+          { label: "Faturamento", to: "/app/admin/faturamento-b2b" },
+          { label: "Relatórios", to: "/app/admin/relatorios-b2b" },
+        ],
+      },
+      {
         label: "Financeiro",
         icon: Wallet,
         requiresCapability: "financeiro.ver",
@@ -157,7 +168,6 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         requiresCapability: "financeiro.servicos_gerenciar",
         children: [
           { label: "Planos da plataforma", to: "/app/admin/planos" },
-          { label: "Planos empresariais", to: "/app/admin/planos-empresariais" },
           { label: "Planos de médicos", to: "/app/admin/planos-medicos" },
           { label: "Cancelamentos", to: "/app/admin/planos-cancelamentos" },
         ],
