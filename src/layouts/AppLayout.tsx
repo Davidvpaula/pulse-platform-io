@@ -116,6 +116,7 @@ export default function AppLayout() {
           </DropdownMenu>
         </header>
 
+        <TermosPendentesBanner />
         <main className="flex-1 p-4 md:p-8">
           <ProtectedRoute>
             <Outlet />
