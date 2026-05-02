@@ -62,13 +62,79 @@ const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
 export default function MedicoConfiguracoes() {
   const [notif, setNotif] = useState({ lembretes: true, alertas: true, resumoDiario: false });
 
+  // Google OAuth state
+  const [googleStatus, setGoogleStatus] = useState<{
+    connected: boolean;
+    google_email: string | null;
+    tipo_sala: string;
+    link_sala_padrao: string | null;
+    connected_at: string | null;
+  }>({ connected: false, google_email: null, tipo_sala: "fixo", link_sala_padrao: null, connected_at: null });
+  const [googleLoading, setGoogleLoading] = useState(true);
+  const [googleActionLoading, setGoogleActionLoading] = useState(false);
+  const [linkSala, setLinkSala] = useState("");
+
+  const fetchGoogleStatus = useCallback(async () => {
+    setGoogleLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-oauth", {
+        body: { action: "status" },
+      });
+      if (!error && data && !data.error) {
+        setGoogleStatus(data);
+        setLinkSala(data.link_sala_padrao || "");
+      }
+    } catch {
+      // silently fail — secrets may not be configured yet
+    }
+    setGoogleLoading(false);
+  }, []);
+
+  useEffect(() => { fetchGoogleStatus(); }, [fetchGoogleStatus]);
+
+  const handleGoogleConnect = async () => {
+    setGoogleActionLoading(true);
+    try {
+      const redirectUri = `${window.location.origin}/medico/google-callback`;
+      const { data, error } = await supabase.functions.invoke("google-oauth", {
+        body: { action: "get-auth-url", redirect_uri: redirectUri },
+      });
+      if (error || data?.error) {
+        if (data?.not_configured) {
+          toast.info("Integração Google será ativada na etapa final de configuração.");
+        } else {
+          toast.error(data?.error || "Erro ao gerar link de autorização.");
+        }
+        setGoogleActionLoading(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error("Erro ao iniciar conexão Google.");
+      setGoogleActionLoading(false);
+    }
+  };
+
+  const handleGoogleDisconnect = async () => {
+    setGoogleActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-oauth", {
+        body: { action: "disconnect" },
+      });
+      if (error || data?.error) {
+        toast.error("Erro ao desconectar.");
+      } else {
+        toast.success("Google Calendar desconectado.");
+        setGoogleStatus({ connected: false, google_email: null, tipo_sala: "fixo", link_sala_padrao: googleStatus.link_sala_padrao, connected_at: null });
+      }
+    } catch {
+      toast.error("Erro ao desconectar.");
+    }
+    setGoogleActionLoading(false);
+  };
+
   // Atendimento dinâmico
   const [loadingAt, setLoadingAt] = useState(true);
-  const [savingAt, setSavingAt] = useState(false);
-  const [especialidades, setEspecialidades] = useState<Especialidade[]>([]);
-  const [linhas, setLinhas] = useState<Record<string, LinhaEsp>>({});
-  const [paDuracao, setPaDuracao] = useState<number>(15);
-  const [devMode, setDevMode] = useState(false);
 
   useEffect(() => {
     (async () => {
