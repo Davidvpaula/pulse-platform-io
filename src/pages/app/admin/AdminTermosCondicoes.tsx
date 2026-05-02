@@ -222,7 +222,7 @@ export default function AdminTermosCondicoes() {
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader icon={FileText} title="Termos & Condições" subtitle="Gerencie todos os termos legais da plataforma com versionamento completo." />
+      <PageHeader title="Termos & Condições" description="Gerencie todos os termos legais da plataforma com versionamento completo." />
 
       <div className="flex justify-end">
         <Button onClick={() => setShowCreate(true)}>
