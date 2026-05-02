@@ -59,6 +59,8 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos" }],
   "/app/admin/colaboradores":  [admin(), { label: "Cadastros" }, { label: "Colaboradores" }],
   "/app/admin/empresas":       [admin(), { label: "Cadastros" }, { label: "Empresas" }],
+  "/app/admin/gestao-b2b":     [admin(), { label: "Cadastros" }, { label: "Gestão B2B" }],
+  "/app/admin/relatorios-b2b": [admin(), { label: "Cadastros" }, { label: "Relatórios B2B" }],
 
   // ── Admin: Financeiro ──
   "/app/admin/financeiro":               [admin(), { label: "Financeiro" }, { label: "Visão geral" }],
@@ -170,8 +172,10 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/empresa/dashboard":    [{ label: "Empresa" }, { label: "Dashboard" }],
   "/app/empresa/funcionarios": [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Funcionários" }],
   "/app/empresa/agendamentos": [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Agendamentos" }],
+  "/app/empresa/documentos":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Documentos" }],
   "/app/empresa/relatorios":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Relatórios" }],
   "/app/empresa/financeiro":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Financeiro" }],
+  "/app/empresa/termos":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Termos" }],
   "/app/empresa/perfil":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Perfil" }],
 };
 
