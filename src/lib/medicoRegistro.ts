@@ -203,38 +203,6 @@ export async function listMedicos(): Promise<MedicoRow[]> {
   return (data ?? []) as unknown as MedicoRow[];
 }
 
-export async function updateMedicoStatus(
-  id: string,
-  novoStatus: MedicoStatus,
-  motivo?: string,
-): Promise<void> {
-  // pega status anterior (pra auditoria)
-  const { data: atual } = await supabase
-    .from("medicos")
-    .select("status")
-    .eq("id", id)
-    .single();
-  const statusAnterior = (atual?.status ?? null) as MedicoStatus | null;
-
-  const { error: e1 } = await supabase
-    .from("medicos")
-    .update({
-      status: novoStatus,
-      motivo_reprovacao: novoStatus === "reprovado" ? (motivo ?? null) : null,
-    })
-    .eq("id", id);
-  if (e1) throw e1;
-
-  const { data: u } = await supabase.auth.getUser();
-  await supabase.from("medicos_auditoria").insert({
-    medico_id: id,
-    actor_id: u.user?.id ?? null,
-    acao: novoStatus,
-    status_anterior: statusAnterior,
-    status_novo: novoStatus,
-    motivo: motivo ?? null,
-  });
-}
 
 export async function listAuditoria(medicoId: string): Promise<AuditoriaRow[]> {
   const { data, error } = await supabase
