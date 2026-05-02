@@ -4,6 +4,25 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /* ── Types ── */
+
+export type ConsultaPendenteAvaliacao = {
+  consulta_id: string;
+  medico_id: string;
+  medico_nome: string | null;
+  especialidade_nome: string | null;
+  concluida_em: string;
+};
+
+export type SaldoCrescimentoItem = {
+  id: string;
+  medico_id: string;
+  tipo: "credito" | "debito";
+  valor: number;
+  saldo_apos: number;
+  motivo: string;
+  referencia_id: string | null;
+  created_at: string;
+};
 export type AvaliacaoMedica = {
   id: string;
   paciente_id: string;
