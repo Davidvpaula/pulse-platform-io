@@ -118,6 +118,12 @@ export const colaboradorMenu: MenuNode[] = [
     key: "gamificacao.configurar",
   },
   {
+    label: "Gaming Financeiro",
+    to: "/app/admin/gamificacao/financeiro",
+    icon: Trophy,
+    key: "gamificacao.configurar",
+  },
+  {
     label: "Auditoria",
     to: "/app/colaborador/auditoria",
     icon: Eye,
