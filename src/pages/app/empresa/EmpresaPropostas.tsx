@@ -522,6 +522,13 @@ export default function EmpresaPropostas() {
           })}
         </div>
       )}
+      {/* Terms enforcement dialog */}
+      <TermsAcceptanceDialog
+        tipo="proposta_empresa"
+        open={termsEmpresa.showDialog}
+        onOpenChange={termsEmpresa.setShowDialog}
+        onAccepted={termsEmpresa.onAccepted}
+      />
     </div>
   );
 }
