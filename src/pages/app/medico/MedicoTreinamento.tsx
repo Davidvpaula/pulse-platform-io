@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Play, CheckCircle2, BookOpen, Clock, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Play, CheckCircle2, BookOpen, Clock, ExternalLink, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
