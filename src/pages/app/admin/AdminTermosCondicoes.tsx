@@ -175,6 +175,7 @@ export default function AdminTermosCondicoes() {
     }
   };
 
+  const handleNovaVersao = (tipo: TermoTipo) => {
     const ativo = termos.find(t => t.tipo === tipo && t.status === "ativo");
     setCreateTipo(tipo);
     setCreateTitulo(ativo?.titulo ?? TERMO_TIPO_LABELS[tipo]);
