@@ -112,6 +112,8 @@ import AdminRelatorioAuditoria from "@/pages/app/admin/AdminRelatorioAuditoria";
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
+import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
+import MedicoCorporativo from "@/pages/app/medico/MedicoCorporativo";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
