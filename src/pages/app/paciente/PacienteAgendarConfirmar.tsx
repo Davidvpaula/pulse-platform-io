@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,8 @@ import {
 import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 /* ─────────── Validação ─────────── */
 
@@ -84,6 +86,8 @@ export default function PacienteAgendarConfirmar() {
   const [slot, setSlot] = useState<SlotDisponivel | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const termsCheck = useTermsCheck("consulta_paciente");
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -124,7 +128,7 @@ export default function PacienteAgendarConfirmar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotId, session]);
 
-  const onSubmit = async (values: FormData) => {
+  const doSubmit = useCallback(async (values: FormData) => {
     if (!slot) return;
     setSubmitting(true);
     try {
@@ -140,7 +144,6 @@ export default function PacienteAgendarConfirmar() {
         cep: values.cep,
       });
 
-      // Dispara checkout — Stripe (hosted) ou mock conforme app_settings
       const session = await criarCheckoutSession({
         consultaId: res.consulta_id,
         valorCentavos: res.valor_centavos,
@@ -154,7 +157,24 @@ export default function PacienteAgendarConfirmar() {
     } finally {
       setSubmitting(false);
     }
+  }, [slot, navigate]);
+
+  const onSubmit = async (values: FormData) => {
+    if (termsCheck.needsAcceptance) {
+      setPendingFormData(values);
+      termsCheck.setShowDialog(true);
+      return;
+    }
+    await doSubmit(values);
   };
+
+  const handleTermsAccepted = useCallback(() => {
+    termsCheck.onAccepted();
+    if (pendingFormData) {
+      doSubmit(pendingFormData);
+      setPendingFormData(null);
+    }
+  }, [termsCheck, pendingFormData, doSubmit]);
 
   if (loading) {
     return (
@@ -356,6 +376,13 @@ export default function PacienteAgendarConfirmar() {
           </p>
         </aside>
       </div>
+
+      <TermsAcceptanceDialog
+        tipo="consulta_paciente"
+        open={termsCheck.showDialog}
+        onOpenChange={termsCheck.setShowDialog}
+        onAccepted={handleTermsAccepted}
+      />
     </div>
   );
 }

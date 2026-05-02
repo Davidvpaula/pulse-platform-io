@@ -1,84 +1,91 @@
 
-# Fase 1 — Avaliações + Ranking + Dashboards Separados
+# Sistema de Termos e Condições
 
 ## Resumo
-Criar o sistema de avaliação de pacientes, ranking dinâmico de médicos, e duas páginas dedicadas (médico e admin) completamente separadas do financeiro e outros módulos.
+
+Criar um sistema centralizado de gestão de Termos e Condições no dashboard Admin, com versionamento imutavel, aceite obrigatório por usuário (com IP/user-agent), e integração nos fluxos existentes (compra de consulta, planos, cadastro médico, premium, gamificação).
+
+Nenhuma tabela ou fluxo existente será alterada -- apenas novas tabelas, páginas e componentes serão criados.
 
 ---
 
-## 1. Banco de dados (migração)
+## Fase 1 -- Database (migration)
 
-**3 novas tabelas + funções + triggers:**
+**Tabela `termos_condicoes`**
+- `id` uuid PK
+- `tipo` enum: `consulta_paciente`, `privacidade`, `plano_plataforma`, `plano_medico`, `contrato_medico`, `gamificacao_premium`, `criacao_plano_medico`, `uso_feegow`
+- `titulo` text NOT NULL
+- `conteudo` text NOT NULL (HTML do editor rico)
+- `versao` int NOT NULL (auto-incrementa por tipo)
+- `status` enum: `ativo`, `inativo`
+- `created_at`, `published_at` timestamptz
+- `created_by` uuid (actor admin)
+- Constraint UNIQUE(tipo, versao) -- nunca sobrescreve
+- Constraint: max 1 ativo por tipo (via trigger)
 
-- `ranking_config` — configuração admin (pesos da fórmula, mín. avaliações para exibir, dias de recência). RLS: apenas admin.
-- `avaliacoes_medicas` — paciente_id, medico_id, consulta_id (unique), nota 1-5, comentário, flags público/exibir_no_perfil. RLS: paciente insere/lê próprias, médico lê as dele e atualiza `exibir_no_perfil`, admin lê tudo, anon lê públicas.
-- `medico_ranking` — tabela materializada com avaliacao_media, total_atendimentos, taxa_conversao, taxa_no_show, fator_recencia, ranking_score, posicao. RLS: médico lê próprio, admin tudo, público leitura.
+**Tabela `user_terms_acceptance`**
+- `id` uuid PK
+- `user_id` uuid NOT NULL refs profiles
+- `termo_id` uuid NOT NULL refs termos_condicoes
+- `aceito_em` timestamptz NOT NULL default now()
+- `ip_address` text
+- `user_agent` text
+- RLS: usuario ve apenas seus aceites; admin le tudo
 
-**Triggers:**
-- `trg_validar_avaliacao` — BEFORE INSERT: verifica consulta concluída, paciente correto, médico correto
-- `trg_after_avaliacao_recalc` — AFTER INSERT: recalcula ranking do médico
+**Trigger**: ao ativar um termo, desativa automaticamente o anterior do mesmo tipo.
 
-**Funções:**
-- `recalcular_ranking_medico(uuid)` — calcula score usando fórmula oficial
-- `recalcular_ranking_todos()` — loop em médicos aprovados + atualiza posições
+**Auditoria**: trigger que insere em `audit_eventos_unificado` nas ações de criação, edição, ativação e aceite.
 
-**Permissões:** `gamificacao.ver` e `gamificacao.configurar` no catálogo.
+---
 
-## 2. Service layer
+## Fase 2 -- Pagina Admin `/app/admin/termos-condicoes`
 
-**Novo arquivo `src/lib/gamificacao.ts`:**
-- `enviarAvaliacao()`, `consultaJaAvaliada()`, `listarAvaliacoesMedico()`, `toggleExibirNoPerfil()`
-- `getRankingMedico()`, `listarRankingTop()`
-- `getRankingConfig()`, `salvarRankingConfig()`, `recalcularRankingTodos()`
+- Listagem de todos os termos agrupados por categoria (Paciente / Medico)
+- Cards por tipo mostrando versão ativa, data, status
+- Ações: Criar novo termo, ver historico de versoes, ativar/desativar
+- Editor rico (textarea com suporte a HTML basico) para conteudo
+- Ao editar um termo ativo: cria nova versão (v+1), não sobrescreve
+- Aba "Aceites" mostrando quem aceitou cada versão (user, data, IP)
+- Rota e menu adicionados ao nav do Admin
 
-## 3. Componente de avaliação
+---
 
-**Novo `src/components/paciente/AvaliarMedicoDialog.tsx`:**
-- Dialog com estrelas clicáveis (1-5), campo de comentário, checkbox "tornar público"
-- Validação: só aparece para consultas concluídas sem avaliação existente
-- Feedback visual após envio
+## Fase 3 -- Componente de aceite reutilizavel
 
-## 4. Integração no PacienteAgendamentos
+- `TermsAcceptanceDialog.tsx` -- modal obrigatório
+  - Recebe `tipo` do termo como prop
+  - Busca o termo ativo daquele tipo
+  - Exibe titulo + conteudo (scrollável)
+  - Checkbox "Li e aceito os termos"
+  - Botão confirmar (desabilitado até checkbox)
+  - Ao confirmar: insere em `user_terms_acceptance` com IP e user-agent
+  - Callback `onAccepted` para liberar o fluxo
 
-- Botão "Avaliar" ao lado de cada consulta concluída (verifica se já avaliou)
-- Abre o `AvaliarMedicoDialog`
+- `useTermsCheck(tipo)` -- hook que verifica se o usuario já aceitou a versão ativa do tipo. Retorna `{ needsAcceptance, showDialog, ... }`.
 
-## 5. Dashboard Médico — `/app/medico/gamificacao`
+---
 
-**Nova página `src/pages/app/medico/MedicoGamificacao.tsx`:**
-- **Performance**: nota média, total avaliações, atendimentos, posição no ranking, taxa de conversão, taxa de no-show, fator de recência
-- **Avaliações**: lista de comentários recebidos com toggle para exibir/ocultar no perfil público
-- Página separada, não mistura com financeiro
+## Fase 4 -- Integração nos fluxos existentes
 
-## 6. Dashboard Admin — `/app/admin/gamificacao`
+Cada fluxo chama `useTermsCheck` e, se necessário, exibe o dialog antes de prosseguir:
 
-**Nova página `src/pages/app/admin/AdminGamificacao.tsx`:**
-- **Pesos do ranking**: formulário com sliders para os 6 pesos (validação soma = 1.0)
-- **Configuração**: mín. avaliações para exibir, dias recência ativo/penalidade
-- **Top médicos**: tabela com ranking, score, avaliações, atendimentos
-- **Botão recalcular**: recalcula ranking de todos os médicos
-- Página separada, protegida por `gamificacao.configurar`
+| Fluxo | Tipo do termo | Onde integrar |
+|-------|--------------|---------------|
+| Compra consulta (paciente) | `consulta_paciente` | Antes de confirmar agendamento |
+| Assinar plano plataforma | `plano_plataforma` | Antes de confirmar assinatura |
+| Assinar plano médico | `plano_medico` | Antes de confirmar assinatura |
+| Cadastro médico (1o login) | `contrato_medico` | Popup obrigatório no dashboard médico |
+| Ativar premium | `gamificacao_premium` | Antes de ativar na page gamificação |
+| Criar plano (médico) | `criacao_plano_medico` | Antes de salvar novo plano |
 
-## 7. Rotas e menus
+A integração será feita adicionando o hook + dialog nos componentes existentes, sem alterar a lógica de negócio atual.
 
-- `App.tsx`: adicionar rotas `/app/medico/gamificacao` e `/app/admin/gamificacao`
-- `menuCatalog.ts`: adicionar item "Gamificação" no menu do colaborador (admin)
-- Imports e guards adequados (`MedicoGuard`, `RequireRoutePermission`)
+---
 
-## Arquivos criados/modificados
+## Detalhes técnicos
 
-| Arquivo | Ação |
-|---------|------|
-| `supabase/migrations/...gamificacao_fase1.sql` | Criar |
-| `src/lib/gamificacao.ts` | Criar |
-| `src/components/paciente/AvaliarMedicoDialog.tsx` | Criar |
-| `src/pages/app/medico/MedicoGamificacao.tsx` | Criar |
-| `src/pages/app/admin/AdminGamificacao.tsx` | Criar |
-| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Modificar (botão avaliar) |
-| `src/App.tsx` | Modificar (2 rotas) |
-| `src/lib/menu/menuCatalog.ts` | Modificar (menu item) |
-
-## O que NÃO será alterado
-- Financeiro existente (saques, repasse, snapshots)
-- Planos e assinaturas
-- Nenhuma lógica de consulta existente
+- Enum `termo_tipo` criado no banco para manter integridade
+- RLS: admin full CRUD em `termos_condicoes`; usuarios autenticados SELECT only. Em `user_terms_acceptance`: INSERT proprio + SELECT proprio; admin SELECT all
+- IP capturado via header no client (fallback vazio)
+- Auditoria via `audit_eventos_unificado` com modulo = 'termos'
+- Menu Admin: novo item "Termos & Condições" com icone FileText, entre Segurança e Análises

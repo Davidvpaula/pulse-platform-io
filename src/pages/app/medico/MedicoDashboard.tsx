@@ -19,6 +19,8 @@ import {
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
 import { usePermission } from "@/lib/permissions/usePermission";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -56,6 +58,7 @@ export default function MedicoDashboard() {
   const podeVerFinanceiro = isMedico ? hasPerm("financeiro.ver") : isAdmin;
   const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
   const [loading, setLoading] = useState(true);
+  const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
@@ -535,6 +538,17 @@ export default function MedicoDashboard() {
           )}
         </div>
       </div>
+
+      {/* Contrato obrigatório no primeiro acesso */}
+      {isMedico && (
+        <TermsAcceptanceDialog
+          tipo="contrato_medico"
+          open={termsContrato.needsAcceptance && !termsContrato.loading}
+          onOpenChange={termsContrato.setShowDialog}
+          onAccepted={termsContrato.onAccepted}
+          obrigatorio
+        />
+      )}
     </div>
   );
 }

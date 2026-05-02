@@ -198,6 +198,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Impersonar usuário", to: "/app/admin/impersonar" },
         ],
       },
+      { label: "Termos & Condições", to: "/app/admin/termos-condicoes", icon: FileText },
       {
         label: "Análises",
         icon: TrendingUp,

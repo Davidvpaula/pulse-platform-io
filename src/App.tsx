@@ -64,6 +64,7 @@ import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
 import SecretariaRelatorios from "@/pages/app/secretaria/SecretariaRelatorios";
 import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
 import AdminDashboard from "@/pages/app/admin/AdminDashboard";
+import AdminTermosCondicoes from "@/pages/app/admin/AdminTermosCondicoes";
 import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
 import AdminUsuarios from "@/pages/app/admin/AdminUsuarios";
 import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
@@ -266,6 +267,7 @@ const App = () => (
               <Route path="admin/planos-cancelamentos" element={<G perm="financeiro.servicos_gerenciar"><AdminCancelamentosPlanos /></G>} />
               <Route path="admin/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
               <Route path="admin/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
+              <Route path="admin/termos-condicoes" element={<AdminTermosCondicoes />} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />
