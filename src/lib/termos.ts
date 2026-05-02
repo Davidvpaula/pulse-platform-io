@@ -18,11 +18,14 @@ export const TERMO_TIPO_LABELS: Record<TermoTipo, string> = {
   gamificacao_premium: "Termos de gamificação / premium",
   criacao_plano_medico: "Termos de criação de planos",
   uso_feegow: "Termos de uso da Feegow",
+  proposta_empresa: "Termos de proposta comercial (Empresa)",
+  proposta_medico: "Termos de proposta comercial (Médico)",
 };
 
 export const TERMO_CATEGORIAS = {
   paciente: ["consulta_paciente", "privacidade", "plano_plataforma", "plano_medico"] as TermoTipo[],
-  medico: ["contrato_medico", "gamificacao_premium", "criacao_plano_medico", "uso_feegow"] as TermoTipo[],
+  medico: ["contrato_medico", "gamificacao_premium", "criacao_plano_medico", "uso_feegow", "proposta_medico"] as TermoTipo[],
+  empresa: ["proposta_empresa"] as TermoTipo[],
 };
 
 /* ─── Queries ─── */
