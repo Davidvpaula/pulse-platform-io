@@ -122,7 +122,7 @@ export default function AdminContratoDetalhes() {
         .from("empresas_funcionarios")
         .select("id", { count: "exact", head: true })
         .eq("empresa_id", c.empresa_id)
-        .eq("ativo", true);
+        .eq("status", "ativo");
       setQtdFuncionarios(count ?? 0);
     } catch (e: any) {
       toast.error("Erro ao carregar contrato", { description: e.message });
