@@ -258,10 +258,62 @@ export default function AdminTermosCondicoes() {
     <div className="space-y-6 p-6">
       <PageHeader title="Termos & Condições" description="Gerencie todos os termos legais da plataforma com versionamento completo." />
 
-      <div className="flex justify-end">
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Criar novo termo
-        </Button>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[200px] max-w-sm">
+          <Label className="text-xs text-muted-foreground mb-1 block">Buscar</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por título ou tipo…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div className="min-w-[160px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Tipo</Label>
+          <Select value={filterTipo} onValueChange={setFilterTipo}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {Object.entries(TERMO_TIPO_LABELS).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[130px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="ativo">Ativo</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[130px]">
+          <Label className="text-xs text-muted-foreground mb-1 block">Versão</Label>
+          <Select value={filterVersao} onValueChange={setFilterVersao}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              <SelectItem value="ultima">Última versão</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-10">
+            <X className="h-4 w-4 mr-1" /> Limpar
+          </Button>
+        )}
+        <div className="ml-auto">
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Criar novo termo
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="paciente">
