@@ -119,6 +119,7 @@ export default function MedicoFinanceiro() {
       valor_plataforma_centavos: r.valor_plataforma_centavos,
       status: r.status,
       paciente_nome: r.consultas?.pacientes?.user_id ? nomes[r.consultas.pacientes.user_id] ?? null : null,
+      empresa_id: r.empresa_id ?? null,
     })));
     setLoading(false);
   }
