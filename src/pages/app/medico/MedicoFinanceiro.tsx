@@ -26,6 +26,7 @@ type FinRow = {
   valor_plataforma_centavos: number;
   status: string;
   paciente_nome?: string | null;
+  empresa_id?: string | null;
 };
 
 const periodos = [
