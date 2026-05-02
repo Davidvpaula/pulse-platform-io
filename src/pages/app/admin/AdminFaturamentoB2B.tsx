@@ -387,7 +387,46 @@ export default function AdminFaturamentoB2B() {
         </table>
       </div>
 
-      {/* Modal de detalhes */}
+      {/* Paginação */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-muted-foreground">
+            Mostrando {(pagina - 1) * POR_PAGINA + 1}–{Math.min(pagina * POR_PAGINA, listaFiltrada.length)} de {listaFiltrada.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" disabled={pagina <= 1} onClick={() => setPagina(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: Math.min(totalPaginas, 7) }, (_, i) => {
+              let p: number;
+              if (totalPaginas <= 7) {
+                p = i + 1;
+              } else if (pagina <= 4) {
+                p = i + 1;
+              } else if (pagina >= totalPaginas - 3) {
+                p = totalPaginas - 6 + i;
+              } else {
+                p = pagina - 3 + i;
+              }
+              return (
+                <Button
+                  key={p}
+                  variant={p === pagina ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => setPagina(p)}
+                >
+                  {p}
+                </Button>
+              );
+            })}
+            <Button variant="outline" size="sm" disabled={pagina >= totalPaginas} onClick={() => setPagina(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={!!detalheAberto} onOpenChange={() => setDetalheAberto(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
