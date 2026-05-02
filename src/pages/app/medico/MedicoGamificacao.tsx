@@ -112,7 +112,75 @@ export default function MedicoGamificacao() {
     }
   };
 
-  if (loading) {
+  /** Fluxo de ativação premium: verifica termos → exige aceite → ativa */
+  const handleAtivarPremium = async () => {
+    if (!medicoId) return;
+    setActivatingPremium(true);
+    try {
+      // 1. Verifica termos pendentes de gamificação/premium
+      const pendentes = await buscarTermosPendentes("medico");
+      // Filtra apenas os tipos obrigatórios para premium
+      const premiumTermos = pendentes.filter(t =>
+        t.tipo === "gamificacao_premium" || t.tipo === "contrato_medico"
+      );
+
+      if (premiumTermos.length > 0) {
+        // Precisa aceitar termos primeiro
+        setTermosPendentes(premiumTermos);
+        setTermoAtual(premiumTermos[0]);
+        setActivatingPremium(false);
+        return; // O fluxo continua após aceitar todos os termos
+      }
+
+      // 2. Todos os termos aceitos — ativa premium
+      await ativarPremiumConquistado(medicoId);
+      toast.success("Premium ativado com sucesso! 🎉");
+      // Recarrega estado
+      const prem = await getMedicoPremium(medicoId);
+      setPremium(prem);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao ativar Premium");
+    } finally {
+      setActivatingPremium(false);
+    }
+  };
+
+  const handleAceitarTermo = async () => {
+    if (!termoAtual) return;
+    setAceitandoTermo(true);
+    try {
+      await registrarAceite(termoAtual.id);
+      toast.success(`"${termoAtual.titulo}" aceito!`);
+      const restantes = termosPendentes.filter(t => t.id !== termoAtual.id);
+      setTermosPendentes(restantes);
+
+      if (restantes.length > 0) {
+        // Mais termos para aceitar
+        setTermoAtual(restantes[0]);
+      } else {
+        // Todos aceitos — prossegue com ativação
+        setTermoAtual(null);
+        if (medicoId) {
+          setActivatingPremium(true);
+          try {
+            await ativarPremiumConquistado(medicoId);
+            toast.success("Premium ativado com sucesso! 🎉");
+            const prem = await getMedicoPremium(medicoId);
+            setPremium(prem);
+          } catch (e: any) {
+            toast.error(e.message ?? "Erro ao ativar Premium");
+          } finally {
+            setActivatingPremium(false);
+          }
+        }
+      }
+    } catch (e: any) {
+      toast.error("Erro ao registrar aceite: " + e.message);
+    } finally {
+      setAceitandoTermo(false);
+    }
+  };
+
     return (
       <div className="flex items-center justify-center p-20 text-muted-foreground">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando gamificação…
