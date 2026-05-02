@@ -12,7 +12,7 @@ import {
   buscarTermosPendentes, registrarAceite, TERMO_TIPO_LABELS,
   type TermoRow,
 } from "@/lib/termos";
-import { MeusAceites } from "@/components/shared/MeusAceites";
+import MeusAceites from "@/components/shared/MeusAceites";
 
 export default function EmpresaTermos() {
   const [pendentes, setPendentes] = useState<TermoRow[]>([]);
@@ -114,7 +114,7 @@ export default function EmpresaTermos() {
           </DialogHeader>
           <ScrollArea className="max-h-[50vh] rounded-md border border-border p-4">
             <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-              {aceitando?.conteudo_markdown ?? aceitando?.conteudo_texto ?? "Conteúdo não disponível."}
+              {aceitando?.conteudo ?? "Conteúdo não disponível."}
             </div>
           </ScrollArea>
           <DialogFooter>
