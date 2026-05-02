@@ -117,6 +117,7 @@ import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
 import AdminGestaoB2B from "@/pages/app/admin/AdminGestaoB2B";
 import AdminRelatoriosB2B from "@/pages/app/admin/AdminRelatoriosB2B";
+import AdminFaturamentoB2B from "@/pages/app/admin/AdminFaturamentoB2B";
 import MedicoCorporativo from "@/pages/app/medico/MedicoCorporativo";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
