@@ -333,6 +333,7 @@ const App = () => (
               <Route path="empresa/financeiro" element={<EmpresaFinanceiro />} />
               <Route path="empresa/documentos" element={<EmpresaDocumentos />} />
               <Route path="empresa/termos" element={<EmpresaTermos />} />
+              <Route path="empresa/propostas" element={<EmpresaPropostas />} />
               <Route path="empresa/perfil" element={<EmpresaPerfilPage />} />
 
               {/* Comunicação */}
