@@ -54,6 +54,12 @@ export default function MedicoGamificacao() {
   const [config, setConfig] = useState<RankingConfig | null>(null);
   const [showSaldoHistory, setShowSaldoHistory] = useState(false);
 
+  // Premium activation + terms
+  const [activatingPremium, setActivatingPremium] = useState(false);
+  const [termosPendentes, setTermosPendentes] = useState<TermoRow[]>([]);
+  const [termoAtual, setTermoAtual] = useState<TermoRow | null>(null);
+  const [aceitandoTermo, setAceitandoTermo] = useState(false);
+
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
     setLoading(true);
