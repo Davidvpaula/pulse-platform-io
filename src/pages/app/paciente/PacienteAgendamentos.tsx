@@ -41,7 +41,7 @@ export default function PacienteAgendamentos() {
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
-    if (!session) { setRows(null); setVouchers([]); return; }
+    if (!session) { setRows(null); setVouchers([]); setAvaliadas(new Set()); return; }
     setLoading(true);
     const [data, vs] = await Promise.all([
       listConsultasDoPaciente(),
@@ -49,6 +49,12 @@ export default function PacienteAgendamentos() {
     ]);
     setRows(data);
     setVouchers(vs);
+    // Check which completed consultations have already been evaluated
+    const concluidas = (data ?? []).filter((c) => c.status === "concluida");
+    if (concluidas.length) {
+      const ids = await consultasAvaliadasIds(concluidas.map((c) => c.id));
+      setAvaliadas(ids);
+    }
     setLoading(false);
   };
 
