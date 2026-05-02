@@ -4,7 +4,7 @@ import {
   ArrowLeft, Calendar, MessageSquareText, Wallet, FileText, Building2, User,
   Stethoscope, Phone, ExternalLink, Loader2, History, Shield, Clock,
   Send, Eye, RefreshCw, AlertCircle, Ban, Play, Pause, ShieldOff,
-  MessageCircle, Tag, StickyNote, CreditCard, Gift,
+  MessageCircle, Tag, StickyNote, CreditCard, Gift, Undo2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { brl } from "@/lib/relatorios/utils";
@@ -167,10 +175,23 @@ export default function PacientePerfil() {
   const [obsEdit, setObsEdit] = useState("");
   const [obsSalvando, setObsSalvando] = useState(false);
 
+  // Reembolso dialog
+  const [reembolsoOpen, setReembolsoOpen] = useState(false);
+  const [reembolsoForm, setReembolsoForm] = useState({ pagamento_id: "", tipo: "total" as "total" | "parcial", valor: "", motivo: "" });
+  const [reembolsoCriando, setReembolsoCriando] = useState(false);
+
+  // Status action dialog
+  const [statusActionOpen, setStatusActionOpen] = useState(false);
+  const [statusAction, setStatusAction] = useState<{ novoStatus: string; label: string }>({ novoStatus: "", label: "" });
+  const [statusMotivo, setStatusMotivo] = useState("");
+  const [statusObs, setStatusObs] = useState("");
+  const [statusBloqueadoAte, setStatusBloqueadoAte] = useState("");
+  const [statusSalvando, setStatusSalvando] = useState(false);
+
   const defaultTab = searchParams.get("tab") || "visao-geral";
 
   const voltarTo = location.pathname.startsWith("/app/admin")
-    ? "/app/admin/usuarios"
+    ? "/app/admin/pacientes"
     : location.pathname.startsWith("/app/colaborador")
     ? "/app/colaborador/pacientes"
     : "/app/secretaria/pacientes";
@@ -305,6 +326,76 @@ export default function PacientePerfil() {
     setObsSalvando(false);
   }
 
+  // ── Solicitar reembolso ──
+  async function criarReembolso() {
+    if (!pac || !reembolsoForm.pagamento_id || !reembolsoForm.motivo.trim()) {
+      toast({ title: "Preencha pagamento e motivo", variant: "destructive" });
+      return;
+    }
+    const pag = pagamentos.find(p => p.id === reembolsoForm.pagamento_id);
+    if (!pag) return;
+    const valorCentavos = reembolsoForm.tipo === "total"
+      ? pag.valor_centavos
+      : Math.round(parseFloat(reembolsoForm.valor || "0") * 100);
+    if (valorCentavos <= 0 || valorCentavos > pag.valor_centavos) {
+      toast({ title: "Valor inválido", description: "O valor deve ser maior que 0 e menor ou igual ao pagamento.", variant: "destructive" });
+      return;
+    }
+    setReembolsoCriando(true);
+    // Find consulta_id from pagamento
+    const consultaId = pag.consulta_id;
+    const { error } = await supabase.from("reembolsos").insert({
+      consulta_id: consultaId,
+      pagamento_id: pag.id,
+      valor_centavos: valorCentavos,
+      motivo: reembolsoForm.motivo.trim(),
+      tipo: reembolsoForm.tipo,
+      status: "solicitado",
+      actor_id: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
+    setReembolsoCriando(false);
+    if (error) {
+      toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Reembolso solicitado", description: "O reembolso entrará na fila para aprovação." });
+      setReembolsoOpen(false);
+      setReembolsoForm({ pagamento_id: "", tipo: "total", valor: "", motivo: "" });
+      carregar();
+    }
+  }
+
+  // ── Ação de status ──
+  function openStatusAction(novoStatus: string, label: string) {
+    setStatusAction({ novoStatus, label });
+    setStatusMotivo("");
+    setStatusObs("");
+    setStatusBloqueadoAte("");
+    setStatusActionOpen(true);
+  }
+
+  async function executarStatusAction() {
+    if (!pac || !statusMotivo.trim()) {
+      toast({ title: "Informe o motivo", variant: "destructive" });
+      return;
+    }
+    setStatusSalvando(true);
+    const { error } = await supabase.rpc("alterar_status_conta_paciente" as any, {
+      _paciente_id: pac.id,
+      _novo_status: statusAction.novoStatus,
+      _motivo: statusMotivo.trim(),
+      _observacao: statusObs.trim() || null,
+      _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? statusBloqueadoAte : null,
+    });
+    setStatusSalvando(false);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `Status alterado para "${statusAction.label}"` });
+      setStatusActionOpen(false);
+      carregar();
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -368,6 +459,36 @@ export default function PacientePerfil() {
             ))}
           </div>
         )}
+        <div className="ml-auto flex gap-2">
+          {pac.status_conta !== "suspenso" && pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-warning/40 text-warning" onClick={() => openStatusAction("suspenso", "Suspenso")}>
+                <Pause className="h-3.5 w-3.5 mr-1" />Suspender
+              </Button>
+            </RequirePermission>
+          )}
+          {pac.status_conta !== "bloqueado" && pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-destructive/40 text-destructive" onClick={() => openStatusAction("bloqueado", "Bloqueado")}>
+                <ShieldOff className="h-3.5 w-3.5 mr-1" />Bloquear
+              </Button>
+            </RequirePermission>
+          )}
+          {pac.status_conta !== "banido" && (
+            <RequirePermission perm="pacientes.banir">
+              <Button size="sm" variant="destructive" onClick={() => openStatusAction("banido", "Banido")}>
+                <Ban className="h-3.5 w-3.5 mr-1" />Banir
+              </Button>
+            </RequirePermission>
+          )}
+          {["suspenso", "bloqueado", "banido"].includes(pac.status_conta) && (
+            <RequirePermission perm="pacientes.suspender">
+              <Button size="sm" variant="outline" className="border-success/40 text-success" onClick={() => openStatusAction("ativo", "Ativo")}>
+                <Play className="h-3.5 w-3.5 mr-1" />Reativar
+              </Button>
+            </RequirePermission>
+          )}
+        </div>
       </div>
 
       {/* TABS */}
@@ -517,6 +638,13 @@ export default function PacientePerfil() {
 
         {/* ── FINANCEIRO ── */}
         <TabsContent value="financeiro">
+          <div className="flex justify-end mb-4">
+            <RequirePermission perm="pacientes.reembolsar">
+              <Button variant="outline" onClick={() => setReembolsoOpen(true)} disabled={pagamentos.filter(p => p.status === "pago").length === 0}>
+                <Undo2 className="h-4 w-4 mr-2" />Solicitar reembolso
+              </Button>
+            </RequirePermission>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <Kpi label="Total gasto" value={brl(finKpis.totalGasto)} icon={CreditCard} cls="text-primary" />
             <Kpi label="Pendentes" value={String(finKpis.pendentes)} icon={Clock} cls="text-warning" />
@@ -731,6 +859,92 @@ export default function PacientePerfil() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ── Dialog: Solicitar Reembolso ── */}
+      <Dialog open={reembolsoOpen} onOpenChange={setReembolsoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar reembolso</DialogTitle>
+            <DialogDescription>Selecione o pagamento e informe os detalhes do reembolso.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Pagamento</Label>
+              <Select value={reembolsoForm.pagamento_id} onValueChange={v => setReembolsoForm(f => ({ ...f, pagamento_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {pagamentos.filter(p => p.status === "pago").map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {fmtData(p.created_at)} — {brl(p.valor_centavos)} ({p.metodo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <Select value={reembolsoForm.tipo} onValueChange={v => setReembolsoForm(f => ({ ...f, tipo: v as "total" | "parcial" }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total">Total</SelectItem>
+                  <SelectItem value="parcial">Parcial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {reembolsoForm.tipo === "parcial" && (
+              <div>
+                <Label>Valor (R$)</Label>
+                <Input type="number" step="0.01" min="0.01" placeholder="0,00" value={reembolsoForm.valor} onChange={e => setReembolsoForm(f => ({ ...f, valor: e.target.value }))} />
+              </div>
+            )}
+            <div>
+              <Label>Motivo *</Label>
+              <Textarea rows={3} placeholder="Descreva o motivo do reembolso..." value={reembolsoForm.motivo} onChange={e => setReembolsoForm(f => ({ ...f, motivo: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReembolsoOpen(false)} disabled={reembolsoCriando}>Cancelar</Button>
+            <Button onClick={criarReembolso} disabled={reembolsoCriando}>
+              {reembolsoCriando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Solicitar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog: Ação de Status ── */}
+      <Dialog open={statusActionOpen} onOpenChange={setStatusActionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar status para "{statusAction.label}"</DialogTitle>
+            <DialogDescription>Esta ação será registrada na auditoria do paciente.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Motivo *</Label>
+              <Textarea rows={3} placeholder="Motivo obrigatório..." value={statusMotivo} onChange={e => setStatusMotivo(e.target.value)} />
+            </div>
+            <div>
+              <Label>Observação adicional</Label>
+              <Textarea rows={2} placeholder="Opcional..." value={statusObs} onChange={e => setStatusObs(e.target.value)} />
+            </div>
+            {statusAction.novoStatus === "bloqueado" && (
+              <div>
+                <Label>Bloqueio até (temporário)</Label>
+                <Input type="datetime-local" value={statusBloqueadoAte} onChange={e => setStatusBloqueadoAte(e.target.value)} />
+                <p className="text-xs text-muted-foreground mt-1">Deixe vazio para bloqueio permanente.</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusActionOpen(false)} disabled={statusSalvando}>Cancelar</Button>
+            <Button variant={statusAction.novoStatus === "ativo" ? "default" : "destructive"} onClick={executarStatusAction} disabled={statusSalvando}>
+              {statusSalvando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
