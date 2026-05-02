@@ -77,6 +77,8 @@ export default function MedicoDashboard() {
     docsMes: 0,
   });
   const [iniciandoId, setIniciandoId] = useState<string | null>(null);
+  const [rankingData, setRankingData] = useState<MedicoRanking | null>(null);
+  const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
