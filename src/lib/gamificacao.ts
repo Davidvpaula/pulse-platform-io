@@ -172,3 +172,35 @@ export async function recalcularRankingTodos() {
   const { error } = await supabase.rpc("recalcular_ranking_todos" as any);
   if (error) throw error;
 }
+
+/* ── Consultas pendentes de avaliação (auto-prompt) ── */
+
+export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAvaliacao[]> {
+  const { data, error } = await supabase.rpc("consultas_pendentes_avaliacao" as any);
+  if (error) throw error;
+  return (data ?? []) as unknown as ConsultaPendenteAvaliacao[];
+}
+
+/* ── Saldo de Crescimento ── */
+
+export async function listarSaldoCrescimento(medico_id: string): Promise<SaldoCrescimentoItem[]> {
+  const { data, error } = await supabase
+    .from("medico_saldo_crescimento" as any)
+    .select("*")
+    .eq("medico_id", medico_id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as unknown as SaldoCrescimentoItem[];
+}
+
+export async function getSaldoAtual(medico_id: string): Promise<number> {
+  const { data } = await supabase
+    .from("medico_saldo_crescimento" as any)
+    .select("saldo_apos")
+    .eq("medico_id", medico_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as any)?.saldo_apos ?? 0;
+}
