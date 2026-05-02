@@ -115,15 +115,14 @@ export default function EmpresaPropostas() {
       const [{ data: props }, { data: meds }, { data: esps }, { data: termo }] = await Promise.all([
         supabase
           .from("propostas_empresa_medico")
-          .select("*, medico:profiles!propostas_empresa_medico_medico_id_fkey(full_name), especialidade:especialidades(nome)")
+          .select("*, medico:profiles!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
           .eq("empresa_id", finalEid)
           .order("created_at", { ascending: false }),
         supabase
-          .from("profiles")
-          .select("id, full_name")
-          .eq("role", "medico")
-          .eq("aprovado", true)
-          .order("full_name"),
+          .from("medicos")
+          .select("user_id, nome")
+          .eq("status", "aprovado")
+          .order("nome"),
         supabase
           .from("especialidades")
           .select("id, nome")
@@ -142,11 +141,11 @@ export default function EmpresaPropostas() {
       setPropostas(
         (props ?? []).map((p: any) => ({
           ...p,
-          medico_nome: p.medico?.full_name ?? "—",
+          medico_nome: p.medico?.nome ?? "—",
           especialidade_nome: p.especialidade?.nome ?? null,
         }))
       );
-      setMedicos(meds ?? []);
+      setMedicos((meds ?? []).map((m: any) => ({ id: m.user_id, nome: m.nome })));
       setEspecialidades(esps ?? []);
       setTermoConteudo(termo?.conteudo ?? null);
       setTermoVersao(termo?.versao ?? null);
