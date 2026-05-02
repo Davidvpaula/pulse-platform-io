@@ -113,6 +113,7 @@ export default function MedicoPerfil() {
           <TabsTrigger value="pessoal"><FileText className="mr-1.5 h-3.5 w-3.5" />Dados Pessoais</TabsTrigger>
           <TabsTrigger value="bancario"><Landmark className="mr-1.5 h-3.5 w-3.5" />Dados Bancários</TabsTrigger>
           <TabsTrigger value="fiscal"><Receipt className="mr-1.5 h-3.5 w-3.5" />Documentos Fiscais</TabsTrigger>
+          <TabsTrigger value="termos"><FileText className="mr-1.5 h-3.5 w-3.5" />Termos</TabsTrigger>
         </TabsList>
 
         {/* ── PERFIL PÚBLICO ── */}
