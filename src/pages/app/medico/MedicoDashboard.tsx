@@ -498,6 +498,16 @@ export default function MedicoDashboard() {
           )}
 
           {isMedico && (
+            <Link to="/app/medico/gamificacao" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-warning" />
+                <p className="font-semibold">Gamificação & Ranking</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Performance, avaliações e posição</p>
+            </Link>
+          )}
+
+          {isMedico && (
             <Link to="/app/medico/treinamento" className="card-elevated block p-5 transition hover:border-primary/40">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-primary" />
