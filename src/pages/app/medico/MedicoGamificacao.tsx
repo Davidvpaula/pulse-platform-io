@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
+  FileText, CheckCircle2, AlertTriangle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -13,16 +14,21 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import { getMedicoAtual } from "@/lib/clinico";
 import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
-  listarSaldoCrescimento, getRankingConfig,
+  listarSaldoCrescimento, getRankingConfig, ativarPremiumConquistado,
   type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
   type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
 } from "@/lib/gamificacao";
+import {
+  buscarTermosPendentes, registrarAceite, TERMO_TIPO_LABELS,
+  type TermoRow,
+} from "@/lib/termos";
 import { cn } from "@/lib/utils";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
@@ -47,6 +53,12 @@ export default function MedicoGamificacao() {
   const [novaCampanhaOpen, setNovaCampanhaOpen] = useState(false);
   const [config, setConfig] = useState<RankingConfig | null>(null);
   const [showSaldoHistory, setShowSaldoHistory] = useState(false);
+
+  // Premium activation + terms
+  const [activatingPremium, setActivatingPremium] = useState(false);
+  const [termosPendentes, setTermosPendentes] = useState<TermoRow[]>([]);
+  const [termoAtual, setTermoAtual] = useState<TermoRow | null>(null);
+  const [aceitandoTermo, setAceitandoTermo] = useState(false);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
@@ -97,6 +109,75 @@ export default function MedicoGamificacao() {
       toast.success(`Campanha ${novoStatus}`);
     } catch {
       toast.error("Erro ao atualizar campanha");
+    }
+  };
+
+  /** Fluxo de ativação premium: verifica termos → exige aceite → ativa */
+  const handleAtivarPremium = async () => {
+    if (!medicoId) return;
+    setActivatingPremium(true);
+    try {
+      // 1. Verifica termos pendentes de gamificação/premium
+      const pendentes = await buscarTermosPendentes("medico");
+      // Filtra apenas os tipos obrigatórios para premium
+      const premiumTermos = pendentes.filter(t =>
+        t.tipo === "gamificacao_premium" || t.tipo === "contrato_medico"
+      );
+
+      if (premiumTermos.length > 0) {
+        // Precisa aceitar termos primeiro
+        setTermosPendentes(premiumTermos);
+        setTermoAtual(premiumTermos[0]);
+        setActivatingPremium(false);
+        return; // O fluxo continua após aceitar todos os termos
+      }
+
+      // 2. Todos os termos aceitos — ativa premium
+      await ativarPremiumConquistado(medicoId);
+      toast.success("Premium ativado com sucesso! 🎉");
+      // Recarrega estado
+      const prem = await getMedicoPremium(medicoId);
+      setPremium(prem);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao ativar Premium");
+    } finally {
+      setActivatingPremium(false);
+    }
+  };
+
+  const handleAceitarTermo = async () => {
+    if (!termoAtual) return;
+    setAceitandoTermo(true);
+    try {
+      await registrarAceite(termoAtual.id);
+      toast.success(`"${termoAtual.titulo}" aceito!`);
+      const restantes = termosPendentes.filter(t => t.id !== termoAtual.id);
+      setTermosPendentes(restantes);
+
+      if (restantes.length > 0) {
+        // Mais termos para aceitar
+        setTermoAtual(restantes[0]);
+      } else {
+        // Todos aceitos — prossegue com ativação
+        setTermoAtual(null);
+        if (medicoId) {
+          setActivatingPremium(true);
+          try {
+            await ativarPremiumConquistado(medicoId);
+            toast.success("Premium ativado com sucesso! 🎉");
+            const prem = await getMedicoPremium(medicoId);
+            setPremium(prem);
+          } catch (e: any) {
+            toast.error(e.message ?? "Erro ao ativar Premium");
+          } finally {
+            setActivatingPremium(false);
+          }
+        }
+      }
+    } catch (e: any) {
+      toast.error("Erro ao registrar aceite: " + e.message);
+    } finally {
+      setAceitandoTermo(false);
     }
   };
 
@@ -180,7 +261,74 @@ export default function MedicoGamificacao() {
             </div>
           </div>
         )}
+
+        {/* Activation button — shown when all qualifications met */}
+        {!isPremium && premiumProgress &&
+          premiumProgress.atendimentos.ok && premiumProgress.avaliacao.ok && premiumProgress.noShow.ok && (
+          <div className="mt-4 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+            <Crown className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Parabéns! Você atingiu todos os requisitos.</p>
+              <p className="text-xs text-muted-foreground">Aceite os termos obrigatórios e ative seu plano Premium agora.</p>
+            </div>
+            <Button
+              onClick={handleAtivarPremium}
+              disabled={activatingPremium}
+              className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white hover:opacity-90"
+            >
+              {activatingPremium
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Ativando…</>
+                : <><Crown className="mr-2 h-4 w-4" /> Ativar Premium</>}
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Dialog: aceite de termos obrigatórios para Premium */}
+      <Dialog open={!!termoAtual} onOpenChange={(o) => { if (!o) { setTermoAtual(null); setTermosPendentes([]); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              {termoAtual?.titulo}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              {termoAtual && TERMO_TIPO_LABELS[termoAtual.tipo]} • Versão {termoAtual?.versao}
+            </p>
+            <div className="flex items-center gap-2 mt-2 rounded-md bg-warning/10 border border-warning/30 px-3 py-2 text-xs text-warning">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              Você precisa aceitar {termosPendentes.length > 1 ? `${termosPendentes.length} termos` : "este termo"} para ativar o Premium.
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 max-h-[50vh] border rounded-md p-4">
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: termoAtual?.conteudo ?? "" }}
+            />
+          </ScrollArea>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-2">
+            <p className="text-xs text-muted-foreground flex-1">
+              Ao aceitar, você concorda com os termos acima. Seu aceite será registrado com data, IP e navegador.
+            </p>
+            <Button variant="outline" onClick={() => { setTermoAtual(null); setTermosPendentes([]); }} disabled={aceitandoTermo}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAceitarTermo} disabled={aceitandoTermo}>
+              {aceitandoTermo
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registrando…</>
+                : <><CheckCircle2 className="mr-2 h-4 w-4" /> Li e aceito</>}
+            </Button>
+          </DialogFooter>
+
+          {termosPendentes.length > 1 && termoAtual && (
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              + {termosPendentes.filter(t => t.id !== termoAtual.id).length} termo(s) restante(s) após este
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Saldo de Crescimento */}
       <div className="card-elevated p-5">
