@@ -124,10 +124,12 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/fluxo":                [admin(), { label: "Fluxo operacional" }],
   "/app/admin/configuracoes":        [admin(), { label: "Configurações" }],
   "/app/admin/agendamentos":         [admin(), { label: "Agendamentos" }],
+  "/app/admin/planos-empresariais":  [admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Planos empresariais" }],
 
   // ── Médico (gamificação gerada via buildGroup) ──
   "/app/medico/dashboard":       [{ label: "Médico" }, { label: "Dashboard" }],
   "/app/medico/agenda":          [medico(), { label: "Agenda" }],
+  "/app/medico/corporativo":     [medico(), { label: "Corporativo" }],
   "/app/medico/horarios":        [medico(), { label: "Meus horários" }],
   "/app/medico/consultas":       [medico(), { label: "Consultas" }],
   "/app/medico/servicos":        [medico(), { label: "Serviços da plataforma" }],
