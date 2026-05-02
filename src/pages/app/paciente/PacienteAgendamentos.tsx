@@ -37,6 +37,8 @@ export default function PacienteAgendamentos() {
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
+  const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
+  const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); setVouchers([]); return; }
