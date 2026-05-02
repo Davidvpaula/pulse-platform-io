@@ -334,7 +334,7 @@ export default function AdminGestaoB2B() {
                       {isOver && (
                         <p className="mt-1 text-xs text-destructive flex items-center gap-1">
                           <ArrowUpRight className="h-3 w-3" />
-                          {c.qtd_funcionarios - c.limite_consultas_mes} vidas acima do contrato
+                          {c.qtd_funcionarios - c.limite_consultas_mes} funcionários acima do limite
                         </p>
                       )}
                     </div>
