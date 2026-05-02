@@ -34,7 +34,8 @@ export default function AdminSeguranca() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
-
+  const [filtroResultado, setFiltroResultado] = useState<string>("todos");
+  const [filtroBusca, setFiltroBusca] = useState("");
   async function load() {
     setLoading(true);
     const [{ data: p }, { data: a }] = await Promise.all([
