@@ -6,100 +6,141 @@ import {
 
 /**
  * Map of route paths to breadcrumb config.
- * Each entry: [parentLabel, parentLink, ...intermediates, currentLabel]
- * Intermediates are [label, link] tuples.
+ * Each entry: array of { label, to? } crumbs.
  */
 type Crumb = { label: string; to?: string };
 
+/* ─── Helpers para gerar breadcrumbs de forma DRY ─── */
+const admin  = (to?: string): Crumb => ({ label: "Admin", to: to ?? "/app/admin/dashboard" });
+const medico = (to?: string): Crumb => ({ label: "Médico", to: to ?? "/app/medico/dashboard" });
+
+/** Gera mapeamento rota→breadcrumb para um prefixo, com label-raiz e itens. */
+function buildGroup(
+  rootCrumb: Crumb,
+  basePath: string,
+  groupLabel: string,
+  groupLink: string | undefined,
+  items: Array<{ path: string; label: string; parent?: { label: string; to: string } }>,
+): Record<string, Crumb[]> {
+  const map: Record<string, Crumb[]> = {};
+  for (const item of items) {
+    const crumbs: Crumb[] = [rootCrumb];
+    if (groupLink) {
+      crumbs.push({ label: groupLabel, to: groupLink });
+    } else {
+      crumbs.push({ label: groupLabel });
+    }
+    if (item.parent) crumbs.push(item.parent);
+    crumbs.push({ label: item.label });
+    map[`${basePath}${item.path}`] = crumbs;
+  }
+  return map;
+}
+
+/* ─── Gamificação: configuração única compartilhada ─── */
+const GAMIFICACAO_ITEMS: Array<{ path: string; label: string }> = [
+  { path: "",            label: "Configuração & Ranking" },
+  { path: "/financeiro", label: "Financeiro" },
+];
+
+const adminGamificacao = buildGroup(
+  admin(), "/app/admin/gamificacao", "Gamificação", "/app/admin/gamificacao",
+  GAMIFICACAO_ITEMS,
+);
+
+const medicoGamificacao = buildGroup(
+  medico(), "/app/medico/gamificacao", "Gamificação & Ranking", undefined,
+  [{ path: "", label: "Visão geral" }],
+);
+
 const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   // ── Admin: Cadastros ──
-  "/app/admin/usuarios":       [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cadastros" }, { label: "Usuários" }],
-  "/app/admin/medicos":        [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cadastros" }, { label: "Médicos" }],
-  "/app/admin/colaboradores":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cadastros" }, { label: "Colaboradores" }],
-  "/app/admin/empresas":       [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cadastros" }, { label: "Empresas" }],
+  "/app/admin/usuarios":       [admin(), { label: "Cadastros" }, { label: "Usuários" }],
+  "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos" }],
+  "/app/admin/colaboradores":  [admin(), { label: "Cadastros" }, { label: "Colaboradores" }],
+  "/app/admin/empresas":       [admin(), { label: "Cadastros" }, { label: "Empresas" }],
 
   // ── Admin: Financeiro ──
-  "/app/admin/financeiro":               [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Financeiro" }, { label: "Visão geral" }],
-  "/app/admin/financeiro/repasse":       [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Repasse e comissões" }],
-  "/app/admin/financeiro/previa-repasse":[{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Prévia de repasse" }],
-  "/app/admin/financeiro/saques-medicos":[{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Saques médicos" }],
+  "/app/admin/financeiro":               [admin(), { label: "Financeiro" }, { label: "Visão geral" }],
+  "/app/admin/financeiro/repasse":       [admin(), { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Repasse e comissões" }],
+  "/app/admin/financeiro/previa-repasse":[admin(), { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Prévia de repasse" }],
+  "/app/admin/financeiro/saques-medicos":[admin(), { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Saques médicos" }],
 
   // ── Admin: Planos ──
-  "/app/admin/planos":              [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Planos" }, { label: "Planos da plataforma" }],
-  "/app/admin/planos-medicos":      [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Planos", to: "/app/admin/planos" }, { label: "Planos de médicos" }],
-  "/app/admin/planos-cancelamentos":[{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Planos", to: "/app/admin/planos" }, { label: "Cancelamentos" }],
+  "/app/admin/planos":              [admin(), { label: "Planos" }, { label: "Planos da plataforma" }],
+  "/app/admin/planos-medicos":      [admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Planos de médicos" }],
+  "/app/admin/planos-cancelamentos":[admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Cancelamentos" }],
 
   // ── Admin: Comunicação ──
-  "/app/comunicacao/inbox":      [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Inbox" }],
-  "/app/comunicacao/bot":        [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Bot" }],
-  "/app/comunicacao/ia":         [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "IA Avatar" }],
-  "/app/comunicacao/templates":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Templates" }],
-  "/app/comunicacao/automacoes": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Automações" }],
-  "/app/comunicacao/metricas":   [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Métricas" }],
-  "/app/admin/comunicacao-interna": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Comunicação" }, { label: "Equipe (interna)" }],
+  "/app/comunicacao/inbox":      [admin(), { label: "Comunicação" }, { label: "Inbox" }],
+  "/app/comunicacao/bot":        [admin(), { label: "Comunicação" }, { label: "Bot" }],
+  "/app/comunicacao/ia":         [admin(), { label: "Comunicação" }, { label: "IA Avatar" }],
+  "/app/comunicacao/templates":  [admin(), { label: "Comunicação" }, { label: "Templates" }],
+  "/app/comunicacao/automacoes": [admin(), { label: "Comunicação" }, { label: "Automações" }],
+  "/app/comunicacao/metricas":   [admin(), { label: "Comunicação" }, { label: "Métricas" }],
+  "/app/admin/comunicacao-interna": [admin(), { label: "Comunicação" }, { label: "Equipe (interna)" }],
 
   // ── Admin: Integrações ──
-  "/app/admin/integracoes":           [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações" }, { label: "Visão geral" }],
-  "/app/admin/integracoes/whatsapp":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações", to: "/app/admin/integracoes" }, { label: "WhatsApp Business API" }],
-  "/app/admin/feegow":                [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow" }],
-  "/app/admin/feegow/mapeamento":     [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow", to: "/app/admin/feegow" }, { label: "Mapeamento de status" }],
-  "/app/admin/feegow/schema":         [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow", to: "/app/admin/feegow" }, { label: "Schema lógico" }],
-  "/app/admin/pendencias-integracao": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Pendências" }],
+  "/app/admin/integracoes":           [admin(), { label: "Integrações" }, { label: "Visão geral" }],
+  "/app/admin/integracoes/whatsapp":  [admin(), { label: "Integrações", to: "/app/admin/integracoes" }, { label: "WhatsApp Business API" }],
+  "/app/admin/feegow":                [admin(), { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow" }],
+  "/app/admin/feegow/mapeamento":     [admin(), { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow", to: "/app/admin/feegow" }, { label: "Mapeamento de status" }],
+  "/app/admin/feegow/schema":         [admin(), { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Feegow", to: "/app/admin/feegow" }, { label: "Schema lógico" }],
+  "/app/admin/pendencias-integracao": [admin(), { label: "Integrações", to: "/app/admin/integracoes" }, { label: "Pendências" }],
 
   // ── Admin: Segurança & Acessos ──
-  "/app/admin/permissoes":     [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Segurança & Acessos" }, { label: "Permissões" }],
-  "/app/admin/permissoes/log": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Log de permissões" }],
-  "/app/admin/sessoes":        [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Sessões ativas" }],
-  "/app/admin/seguranca":      [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Alertas de segurança" }],
-  "/app/admin/impersonar":     [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Impersonar usuário" }],
+  "/app/admin/permissoes":     [admin(), { label: "Segurança & Acessos" }, { label: "Permissões" }],
+  "/app/admin/permissoes/log": [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Log de permissões" }],
+  "/app/admin/sessoes":        [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Sessões ativas" }],
+  "/app/admin/seguranca":      [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Alertas de segurança" }],
+  "/app/admin/impersonar":     [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Impersonar usuário" }],
 
   // ── Admin: Análises ──
-  "/app/admin/analises":              [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises" }, { label: "Visão geral" }],
-  "/app/admin/analises/tempo-real":   [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Tempo real" }],
-  "/app/admin/analises/trafego":      [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Tráfego" }],
-  "/app/admin/analises/comportamento":[{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Comportamento" }],
-  "/app/admin/analises/conversao":    [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Conversão" }],
-  "/app/admin/analises/financeiro":   [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Financeiro" }],
-  "/app/admin/analises/marketing":    [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Marketing" }],
-  "/app/admin/analises/comparativo":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Análises", to: "/app/admin/analises" }, { label: "Comparativo" }],
+  "/app/admin/analises":              [admin(), { label: "Análises" }, { label: "Visão geral" }],
+  "/app/admin/analises/tempo-real":   [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Tempo real" }],
+  "/app/admin/analises/trafego":      [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Tráfego" }],
+  "/app/admin/analises/comportamento":[admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Comportamento" }],
+  "/app/admin/analises/conversao":    [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Conversão" }],
+  "/app/admin/analises/financeiro":   [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Financeiro" }],
+  "/app/admin/analises/marketing":    [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Marketing" }],
+  "/app/admin/analises/comparativo":  [admin(), { label: "Análises", to: "/app/admin/analises" }, { label: "Comparativo" }],
 
   // ── Admin: Relatórios ──
-  "/app/admin/relatorios":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Relatórios" }, { label: "Visão geral" }],
-  "/app/admin/relatorios/financeiro": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Financeiro" }],
-  "/app/admin/relatorios/auditoria":  [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Auditoria" }],
+  "/app/admin/relatorios":            [admin(), { label: "Relatórios" }, { label: "Visão geral" }],
+  "/app/admin/relatorios/financeiro": [admin(), { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Financeiro" }],
+  "/app/admin/relatorios/auditoria":  [admin(), { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Auditoria" }],
 
-  // ── Admin: Gamificação (já existia inline, agora centralizado) ──
-  "/app/admin/gamificacao":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Configuração & Ranking" }],
-  "/app/admin/gamificacao/financeiro": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Gamificação", to: "/app/admin/gamificacao" }, { label: "Financeiro" }],
+  // ── Admin: Gamificação (gerado via buildGroup) ──
+  ...adminGamificacao,
 
-  // ── Admin: itens soltos com breadcrumb simples ──
-  "/app/admin/servicos":             [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Serviços" }],
-  "/app/admin/atendimento-imediato": [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Atendimento imediato" }],
-  "/app/admin/cupons":               [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cupons" }],
-  "/app/admin/cupons/log":           [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Cupons", to: "/app/admin/cupons" }, { label: "Log de uso" }],
-  "/app/admin/termos-condicoes":     [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Termos & Condições" }],
-  "/app/admin/treinamentos":         [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Treinamento" }],
-  "/app/admin/auditoria":            [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Auditoria" }],
-  "/app/admin/fluxo":                [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Fluxo operacional" }],
-  "/app/admin/configuracoes":        [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Configurações" }],
-  "/app/admin/agendamentos":         [{ label: "Admin", to: "/app/admin/dashboard" }, { label: "Agendamentos" }],
+  // ── Admin: itens soltos ──
+  "/app/admin/servicos":             [admin(), { label: "Serviços" }],
+  "/app/admin/atendimento-imediato": [admin(), { label: "Atendimento imediato" }],
+  "/app/admin/cupons":               [admin(), { label: "Cupons" }],
+  "/app/admin/cupons/log":           [admin(), { label: "Cupons", to: "/app/admin/cupons" }, { label: "Log de uso" }],
+  "/app/admin/termos-condicoes":     [admin(), { label: "Termos & Condições" }],
+  "/app/admin/treinamentos":         [admin(), { label: "Treinamento" }],
+  "/app/admin/auditoria":            [admin(), { label: "Auditoria" }],
+  "/app/admin/fluxo":                [admin(), { label: "Fluxo operacional" }],
+  "/app/admin/configuracoes":        [admin(), { label: "Configurações" }],
+  "/app/admin/agendamentos":         [admin(), { label: "Agendamentos" }],
 
-  // ── Médico ──
+  // ── Médico (gamificação gerada via buildGroup) ──
   "/app/medico/dashboard":       [{ label: "Médico" }, { label: "Dashboard" }],
-  "/app/medico/agenda":          [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Agenda" }],
-  "/app/medico/horarios":        [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Meus horários" }],
-  "/app/medico/consultas":       [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Consultas" }],
-  "/app/medico/servicos":        [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Serviços da plataforma" }],
-  "/app/medico/pacientes":       [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Pacientes" }],
-  "/app/medico/documentos":      [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Documentos" }],
-  "/app/medico/mensagens":       [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Mensagens das consultas" }],
-  "/app/medico/comunicacao-interna": [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Comunicação interna" }],
-  "/app/medico/financeiro":      [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Financeiro" }],
-  "/app/medico/treinamento":     [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Treinamento" }],
-  "/app/medico/planos":          [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Meus Planos" }],
-  "/app/medico/gamificacao":     [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Gamificação & Ranking" }],
-  "/app/medico/configuracoes":   [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Configurações" }],
-  "/app/medico/perfil":          [{ label: "Médico", to: "/app/medico/dashboard" }, { label: "Perfil" }],
+  "/app/medico/agenda":          [medico(), { label: "Agenda" }],
+  "/app/medico/horarios":        [medico(), { label: "Meus horários" }],
+  "/app/medico/consultas":       [medico(), { label: "Consultas" }],
+  "/app/medico/servicos":        [medico(), { label: "Serviços da plataforma" }],
+  "/app/medico/pacientes":       [medico(), { label: "Pacientes" }],
+  "/app/medico/documentos":      [medico(), { label: "Documentos" }],
+  "/app/medico/mensagens":       [medico(), { label: "Mensagens das consultas" }],
+  "/app/medico/comunicacao-interna": [medico(), { label: "Comunicação interna" }],
+  "/app/medico/financeiro":      [medico(), { label: "Financeiro" }],
+  "/app/medico/treinamento":     [medico(), { label: "Treinamento" }],
+  "/app/medico/planos":          [medico(), { label: "Meus Planos" }],
+  ...medicoGamificacao,
+  "/app/medico/configuracoes":   [medico(), { label: "Configurações" }],
+  "/app/medico/perfil":          [medico(), { label: "Perfil" }],
 
   // ── Secretaria ──
   "/app/secretaria/dashboard":     [{ label: "Secretaria" }, { label: "Dashboard" }],
