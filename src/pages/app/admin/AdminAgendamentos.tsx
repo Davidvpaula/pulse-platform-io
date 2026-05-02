@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { brl } from "@/lib/relatorios/utils";
 
 type Status =
   | "agendada" | "aguardando_pagamento" | "confirmada"
@@ -103,9 +104,7 @@ function canalBadge(c: Canal) {
   return <span className="text-xs text-muted-foreground">{map[c] || c}</span>;
 }
 
-function brl(c: number) {
-  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+// brl() importado de @/lib/relatorios/utils
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
