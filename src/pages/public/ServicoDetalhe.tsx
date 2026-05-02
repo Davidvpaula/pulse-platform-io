@@ -242,8 +242,12 @@ export default function ServicoDetalhe() {
                     </div>
                   </div>
                   {m.proximo_slot_id ? (
-                    <Button size="sm" asChild>
-                      <Link to={`/app/paciente/agendar/confirmar/${m.proximo_slot_id}?servico=${servico.id}`}>
+                    <Button size="sm" asChild onClick={() => {
+                      if (m.is_patrocinado && m.campanha_id) {
+                        registrarClique(m.campanha_id, undefined, "busca").catch(() => {});
+                      }
+                    }}>
+                      <Link to={`/app/paciente/agendar/confirmar/${m.proximo_slot_id}?servico=${servico.id}${m.campanha_id ? `&campanha=${m.campanha_id}` : ''}`}>
                         Agendar <ArrowRight className="h-3 w-3 ml-1" />
                       </Link>
                     </Button>
