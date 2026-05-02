@@ -82,8 +82,8 @@ export default function AdminFaturamentoB2B() {
         .from("consultas")
         .select("medico_id, medico:profiles!consultas_medico_id_fkey(id, full_name)")
         .eq("empresa_id", fatura.empresa_id)
-        .gte("data_hora", `${fatura.competencia_ano}-${String(fatura.competencia_mes).padStart(2, "0")}-01`)
-        .lt("data_hora", fatura.competencia_mes === 12
+        .gte("inicio", `${fatura.competencia_ano}-${String(fatura.competencia_mes).padStart(2, "0")}-01`)
+        .lt("inicio", fatura.competencia_mes === 12
           ? `${fatura.competencia_ano + 1}-01-01`
           : `${fatura.competencia_ano}-${String(fatura.competencia_mes + 1).padStart(2, "0")}-01`
         );
