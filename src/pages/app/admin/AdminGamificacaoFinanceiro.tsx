@@ -70,11 +70,66 @@ export default function AdminGamificacaoFinanceiro() {
   const premiumsAtivos = premiums.filter((p) => p.ativo).length;
   const taxaConvGlobal = totalCliques > 0 ? totalConversoes / totalCliques : 0;
 
+  const exportKpis = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-kpis-${hoje}.csv`,
+      ["Métrica", "Valor"],
+      [
+        ["Receita CPC total", brl(totalGastoCPC)],
+        ["Orçamento CPC total", brl(totalOrcamentoCPC)],
+        ["Cliques totais", String(totalCliques)],
+        ["Conversões", String(totalConversoes)],
+        ["Taxa de conversão", pct(taxaConvGlobal)],
+        ["Premium ativos", String(premiumsAtivos)],
+        ["Premium total", String(premiums.length)],
+        ["Campanhas total", String(campanhas.length)],
+        ["Campanhas ativas", String(campanhasAtivas)],
+      ],
+    );
+  };
+
+  const exportCampanhas = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-campanhas-${hoje}.csv`,
+      ["Médico", "Campanha", "Status", "Orçamento", "Gasto", "Cliques", "Conversões", "CPC", "ROI %"],
+      campanhas.map(c => [
+        c.nome ?? "—",
+        c.titulo,
+        c.status,
+        brl(c.orcamento_centavos),
+        brl(c.gasto_centavos),
+        String(c.cliques),
+        String(c.conversoes ?? 0),
+        brl(c.cpc_centavos),
+        c.cliques > 0 ? ((c.conversoes ?? 0) / c.cliques * 100).toFixed(1) : "0.0",
+      ]),
+    );
+  };
+
+  const exportPremium = () => {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    downloadCsv(`gamificacao-premium-${hoje}.csv`,
+      ["Médico", "Status", "Tipo", "Início", "Fim"],
+      premiums.map(p => [
+        p.nome ?? "—",
+        p.ativo ? "Ativo" : "Inativo",
+        p.tipo,
+        p.inicio ? new Date(p.inicio).toLocaleDateString("pt-BR") : "—",
+        p.fim ? new Date(p.fim).toLocaleDateString("pt-BR") : "Sem prazo",
+      ]),
+    );
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Financeiro da Gamificação"
         description="Receita de assinaturas premium, consumo CPC, conversões e métricas de ROI."
+        actions={
+          <Button variant="outline" size="sm" onClick={exportKpis}>
+            <Download className="mr-1.5 h-3.5 w-3.5" /> Exportar KPIs
+          </Button>
+        }
       />
 
       {/* KPIs */}
