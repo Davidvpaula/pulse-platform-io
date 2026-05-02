@@ -81,7 +81,7 @@ export default function MedicoGamificacao() {
       />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <StatCard
           label="Nota média"
           value={ranking ? ranking.avaliacao_media.toFixed(1) : "—"}
