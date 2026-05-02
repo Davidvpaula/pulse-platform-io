@@ -399,6 +399,50 @@ export default function AdminFaturamentoB2B() {
                   </pre>
                 </div>
               )}
+
+              {/* Links de navegação */}
+              <div className="space-y-3 border-t border-border pt-3">
+                {detalheAberto.contrato_id && (
+                  <Link
+                    to={`/app/admin/contrato-b2b/${detalheAberto.contrato_id}`}
+                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm font-medium hover:bg-muted/40 transition-colors"
+                    onClick={() => setDetalheAberto(null)}
+                  >
+                    <FileText className="h-4 w-4 text-primary" />
+                    Ver contrato vinculado
+                    <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+                  </Link>
+                )}
+
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                    <Stethoscope className="h-3.5 w-3.5" />
+                    Médicos com consultas nesta competência
+                  </p>
+                  {loadingMedicos ? (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando…
+                    </div>
+                  ) : medicosVinculados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">Nenhuma consulta encontrada neste período.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {medicosVinculados.map(m => (
+                        <Link
+                          key={m.id}
+                          to={`/app/admin/medico/${m.id}`}
+                          className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/40 transition-colors"
+                          onClick={() => setDetalheAberto(null)}
+                        >
+                          <span className="font-medium">{m.nome}</span>
+                          <span className="text-xs text-muted-foreground">{m.qtd} consulta(s)</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={() => {
                   gerarFaturaPdf(detalheAberto);
