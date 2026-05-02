@@ -33,8 +33,8 @@ export default function CalendarioFila({ slots, estadoPorSlot, destacar, onPick 
               {doTurno.map((s) => {
                 const info = estadoPorSlot.get(s.key) ?? {
                   estado: "livre" as SlotEstado,
-                  vagas: s.total_vagas,
-                  capacidade: s.total_vagas,
+                  vagas: s.total_vagas ?? 0,
+                  capacidade: s.total_vagas ?? 0,
                 };
                 return (
                   <SlotCelula

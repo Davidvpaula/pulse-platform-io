@@ -120,12 +120,12 @@ export default function AtendimentoImediato() {
 
       let estado: SlotEstado;
       if (fimMs < agora) estado = "passado";
-      else if (s.total_vagas === 0) estado = "lotado";
+      else if ((s.total_vagas ?? 0) === 0) estado = "lotado";
       else if (minhaAqui) estado = "reservado_por_mim";
       else if (inicioMs <= agora && agora < fimMs) estado = "em_atendimento";
       else estado = "livre";
 
-      map.set(s.key, { estado, vagas: s.total_vagas, capacidade: s.total_vagas });
+      map.set(s.key, { estado, vagas: s.total_vagas ?? 0, capacidade: s.total_vagas ?? 0 });
     }
     return map;
   }, [slots, reserva, agora]);
