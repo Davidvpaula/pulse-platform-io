@@ -97,18 +97,6 @@ export default function AdminServicos() {
   }
   useEffect(() => { load(); }, []);
 
-  async function salvarPa(id: string | null) {
-    setSavingPa(true);
-    const { error } = await supabase
-      .from("app_settings")
-      .update({ value: id as any })
-      .eq("key", "atendimento_imediato.servico_id");
-    setSavingPa(false);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
-    setPaServicoId(id);
-    broadcastAtendimentoImediatoConfigChanged();
-    toast({ title: id ? "Atendimento imediato configurado" : "Atendimento imediato desativado" });
-  }
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
