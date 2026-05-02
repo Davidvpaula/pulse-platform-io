@@ -14,8 +14,19 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const brl = (c: number) => {
+  if (typeof c !== "number" || isNaN(c)) return "R$ 0,00";
+  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+const safeNum = (v: unknown, fallback = 0): number => {
+  if (typeof v === "number" && !isNaN(v)) return v;
+  return fallback;
+};
+const safeStr = (v: unknown, fallback = "—"): string => {
+  if (typeof v === "string" && v.length > 0) return v;
+  return fallback;
+};
 
 type ContratoView = {
   id: string;
