@@ -470,9 +470,14 @@ export default function AdminUsuarios() {
                               <Pause className="mr-2 h-4 w-4 text-warning" />Suspender
                             </DropdownMenuItem>
                           )}
-                          {p.status_conta !== "bloqueado" && (
+                          {p.status_conta !== "bloqueado" && p.status_conta !== "banido" && (
                             <DropdownMenuItem onClick={() => abrirDialog(p, "bloqueado")}>
                               <Ban className="mr-2 h-4 w-4 text-destructive" />Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          {p.status_conta !== "banido" && (
+                            <DropdownMenuItem onClick={() => abrirDialog(p, "banido")}>
+                              <ShieldOff className="mr-2 h-4 w-4 text-destructive" />Banir
                             </DropdownMenuItem>
                           )}
                           {p.status_conta !== "ativo" && (
