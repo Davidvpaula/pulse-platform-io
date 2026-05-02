@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
 } from "lucide-react";
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Switch } from "@/components/ui/switch";
@@ -120,6 +125,18 @@ export default function MedicoGamificacao() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link to="/app/medico/dashboard">Médico</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Gamificação &amp; Ranking</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <PageHeader
         title="Gamificação & Ranking"
         description="Acompanhe sua performance, avaliações e posição no ranking da plataforma."

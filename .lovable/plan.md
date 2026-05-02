@@ -1,37 +1,34 @@
-## Objetivo
 
-Exibir no dashboard do médico (`MedicoDashboard.tsx`) uma seção compacta mostrando:
-- Posição no ranking (#N)
-- Score atual
-- Nota média + total de avaliações
-- Saldo de crescimento (pontos acumulados)
-- Link direto para a página completa de gamificação
+## Situação atual
 
-Os dados são reais (tabelas `medico_ranking` e `medico_saldo_crescimento` já existem e são populadas por triggers automáticos).
+- O **menu lateral** já usa `NavLink` com `isActive` e já destaca o item ativo com `bg-primary text-primary-foreground`. O grupo "Gamificação" no Admin já expande automaticamente quando a rota ativa pertence a ele (`defaultOpen={open}`). Portanto, o **destaque de menu ativo já funciona**.
+- O componente `Breadcrumb` (shadcn) existe em `src/components/ui/breadcrumb.tsx` mas **nenhuma página o utiliza ainda**.
+- As 3 páginas de gamificação usam `PageHeader` sem breadcrumbs.
 
----
+## O que será feito
 
-## Alterações
+### 1. Adicionar breadcrumbs nas páginas de gamificação
 
-### `src/pages/app/medico/MedicoDashboard.tsx`
+Adicionar um bloco de breadcrumbs acima do `PageHeader` em cada página:
 
-1. **Importar** `getRankingMedico`, `getSaldoAtual` de `@/lib/gamificacao` e ícones `Star`, `Award`, `Crown` de `lucide-react`.
+- **AdminGamificacao** (`src/pages/app/admin/AdminGamificacao.tsx`)
+  - `Admin > Gamificação > Configuração & Ranking`
 
-2. **Adicionar state** para `ranking` (MedicoRanking | null) e `saldoCrescimento` (number).
+- **AdminGamificacaoFinanceiro** (`src/pages/app/admin/AdminGamificacaoFinanceiro.tsx`)
+  - `Admin > Gamificação > Financeiro`
+  - Link "Configuração & Ranking" apontando para `/app/admin/gamificacao`
 
-3. **Na função `carregar()`**, após carregar o médico, fazer em paralelo:
-   - `getRankingMedico(medico.id)` 
-   - `getSaldoAtual(medico.id)`
+- **MedicoGamificacao** (`src/pages/app/medico/MedicoGamificacao.tsx`)
+  - `Médico > Gamificação & Ranking`
 
-4. **Renderizar nova seção** entre os stats cards e a grid de próximas consultas (após o split de receita). Card compacto com layout horizontal:
-   - **Posição** (#1, #2...) com badge colorido
-   - **Score** (numérico)
-   - **Nota média** (estrelas + número)
-   - **Saldo** (pontos)
-   - Botão "Ver detalhes" linkando para `/app/medico/gamificacao`
+Os breadcrumbs usarão os componentes `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator` já existentes, com `Link` do react-router para navegação.
 
-Visível apenas quando `isMedico` é true (perfil médico).
+### 2. Arquivos modificados
 
----
+| Arquivo | Alteração |
+|---|---|
+| `src/pages/app/admin/AdminGamificacao.tsx` | Adicionar breadcrumb acima do PageHeader |
+| `src/pages/app/admin/AdminGamificacaoFinanceiro.tsx` | Adicionar breadcrumb acima do PageHeader |
+| `src/pages/app/medico/MedicoGamificacao.tsx` | Adicionar breadcrumb acima do PageHeader |
 
-Nenhuma alteração de banco de dados necessária -- os dados já existem nas tabelas e são atualizados automaticamente via triggers e cron job.
+Nenhuma migração de banco necessária. Nenhum componente novo — apenas uso dos existentes.
