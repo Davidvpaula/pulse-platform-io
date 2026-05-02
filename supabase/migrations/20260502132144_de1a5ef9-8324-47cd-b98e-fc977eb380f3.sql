@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.consultas_pendentes_avaliacao() FROM anon;
