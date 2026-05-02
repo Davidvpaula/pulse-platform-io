@@ -49,10 +49,12 @@ type VinculoStatus = "todos" | "ativo" | "inativo" | "afastado" | "desligado";
 
 export default function MedicoCorporativo() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<any[]>([]);
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [vinculos, setVinculos] = useState<Map<string, any>>(new Map());
+  const [propostasB2B, setPropostasB2B] = useState<any[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
   const [filtroOrigem, setFiltroOrigem] = useState<Origem>("todas");
