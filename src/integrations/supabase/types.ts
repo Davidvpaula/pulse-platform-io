@@ -5154,6 +5154,42 @@ export type Database = {
           },
         ]
       }
+      termos_condicoes: {
+        Row: {
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          status: string
+          tipo: Database["public"]["Enums"]["termo_tipo"]
+          titulo: string
+          versao: number
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          status?: string
+          tipo: Database["public"]["Enums"]["termo_tipo"]
+          titulo: string
+          versao?: number
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          status?: string
+          tipo?: Database["public"]["Enums"]["termo_tipo"]
+          titulo?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       treinamentos_aulas: {
         Row: {
           ativo: boolean
@@ -5343,6 +5379,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_terms_acceptance: {
+        Row: {
+          aceito_em: string
+          id: string
+          ip_address: string | null
+          termo_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          aceito_em?: string
+          id?: string
+          ip_address?: string | null
+          termo_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          aceito_em?: string
+          id?: string
+          ip_address?: string | null
+          termo_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_terms_acceptance_termo_id_fkey"
+            columns: ["termo_id"]
+            isOneToOne: false
+            referencedRelation: "termos_condicoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_instances: {
         Row: {
@@ -6415,6 +6486,15 @@ export type Database = {
         | "suporte"
         | "outro"
       template_wa_status: "rascunho" | "pendente" | "aprovado" | "rejeitado"
+      termo_tipo:
+        | "consulta_paciente"
+        | "privacidade"
+        | "plano_plataforma"
+        | "plano_medico"
+        | "contrato_medico"
+        | "gamificacao_premium"
+        | "criacao_plano_medico"
+        | "uso_feegow"
       tipo_conta_bancaria: "corrente" | "poupanca"
       tipo_pessoa: "pf" | "pj"
       whatsapp_instance_status:
@@ -6890,6 +6970,16 @@ export const Constants = {
         "outro",
       ],
       template_wa_status: ["rascunho", "pendente", "aprovado", "rejeitado"],
+      termo_tipo: [
+        "consulta_paciente",
+        "privacidade",
+        "plano_plataforma",
+        "plano_medico",
+        "contrato_medico",
+        "gamificacao_premium",
+        "criacao_plano_medico",
+        "uso_feegow",
+      ],
       tipo_conta_bancaria: ["corrente", "poupanca"],
       tipo_pessoa: ["pf", "pj"],
       whatsapp_instance_status: [
