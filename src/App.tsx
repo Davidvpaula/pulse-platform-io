@@ -48,6 +48,7 @@ import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
 import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
 import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
 import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
+import MedicoGoogleCallback from "@/pages/app/medico/MedicoGoogleCallback";
 import MedicoPerfil from "@/pages/app/medico/MedicoPerfil";
 import MedicoConsultas from "@/pages/app/medico/MedicoConsultas";
 import MedicoFinanceiro from "@/pages/app/medico/MedicoFinanceiro";
@@ -218,6 +219,7 @@ const App = () => (
               <Route path="medico/financeiro" element={<MedicoGuard><MedicoFinanceiro /></MedicoGuard>} />
               <Route path="medico/perfil" element={<MedicoGuard><MedicoPerfil /></MedicoGuard>} />
               <Route path="medico/configuracoes" element={<MedicoGuard><MedicoConfiguracoes /></MedicoGuard>} />
+              <Route path="medico/google-callback" element={<MedicoGuard><MedicoGoogleCallback /></MedicoGuard>} />
               <Route path="medico/servicos" element={<MedicoGuard><MedicoServicos /></MedicoGuard>} />
               
               <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
