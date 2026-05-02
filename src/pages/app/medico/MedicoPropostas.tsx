@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import type { Database } from "@/integrations/supabase/types";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 type PropostaRow = Database["public"]["Tables"]["propostas_empresa_medico"]["Row"];
 type PropostaStatus = Database["public"]["Enums"]["proposta_empresa_status"];
@@ -37,6 +39,7 @@ const COBRANCA_MAP: Record<string, string> = { mensal: "mensal", pacote: "valor_
 export default function MedicoPropostas() {
   const { session } = useSession();
   const uid = session?.user?.id;
+  const termsProposta = useTermsCheck("proposta_medico");
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string })[]>([]);
   const [selected, setSelected] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string }) | null>(null);
@@ -94,6 +97,10 @@ export default function MedicoPropostas() {
 
   async function aceitar() {
     if (!selected || !uid) return;
+    if (termsProposta.needsAcceptance) {
+      termsProposta.setShowDialog(true);
+      return;
+    }
     if (!termoAceito) {
       toast.error("Aceite os termos para continuar");
       return;
@@ -425,6 +432,14 @@ export default function MedicoPropostas() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Terms enforcement dialog */}
+      <TermsAcceptanceDialog
+        tipo="proposta_medico"
+        open={termsProposta.showDialog}
+        onOpenChange={termsProposta.setShowDialog}
+        onAccepted={termsProposta.onAccepted}
+      />
     </div>
   );
 }

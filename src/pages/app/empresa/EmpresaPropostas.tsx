@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import type { Database } from "@/integrations/supabase/types";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 type PropostaRow = Database["public"]["Tables"]["propostas_empresa_medico"]["Row"];
 type PropostaStatus = Database["public"]["Enums"]["proposta_empresa_status"];
@@ -50,6 +52,7 @@ const PIPELINE_ORDER: PropostaStatus[] = [
 
 export default function EmpresaPropostas() {
   const { session } = useSession();
+  const termsEmpresa = useTermsCheck("proposta_empresa");
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { medico_nome?: string; especialidade_nome?: string })[]>([]);
   const [medicos, setMedicos] = useState<{ id: string; nome: string }[]>([]);
@@ -152,6 +155,10 @@ export default function EmpresaPropostas() {
   }
 
   async function enviarProposta() {
+    if (termsEmpresa.needsAcceptance) {
+      termsEmpresa.setShowDialog(true);
+      return;
+    }
     if (!empresaId || !formMedicoId) {
       toast.error("Selecione um médico");
       return;
@@ -515,6 +522,13 @@ export default function EmpresaPropostas() {
           })}
         </div>
       )}
+      {/* Terms enforcement dialog */}
+      <TermsAcceptanceDialog
+        tipo="proposta_empresa"
+        open={termsEmpresa.showDialog}
+        onOpenChange={termsEmpresa.setShowDialog}
+        onAccepted={termsEmpresa.onAccepted}
+      />
     </div>
   );
 }
