@@ -6,6 +6,7 @@ export type TreinamentoModulo = {
   descricao: string | null;
   ordem: number;
   ativo: boolean;
+  obrigatorio: boolean;
 };
 
 export type TreinamentoAula = {
