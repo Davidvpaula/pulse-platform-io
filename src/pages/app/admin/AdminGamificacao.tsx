@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
   Crown, Megaphone, DollarSign, Target, Zap,
 } from "lucide-react";
-import {
-  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
-  BreadcrumbPage, BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

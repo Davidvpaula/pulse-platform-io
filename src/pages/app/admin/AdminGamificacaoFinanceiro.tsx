@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
-  BreadcrumbPage, BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
 import {

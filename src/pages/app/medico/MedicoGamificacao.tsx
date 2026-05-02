@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
 } from "lucide-react";
-import {
-  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
-  BreadcrumbPage, BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Switch } from "@/components/ui/switch";
