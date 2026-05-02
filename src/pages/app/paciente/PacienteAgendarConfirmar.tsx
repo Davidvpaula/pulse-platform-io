@@ -113,6 +113,14 @@ export default function PacienteAgendarConfirmar() {
       }
       const [s, p] = await Promise.all([getSlotDisponivel(slotId), getPacienteAtual()]);
       setSlot(s);
+      if (s) {
+        // Analytics: paciente iniciou o fluxo de agendamento
+        trackEvent("inicio_agendamento", {
+          slot_id: slotId,
+          especialidade: s.especialidade_nome,
+          medico: s.medico_nome,
+        }).catch(() => {});
+      }
       if (p) {
         form.reset({
           nome_completo: p.nome_completo ?? "",
