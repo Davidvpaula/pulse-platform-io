@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, Search, Plus, Filter, MoreHorizontal, Eye, Pencil, Calendar,
   MessageSquare, History, Pause, Ban, Play, AlertCircle, Loader2, Shield,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShieldOff, Clock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
-type StatusConta = "ativo" | "suspenso" | "bloqueado";
+type StatusConta = "ativo" | "suspenso" | "bloqueado" | "banido" | "pendente";
 type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
 
 type PacienteRow = {
@@ -52,6 +52,8 @@ const filtrosPrincipais = [
   { key: "ativo", label: "Ativos" },
   { key: "suspenso", label: "Suspensos" },
   { key: "bloqueado", label: "Bloqueados" },
+  { key: "banido", label: "Banidos" },
+  { key: "pendente", label: "Pendentes" },
   { key: "particular", label: "Particular" },
   { key: "empresarial", label: "Empresarial" },
   { key: "feegow_ok", label: "Sincronizado Feegow" },
@@ -71,11 +73,15 @@ const motivosSugeridos = [
 ];
 
 function statusContaBadge(s: StatusConta) {
-  if (s === "ativo")
-    return <Badge variant="outline" className="border-success/40 text-success">Ativo</Badge>;
-  if (s === "suspenso")
-    return <Badge variant="outline" className="border-warning/40 text-warning">Suspenso</Badge>;
-  return <Badge variant="outline" className="border-destructive/40 text-destructive">Bloqueado</Badge>;
+  const map: Record<StatusConta, { label: string; cls: string }> = {
+    ativo:     { label: "Ativo",     cls: "border-success/40 text-success" },
+    pendente:  { label: "Pendente",  cls: "border-muted-foreground/40 text-muted-foreground" },
+    suspenso:  { label: "Suspenso",  cls: "border-warning/40 text-warning" },
+    bloqueado: { label: "Bloqueado", cls: "border-destructive/40 text-destructive" },
+    banido:    { label: "Banido",    cls: "border-destructive/60 text-destructive font-semibold" },
+  };
+  const v = map[s] ?? map.ativo;
+  return <Badge variant="outline" className={v.cls}>{v.label}</Badge>;
 }
 
 function feegowBadge(s: FeegowStatus) {
@@ -110,6 +116,7 @@ export default function AdminUsuarios() {
   const [motivoSel, setMotivoSel] = useState<string>(motivosSugeridos[0]);
   const [motivoTxt, setMotivoTxt] = useState("");
   const [observacao, setObservacao] = useState("");
+  const [bloqueadoAte, setBloqueadoAte] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   // diálogo novo paciente
@@ -217,6 +224,8 @@ export default function AdminUsuarios() {
       if (filtro === "ativo" && r.status_conta !== "ativo") return false;
       if (filtro === "suspenso" && r.status_conta !== "suspenso") return false;
       if (filtro === "bloqueado" && r.status_conta !== "bloqueado") return false;
+      if (filtro === "banido" && r.status_conta !== "banido") return false;
+      if (filtro === "pendente" && r.status_conta !== "pendente") return false;
       if (filtro === "particular" && r.empresa_id) return false;
       if (filtro === "empresarial" && !r.empresa_id) return false;
       if (filtro === "feegow_ok" && r.feegow_status !== "liberado") return false;
@@ -241,6 +250,7 @@ export default function AdminUsuarios() {
     setMotivoSel(motivosSugeridos[0]);
     setMotivoTxt("");
     setObservacao("");
+    setBloqueadoAte("");
     setDialogOpen(true);
   }
 
@@ -257,7 +267,8 @@ export default function AdminUsuarios() {
       _novo_status: acao,
       _motivo: motivo,
       _observacao: observacao.trim() || null,
-    });
+      _bloqueado_ate: acao === "bloqueado" && bloqueadoAte ? new Date(bloqueadoAte).toISOString() : null,
+    } as any);
     setSalvando(false);
     if (error) {
       toast({ title: "Não foi possível alterar", description: error.message, variant: "destructive" });
@@ -311,6 +322,24 @@ export default function AdminUsuarios() {
           </Button>
         }
       />
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total", value: totalRows, icon: Users, cls: "text-primary" },
+          { label: "Ativos", value: rows.filter(r => r.status_conta === "ativo").length, icon: Play, cls: "text-success" },
+          { label: "Suspensos/Bloqueados", value: rows.filter(r => ["suspenso", "bloqueado", "banido"].includes(r.status_conta)).length, icon: ShieldOff, cls: "text-destructive" },
+          { label: "Pgto pendente", value: rows.filter(r => r.tem_pagamento_pendente).length, icon: AlertCircle, cls: "text-warning" },
+        ].map(k => (
+          <div key={k.label} className="rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{k.label}</span>
+              <k.icon className={cn("h-4 w-4", k.cls)} />
+            </div>
+            <div className="text-2xl font-display font-semibold mt-1">{k.value}</div>
+          </div>
+        ))}
+      </div>
 
       <div className="card-elevated p-4 space-y-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -441,9 +470,14 @@ export default function AdminUsuarios() {
                               <Pause className="mr-2 h-4 w-4 text-warning" />Suspender
                             </DropdownMenuItem>
                           )}
-                          {p.status_conta !== "bloqueado" && (
+                          {p.status_conta !== "bloqueado" && p.status_conta !== "banido" && (
                             <DropdownMenuItem onClick={() => abrirDialog(p, "bloqueado")}>
                               <Ban className="mr-2 h-4 w-4 text-destructive" />Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          {p.status_conta !== "banido" && (
+                            <DropdownMenuItem onClick={() => abrirDialog(p, "banido")}>
+                              <ShieldOff className="mr-2 h-4 w-4 text-destructive" />Banir
                             </DropdownMenuItem>
                           )}
                           {p.status_conta !== "ativo" && (
@@ -496,13 +530,17 @@ export default function AdminUsuarios() {
             <DialogTitle>
               {acao === "suspenso" && "Suspender conta"}
               {acao === "bloqueado" && "Bloquear conta"}
+              {acao === "banido" && "Banir conta"}
               {acao === "ativo" && "Reativar conta"}
+              {acao === "pendente" && "Marcar como pendente"}
             </DialogTitle>
             <DialogDescription>
               {pacienteAlvo?.nome_completo} — {pacienteAlvo?.cpf ?? "sem CPF"}.{" "}
               {acao === "suspenso" && "Bloqueia novos agendamentos. Documentos e histórico permanecem acessíveis."}
-              {acao === "bloqueado" && "Impede login e novos agendamentos. Use apenas em casos graves."}
+              {acao === "bloqueado" && "Impede login e novos agendamentos. Pode definir data limite para bloqueio temporário."}
+              {acao === "banido" && "Banimento permanente. Impede qualquer acesso à plataforma. Ação grave e irreversível na prática."}
               {acao === "ativo" && "Restaura o acesso completo do paciente à plataforma."}
+              {acao === "pendente" && "Marca o paciente como pendente de verificação."}
             </DialogDescription>
           </DialogHeader>
 
@@ -535,6 +573,21 @@ export default function AdminUsuarios() {
                 placeholder="Notas visíveis apenas para a equipe administrativa."
               />
             </div>
+
+            {acao === "bloqueado" && (
+              <div>
+                <Label className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Bloqueio temporário até (opcional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={bloqueadoAte}
+                  onChange={e => setBloqueadoAte(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Deixe vazio para bloqueio permanente. Se preenchido, o bloqueio expira automaticamente.
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -542,7 +595,7 @@ export default function AdminUsuarios() {
             <Button
               onClick={confirmar}
               disabled={salvando}
-              variant={acao === "bloqueado" ? "destructive" : "default"}
+              variant={["bloqueado", "banido"].includes(acao) ? "destructive" : "default"}
             >
               {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmar
