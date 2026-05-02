@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, X, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 type Medico = { id: string; nome: string; especialidade: string };
 type DescontoRegra = { qtd_medicos_min: number; desconto_pct: number };
@@ -17,6 +19,7 @@ type DescontoRegra = { qtd_medicos_min: number; desconto_pct: number };
 export default function PacienteMontarPlano() {
   const { session } = useSession();
   const uid = session?.user?.id;
+  const termsPlano = useTermsCheck("plano_plataforma");
 
   const [step, setStep] = useState(1);
   const [medicos, setMedicos] = useState<Medico[]>([]);
@@ -68,6 +71,7 @@ export default function PacienteMontarPlano() {
 
   async function confirmar() {
     if (!uid || selectedIds.size < 2) return;
+    if (termsPlano.needsAcceptance) { termsPlano.promptAcceptance(); return; }
     setSaving(true);
     try {
       // Create plano
@@ -237,6 +241,7 @@ export default function PacienteMontarPlano() {
           </CardContent>
         </Card>
       )}
+      <TermsAcceptanceDialog tipo="plano_plataforma" open={termsPlano.showDialog} onOpenChange={termsPlano.setShowDialog} onAccepted={termsPlano.onAccepted} />
     </PageShell>
   );
 }

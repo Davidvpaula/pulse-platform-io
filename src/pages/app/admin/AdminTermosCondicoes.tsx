@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  FileText, Plus, Eye, ToggleLeft, ToggleRight, Loader2,
+  FileText, Plus, Eye, Edit, ToggleLeft, ToggleRight, Loader2,
   ChevronDown, ChevronRight, Users, Clock, Shield, Search, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -20,11 +20,12 @@ import {
 } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  listarTermos, criarTermo, ativarTermo, desativarTermo, listarAceitesDoTermo,
+  listarTermos, criarTermo, ativarTermo, desativarTermo, editarTermo, listarAceitesDoTermo,
   TERMO_TIPO_LABELS, TERMO_CATEGORIAS,
   type TermoRow, type TermoTipo,
 } from "@/lib/termos";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export default function AdminTermosCondicoes() {
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,12 @@ export default function AdminTermosCondicoes() {
 
   // Preview
   const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
+
+  // Edit draft
+  const [editTermo, setEditTermo] = useState<TermoRow | null>(null);
+  const [editTitulo, setEditTitulo] = useState("");
+  const [editConteudo, setEditConteudo] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   // Filtered termos
   const termosFiltrados = useMemo(() => {
@@ -148,6 +155,27 @@ export default function AdminTermosCondicoes() {
     }
   };
 
+  const handleOpenEdit = (t: TermoRow) => {
+    setEditTermo(t);
+    setEditTitulo(t.titulo);
+    setEditConteudo(t.conteudo);
+  };
+
+  const handleSalvarEdicao = async () => {
+    if (!editTermo || !editTitulo.trim() || !editConteudo.trim()) return;
+    setEditSaving(true);
+    try {
+      await editarTermo(editTermo.id, { titulo: editTitulo.trim(), conteudo: editConteudo.trim() });
+      toast.success("Rascunho atualizado!");
+      setEditTermo(null);
+      await carregar();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const handleNovaVersao = (tipo: TermoTipo) => {
     const ativo = termos.find(t => t.tipo === tipo && t.status === "ativo");
     setCreateTipo(tipo);
@@ -225,6 +253,11 @@ export default function AdminTermosCondicoes() {
                               <Button size="icon" variant="ghost" title="Visualizar" onClick={() => setPreviewTermo(t)}>
                                 <Eye className="h-4 w-4" />
                               </Button>
+                              {t.status === "inativo" && (
+                                <Button size="icon" variant="ghost" title="Editar rascunho" onClick={() => handleOpenEdit(t)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button size="icon" variant="ghost" title={t.status === "ativo" ? "Desativar" : "Ativar"} onClick={() => handleToggle(t)}>
                                 {t.status === "ativo" ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4" />}
                               </Button>
@@ -385,7 +418,7 @@ export default function AdminTermosCondicoes() {
           <DialogHeader>
             <DialogTitle>{previewTermo?.titulo} (v{previewTermo?.versao})</DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: previewTermo?.conteudo ?? "" }} />
+          <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewTermo?.conteudo ?? "") }} />
         </DialogContent>
       </Dialog>
 
@@ -421,6 +454,31 @@ export default function AdminTermosCondicoes() {
               </tbody>
             </table>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar rascunho */}
+      <Dialog open={!!editTermo} onOpenChange={(o) => { if (!o) setEditTermo(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar rascunho — {editTermo && TERMO_TIPO_LABELS[editTermo.tipo]}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Título</Label>
+              <Input value={editTitulo} onChange={e => setEditTitulo(e.target.value)} maxLength={200} />
+            </div>
+            <div>
+              <Label>Conteúdo (suporta HTML)</Label>
+              <Textarea value={editConteudo} onChange={e => setEditConteudo(e.target.value)} rows={12} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTermo(null)}>Cancelar</Button>
+            <Button onClick={handleSalvarEdicao} disabled={editSaving}>
+              {editSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
