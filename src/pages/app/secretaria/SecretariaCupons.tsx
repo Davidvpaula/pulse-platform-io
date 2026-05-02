@@ -19,6 +19,7 @@ import {
 } from "@/lib/cupons";
 import { formatBRL } from "@/lib/pagamentos";
 import CupomDialog from "@/components/secretaria/CupomDialog";
+import { useSession } from "@/lib/session";
 function formatData(d?: string | null) {
   if (!d) return "—";
   try { return new Date(d).toLocaleDateString("pt-BR"); } catch { return d; }
