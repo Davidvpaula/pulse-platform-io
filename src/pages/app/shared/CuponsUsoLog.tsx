@@ -7,9 +7,6 @@ import { useSession } from "@/lib/session";
 import { listCuponsUso, type CupomUsoDetalhado } from "@/lib/cuponsUso";
 import { cn } from "@/lib/utils";
 
-function brl(c: number) {
-  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 function fmt(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", {
