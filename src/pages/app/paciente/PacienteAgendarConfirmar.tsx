@@ -86,6 +86,8 @@ export default function PacienteAgendarConfirmar() {
   const [slot, setSlot] = useState<SlotDisponivel | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const termsCheck = useTermsCheck("consulta_paciente");
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
