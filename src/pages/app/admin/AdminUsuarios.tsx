@@ -573,6 +573,21 @@ export default function AdminUsuarios() {
                 placeholder="Notas visíveis apenas para a equipe administrativa."
               />
             </div>
+
+            {acao === "bloqueado" && (
+              <div>
+                <Label className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Bloqueio temporário até (opcional)</Label>
+                <Input
+                  type="datetime-local"
+                  value={bloqueadoAte}
+                  onChange={e => setBloqueadoAte(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Deixe vazio para bloqueio permanente. Se preenchido, o bloqueio expira automaticamente.
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -580,7 +595,7 @@ export default function AdminUsuarios() {
             <Button
               onClick={confirmar}
               disabled={salvando}
-              variant={acao === "bloqueado" ? "destructive" : "default"}
+              variant={["bloqueado", "banido"].includes(acao) ? "destructive" : "default"}
             >
               {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmar
