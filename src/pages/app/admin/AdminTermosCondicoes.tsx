@@ -37,6 +37,12 @@ export default function AdminTermosCondicoes() {
   const [createStatus, setCreateStatus] = useState<"ativo" | "inativo">("inativo");
   const [saving, setSaving] = useState(false);
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTipo, setFilterTipo] = useState<string>("todos");
+  const [filterStatus, setFilterStatus] = useState<string>("todos");
+  const [filterVersao, setFilterVersao] = useState<string>("todas");
+
   // Aceites viewer
   const [viewAceites, setViewAceites] = useState<string | null>(null);
   const [aceites, setAceites] = useState<any[]>([]);
@@ -44,6 +50,34 @@ export default function AdminTermosCondicoes() {
 
   // Preview
   const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
+
+  // Filtered termos
+  const termosFiltrados = useMemo(() => {
+    return termos.filter(t => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = t.titulo.toLowerCase().includes(q);
+        const matchTipo = TERMO_TIPO_LABELS[t.tipo]?.toLowerCase().includes(q);
+        if (!matchTitle && !matchTipo) return false;
+      }
+      if (filterTipo !== "todos" && t.tipo !== filterTipo) return false;
+      if (filterStatus !== "todos" && t.status !== filterStatus) return false;
+      if (filterVersao === "ultima") {
+        const maxV = Math.max(...termos.filter(x => x.tipo === t.tipo).map(x => x.versao));
+        if (t.versao !== maxV) return false;
+      }
+      return true;
+    });
+  }, [termos, searchQuery, filterTipo, filterStatus, filterVersao]);
+
+  const hasActiveFilters = searchQuery || filterTipo !== "todos" || filterStatus !== "todos" || filterVersao !== "todas";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterTipo("todos");
+    setFilterStatus("todos");
+    setFilterVersao("todas");
+  };
 
   const carregar = useCallback(async () => {
     setLoading(true);
