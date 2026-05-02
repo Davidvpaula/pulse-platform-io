@@ -109,11 +109,12 @@ export async function desmarcarAulaConcluida(aulaId: string): Promise<boolean> {
 
 /* ─── ADMIN ─── */
 
-export async function adminCreateModulo(input: { titulo: string; descricao?: string; ordem?: number }) {
+export async function adminCreateModulo(input: { titulo: string; descricao?: string; ordem?: number; obrigatorio?: boolean }) {
   return supabase.from("treinamentos_modulos").insert({
     titulo: input.titulo,
     descricao: input.descricao ?? null,
     ordem: input.ordem ?? 0,
+    obrigatorio: input.obrigatorio ?? false,
   }).select().single();
 }
 
