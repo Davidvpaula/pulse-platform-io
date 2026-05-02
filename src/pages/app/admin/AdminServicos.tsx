@@ -78,7 +78,6 @@ export default function AdminServicos() {
   const [saving, setSaving] = useState(false);
   const [pctValid, setPctValid] = useState<boolean>(true);
   const [paServicoId, setPaServicoId] = useState<string | null>(null);
-  const [savingPa, setSavingPa] = useState(false);
 
   async function load() {
     setLoading(true);

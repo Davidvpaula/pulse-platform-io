@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Settings, Stethoscope, Zap, Plus, Trash2, Save, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight } from "lucide-react";
+import { Settings, Stethoscope, Zap, Plus, Trash2, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { getAppSetting, type Especialidade } from "@/lib/clinico";
+import { type Especialidade } from "@/lib/clinico";
 import { getProviderAtual, type PagamentoProvider } from "@/lib/pagamentos";
 import { usePermission } from "@/lib/permissions/usePermission";
 
@@ -53,11 +53,6 @@ export default function AdminConfiguracoes() {
   const [novaDescricao, setNovaDescricao] = useState("");
   const [criando, setCriando] = useState(false);
 
-  // Pronto Atendimento
-  const [paDuracao, setPaDuracao] = useState<number>(15);
-  const [paValor, setPaValor] = useState<number>(0); // em reais
-  const [savingPa, setSavingPa] = useState(false);
-
   // Pagamentos
   const [provider, setProvider] = useState<PagamentoProvider>("mock");
 
@@ -68,10 +63,6 @@ export default function AdminConfiguracoes() {
       .select("*")
       .order("nome", { ascending: true });
     setEsps(data ?? []);
-    const dur = await getAppSetting<number>("pronto_atendimento_duracao_min");
-    const val = await getAppSetting<number>("pronto_atendimento_valor_centavos");
-    setPaDuracao(typeof dur === "number" ? dur : 15);
-    setPaValor(typeof val === "number" ? val / 100 : 0);
     setProvider(await getProviderAtual());
     setLoading(false);
   };
@@ -115,27 +106,11 @@ export default function AdminConfiguracoes() {
     load();
   };
 
-  const salvarPA = async () => {
-    setSavingPa(true);
-    const { error: e1 } = await supabase
-      .from("app_settings")
-      .upsert({ key: "pronto_atendimento_duracao_min", value: paDuracao as any });
-    const { error: e2 } = await supabase
-      .from("app_settings")
-      .upsert({ key: "pronto_atendimento_valor_centavos", value: Math.round(paValor * 100) as any });
-    setSavingPa(false);
-    if (e1 || e2) {
-      toast.error((e1 || e2)?.message ?? "Falha ao salvar.");
-      return;
-    }
-    toast.success("Configuração de Pronto Atendimento salva.");
-  };
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Configurações da plataforma"
-        description="Especialidades disponíveis no site e parâmetros de Pronto Atendimento."
+        description="Especialidades disponíveis no site e atalhos para módulos de gestão."
       />
 
       {/* Atalho: Repasse financeiro (apenas com capability) */}
@@ -218,35 +193,6 @@ export default function AdminConfiguracoes() {
             </span>
           </div>
         )}
-      </Section>
-
-      {/* Pronto Atendimento */}
-      <Section
-        icon={Zap}
-        title="Pronto Atendimento (parâmetros globais)"
-        action={
-          <Button size="sm" onClick={salvarPA} disabled={savingPa} className="bg-gradient-primary hover:opacity-90">
-            {savingPa ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
-            Salvar PA
-          </Button>
-        }
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Duração padrão (min)" hint="Aplica a todos os atendimentos de PA. Médico só visualiza.">
-            <Input
-              type="number" min={5} step={5}
-              value={paDuracao}
-              onChange={(e) => setPaDuracao(Math.max(5, Number(e.target.value) || 0))}
-            />
-          </Field>
-          <Field label="Valor da consulta PA (R$)" hint="Preço único cobrado em todo Pronto Atendimento.">
-            <Input
-              type="number" min={0} step={10}
-              value={paValor.toFixed(2)}
-              onChange={(e) => setPaValor(Math.max(0, Number(e.target.value) || 0))}
-            />
-          </Field>
-        </div>
       </Section>
 
       {/* Especialidades */}
