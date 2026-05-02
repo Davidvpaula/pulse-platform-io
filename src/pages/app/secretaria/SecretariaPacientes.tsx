@@ -1,62 +1,134 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Building2, User, Plus, Calendar, ExternalLink, Pencil, Filter } from "lucide-react";
+import { Search, Building2, User, Plus, Calendar, ExternalLink, Pencil, Filter, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/StatusBadge";
-import { pacientes, agendamentos } from "@/lib/mock";
+import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
+import { supabase } from "@/integrations/supabase/client";
 
 type StatusFilter = "todos" | "ativo" | "aguardando" | "inadimplente";
+
+type PacRow = {
+  id: string;
+  nome_completo: string | null;
+  cpf: string | null;
+  telefone: string | null;
+  empresa_id: string | null;
+  status_conta: string;
+  feegow_status: string;
+  created_at: string;
+  consultas_count: number;
+  tem_pgto_pendente: boolean;
+};
 
 export default function SecretariaPacientes() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const [open, setOpen] = useState(false);
   const [novo, setNovo] = useState({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" as "particular" | "empresarial" });
+  const [criando, setCriando] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<PacRow[]>([]);
+
+  async function carregar() {
+    setLoading(true);
+    const { data: pacientes } = await supabase
+      .from("pacientes")
+      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,feegow_status,created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (!pacientes?.length) { setRows([]); setLoading(false); return; }
+
+    const ids = pacientes.map(p => p.id);
+
+    // Count consultas per paciente
+    const { data: cons } = await supabase
+      .from("consultas")
+      .select("paciente_id")
+      .in("paciente_id", ids);
+    const countMap: Record<string, number> = {};
+    cons?.forEach(c => { countMap[c.paciente_id] = (countMap[c.paciente_id] ?? 0) + 1; });
+
+    // Pagamentos pendentes
+    const { data: pagPend } = await supabase
+      .from("pagamentos")
+      .select("consulta_id, status, consultas:consulta_id(paciente_id)")
+      .in("status", ["pendente", "processando"]);
+    const pendSet = new Set<string>();
+    pagPend?.forEach((p: any) => { if (p.consultas?.paciente_id) pendSet.add(p.consultas.paciente_id); });
+
+    setRows(pacientes.map(p => ({
+      id: p.id,
+      nome_completo: p.nome_completo,
+      cpf: p.cpf,
+      telefone: p.telefone,
+      empresa_id: p.empresa_id,
+      status_conta: p.status_conta ?? "ativo",
+      feegow_status: p.feegow_status ?? "nao_enviado",
+      created_at: p.created_at,
+      consultas_count: countMap[p.id] ?? 0,
+      tem_pgto_pendente: pendSet.has(p.id),
+    })));
+    setLoading(false);
+  }
+
+  useEffect(() => { carregar(); }, []);
 
   const lista = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return pacientes
-      .map(p => {
-        const ags = agendamentos.filter(a => a.pacienteId === p.id);
-        const inadimplente = ags.some(a => a.status === "aguardando");
-        const aguardando = p.status === "paciente_criado" || p.status === "feegow_enviado";
-        const statusLabel: StatusFilter = inadimplente ? "inadimplente" : aguardando ? "aguardando" : "ativo";
-        return { ...p, ags: ags.length, statusLabel };
-      })
-      .filter(p => {
-        if (statusFilter !== "todos" && p.statusLabel !== statusFilter) return false;
-        if (!term) return true;
-        return (
-          p.nome.toLowerCase().includes(term) ||
-          p.id.toLowerCase().includes(term) ||
-          (p.empresa ?? "").toLowerCase().includes(term)
-        );
-      });
-  }, [q, statusFilter]);
+    return rows.filter(p => {
+      const aguardando = p.feegow_status === "pendente" || p.feegow_status === "nao_enviado";
+      const statusLabel: StatusFilter = p.tem_pgto_pendente ? "inadimplente" : aguardando ? "aguardando" : "ativo";
+      if (statusFilter !== "todos" && statusLabel !== statusFilter) return false;
+      if (!term) return true;
+      return (
+        (p.nome_completo ?? "").toLowerCase().includes(term) ||
+        (p.cpf ?? "").includes(term)
+      );
+    }).map(p => {
+      const aguardando = p.feegow_status === "pendente" || p.feegow_status === "nao_enviado";
+      const statusLabel: StatusFilter = p.tem_pgto_pendente ? "inadimplente" : aguardando ? "aguardando" : "ativo";
+      return { ...p, statusLabel };
+    });
+  }, [rows, q, statusFilter]);
 
-  const create = () => {
-    if (!novo.nome || !novo.cpf || !novo.telefone || !novo.email) {
-      toast.error("Preencha nome, CPF, telefone e e-mail.");
+  async function create() {
+    if (!novo.nome || !novo.email) {
+      toast.error("Preencha nome e e-mail.");
       return;
     }
-    if (!isValidCpf(novo.cpf)) {
+    if (novo.cpf && !isValidCpf(novo.cpf)) {
       toast.error("CPF inválido", { description: "Verifique os dígitos informados." });
       return;
     }
-    toast.success(`Paciente ${novo.nome} criado`, {
-      description: "Status: aguardando sincronização com Feegow (mock).",
+    setCriando(true);
+    const { data, error } = await supabase.functions.invoke("admin-criar-paciente", {
+      body: {
+        email: novo.email.trim(),
+        nome_completo: novo.nome.trim(),
+        cpf: novo.cpf ? novo.cpf.replace(/\D/g, "") : null,
+        telefone: novo.telefone.trim() || null,
+        vinculo: novo.vinculo,
+      },
     });
+    setCriando(false);
+    if (error || data?.error) {
+      toast.error(data?.error ?? error?.message ?? "Falha ao criar paciente");
+      return;
+    }
+    toast.success(`Paciente ${novo.nome} criado com sucesso`);
     setNovo({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" });
     setOpen(false);
-  };
+    carregar();
+  }
 
   const statusBadge: Record<StatusFilter, string> = {
     todos: "",
@@ -71,37 +143,9 @@ export default function SecretariaPacientes() {
         title="Pacientes"
         description="Busca global, status operacional e ações rápidas."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary hover:opacity-90">
-                <Plus className="mr-2 h-4 w-4" /> Cadastrar paciente
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Novo paciente</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <Input placeholder="Nome completo *" value={novo.nome} onChange={e => setNovo(n => ({ ...n, nome: e.target.value }))} />
-                <Input placeholder="CPF *" value={novo.cpf} maxLength={14} onChange={e => setNovo(n => ({ ...n, cpf: maskCpf(e.target.value) }))} />
-                <Input placeholder="Telefone *" value={novo.telefone} onChange={e => setNovo(n => ({ ...n, telefone: e.target.value }))} />
-                <Input placeholder="E-mail *" value={novo.email} onChange={e => setNovo(n => ({ ...n, email: e.target.value }))} />
-                <div className="flex gap-2">
-                  {(["particular", "empresarial"] as const).map(v => (
-                    <Button key={v} type="button"
-                      variant={novo.vinculo === v ? "default" : "outline"}
-                      onClick={() => setNovo(n => ({ ...n, vinculo: v }))}
-                      className="flex-1 capitalize">{v}</Button>
-                  ))}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Após criar, o paciente entra na fila de envio para Feegow automaticamente.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button onClick={create}>Criar paciente</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Cadastrar paciente
+          </Button>
         }
       />
 
@@ -131,42 +175,85 @@ export default function SecretariaPacientes() {
       </div>
 
       <div className="card-elevated overflow-hidden">
-        <div className="divide-y divide-border">
-          {lista.length === 0 && (
-            <p className="p-10 text-center text-sm text-muted-foreground">Nenhum paciente encontrado.</p>
-          )}
-          {lista.map(p => {
-            const empresarial = p.vinculo === "empresarial";
-            return (
-              <div key={p.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-4 hover:bg-muted/30">
-                <div className={`grid h-10 w-10 place-items-center rounded-lg ${empresarial ? "bg-accent/15 text-accent" : "bg-primary-soft text-primary"}`}>
-                  {empresarial ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium">
-                    <Link to={`/app/secretaria/pacientes/${p.id}`} className="hover:text-primary">{p.nome}</Link>
-                    <span className="ml-2 font-mono text-xs text-muted-foreground">{p.id}</span>
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {empresarial ? `Empresarial · ${p.empresa}` : "Particular"} · {p.ags} consulta(s)
-                  </p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize", statusBadge[p.statusLabel])}>
-                      {p.statusLabel}
-                    </span>
-                    <StatusBadge status={p.status} />
+        {loading ? (
+          <div className="flex items-center justify-center p-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {lista.length === 0 && (
+              <p className="p-10 text-center text-sm text-muted-foreground">Nenhum paciente encontrado.</p>
+            )}
+            {lista.map(p => {
+              const empresarial = !!p.empresa_id;
+              return (
+                <div key={p.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-4 hover:bg-muted/30">
+                  <div className={`grid h-10 w-10 place-items-center rounded-lg ${empresarial ? "bg-accent/15 text-accent" : "bg-primary/10 text-primary"}`}>
+                    {empresarial ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">
+                      <Link to={`/app/secretaria/pacientes/${p.id}`} className="hover:text-primary">{p.nome_completo ?? "—"}</Link>
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {empresarial ? "Empresarial" : "Particular"} · {p.consultas_count} consulta(s)
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize", statusBadge[p.statusLabel])}>
+                        {p.statusLabel}
+                      </span>
+                      <Badge variant="outline" className={cn("text-[10px]",
+                        p.feegow_status === "liberado" ? "border-success/40 text-success" : "border-muted-foreground/30 text-muted-foreground"
+                      )}>
+                        Feegow: {p.feegow_status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" title="Editar" asChild>
+                      <Link to={`/app/secretaria/pacientes/${p.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
+                    </Button>
+                    <Button size="sm" variant="outline" title="Agendar" asChild>
+                      <Link to={`/app/secretaria/agenda?paciente=${p.id}`}><Calendar className="mr-1.5 h-3.5 w-3.5" /> Agendar</Link>
+                    </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button size="sm" variant="outline" title="Agendar"><Calendar className="mr-1.5 h-3.5 w-3.5" /> Agendar</Button>
-                  <Button size="sm" variant="outline" title="Enviar para Feegow"><ExternalLink className="mr-1.5 h-3.5 w-3.5 text-primary" /> Feegow</Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Dialog novo paciente */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Novo paciente</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Input placeholder="Nome completo *" value={novo.nome} onChange={e => setNovo(n => ({ ...n, nome: e.target.value }))} />
+            <Input placeholder="CPF" value={novo.cpf} maxLength={14} onChange={e => setNovo(n => ({ ...n, cpf: maskCpf(e.target.value) }))} />
+            <Input placeholder="Telefone" value={novo.telefone} onChange={e => setNovo(n => ({ ...n, telefone: e.target.value }))} />
+            <Input placeholder="E-mail *" value={novo.email} onChange={e => setNovo(n => ({ ...n, email: e.target.value }))} />
+            <div className="flex gap-2">
+              {(["particular", "empresarial"] as const).map(v => (
+                <Button key={v} type="button"
+                  variant={novo.vinculo === v ? "default" : "outline"}
+                  onClick={() => setNovo(n => ({ ...n, vinculo: v }))}
+                  className="flex-1 capitalize">{v}</Button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Após criar, o paciente entra na fila de envio para Feegow automaticamente.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={criando}>Cancelar</Button>
+            <Button onClick={create} disabled={criando}>
+              {criando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar paciente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, Search, Plus, Filter, MoreHorizontal, Eye, Pencil, Calendar,
   MessageSquare, History, Pause, Ban, Play, AlertCircle, Loader2, Shield,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
 type StatusConta = "ativo" | "suspenso" | "bloqueado";
 type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
@@ -42,6 +44,8 @@ type PacienteRow = {
   proxima_consulta?: string | null;
   tem_pagamento_pendente?: boolean;
 };
+
+const PAGE_SIZE = 50;
 
 const filtrosPrincipais = [
   { key: "todos", label: "Todos" },
@@ -96,6 +100,8 @@ export default function AdminUsuarios() {
   const [rows, setRows] = useState<PacienteRow[]>([]);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<typeof filtrosPrincipais[number]["key"]>("todos");
+  const [pagina, setPagina] = useState(0);
+  const [totalRows, setTotalRows] = useState(0);
 
   // diálogo de status
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,13 +112,28 @@ export default function AdminUsuarios() {
   const [observacao, setObservacao] = useState("");
   const [salvando, setSalvando] = useState(false);
 
+  // diálogo novo paciente
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [novo, setNovo] = useState({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" as "particular" | "empresarial" });
+  const [criando, setCriando] = useState(false);
+
   async function carregar() {
     setLoading(true);
+
+    // Count total
+    const { count } = await supabase
+      .from("pacientes")
+      .select("id", { count: "exact", head: true });
+    setTotalRows(count ?? 0);
+
+    const from = pagina * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const { data: pacientes, error } = await supabase
       .from("pacientes")
       .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,feegow_status,created_at,user_id")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .range(from, to);
 
     if (error) {
       toast({ title: "Erro ao carregar", description: error.message, variant: "destructive" });
@@ -123,7 +144,6 @@ export default function AdminUsuarios() {
     const ids = (pacientes ?? []).map(p => p.id);
     const userIds = (pacientes ?? []).map(p => p.user_id).filter(Boolean) as string[];
 
-    // emails dos profiles (auth.users não acessível direto)
     const emailsMap = new Map<string, string>();
     if (userIds.length) {
       const { data: profs } = await supabase
@@ -133,7 +153,6 @@ export default function AdminUsuarios() {
       profs?.forEach(p => p.email && emailsMap.set(p.id, p.email));
     }
 
-    // última e próxima consulta + pagamentos pendentes
     const ultimaMap = new Map<string, string>();
     const proximaMap = new Map<string, string>();
     const pgtoPend = new Set<string>();
@@ -190,12 +209,11 @@ export default function AdminUsuarios() {
     setLoading(false);
   }
 
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { carregar(); }, [pagina]);
 
   const filtradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return rows.filter(r => {
-      // filtro principal
       if (filtro === "ativo" && r.status_conta !== "ativo") return false;
       if (filtro === "suspenso" && r.status_conta !== "suspenso") return false;
       if (filtro === "bloqueado" && r.status_conta !== "bloqueado") return false;
@@ -250,14 +268,46 @@ export default function AdminUsuarios() {
     carregar();
   }
 
+  async function criarPaciente() {
+    if (!novo.nome.trim() || !novo.email.trim()) {
+      toast({ title: "Campos obrigatórios", description: "Preencha nome e e-mail.", variant: "destructive" });
+      return;
+    }
+    if (novo.cpf && !isValidCpf(novo.cpf)) {
+      toast({ title: "CPF inválido", description: "Verifique os dígitos informados.", variant: "destructive" });
+      return;
+    }
+    setCriando(true);
+    const { data, error } = await supabase.functions.invoke("admin-criar-paciente", {
+      body: {
+        email: novo.email.trim(),
+        nome_completo: novo.nome.trim(),
+        cpf: novo.cpf ? novo.cpf.replace(/\D/g, "") : null,
+        telefone: novo.telefone.trim() || null,
+        vinculo: novo.vinculo,
+      },
+    });
+    setCriando(false);
+    if (error || data?.error) {
+      toast({ title: "Erro ao criar paciente", description: data?.error ?? error?.message ?? "Falha desconhecida", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Paciente criado", description: `${novo.nome} cadastrado com sucesso. Convite enviado por e-mail.` });
+    setNovo({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" });
+    setNovoOpen(false);
+    carregar();
+  }
+
+  const totalPaginas = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Gestão de usuários/pacientes"
         description="Cadastro, vínculo, integração Feegow e ações administrativas sobre contas de pacientes."
         actions={
-          <Button asChild>
-            <Link to="/app/secretaria/pacientes?novo=1"><Plus className="mr-2 h-4 w-4" />Novo paciente</Link>
+          <Button onClick={() => setNovoOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />Novo paciente
           </Button>
         }
       />
@@ -321,7 +371,6 @@ export default function AdminUsuarios() {
                   <th className="px-4 py-2 text-left">Conta</th>
                   <th className="px-4 py-2 text-left">Feegow</th>
                   <th className="px-4 py-2 text-left">Última</th>
-                  <th className="px-4 py-2 text-left">Próxima</th>
                   <th className="px-4 py-2 text-right">Ações</th>
                 </tr>
               </thead>
@@ -349,7 +398,6 @@ export default function AdminUsuarios() {
                     <td className="px-4 py-2.5">{statusContaBadge(p.status_conta)}</td>
                     <td className="px-4 py-2.5">{feegowBadge(p.feegow_status)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.ultima_consulta)}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.proxima_consulta)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -412,8 +460,36 @@ export default function AdminUsuarios() {
             </table>
           </div>
         )}
+
+        {/* Paginação */}
+        {totalPaginas > 1 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <p className="text-xs text-muted-foreground">
+              Página {pagina + 1} de {totalPaginas} · {totalRows} pacientes
+            </p>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagina === 0}
+                onClick={() => setPagina(p => Math.max(0, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagina >= totalPaginas - 1}
+                onClick={() => setPagina(p => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Diálogo alteração de status */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -470,6 +546,65 @@ export default function AdminUsuarios() {
             >
               {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo novo paciente */}
+      <Dialog open={novoOpen} onOpenChange={setNovoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo paciente</DialogTitle>
+            <DialogDescription>
+              Cadastra o paciente e envia convite por e-mail automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Nome completo *"
+              value={novo.nome}
+              onChange={e => setNovo(n => ({ ...n, nome: e.target.value }))}
+            />
+            <Input
+              placeholder="CPF"
+              value={novo.cpf}
+              maxLength={14}
+              onChange={e => setNovo(n => ({ ...n, cpf: maskCpf(e.target.value) }))}
+            />
+            <Input
+              placeholder="Telefone"
+              value={novo.telefone}
+              onChange={e => setNovo(n => ({ ...n, telefone: e.target.value }))}
+            />
+            <Input
+              placeholder="E-mail *"
+              type="email"
+              value={novo.email}
+              onChange={e => setNovo(n => ({ ...n, email: e.target.value }))}
+            />
+            <div className="flex gap-2">
+              {(["particular", "empresarial"] as const).map(v => (
+                <Button
+                  key={v}
+                  type="button"
+                  variant={novo.vinculo === v ? "default" : "outline"}
+                  onClick={() => setNovo(n => ({ ...n, vinculo: v }))}
+                  className="flex-1 capitalize"
+                >
+                  {v}
+                </Button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Após criar, o paciente entra na fila de envio para Feegow automaticamente.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNovoOpen(false)} disabled={criando}>Cancelar</Button>
+            <Button onClick={criarPaciente} disabled={criando}>
+              {criando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar paciente
             </Button>
           </DialogFooter>
         </DialogContent>
