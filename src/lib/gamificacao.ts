@@ -301,6 +301,23 @@ export async function verificarPremiumConquistado(medico_id: string): Promise<bo
   return data as boolean;
 }
 
+/** Médico solicita ativação Premium (tipo "conquistado") — só funciona se qualificado. */
+export async function ativarPremiumConquistado(medico_id: string) {
+  const qualificado = await verificarPremiumConquistado(medico_id);
+  if (!qualificado) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
+  const { error } = await supabase
+    .from("medico_premium" as any)
+    .upsert({
+      medico_id,
+      ativo: true,
+      tipo: "conquistado",
+      inicio: new Date().toISOString(),
+      fim: null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "medico_id" });
+  if (error) throw error;
+}
+
 /* ── Impulsionamento / Campanhas ── */
 
 export async function listarCampanhasMedico(medico_id: string): Promise<ImpulsionamentoCampanha[]> {
