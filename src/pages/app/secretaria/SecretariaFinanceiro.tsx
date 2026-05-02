@@ -112,37 +112,11 @@ export default function SecretariaFinanceiro() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={nova.open} onOpenChange={o => setNova(s => ({ ...s, open: o }))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova cobrança</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Descrição</Label><Input value={nova.descricao} onChange={e => setNova(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>Valor (R$)</Label><Input value={nova.valor} onChange={e => setNova(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={nova.vencimento} onChange={e => setNova(s => ({ ...s, vencimento: e.target.value }))} /></div>
-            </div>
-            <div>
-              <Label>Paciente (opcional)</Label>
-              <Select value={nova.paciente_id} onValueChange={v => setNova(s => ({ ...s, paciente_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Empresa (opcional)</Label>
-              <Select value={nova.empresa_id} onValueChange={v => setNova(s => ({ ...s, empresa_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>Observação</Label><Textarea value={nova.observacao} onChange={e => setNova(s => ({ ...s, observacao: e.target.value }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNova(s => ({ ...s, open: false }))}>Cancelar</Button>
-            <Button onClick={criar}>Criar cobrança</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NovaCobrancaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        onCreated={carregar}
+      />
     </div>
   );
 }
