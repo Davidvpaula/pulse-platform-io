@@ -175,6 +175,19 @@ export default function PacientePerfil() {
   const [obsEdit, setObsEdit] = useState("");
   const [obsSalvando, setObsSalvando] = useState(false);
 
+  // Reembolso dialog
+  const [reembolsoOpen, setReembolsoOpen] = useState(false);
+  const [reembolsoForm, setReembolsoForm] = useState({ pagamento_id: "", tipo: "total" as "total" | "parcial", valor: "", motivo: "" });
+  const [reembolsoCriando, setReembolsoCriando] = useState(false);
+
+  // Status action dialog
+  const [statusActionOpen, setStatusActionOpen] = useState(false);
+  const [statusAction, setStatusAction] = useState<{ novoStatus: string; label: string }>({ novoStatus: "", label: "" });
+  const [statusMotivo, setStatusMotivo] = useState("");
+  const [statusObs, setStatusObs] = useState("");
+  const [statusBloqueadoAte, setStatusBloqueadoAte] = useState("");
+  const [statusSalvando, setStatusSalvando] = useState(false);
+
   const defaultTab = searchParams.get("tab") || "visao-geral";
 
   const voltarTo = location.pathname.startsWith("/app/admin")
