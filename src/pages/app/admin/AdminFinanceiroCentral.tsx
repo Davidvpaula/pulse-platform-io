@@ -522,37 +522,12 @@ export default function AdminFinanceiroCentral() {
       </Dialog>
 
       {/* Nova cobrança manual */}
-      <Dialog open={novaCobranca.open} onOpenChange={o => setNovaCobranca(s => ({ ...s, open: o }))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova cobrança manual</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Descrição</Label><Input value={novaCobranca.descricao} onChange={e => setNovaCobranca(s => ({ ...s, descricao: e.target.value }))} placeholder="Ex.: Consulta avulsa - Dr. Silva" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>Valor (R$)</Label><Input value={novaCobranca.valor} onChange={e => setNovaCobranca(s => ({ ...s, valor: e.target.value }))} placeholder="0,00" /></div>
-              <div><Label>Vencimento</Label><Input type="date" min={new Date().toISOString().slice(0,10)} value={novaCobranca.vencimento} onChange={e => setNovaCobranca(s => ({ ...s, vencimento: e.target.value }))} /></div>
-            </div>
-            <div>
-              <Label>Paciente (opcional)</Label>
-              <Select value={novaCobranca.paciente_id} onValueChange={v => setNovaCobranca(s => ({ ...s, paciente_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
-                <SelectContent>{pacientesOpts.map(p => <SelectItem key={p.id} value={p.id}>{p.nome_completo}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Empresa (opcional)</Label>
-              <Select value={novaCobranca.empresa_id} onValueChange={v => setNovaCobranca(s => ({ ...s, empresa_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione uma empresa" /></SelectTrigger>
-                <SelectContent>{empresasOpts.map(e => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>Observação</Label><Textarea value={novaCobranca.observacao} onChange={e => setNovaCobranca(s => ({ ...s, observacao: e.target.value }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNovaCobranca(s => ({ ...s, open: false }))}>Cancelar</Button>
-            <Button onClick={criarCobranca}>Criar cobrança</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NovaCobrancaDialog
+        open={novaCobrancaOpen}
+        onOpenChange={setNovaCobrancaOpen}
+        onCreated={carregar}
+        title="Nova cobrança manual"
+      />
     </div>
   );
 }
