@@ -82,6 +82,18 @@ export default function AdminSessoes() {
     load();
   }
 
+  async function revokeAll() {
+    const ativas = rows.filter(r => !r.revoked_at);
+    if (ativas.length === 0) return;
+    let ok = 0;
+    for (const r of ativas) {
+      const { error } = await supabase.rpc("session_revoke", { _session_id: r.id, _reason: "Revogação em massa pelo admin" });
+      if (!error) ok++;
+    }
+    toast({ title: `${ok} sessão(ões) revogada(s)` });
+    load();
+  }
+
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
     if (!t) return rows;
