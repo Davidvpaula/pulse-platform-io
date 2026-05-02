@@ -106,9 +106,8 @@ export const colaboradorMenu: MenuNode[] = [
     label: "Supervisão",
     icon: Activity,
     children: [
-      { label: "Visão da equipe", to: "/app/colaborador/equipe", key: "supervisor.fila_geral" },
+      { label: "Equipe & Produtividade", to: "/app/colaborador/equipe", key: "supervisor.fila_geral" },
       { label: "Relatórios operacionais", to: "/app/colaborador/relatorios", key: "relatorios.ver_operacional" },
-      { label: "Produtividade", to: "/app/colaborador/produtividade", key: "supervisor.ver_produtividade" },
     ],
   },
   {
