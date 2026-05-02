@@ -213,12 +213,12 @@ export default function AdminFaturamentoB2B() {
   }, [listaFiltrada, pagina]);
 
   const kpis = useMemo(() => {
-    const abertas = lista.filter(f => f.status === "em_aberto");
-    const atrasadas = lista.filter(f => f.status === "atrasada");
-    const pagas = lista.filter(f => f.status === "paga");
+    const abertas = listaFiltrada.filter(f => f.status === "em_aberto");
+    const atrasadas = listaFiltrada.filter(f => f.status === "atrasada");
+    const pagas = listaFiltrada.filter(f => f.status === "paga");
     return {
-      total: lista.length,
-      valorTotal: lista.reduce((s, f) => s + f.valor_total_centavos, 0),
+      total: listaFiltrada.length,
+      valorTotal: listaFiltrada.reduce((s, f) => s + f.valor_total_centavos, 0),
       abertas: abertas.length,
       valorAberto: abertas.reduce((s, f) => s + f.valor_total_centavos, 0),
       atrasadas: atrasadas.length,
@@ -226,7 +226,7 @@ export default function AdminFaturamentoB2B() {
       pagas: pagas.length,
       valorPago: pagas.reduce((s, f) => s + f.valor_total_centavos, 0),
     };
-  }, [lista]);
+  }, [listaFiltrada]);
 
   function exportarCSV() {
     if (lista.length === 0) { toast.info("Nenhuma fatura para exportar"); return; }
