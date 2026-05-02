@@ -297,12 +297,13 @@ function SidebarBody({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2">
-          <ShieldCheck className="h-4 w-4 text-primary" />
+        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
+          <flow.icon className="h-4 w-4 flow-icon shrink-0" />
           <span className="flex-1">
-            <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil</span>
+            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
             <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
           </span>
+          <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
         </div>
       )}
 
