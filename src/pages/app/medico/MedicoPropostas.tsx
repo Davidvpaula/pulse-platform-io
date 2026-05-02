@@ -97,6 +97,10 @@ export default function MedicoPropostas() {
 
   async function aceitar() {
     if (!selected || !uid) return;
+    if (termsProposta.needsAcceptance) {
+      termsProposta.setShowDialog(true);
+      return;
+    }
     if (!termoAceito) {
       toast.error("Aceite os termos para continuar");
       return;
