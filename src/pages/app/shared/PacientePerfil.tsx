@@ -4,7 +4,7 @@ import {
   ArrowLeft, Calendar, MessageSquareText, Wallet, FileText, Building2, User,
   Stethoscope, Phone, ExternalLink, Loader2, History, Shield, Clock,
   Send, Eye, RefreshCw, AlertCircle, Ban, Play, Pause, ShieldOff,
-  MessageCircle, Tag, StickyNote, CreditCard, Gift,
+  MessageCircle, Tag, StickyNote, CreditCard, Gift, Undo2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { RequirePermission } from "@/components/permissions/RequirePermission";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { brl } from "@/lib/relatorios/utils";
