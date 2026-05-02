@@ -116,7 +116,8 @@ export default function ServicoDetalhe() {
           total_avaliacoes: rk?.total_avaliacoes ?? 0,
           ranking_score: rk?.ranking_score ?? 0,
           is_premium: premMap.get(id) ?? false,
-          is_patrocinado: adsSet.has(id),
+          is_patrocinado: adsMap.has(id),
+          campanha_id: adsMap.get(id) ?? undefined,
         });
       }
       setMedicos(cards);
