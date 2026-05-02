@@ -538,6 +538,17 @@ export default function MedicoDashboard() {
           )}
         </div>
       </div>
+
+      {/* Contrato obrigatório no primeiro acesso */}
+      {isMedico && (
+        <TermsAcceptanceDialog
+          tipo="contrato_medico"
+          open={termsContrato.needsAcceptance && !termsContrato.loading}
+          onOpenChange={termsContrato.setShowDialog}
+          onAccepted={termsContrato.onAccepted}
+          obrigatorio
+        />
+      )}
     </div>
   );
 }
