@@ -130,3 +130,19 @@ export async function listarAceitesDoTermo(termoId: string) {
   if (error) throw error;
   return data;
 }
+
+/** Lista todos os aceites do usuário logado, com dados do termo */
+export async function listarMeusAceites() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Usuário não autenticado");
+
+  const { data, error } = await supabase
+    .from("user_terms_acceptance")
+    .select("*, termos_condicoes:termo_id(id, tipo, titulo, conteudo, versao, status, published_at)")
+    .eq("user_id", user.id)
+    .order("aceito_em", { ascending: false });
+  if (error) throw error;
+  return data as (AcceptanceRow & {
+    termos_condicoes: Pick<TermoRow, "id" | "tipo" | "titulo" | "conteudo" | "versao" | "status" | "published_at"> | null;
+  })[];
+}
