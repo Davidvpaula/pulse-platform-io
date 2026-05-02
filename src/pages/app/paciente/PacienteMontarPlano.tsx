@@ -71,6 +71,7 @@ export default function PacienteMontarPlano() {
 
   async function confirmar() {
     if (!uid || selectedIds.size < 2) return;
+    if (termsPlano.needsAcceptance) { termsPlano.promptAcceptance(); return; }
     setSaving(true);
     try {
       // Create plano
