@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Building2, FileText, AlertTriangle, TrendingUp, Users, Wallet,
-  Clock, CheckCircle2, XCircle, ArrowUpRight, Loader2, Search,
+  Clock, CheckCircle2, XCircle, ArrowUpRight, Loader2, Search, Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
@@ -249,11 +249,12 @@ export default function AdminGestaoB2B() {
                     <th className="text-left">Início</th>
                     <th className="text-left">Fim</th>
                     <th className="text-left">Status</th>
+                    <th className="text-right px-4"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredContratos.length === 0 && (
-                    <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">Nenhum contrato encontrado.</td></tr>
+                    <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">Nenhum contrato encontrado.</td></tr>
                   )}
                   {filteredContratos.map(c => (
                     <tr key={c.id} className="border-t border-border hover:bg-muted/20">
@@ -268,6 +269,11 @@ export default function AdminGestaoB2B() {
                       <td>{fmtDate(c.inicio)}</td>
                       <td>{fmtDate(c.fim)}</td>
                       <td>{statusBadge(c.status)}</td>
+                      <td className="text-right px-4">
+                        <Link to={`/app/admin/contrato-b2b/${c.id}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                          <Eye className="h-3.5 w-3.5" /> Detalhes
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
