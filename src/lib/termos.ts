@@ -128,7 +128,7 @@ export async function verificarAceite(tipo: TermoTipo, userId: string): Promise<
  * Filtra por categoria (paciente/medico) se fornecida.
  */
 export async function buscarTermosPendentes(
-  categoria?: "paciente" | "medico",
+  categoria?: "paciente" | "medico" | "empresa",
 ): Promise<TermoRow[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
