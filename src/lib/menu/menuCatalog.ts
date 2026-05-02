@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Calendar, Users, Wallet, MessageCircle, MessageSquare,
   ClipboardList, ListTodo, BadgeCheck, Activity, FileBarChart, Eye,
-  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp,
+  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp, Trophy,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -110,6 +110,12 @@ export const colaboradorMenu: MenuNode[] = [
       { label: "Relatórios operacionais", to: "/app/colaborador/relatorios", key: "relatorios.ver_operacional" },
       { label: "Produtividade", to: "/app/colaborador/produtividade", key: "supervisor.ver_produtividade" },
     ],
+  },
+  {
+    label: "Gamificação",
+    to: "/app/admin/gamificacao",
+    icon: Trophy,
+    key: "gamificacao.configurar",
   },
   {
     label: "Auditoria",

@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Stethoscope, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Loader2, Search, Filter,
+  Loader2, Search, Filter, Star,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -22,6 +23,8 @@ import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
+import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
+import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
@@ -35,9 +38,11 @@ export default function PacienteAgendamentos() {
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
+  const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
+  const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
-    if (!session) { setRows(null); setVouchers([]); return; }
+    if (!session) { setRows(null); setVouchers([]); setAvaliadas(new Set()); return; }
     setLoading(true);
     const [data, vs] = await Promise.all([
       listConsultasDoPaciente(),
@@ -45,6 +50,12 @@ export default function PacienteAgendamentos() {
     ]);
     setRows(data);
     setVouchers(vs);
+    // Check which completed consultations have already been evaluated
+    const concluidas = (data ?? []).filter((c) => c.status === "concluida");
+    if (concluidas.length) {
+      const ids = await consultasAvaliadasIds(concluidas.map((c) => c.id));
+      setAvaliadas(ids);
+    }
     setLoading(false);
   };
 
@@ -262,6 +273,21 @@ export default function PacienteAgendamentos() {
                         </Button>
                       </>
                     )}
+                    {c.status === "concluida" && !avaliadas.has(c.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-warning hover:text-warning"
+                        onClick={() => setAvaliarConsulta(c)}
+                      >
+                        <Star className="mr-1.5 h-3.5 w-3.5" /> Avaliar
+                      </Button>
+                    )}
+                    {c.status === "concluida" && avaliadas.has(c.id) && (
+                      <Badge variant="secondary" className="text-[11px]">
+                        <Star className="mr-1 h-3 w-3 fill-warning text-warning" /> Avaliado
+                      </Badge>
+                    )}
                   </div>
                 </li>
               );
@@ -276,6 +302,20 @@ export default function PacienteAgendamentos() {
         voucher={voucherSelecionado}
         onAgendado={() => { setVoucherSelecionado(null); void carregar(); }}
       />
+
+      {avaliarConsulta && (
+        <AvaliarMedicoDialog
+          open={!!avaliarConsulta}
+          onOpenChange={(v) => { if (!v) setAvaliarConsulta(null); }}
+          consulta={{
+            id: avaliarConsulta.id,
+            paciente_id: avaliarConsulta.paciente_id,
+            medico_id: avaliarConsulta.medico_id,
+            medico_nome: avaliarConsulta.medico_nome,
+          }}
+          onAvaliado={() => { setAvaliarConsulta(null); void carregar(); }}
+        />
+      )}
     </div>
   );
 }

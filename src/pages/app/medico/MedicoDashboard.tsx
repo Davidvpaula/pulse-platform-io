@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
-  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope,
+  AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope, Trophy,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -494,6 +494,16 @@ export default function MedicoDashboard() {
                 <p className="font-semibold">Buscar paciente</p>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">Por nome, CPF ou ID interno</p>
+            </Link>
+          )}
+
+          {isMedico && (
+            <Link to="/app/medico/gamificacao" className="card-elevated block p-5 transition hover:border-primary/40">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-warning" />
+                <p className="font-semibold">Gamificação & Ranking</p>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Performance, avaliações e posição</p>
             </Link>
           )}
 

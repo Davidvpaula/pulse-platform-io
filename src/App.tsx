@@ -117,6 +117,8 @@ import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
+import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
+import AdminGamificacao from "@/pages/app/admin/AdminGamificacao";
 import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
 import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
 import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
@@ -209,6 +211,7 @@ const App = () => (
               <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
               <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
               <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
+              <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
 
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
@@ -260,6 +263,7 @@ const App = () => (
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/planos-cancelamentos" element={<G perm="financeiro.servicos_gerenciar"><AdminCancelamentosPlanos /></G>} />
+              <Route path="admin/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
               <Route path="admin/comunicacao" element={<Navigate to="/app/comunicacao/inbox" replace />} />
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />
