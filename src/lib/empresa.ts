@@ -331,6 +331,4 @@ export const STATUS_FATURA_LABEL: Record<Fatura["status"], string> = {
   atrasada: "Atrasada",
 };
 
-/** BRL helper */
-export const brl = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+export { brlReais as brl } from "@/lib/format";

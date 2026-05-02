@@ -121,8 +121,7 @@ function calcularProximaLiberacao(config: SaqueConfig): Date | null {
   return new Date(ano, mes + 1, dias[0]);
 }
 
-export const brl = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+export { brl } from "@/lib/format";
 
 export const mascarar = (v: string, visivel = 4) => {
   if (!v || v.length <= visivel) return v;

@@ -68,5 +68,4 @@ export function gerarSugestoes(s: SaudeFinanceira): string[] {
   return sugestoes;
 }
 
-export const brl = (c: number) =>
-  ((c || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+export { brl } from "@/lib/format";
