@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
   Crown, Megaphone, DollarSign, Target, Zap, History, Filter,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
-function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
+
 
 type AuditTipo = "peso" | "premium" | "cpc" | "saldo" | "recalculo";
 

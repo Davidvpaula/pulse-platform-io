@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
@@ -32,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
-function brl(centavos: number) { return `R$ ${(centavos / 100).toFixed(2)}`; }
+
 function recenciaLabel(f: number) {
   if (f >= 1) return { label: "Ativo", cls: "bg-success/15 text-success" };
   if (f >= 0.8) return { label: "Moderado", cls: "bg-warning/15 text-warning" };

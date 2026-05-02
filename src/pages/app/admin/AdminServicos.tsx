@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,9 +57,6 @@ const empty: Partial<Servico> = {
   requer_aprovacao_medico: false,
 };
 
-function brl(c: number) {
-  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 
 function slugify(s: string) {
   return s.toLowerCase()

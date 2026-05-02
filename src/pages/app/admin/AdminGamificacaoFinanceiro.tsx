@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import {
   Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap, Download,
 } from "lucide-react";
@@ -25,7 +26,7 @@ function downloadCsv(filename: string, header: string[], rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
+
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
 
 export default function AdminGamificacaoFinanceiro() {

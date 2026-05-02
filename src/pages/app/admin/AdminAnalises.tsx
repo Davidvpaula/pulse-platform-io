@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { brlReais as brl } from "@/lib/format";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
@@ -34,9 +35,6 @@ function pct(now: number, prev: number) {
   return Math.round(((now - prev) / prev) * 100);
 }
 
-function brl(v: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
-}
 
 function downloadCSV(filename: string, rows: any[]) {
   if (!rows.length) return;

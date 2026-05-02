@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { fmtHora } from "@/lib/format";
 import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Calendar, MessageSquareText, Wallet, FileText, Building2, User,
@@ -133,9 +134,6 @@ type AuditLog = {
 /* ── helpers ── */
 function fmtData(d: string) {
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-function fmtHora(d: string) {
-  return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 function fmtDataHora(d: string) {
   return `${fmtData(d)} ${fmtHora(d)}`;
