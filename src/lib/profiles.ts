@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -74,6 +74,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Treinamento", to: "/app/medico/treinamento", icon: BookOpen },
       { label: "Meus Planos", to: "/app/medico/planos", icon: BadgeCheck },
+      { label: "Gamificação & Ranking", to: "/app/medico/gamificacao", icon: Trophy },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],
@@ -222,6 +223,14 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye, requiresCapability: "auditoria.ver" },
+      {
+        label: "Gamificação",
+        icon: Trophy,
+        children: [
+          { label: "Configuração & Ranking", to: "/app/admin/gamificacao" },
+          { label: "Financeiro", to: "/app/admin/gamificacao/financeiro" },
+        ],
+      },
       { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
