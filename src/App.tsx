@@ -82,7 +82,7 @@ import Templates from "@/pages/app/comunicacao/Templates";
 import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
 import BotConfig from "@/pages/app/comunicacao/BotConfig";
-import Integracoes from "@/pages/app/shared/Integracoes";
+
 import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
 import Tarefas from "@/pages/app/shared/Tarefas";
 import Permissoes from "@/pages/app/admin/Permissoes";
@@ -297,7 +297,7 @@ const App = () => (
               <Route path="admin/whatsapp" element={<Navigate to="/app/admin/integracoes/whatsapp" replace />} />
               <Route path="admin/integracoes/whatsapp" element={<G perm="integracoes.configurar_whatsapp"><IntegracaoWhatsApp /></G>} />
               <Route path="admin/integracoes" element={<G perm="integracoes.ver"><AdminIntegracoes /></G>} />
-              <Route path="admin/integracoes-legado" element={<G perm="integracoes.ver"><Integracoes /></G>} />
+              
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
