@@ -57,12 +57,14 @@ function getFlowContext(profileKey: ProfileKey, pathname: string): FlowContext {
 
 export default function AppLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { profileKey, setProfileKey, user } = useAuth();
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
   const isDev = import.meta.env.DEV;
   const showDemoSwitcher = isDev && !session;
+  const flow = getFlowContext(profileKey, pathname);
 
   const handleLogout = async () => {
     if (session) {
