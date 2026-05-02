@@ -380,7 +380,7 @@ export default function AdminFinanceiroCentral() {
                 </SelectContent>
               </Select>
             </div>
-            <Button size="sm" onClick={abrirNovaCobranca}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
+            <Button size="sm" onClick={() => setNovaCobrancaOpen(true)}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
