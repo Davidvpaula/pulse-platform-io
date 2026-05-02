@@ -52,6 +52,7 @@ const PIPELINE_ORDER: PropostaStatus[] = [
 
 export default function EmpresaPropostas() {
   const { session } = useSession();
+  const termsEmpresa = useTermsCheck("proposta_empresa");
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { medico_nome?: string; especialidade_nome?: string })[]>([]);
   const [medicos, setMedicos] = useState<{ id: string; nome: string }[]>([]);
