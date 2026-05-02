@@ -254,8 +254,8 @@ export default function MedicoGamificacao() {
       </div>
 
       {/* Impulsionamento / Campanhas CPC */}
-      <div className="card-elevated p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="card-elevated p-6 space-y-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
             <h3 className="font-display text-lg font-semibold">Impulsionamento</h3>
@@ -264,6 +264,45 @@ export default function MedicoGamificacao() {
             <PlusCircle className="mr-1.5 h-3.5 w-3.5" /> Nova campanha
           </Button>
         </div>
+
+        {/* Status counters */}
+        {(() => {
+          const ativas = campanhas.filter(c => c.status === "ativa").length;
+          const pausadas = campanhas.filter(c => c.status === "pausada").length;
+          const encerradas = campanhas.filter(c => c.status === "encerrada").length;
+          const canceladas = campanhas.filter(c => c.status === "cancelada").length;
+          const totalCliques = campanhas.reduce((s, c) => s + c.cliques, 0);
+          const totalGasto = campanhas.reduce((s, c) => s + c.gasto_centavos, 0);
+
+          return (
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-center">
+                <p className="text-xl font-bold text-success">{ativas}</p>
+                <p className="text-[11px] text-muted-foreground">Ativas</p>
+              </div>
+              <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-center">
+                <p className="text-xl font-bold text-warning">{pausadas}</p>
+                <p className="text-[11px] text-muted-foreground">Pausadas</p>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
+                <p className="text-xl font-bold text-muted-foreground">{encerradas}</p>
+                <p className="text-[11px] text-muted-foreground">Concluídas</p>
+              </div>
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">
+                <p className="text-xl font-bold text-destructive">{canceladas}</p>
+                <p className="text-[11px] text-muted-foreground">Canceladas</p>
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+                <p className="text-xl font-bold text-primary">{totalCliques}</p>
+                <p className="text-[11px] text-muted-foreground">Cliques total</p>
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-center">
+                <p className="text-xl font-bold text-primary">{brl(totalGasto)}</p>
+                <p className="text-[11px] text-muted-foreground">Investido</p>
+              </div>
+            </div>
+          );
+        })()}
 
         {campanhas.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
