@@ -117,6 +117,22 @@ export default function MedicoCorporativo() {
           });
           setVinculos(vMap);
         }
+
+        // Fetch propostas B2B for this doctor
+        const { data: props } = await supabase
+          .from("propostas_empresa_medico")
+          .select("*, empresa:empresas(razao_social, nome_fantasia), especialidade:especialidades(nome)")
+          .eq("medico_id", med.id)
+          .in("status", ["enviada_medico", "aceita", "recusada", "convertida"])
+          .order("created_at", { ascending: false });
+
+        setPropostasB2B(
+          (props ?? []).map((p: any) => ({
+            ...p,
+            empresa_nome: p.empresa?.nome_fantasia || p.empresa?.razao_social || "—",
+            especialidade_nome: p.especialidade?.nome ?? null,
+          }))
+        );
       } catch (e: any) {
         toast.error("Erro: " + e.message);
       } finally {
