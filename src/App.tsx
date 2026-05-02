@@ -268,7 +268,8 @@ const App = () => (
 
               {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />
-              <Route path="admin/usuarios" element={<G perm="pacientes.ver"><AdminUsuarios /></G>} />
+              <Route path="admin/pacientes" element={<G perm="pacientes.ver"><AdminUsuarios /></G>} />
+              <Route path="admin/usuarios" element={<Navigate to="/app/admin/pacientes" replace />} />
               <Route path="admin/medicos" element={<G perm={["medicos.ver","medicos.aprovar"]}><MedicosAprovacao /></G>} />
               <Route path="admin/colaboradores" element={<G perm="colaboradores.ver"><AdminColaboradores /></G>} />
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
