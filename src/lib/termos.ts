@@ -84,6 +84,25 @@ export async function desativarTermo(id: string) {
   if (error) throw error;
 }
 
+/** Edita título e conteúdo de um termo INATIVO (rascunho). Termos ativos são imutáveis. */
+export async function editarTermo(id: string, input: { titulo: string; conteudo: string }) {
+  // Verifica se é inativo antes de editar
+  const { data: current, error: fetchErr } = await supabase
+    .from("termos_condicoes")
+    .select("status")
+    .eq("id", id)
+    .single();
+  if (fetchErr) throw fetchErr;
+  if (current?.status === "ativo") throw new Error("Termos ativos não podem ser editados. Crie uma nova versão.");
+
+  const { error } = await supabase
+    .from("termos_condicoes")
+    .update({ titulo: input.titulo, conteudo: input.conteudo })
+    .eq("id", id)
+    .eq("status", "inativo");
+  if (error) throw error;
+}
+
 /* ─── Aceite ─── */
 
 export async function registrarAceite(termoId: string) {
