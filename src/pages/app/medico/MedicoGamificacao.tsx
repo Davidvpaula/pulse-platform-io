@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import { getMedicoAtual } from "@/lib/clinico";
 import {
-  getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil,
+  getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   type AvaliacaoMedica, type MedicoRanking,
 } from "@/lib/gamificacao";
 import { cn } from "@/lib/utils";
