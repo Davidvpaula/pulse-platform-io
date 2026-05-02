@@ -1,91 +1,37 @@
+## Objetivo
 
-# Sistema de Termos e Condições
+Exibir no dashboard do médico (`MedicoDashboard.tsx`) uma seção compacta mostrando:
+- Posição no ranking (#N)
+- Score atual
+- Nota média + total de avaliações
+- Saldo de crescimento (pontos acumulados)
+- Link direto para a página completa de gamificação
 
-## Resumo
-
-Criar um sistema centralizado de gestão de Termos e Condições no dashboard Admin, com versionamento imutavel, aceite obrigatório por usuário (com IP/user-agent), e integração nos fluxos existentes (compra de consulta, planos, cadastro médico, premium, gamificação).
-
-Nenhuma tabela ou fluxo existente será alterada -- apenas novas tabelas, páginas e componentes serão criados.
-
----
-
-## Fase 1 -- Database (migration)
-
-**Tabela `termos_condicoes`**
-- `id` uuid PK
-- `tipo` enum: `consulta_paciente`, `privacidade`, `plano_plataforma`, `plano_medico`, `contrato_medico`, `gamificacao_premium`, `criacao_plano_medico`, `uso_feegow`
-- `titulo` text NOT NULL
-- `conteudo` text NOT NULL (HTML do editor rico)
-- `versao` int NOT NULL (auto-incrementa por tipo)
-- `status` enum: `ativo`, `inativo`
-- `created_at`, `published_at` timestamptz
-- `created_by` uuid (actor admin)
-- Constraint UNIQUE(tipo, versao) -- nunca sobrescreve
-- Constraint: max 1 ativo por tipo (via trigger)
-
-**Tabela `user_terms_acceptance`**
-- `id` uuid PK
-- `user_id` uuid NOT NULL refs profiles
-- `termo_id` uuid NOT NULL refs termos_condicoes
-- `aceito_em` timestamptz NOT NULL default now()
-- `ip_address` text
-- `user_agent` text
-- RLS: usuario ve apenas seus aceites; admin le tudo
-
-**Trigger**: ao ativar um termo, desativa automaticamente o anterior do mesmo tipo.
-
-**Auditoria**: trigger que insere em `audit_eventos_unificado` nas ações de criação, edição, ativação e aceite.
+Os dados são reais (tabelas `medico_ranking` e `medico_saldo_crescimento` já existem e são populadas por triggers automáticos).
 
 ---
 
-## Fase 2 -- Pagina Admin `/app/admin/termos-condicoes`
+## Alterações
 
-- Listagem de todos os termos agrupados por categoria (Paciente / Medico)
-- Cards por tipo mostrando versão ativa, data, status
-- Ações: Criar novo termo, ver historico de versoes, ativar/desativar
-- Editor rico (textarea com suporte a HTML basico) para conteudo
-- Ao editar um termo ativo: cria nova versão (v+1), não sobrescreve
-- Aba "Aceites" mostrando quem aceitou cada versão (user, data, IP)
-- Rota e menu adicionados ao nav do Admin
+### `src/pages/app/medico/MedicoDashboard.tsx`
 
----
+1. **Importar** `getRankingMedico`, `getSaldoAtual` de `@/lib/gamificacao` e ícones `Star`, `Award`, `Crown` de `lucide-react`.
 
-## Fase 3 -- Componente de aceite reutilizavel
+2. **Adicionar state** para `ranking` (MedicoRanking | null) e `saldoCrescimento` (number).
 
-- `TermsAcceptanceDialog.tsx` -- modal obrigatório
-  - Recebe `tipo` do termo como prop
-  - Busca o termo ativo daquele tipo
-  - Exibe titulo + conteudo (scrollável)
-  - Checkbox "Li e aceito os termos"
-  - Botão confirmar (desabilitado até checkbox)
-  - Ao confirmar: insere em `user_terms_acceptance` com IP e user-agent
-  - Callback `onAccepted` para liberar o fluxo
+3. **Na função `carregar()`**, após carregar o médico, fazer em paralelo:
+   - `getRankingMedico(medico.id)` 
+   - `getSaldoAtual(medico.id)`
 
-- `useTermsCheck(tipo)` -- hook que verifica se o usuario já aceitou a versão ativa do tipo. Retorna `{ needsAcceptance, showDialog, ... }`.
+4. **Renderizar nova seção** entre os stats cards e a grid de próximas consultas (após o split de receita). Card compacto com layout horizontal:
+   - **Posição** (#1, #2...) com badge colorido
+   - **Score** (numérico)
+   - **Nota média** (estrelas + número)
+   - **Saldo** (pontos)
+   - Botão "Ver detalhes" linkando para `/app/medico/gamificacao`
+
+Visível apenas quando `isMedico` é true (perfil médico).
 
 ---
 
-## Fase 4 -- Integração nos fluxos existentes
-
-Cada fluxo chama `useTermsCheck` e, se necessário, exibe o dialog antes de prosseguir:
-
-| Fluxo | Tipo do termo | Onde integrar |
-|-------|--------------|---------------|
-| Compra consulta (paciente) | `consulta_paciente` | Antes de confirmar agendamento |
-| Assinar plano plataforma | `plano_plataforma` | Antes de confirmar assinatura |
-| Assinar plano médico | `plano_medico` | Antes de confirmar assinatura |
-| Cadastro médico (1o login) | `contrato_medico` | Popup obrigatório no dashboard médico |
-| Ativar premium | `gamificacao_premium` | Antes de ativar na page gamificação |
-| Criar plano (médico) | `criacao_plano_medico` | Antes de salvar novo plano |
-
-A integração será feita adicionando o hook + dialog nos componentes existentes, sem alterar a lógica de negócio atual.
-
----
-
-## Detalhes técnicos
-
-- Enum `termo_tipo` criado no banco para manter integridade
-- RLS: admin full CRUD em `termos_condicoes`; usuarios autenticados SELECT only. Em `user_terms_acceptance`: INSERT proprio + SELECT proprio; admin SELECT all
-- IP capturado via header no client (fallback vazio)
-- Auditoria via `audit_eventos_unificado` com modulo = 'termos'
-- Menu Admin: novo item "Termos & Condições" com icone FileText, entre Segurança e Análises
+Nenhuma alteração de banco de dados necessária -- os dados já existem nas tabelas e são atualizados automaticamente via triggers e cron job.
