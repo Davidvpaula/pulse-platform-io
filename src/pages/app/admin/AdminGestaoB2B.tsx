@@ -14,8 +14,19 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const brl = (c: number) => {
+  if (typeof c !== "number" || isNaN(c)) return "R$ 0,00";
+  return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+const safeNum = (v: unknown, fallback = 0): number => {
+  if (typeof v === "number" && !isNaN(v)) return v;
+  return fallback;
+};
+const safeStr = (v: unknown, fallback = "—"): string => {
+  if (typeof v === "string" && v.length > 0) return v;
+  return fallback;
+};
 
 type ContratoView = {
   id: string;
@@ -57,7 +68,7 @@ export default function AdminGestaoB2B() {
   async function carregarDados() {
     setLoading(true);
     try {
-      const [{ data: contratosRaw }, { data: faturasRaw }] = await Promise.all([
+      const [contratosRes, faturasRes] = await Promise.all([
         supabase
           .from("empresas_contratos")
           .select("*, empresas(razao_social), planos(nome)")
@@ -69,19 +80,50 @@ export default function AdminGestaoB2B() {
           .limit(100),
       ]);
 
+      if (contratosRes.error) {
+        toast.error("Erro ao carregar contratos", { description: contratosRes.error.message });
+      }
+      if (faturasRes.error) {
+        toast.error("Erro ao carregar faturas", { description: faturasRes.error.message });
+      }
+
+      const contratosRaw = contratosRes.data;
+      const faturasRaw = faturasRes.data;
+
+      const requiredContractFields = ["id", "empresa_id", "status", "plano_mensal_centavos", "limite_consultas_mes", "modelo_financeiro", "data_inicio"];
+      const requiredFaturaFields = ["id", "empresa_id", "competencia_mes", "competencia_ano", "valor_total_centavos", "status", "vencimento"];
+
+      const missingContractFields = (contratosRaw && contratosRaw.length > 0)
+        ? requiredContractFields.filter(f => !(f in contratosRaw[0]))
+        : [];
+      const missingFaturaFields = (faturasRaw && faturasRaw.length > 0)
+        ? requiredFaturaFields.filter(f => !(f in faturasRaw[0]))
+        : [];
+
+      if (missingContractFields.length > 0) {
+        toast.error("Campos ausentes em contratos", {
+          description: `Os campos ${missingContractFields.join(", ")} não foram encontrados. Verifique a estrutura do banco de dados.`,
+        });
+      }
+      if (missingFaturaFields.length > 0) {
+        toast.error("Campos ausentes em faturas", {
+          description: `Os campos ${missingFaturaFields.join(", ")} não foram encontrados. Verifique a estrutura do banco de dados.`,
+        });
+      }
+
       setContratos(
         (contratosRaw ?? []).map((c) => ({
           id: c.id,
           empresa_id: c.empresa_id,
-          razao_social: (c as any).empresas?.razao_social ?? "—",
+          razao_social: safeStr((c as any).empresas?.razao_social),
           plano_nome: (c as any).planos?.nome ?? null,
-          status: c.status ?? "rascunho",
+          status: safeStr(c.status, "rascunho"),
           inicio: c.data_inicio ?? null,
           fim: c.data_fim ?? null,
-          valor_mensal_centavos: c.plano_mensal_centavos ?? 0,
-          limite_consultas_mes: c.limite_consultas_mes ?? 0,
-          qtd_funcionarios: 0, // populated below
-          modelo_financeiro: c.modelo_financeiro ?? "por_consulta",
+          valor_mensal_centavos: safeNum(c.plano_mensal_centavos),
+          limite_consultas_mes: safeNum(c.limite_consultas_mes),
+          qtd_funcionarios: 0,
+          modelo_financeiro: safeStr(c.modelo_financeiro, "por_consulta"),
         }))
       );
 
@@ -89,13 +131,13 @@ export default function AdminGestaoB2B() {
         (faturasRaw ?? []).map((f) => ({
           id: f.id,
           empresa_id: f.empresa_id,
-          razao_social: (f as any).empresas?.razao_social ?? "—",
-          competencia: `${String(f.competencia_mes).padStart(2, "0")}/${f.competencia_ano}`,
-          valor_centavos: f.valor_total_centavos ?? 0,
-          status: f.status ?? "pendente",
+          razao_social: safeStr((f as any).empresas?.razao_social),
+          competencia: `${String(safeNum(f.competencia_mes)).padStart(2, "0")}/${safeNum(f.competencia_ano)}`,
+          valor_centavos: safeNum(f.valor_total_centavos),
+          status: safeStr(f.status, "pendente"),
           emitida_em: f.created_at ?? "",
           vencimento: f.vencimento ?? null,
-          qtd_funcionarios: f.qtd_funcionarios ?? 0,
+          qtd_funcionarios: safeNum(f.qtd_funcionarios),
         }))
       );
     } catch (e: any) {
