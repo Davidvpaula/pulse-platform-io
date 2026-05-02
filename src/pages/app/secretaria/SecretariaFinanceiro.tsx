@@ -18,9 +18,7 @@ export default function SecretariaFinanceiro() {
   const [podeCobrar, setPodeCobrar] = useState(false);
   const [podeVer, setPodeVer] = useState(false);
 
-  const [pacientesOpts, setPacientesOpts] = useState<any[]>([]);
-  const [empresasOpts, setEmpresasOpts] = useState<any[]>([]);
-  const [nova, setNova] = useState({ open: false, descricao: "", valor: "", vencimento: "", paciente_id: "", empresa_id: "", observacao: "" });
+  const [novaOpen, setNovaOpen] = useState(false);
 
   const checarPermissoes = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
