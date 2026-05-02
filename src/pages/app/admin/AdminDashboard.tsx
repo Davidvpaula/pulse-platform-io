@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState<VisaoGeral | null>(null);
   const [loading, setLoading] = useState(true);
   const [servicos, setServicos] = useState<ServicosResumo | null>(null);
+  const [integracoes, setIntegracoes] = useState<{ nome: string; desc: string; status: string; cor: string }[]>([]);
 
   useEffect(() => {
     let active = true;
