@@ -326,7 +326,7 @@ export default function AdminFaturamentoB2B() {
                       <Button size="sm" variant="ghost" title="Baixar PDF" onClick={() => gerarFaturaPdf(f)}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setDetalheAberto(f)}>
+                      <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => abrirDetalhe(f)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     </div>
