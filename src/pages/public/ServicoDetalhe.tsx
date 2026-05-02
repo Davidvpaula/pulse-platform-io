@@ -46,7 +46,7 @@ export default function ServicoDetalhe() {
     (async () => {
       setLoading(true);
       const { data: s } = await supabase
-        .from("servicos_financeiros")
+        .from("servicos_publicos" as any)
         .select("id,nome,descricao_publica,duracao_min,valor_paciente_centavos,ativo")
         .eq("slug", slug)
         .maybeSingle();
