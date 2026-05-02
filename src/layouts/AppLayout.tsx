@@ -272,10 +272,10 @@ function SidebarBody({
       {showDemoSwitcher ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-left hover:bg-sidebar-accent">
-              <ShieldCheck className="h-4 w-4 text-primary" />
+            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-left hover:opacity-90 flow-sidebar-card">
+              <flow.icon className="h-4 w-4 flow-icon shrink-0" />
               <span className="flex-1">
-                <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil (demo)</span>
+                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Perfil (demo) · {flow.label}</span>
                 <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
               </span>
               <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
