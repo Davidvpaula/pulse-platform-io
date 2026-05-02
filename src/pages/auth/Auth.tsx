@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Loader2, Stethoscope } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 const signupSchema = z.object({
   nome: z.string().trim().min(2, "Nome muito curto").max(120),
@@ -32,7 +34,7 @@ export default function Auth() {
     (params.get("modo") as "login" | "cadastro") ?? "login",
   );
   const [loading, setLoading] = useState(false);
-
+  const [signupPassword, setSignupPassword] = useState("");
   // já logado? manda pro destino padrão
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -101,6 +103,17 @@ export default function Auth() {
     });
     if (!parsed.success) {
       toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    // Valida contra password_policy do admin
+    const validation = await validatePassword(parsed.data.senha);
+    if (!validation.valid) {
+      setLoading(false);
+      toast({
+        title: "Senha não atende aos requisitos",
+        description: validation.errors.join(", "),
+        variant: "destructive",
+      });
       return;
     }
     setLoading(true);
@@ -212,8 +225,11 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="senha-s">Senha</Label>
-                  <Input id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required />
-                  <p className="text-xs text-muted-foreground">Mínimo 8 caracteres</p>
+                  <Input
+                    id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required
+                    value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)}
+                  />
+                  <PasswordStrengthIndicator password={signupPassword} />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}

@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ShieldAlert } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 const schema = z.object({
   senha: z.string().min(8, "Mínimo 8 caracteres"),
@@ -23,6 +25,7 @@ export default function TrocarSenha() {
   const navigate = useNavigate();
   const [policy, setPolicy] = useState<{ min_length: number; expiration_days: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [senha, setSenha] = useState("");
 
   useEffect(() => {
     if (!loading && !session) navigate("/auth", { replace: true });
@@ -42,6 +45,15 @@ export default function TrocarSenha() {
     });
     if (!parsed.success) {
       toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    const validation = await validatePassword(parsed.data.senha);
+    if (!validation.valid) {
+      toast({
+        title: "Senha não atende aos requisitos",
+        description: validation.errors.join(", "),
+        variant: "destructive",
+      });
       return;
     }
     setSubmitting(true);
@@ -74,7 +86,11 @@ export default function TrocarSenha() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="senha">Nova senha</Label>
-              <Input id="senha" name="senha" type="password" required minLength={policy?.min_length ?? 8} />
+              <Input
+                id="senha" name="senha" type="password" required minLength={policy?.min_length ?? 8}
+                value={senha} onChange={(e) => setSenha(e.target.value)}
+              />
+              <PasswordStrengthIndicator password={senha} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmacao">Confirme a senha</Label>

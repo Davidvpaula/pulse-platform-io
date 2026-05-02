@@ -21,6 +21,8 @@ import {
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 const onlyDigits = (v: string) => v.replace(/\D/g, "");
 
@@ -423,6 +425,13 @@ function ContaSeguranca({ emailAtual, onEmailChange }: { emailAtual: string; onE
     if (novaSenha.length < 8) { toast.error("Nova senha precisa de no mínimo 8 caracteres."); return; }
     if (novaSenha !== confSenha) { toast.error("Confirmação de senha não confere."); return; }
     setTrocandoSenha(true);
+    // Valida contra password_policy
+    const validation = await validatePassword(novaSenha);
+    if (!validation.valid) {
+      setTrocandoSenha(false);
+      toast.error("Senha: " + validation.errors.join(", "));
+      return;
+    }
     // Re-autentica para validar a senha atual
     const reauth = await supabase.auth.signInWithPassword({ email: emailAtual, password: senhaAtual });
     if (reauth.error) {
@@ -470,6 +479,7 @@ function ContaSeguranca({ emailAtual, onEmailChange }: { emailAtual: string; onE
           <Field label="Nova senha">
             <Input type="password" autoComplete="new-password" minLength={8}
               value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
+            <PasswordStrengthIndicator password={novaSenha} />
           </Field>
           <Field label="Confirmar nova senha">
             <Input type="password" autoComplete="new-password" minLength={8}

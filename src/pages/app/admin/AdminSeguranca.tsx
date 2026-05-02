@@ -145,12 +145,31 @@ export default function AdminSeguranca() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Como funciona</CardTitle>
+              <CardTitle>Status de enforcement</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-2 text-muted-foreground">
-              <p>• Após {policy.expiration_days} dias o usuário será redirecionado para definir nova senha.</p>
-              <p>• HIBP: senhas conhecidas em vazamentos públicos são rejeitadas no cadastro/troca.</p>
-              <p>• Bloqueio: 5 tentativas falhas em 15 min bloqueiam novas tentativas para o mesmo e-mail.</p>
+            <CardContent className="text-sm space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant={policy.require_complexity ? "default" : "outline"}>
+                  {policy.require_complexity ? "✓ Ativo" : "Inativo"}
+                </Badge>
+                <span className="text-muted-foreground">Complexidade (maiúscula, número, símbolo) — validada no cadastro e troca de senha</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={policy.hibp_enabled ? "default" : "outline"}>
+                  {policy.hibp_enabled ? "✓ Ativo" : "Inativo"}
+                </Badge>
+                <span className="text-muted-foreground">HIBP — senhas vazadas rejeitadas pelo backend de autenticação</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={policy.expiration_days > 0 ? "default" : "outline"}>
+                  {policy.expiration_days > 0 ? `✓ ${policy.expiration_days} dias` : "Desligado"}
+                </Badge>
+                <span className="text-muted-foreground">Expiração — redireciona para troca de senha após o período</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="default">✓ Ativo</Badge>
+                <span className="text-muted-foreground">Rate limiting — 5 tentativas falhas em 15 min bloqueiam login</span>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
