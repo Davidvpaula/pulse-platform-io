@@ -439,6 +439,110 @@ export default function MedicoCorporativo() {
             </div>
           )}
         </TabsContent>
+
+        {/* Propostas B2B */}
+        <TabsContent value="propostas">
+          {propostasB2B.length === 0 ? (
+            <div className="card-elevated p-12 text-center text-muted-foreground">
+              <Send className="mx-auto mb-2 h-8 w-8 opacity-30" />
+              <p>Nenhuma proposta comercial recebida.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {propostasB2B.map((p: any) => {
+                const isPending = p.status === "enviada_medico";
+                const valorBase = p.valor_ajustado_centavos ?? p.valor_mensal_centavos;
+                const taxa = p.taxa_plataforma_pct ?? 0;
+                const valorLiquido = Math.round(valorBase * (1 - taxa / 100));
+
+                const statusCfg: Record<string, { label: string; color: string; icon: typeof Clock }> = {
+                  enviada_medico: { label: "Aguardando resposta", color: "bg-warning/10 text-warning", icon: Clock },
+                  aceita: { label: "Aceita", color: "bg-success/10 text-success", icon: CheckCircle2 },
+                  recusada: { label: "Recusada", color: "bg-destructive/10 text-destructive", icon: XCircle },
+                  convertida: { label: "Plano ativo", color: "bg-success/10 text-success", icon: FileText },
+                };
+                const cfg = statusCfg[p.status] ?? { label: p.status, color: "bg-muted text-muted-foreground", icon: Clock };
+                const StIcon = cfg.icon;
+
+                return (
+                  <Card
+                    key={p.id}
+                    className={cn(
+                      "card-elevated transition-colors",
+                      isPending && "border-primary/30 hover:border-primary/50 cursor-pointer"
+                    )}
+                    onClick={() => isPending && navigate("/app/medico/propostas")}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{p.empresa_nome}</span>
+                        </div>
+                        <Badge className={cfg.color}>
+                          <StIcon className="mr-1 h-3 w-3" />
+                          {cfg.label}
+                        </Badge>
+                      </div>
+
+                      {p.especialidade_nome && (
+                        <p className="text-xs text-muted-foreground">{p.especialidade_nome}</p>
+                      )}
+
+                      {/* Financial breakdown with admin tax */}
+                      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" /> Valor bruto
+                            </p>
+                            <p className="font-bold">{brl(valorBase)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                              <Percent className="h-3 w-3" /> Taxa plataforma
+                            </p>
+                            <p className="font-bold">{taxa}%</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Seu repasse</p>
+                            <p className="font-bold text-success">{brl(valorLiquido)}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {p.mensagem_empresa && (
+                        <div className="border-l-2 border-primary/20 pl-3 py-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-0.5">
+                            <MessageSquareText className="h-3 w-3" /> Proposta da empresa
+                          </p>
+                          <p className="text-xs text-muted-foreground italic line-clamp-3">
+                            {p.mensagem_empresa}
+                          </p>
+                        </div>
+                      )}
+
+                      {isPending && (
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={e => { e.stopPropagation(); navigate("/app/medico/propostas"); }}
+                        >
+                          <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
+                          Responder proposta
+                        </Button>
+                      )}
+
+                      <p className="text-[10px] text-muted-foreground text-right">
+                        {p.created_at ? fmtData(p.created_at) : ""}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
