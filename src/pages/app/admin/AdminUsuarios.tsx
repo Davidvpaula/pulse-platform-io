@@ -320,7 +320,24 @@ export default function AdminUsuarios() {
         }
       />
 
-      <div className="card-elevated p-4 space-y-3">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total", value: totalRows, icon: Users, cls: "text-primary" },
+          { label: "Ativos", value: rows.filter(r => r.status_conta === "ativo").length, icon: Play, cls: "text-success" },
+          { label: "Suspensos/Bloqueados", value: rows.filter(r => ["suspenso", "bloqueado", "banido"].includes(r.status_conta)).length, icon: ShieldOff, cls: "text-destructive" },
+          { label: "Pgto pendente", value: rows.filter(r => r.tem_pagamento_pendente).length, icon: AlertCircle, cls: "text-warning" },
+        ].map(k => (
+          <div key={k.label} className="rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{k.label}</span>
+              <k.icon className={cn("h-4 w-4", k.cls)} />
+            </div>
+            <div className="text-2xl font-display font-semibold mt-1">{k.value}</div>
+          </div>
+        ))}
+      </div>
+
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
