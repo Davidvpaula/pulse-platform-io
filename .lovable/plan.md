@@ -1,18 +1,37 @@
+## Problem
 
-## Estado atual
+`AdminGestaoB2B.tsx` maps DB columns using incorrect field names (`valor_mensal_centavos`, `vidas_contratadas`, `competencia`, `valor_centavos`, `emitida_em`) that don't exist in the actual schema. The code uses `as any` casts which suppress TS errors but causes all values to render as defaults (0, "---").
 
-- **Admin rotas**: Já protegidas por `<G perm="gamificacao.configurar">` que mostra card "Acesso restrito" com ícone de cadeado quando o usuário não tem permissão.
-- **Médico rota**: Protegida por `MedicoGuard` (aguardando aprovação). A página mostra dados do próprio médico — não precisa de capability extra.
-- **Permissões no catálogo**: `gamificacao.ver` e `gamificacao.configurar` já existem na tabela `permissions_catalog`.
+### Actual schema
 
-## Problema
+**empresas_contratos**: `plano_mensal_centavos`, `valor_colaborador_centavos`, `valor_consulta_centavos`, `data_inicio`, `data_fim`, `status`, `limite_consultas_mes`, `modelo_financeiro`  
+**empresas_faturas**: `competencia_ano`, `competencia_mes`, `valor_total_centavos`, `vencimento`, `status`, `qtd_funcionarios`, `qtd_consultas`, `pago_em`
 
-O grupo "Gamificação" no menu lateral do Admin (`profiles.ts`) **não tem** `requiresCapability`, então aparece para todos os admins/colaboradores mesmo que não tenham a permissão. Ao clicar, veem o card de bloqueio, mas o ideal é esconder o menu.
+No `vidas_contratadas` or `vidas_ativas` columns exist on contratos -- those would come from counting `empresas_funcionarios`.
 
-## Alteração
+## Plan
 
-### `src/lib/profiles.ts`
+### 1. Fix AdminGestaoB2B.tsx field mappings
 
-Adicionar `requiresCapability: "gamificacao.configurar"` ao grupo Gamificação do perfil admin (linha ~228), para que o menu só apareça a quem tem a capability.
+Update the `carregarDados` function to map real column names:
 
-Nenhuma migração, nenhuma outra alteração. A tela de bloqueio da rota já funciona como fallback.
+**Contratos:**
+- `valor_mensal_centavos` -> `c.plano_mensal_centavos`
+- `vidas_contratadas` -> `c.limite_consultas_mes ?? 0` (approximate; or query funcionarios count)
+- `vidas_ativas` -> query `empresas_funcionarios` count per empresa (or set 0 for now)
+- `inicio` -> `c.data_inicio`
+- `fim` -> `c.data_fim`
+
+**Faturas:**
+- `competencia` -> `${f.competencia_mes}/${f.competencia_ano}`
+- `valor_centavos` -> `f.valor_total_centavos`
+- `emitida_em` -> `f.created_at`
+- `vencimento` -> `f.vencimento`
+
+### 2. Fix AdminRelatoriosB2B.tsx StatCard ref warning
+
+The console shows `Function components cannot be given refs` for StatCard used in AdminRelatoriosB2B. This is a non-blocking warning but will clean it up if StatCard doesn't use forwardRef.
+
+### Files changed
+- `src/pages/app/admin/AdminGestaoB2B.tsx` -- fix all column mappings
+- `src/pages/app/admin/AdminRelatoriosB2B.tsx` -- minor cleanup if needed
