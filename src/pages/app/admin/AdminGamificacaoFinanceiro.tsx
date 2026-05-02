@@ -148,7 +148,12 @@ export default function AdminGamificacaoFinanceiro() {
             <Crown className="h-5 w-5 text-amber-500" />
             <h3 className="font-display text-lg font-semibold">Membros Premium</h3>
           </div>
-          <Badge variant="secondary">{premiumsAtivos} ativos</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{premiumsAtivos} ativos</Badge>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={exportPremium} title="Exportar CSV">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         {premiums.length === 0 ? (
