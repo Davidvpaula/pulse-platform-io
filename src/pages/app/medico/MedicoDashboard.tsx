@@ -58,6 +58,7 @@ export default function MedicoDashboard() {
   const podeVerFinanceiro = isMedico ? hasPerm("financeiro.ver") : isAdmin;
   const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
   const [loading, setLoading] = useState(true);
+  const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
