@@ -58,10 +58,10 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/usuarios":       [admin(), { label: "Cadastros" }, { label: "Usuários" }],
   "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos" }],
   "/app/admin/colaboradores":  [admin(), { label: "Cadastros" }, { label: "Colaboradores" }],
-  "/app/admin/empresas":       [admin(), { label: "Cadastros" }, { label: "Empresas" }],
-  "/app/admin/gestao-b2b":     [admin(), { label: "Cadastros" }, { label: "Gestão B2B" }],
-  "/app/admin/relatorios-b2b": [admin(), { label: "Cadastros" }, { label: "Relatórios B2B" }],
-  "/app/admin/faturamento-b2b": [admin(), { label: "Cadastros" }, { label: "Faturamento B2B" }],
+  "/app/admin/empresas":        [admin(), { label: "Empresas" }, { label: "Cadastro" }],
+  "/app/admin/gestao-b2b":      [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B" }],
+  "/app/admin/relatorios-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Relatórios" }],
+  "/app/admin/faturamento-b2b": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Faturamento" }],
 
   // ── Admin: Financeiro ──
   "/app/admin/financeiro":               [admin(), { label: "Financeiro" }, { label: "Visão geral" }],
@@ -127,7 +127,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/fluxo":                [admin(), { label: "Fluxo operacional" }],
   "/app/admin/configuracoes":        [admin(), { label: "Configurações" }],
   "/app/admin/agendamentos":         [admin(), { label: "Agendamentos" }],
-  "/app/admin/planos-empresariais":  [admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Planos empresariais" }],
+  "/app/admin/planos-empresariais":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Planos empresariais" }],
 
   // ── Médico (gamificação gerada via buildGroup) ──
   "/app/medico/dashboard":       [{ label: "Médico" }, { label: "Dashboard" }],
