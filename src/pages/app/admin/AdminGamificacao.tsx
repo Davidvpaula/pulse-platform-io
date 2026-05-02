@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
   Crown, Megaphone, DollarSign, Target, Zap, History, Filter,
