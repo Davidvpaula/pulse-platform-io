@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink,
-  BreadcrumbPage, BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -64,22 +59,6 @@ export default function AdminGamificacaoFinanceiro() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link to="/app/admin/dashboard">Admin</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link to="/app/admin/gamificacao">Gamificação</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Financeiro</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <PageHeader
         title="Financeiro da Gamificação"
         description="Receita de assinaturas premium, consumo CPC, conversões e métricas de ROI."
