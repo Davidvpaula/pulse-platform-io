@@ -262,6 +262,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Documentos", to: "/app/empresa/documentos", icon: FileText },
       { label: "Relatórios", to: "/app/empresa/relatorios", icon: FileBarChart },
       { label: "Financeiro", to: "/app/empresa/financeiro", icon: Wallet },
+      { label: "Propostas", to: "/app/empresa/propostas", icon: Send },
       { label: "Termos", to: "/app/empresa/termos", icon: ShieldCheck },
       { label: "Perfil", to: "/app/empresa/perfil", icon: Building2 },
     ],
