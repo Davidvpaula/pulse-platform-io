@@ -159,6 +159,15 @@ export default function PacienteAgendarConfirmar() {
         descricao: `${slot.especialidade_nome} · ${slot.medico_nome}`,
       });
 
+      // Analytics: agendamento concluído (consulta criada + checkout aberto)
+      trackConversion({
+        tipo: "agendamento",
+        valor: res.valor_centavos / 100,
+        consulta_id: res.consulta_id,
+        servico: slot.especialidade_nome,
+        medico_id: slot.medico_id,
+      }).catch(() => {});
+
       toast.success("Horário reservado por 15 minutos. Conclua o pagamento.");
       abrirCheckout(session, navigate);
     } catch (e: any) {
