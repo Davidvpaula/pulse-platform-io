@@ -432,6 +432,14 @@ export default function MedicoPropostas() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Terms enforcement dialog */}
+      <TermsAcceptanceDialog
+        tipo="proposta_medico"
+        open={termsProposta.showDialog}
+        onOpenChange={termsProposta.setShowDialog}
+        onAccepted={termsProposta.onAccepted}
+      />
     </div>
   );
 }
