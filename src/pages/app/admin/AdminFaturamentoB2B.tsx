@@ -229,9 +229,9 @@ export default function AdminFaturamentoB2B() {
   }, [listaFiltrada]);
 
   function exportarCSV() {
-    if (lista.length === 0) { toast.info("Nenhuma fatura para exportar"); return; }
+    if (listaFiltrada.length === 0) { toast.info("Nenhuma fatura para exportar"); return; }
     const header = "Empresa;Competência;Vencimento;Valor (R$);Funcionários;Consultas;Status;Pago em\n";
-    const rows = lista.map(f =>
+    const rows = listaFiltrada.map(f =>
       [
         f.razao_social,
         f.competencia_label,
