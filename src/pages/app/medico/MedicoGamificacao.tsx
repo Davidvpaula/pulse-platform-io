@@ -120,18 +120,6 @@ export default function MedicoGamificacao() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link to="/app/medico/dashboard">Médico</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Gamificação &amp; Ranking</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <PageHeader
         title="Gamificação & Ranking"
         description="Acompanhe sua performance, avaliações e posição no ranking da plataforma."
