@@ -75,6 +75,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Treinamento", to: "/app/medico/treinamento", icon: BookOpen },
       { label: "Meus Planos", to: "/app/medico/planos", icon: BadgeCheck },
       { label: "Gamificação & Ranking", to: "/app/medico/gamificacao", icon: Trophy },
+      { label: "Corporativo", to: "/app/medico/corporativo", icon: Building2 },
       { label: "Configurações", to: "/app/medico/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],
