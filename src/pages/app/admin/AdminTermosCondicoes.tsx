@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   FileText, Plus, Eye, ToggleLeft, ToggleRight, Loader2,
-  ChevronDown, ChevronRight, Users, Clock, Shield,
+  ChevronDown, ChevronRight, Users, Clock, Shield, Search, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
