@@ -100,6 +100,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/sessoes":        [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Sessões ativas" }],
   "/app/admin/seguranca":      [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Política de senhas" }],
   "/app/admin/impersonar":     [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Impersonar usuário" }],
+  "/app/admin/alertas-seguranca": [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Alertas de segurança" }],
 
   // ── Admin: Análises ──
   "/app/admin/analises":              [admin(), { label: "Análises" }, { label: "Visão geral" }],
