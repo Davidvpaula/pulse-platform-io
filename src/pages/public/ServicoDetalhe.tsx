@@ -29,6 +29,7 @@ type MedicoItem = {
   total_avaliacoes?: number;
   is_premium?: boolean;
   is_patrocinado?: boolean;
+  campanha_id?: string;
   ranking_score?: number;
 };
 
