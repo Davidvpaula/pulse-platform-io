@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Building2, Users, Calendar, Loader2, Search, BadgeCheck, User,
+  Send, DollarSign, Percent, CheckCircle2, XCircle, Clock, FileText,
+  MessageSquareText,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -44,10 +49,12 @@ type VinculoStatus = "todos" | "ativo" | "inativo" | "afastado" | "desligado";
 
 export default function MedicoCorporativo() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<any[]>([]);
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [vinculos, setVinculos] = useState<Map<string, any>>(new Map());
+  const [propostasB2B, setPropostasB2B] = useState<any[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
   const [filtroOrigem, setFiltroOrigem] = useState<Origem>("todas");
@@ -110,6 +117,22 @@ export default function MedicoCorporativo() {
           });
           setVinculos(vMap);
         }
+
+        // Fetch propostas B2B for this doctor
+        const { data: props } = await supabase
+          .from("propostas_empresa_medico")
+          .select("*, empresa:empresas(razao_social, nome_fantasia), especialidade:especialidades(nome)")
+          .eq("medico_id", med.id)
+          .in("status", ["enviada_medico", "aceita", "recusada", "convertida"])
+          .order("created_at", { ascending: false });
+
+        setPropostasB2B(
+          (props ?? []).map((p: any) => ({
+            ...p,
+            empresa_nome: p.empresa?.nome_fantasia || p.empresa?.razao_social || "—",
+            especialidade_nome: p.especialidade?.nome ?? null,
+          }))
+        );
       } catch (e: any) {
         toast.error("Erro: " + e.message);
       } finally {
@@ -281,6 +304,14 @@ export default function MedicoCorporativo() {
         <TabsList>
           <TabsTrigger value="consultas">Consultas ({consultasFiltradas.length})</TabsTrigger>
           <TabsTrigger value="pacientes">Pacientes ({pacientesFiltrados.length})</TabsTrigger>
+          <TabsTrigger value="propostas">
+            Propostas ({propostasB2B.length})
+            {propostasB2B.filter(p => p.status === "enviada_medico").length > 0 && (
+              <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                {propostasB2B.filter(p => p.status === "enviada_medico").length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="consultas">
@@ -405,6 +436,110 @@ export default function MedicoCorporativo() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Propostas B2B */}
+        <TabsContent value="propostas">
+          {propostasB2B.length === 0 ? (
+            <div className="card-elevated p-12 text-center text-muted-foreground">
+              <Send className="mx-auto mb-2 h-8 w-8 opacity-30" />
+              <p>Nenhuma proposta comercial recebida.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {propostasB2B.map((p: any) => {
+                const isPending = p.status === "enviada_medico";
+                const valorBase = p.valor_ajustado_centavos ?? p.valor_mensal_centavos;
+                const taxa = p.taxa_plataforma_pct ?? 0;
+                const valorLiquido = Math.round(valorBase * (1 - taxa / 100));
+
+                const statusCfg: Record<string, { label: string; color: string; icon: typeof Clock }> = {
+                  enviada_medico: { label: "Aguardando resposta", color: "bg-warning/10 text-warning", icon: Clock },
+                  aceita: { label: "Aceita", color: "bg-success/10 text-success", icon: CheckCircle2 },
+                  recusada: { label: "Recusada", color: "bg-destructive/10 text-destructive", icon: XCircle },
+                  convertida: { label: "Plano ativo", color: "bg-success/10 text-success", icon: FileText },
+                };
+                const cfg = statusCfg[p.status] ?? { label: p.status, color: "bg-muted text-muted-foreground", icon: Clock };
+                const StIcon = cfg.icon;
+
+                return (
+                  <Card
+                    key={p.id}
+                    className={cn(
+                      "card-elevated transition-colors",
+                      isPending && "border-primary/30 hover:border-primary/50 cursor-pointer"
+                    )}
+                    onClick={() => isPending && navigate("/app/medico/propostas")}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{p.empresa_nome}</span>
+                        </div>
+                        <Badge className={cfg.color}>
+                          <StIcon className="mr-1 h-3 w-3" />
+                          {cfg.label}
+                        </Badge>
+                      </div>
+
+                      {p.especialidade_nome && (
+                        <p className="text-xs text-muted-foreground">{p.especialidade_nome}</p>
+                      )}
+
+                      {/* Financial breakdown with admin tax */}
+                      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" /> Valor bruto
+                            </p>
+                            <p className="font-bold">{brl(valorBase)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                              <Percent className="h-3 w-3" /> Taxa plataforma
+                            </p>
+                            <p className="font-bold">{taxa}%</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Seu repasse</p>
+                            <p className="font-bold text-success">{brl(valorLiquido)}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {p.mensagem_empresa && (
+                        <div className="border-l-2 border-primary/20 pl-3 py-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-0.5">
+                            <MessageSquareText className="h-3 w-3" /> Proposta da empresa
+                          </p>
+                          <p className="text-xs text-muted-foreground italic line-clamp-3">
+                            {p.mensagem_empresa}
+                          </p>
+                        </div>
+                      )}
+
+                      {isPending && (
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={e => { e.stopPropagation(); navigate("/app/medico/propostas"); }}
+                        >
+                          <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
+                          Responder proposta
+                        </Button>
+                      )}
+
+                      <p className="text-[10px] text-muted-foreground text-right">
+                        {p.created_at ? fmtData(p.created_at) : ""}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
