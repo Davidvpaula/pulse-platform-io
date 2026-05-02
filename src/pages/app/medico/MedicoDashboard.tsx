@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
   AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope, Trophy,
+  Star, Award, Crown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -21,6 +22,7 @@ import { useAuth, useCan } from "@/lib/auth";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -75,6 +77,8 @@ export default function MedicoDashboard() {
     docsMes: 0,
   });
   const [iniciandoId, setIniciandoId] = useState<string | null>(null);
+  const [rankingData, setRankingData] = useState<MedicoRanking | null>(null);
+  const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
@@ -83,6 +87,14 @@ export default function MedicoDashboard() {
     const medico = await getMedicoAtual();
     if (!medico) { setLoading(false); return; }
     setMedicoNome(medico.nome ?? "");
+
+    // Gamificação: ranking + saldo (em paralelo com o resto)
+    const [rankRes, saldoRes] = await Promise.all([
+      getRankingMedico(medico.id),
+      getSaldoAtual(medico.id),
+    ]);
+    setRankingData(rankRes);
+    setSaldoCrescimento(saldoRes);
 
     // Onboarding: link de sala + ao menos 1 vínculo de especialidade ativo
     const { count: vinculos } = await supabase
@@ -433,6 +445,45 @@ export default function MedicoDashboard() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Ranking & Saldo de Crescimento */}
+      {isMedico && (
+        <Link to="/app/medico/gamificacao" className="card-elevated p-5 transition hover:border-primary/40 block">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-warning" />
+              <h3 className="font-display text-base font-semibold">Ranking & Crescimento</h3>
+            </div>
+            <span className="text-xs text-primary font-medium">Ver detalhes →</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-bold text-lg mb-1">
+                {rankingData?.posicao ? `#${rankingData.posicao}` : "—"}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Posição</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{rankingData?.ranking_score?.toFixed(1) ?? "—"}</p>
+              <p className="text-[11px] text-muted-foreground">Score</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Star className="h-4 w-4 fill-warning text-warning" />
+                <span className="text-2xl font-bold">{rankingData?.avaliacao_media?.toFixed(1) ?? "—"}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{rankingData?.total_avaliacoes ?? 0} avaliações</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Award className="h-4 w-4 text-primary" />
+                <span className="text-2xl font-bold">{saldoCrescimento.toFixed(0)}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Saldo (pts)</p>
+            </div>
+          </div>
+        </Link>
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
