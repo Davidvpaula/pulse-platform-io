@@ -25,6 +25,7 @@ import {
   type TermoRow, type TermoTipo,
 } from "@/lib/termos";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export default function AdminTermosCondicoes() {
   const [loading, setLoading] = useState(true);

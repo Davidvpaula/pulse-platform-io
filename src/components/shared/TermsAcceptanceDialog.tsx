@@ -7,6 +7,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { buscarTermoAtivo, registrarAceite, type TermoTipo, type TermoRow } from "@/lib/termos";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface Props {
   tipo: TermoTipo;
