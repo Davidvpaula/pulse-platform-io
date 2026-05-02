@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { brl } from "@/lib/format";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -42,8 +43,6 @@ type ElegivelRow = {
   medicos_ativos: number;
 };
 
-const brl = (c: number) =>
-  (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const fmtHora = (d: Date) =>
   d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
