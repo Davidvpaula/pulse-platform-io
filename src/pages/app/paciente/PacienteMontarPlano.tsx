@@ -19,6 +19,7 @@ type DescontoRegra = { qtd_medicos_min: number; desconto_pct: number };
 export default function PacienteMontarPlano() {
   const { session } = useSession();
   const uid = session?.user?.id;
+  const termsPlano = useTermsCheck("plano_plataforma");
 
   const [step, setStep] = useState(1);
   const [medicos, setMedicos] = useState<Medico[]>([]);
