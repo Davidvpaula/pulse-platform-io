@@ -197,7 +197,7 @@ export default function PacienteMontarPlano() {
               <div className="rounded-lg bg-success/10 p-3">
                 <p className="text-sm font-semibold text-success">🎉 Desconto progressivo: {descontoPct}%</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Valor base: {toReais(valorBruto)} → Valor final: <strong>{toReais(valorFinal)}</strong>/mês
+                  Valor base: {brl(valorBruto)} → Valor final: <strong>{brl(valorFinal)}</strong>/mês
                 </p>
               </div>
             )}

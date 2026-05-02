@@ -84,7 +84,7 @@ export default function AdminPlanosMedicos() {
                   <TableCell className="font-medium">{p.nome}</TableCell>
                   <TableCell>{(p.medicos as any)?.nome ?? "—"}</TableCell>
                   <TableCell>{(p.medicos as any)?.especialidade ?? "—"}</TableCell>
-                  <TableCell>{toReais(p.valor_mensal_centavos)}</TableCell>
+                  <TableCell>{brl(p.valor_mensal_centavos)}</TableCell>
                   <TableCell>
                     <Badge className={STATUS_COLORS[p.status] ?? ""}>{p.status}</Badge>
                   </TableCell>
