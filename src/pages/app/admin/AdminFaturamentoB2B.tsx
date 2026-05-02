@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FileText, Download, Search, Loader2, Building2, Wallet,
   Clock, CheckCircle2, AlertTriangle, XCircle, Filter, CalendarDays,
-  ReceiptText, Eye,
+  ReceiptText, Eye, ExternalLink, Stethoscope,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,43 @@ export default function AdminFaturamentoB2B() {
   const [filtroAno, setFiltroAno] = useState(String(new Date().getFullYear()));
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
   const [detalheAberto, setDetalheAberto] = useState<FaturaRow | null>(null);
+  const [medicosVinculados, setMedicosVinculados] = useState<{ id: string; nome: string; qtd: number }[]>([]);
+  const [loadingMedicos, setLoadingMedicos] = useState(false);
+
+  async function carregarMedicosFatura(fatura: FaturaRow) {
+    setLoadingMedicos(true);
+    try {
+      const { data } = await supabase
+        .from("consultas")
+        .select("medico_id, medico:profiles!consultas_medico_id_fkey(id, full_name)")
+        .eq("empresa_id", fatura.empresa_id)
+        .gte("inicio", `${fatura.competencia_ano}-${String(fatura.competencia_mes).padStart(2, "0")}-01`)
+        .lt("inicio", fatura.competencia_mes === 12
+          ? `${fatura.competencia_ano + 1}-01-01`
+          : `${fatura.competencia_ano}-${String(fatura.competencia_mes + 1).padStart(2, "0")}-01`
+        );
+
+      const map = new Map<string, { id: string; nome: string; qtd: number }>();
+      (data ?? []).forEach((c: any) => {
+        const id = c.medico_id;
+        const nome = c.medico?.full_name ?? "Médico";
+        const existing = map.get(id);
+        if (existing) existing.qtd++;
+        else map.set(id, { id, nome, qtd: 1 });
+      });
+      setMedicosVinculados(Array.from(map.values()).sort((a, b) => b.qtd - a.qtd));
+    } catch {
+      setMedicosVinculados([]);
+    } finally {
+      setLoadingMedicos(false);
+    }
+  }
+
+  function abrirDetalhe(f: FaturaRow) {
+    setDetalheAberto(f);
+    setMedicosVinculados([]);
+    carregarMedicosFatura(f);
+  }
 
   const empresasUnicas = useMemo(() => {
     const map = new Map<string, string>();
@@ -288,7 +326,7 @@ export default function AdminFaturamentoB2B() {
                       <Button size="sm" variant="ghost" title="Baixar PDF" onClick={() => gerarFaturaPdf(f)}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setDetalheAberto(f)}>
+                      <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => abrirDetalhe(f)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -361,6 +399,50 @@ export default function AdminFaturamentoB2B() {
                   </pre>
                 </div>
               )}
+
+              {/* Links de navegação */}
+              <div className="space-y-3 border-t border-border pt-3">
+                {detalheAberto.contrato_id && (
+                  <Link
+                    to={`/app/admin/contrato-b2b/${detalheAberto.contrato_id}`}
+                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm font-medium hover:bg-muted/40 transition-colors"
+                    onClick={() => setDetalheAberto(null)}
+                  >
+                    <FileText className="h-4 w-4 text-primary" />
+                    Ver contrato vinculado
+                    <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+                  </Link>
+                )}
+
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                    <Stethoscope className="h-3.5 w-3.5" />
+                    Médicos com consultas nesta competência
+                  </p>
+                  {loadingMedicos ? (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando…
+                    </div>
+                  ) : medicosVinculados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">Nenhuma consulta encontrada neste período.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {medicosVinculados.map(m => (
+                        <Link
+                          key={m.id}
+                          to={`/app/admin/medico/${m.id}`}
+                          className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/40 transition-colors"
+                          onClick={() => setDetalheAberto(null)}
+                        >
+                          <span className="font-medium">{m.nome}</span>
+                          <span className="text-xs text-muted-foreground">{m.qtd} consulta(s)</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={() => {
                   gerarFaturaPdf(detalheAberto);
