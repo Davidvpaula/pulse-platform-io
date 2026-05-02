@@ -109,8 +109,8 @@ export default function AdminGestaoB2B() {
     const ativos = contratos.filter(c => c.status === "ativo");
     const faturasAbertas = faturas.filter(f => f.status === "pendente" || f.status === "em_aberto");
     const faturasAtrasadas = faturas.filter(f => f.status === "atrasada" || f.status === "vencida");
-    const totalVidas = ativos.reduce((s, c) => s + c.vidas_contratadas, 0);
-    const vidasAtivas = ativos.reduce((s, c) => s + c.vidas_ativas, 0);
+    const totalVidas = ativos.reduce((s, c) => s + c.limite_consultas_mes, 0);
+    const vidasAtivas = ativos.reduce((s, c) => s + c.qtd_funcionarios, 0);
     const receitaMensal = ativos.reduce((s, c) => s + c.valor_mensal_centavos, 0);
     return {
       contratosAtivos: ativos.length,
@@ -133,7 +133,7 @@ export default function AdminGestaoB2B() {
   }, [contratos]);
 
   const overUse = useMemo(() => {
-    return contratos.filter(c => c.status === "ativo" && c.vidas_contratadas > 0 && c.vidas_ativas > c.vidas_contratadas);
+    return contratos.filter(c => c.status === "ativo" && c.limite_consultas_mes > 0 && c.qtd_funcionarios > c.limite_consultas_mes);
   }, [contratos]);
 
   const filteredContratos = useMemo(() => {
@@ -202,7 +202,7 @@ export default function AdminGestaoB2B() {
               <div>
                 <p className="text-sm font-semibold">Empresas com over-use</p>
                 <p className="text-xs text-muted-foreground">
-                  {overUse.map(c => `${c.razao_social} (${c.vidas_ativas}/${c.vidas_contratadas})`).join(", ")}
+                  {overUse.map(c => `${c.razao_social} (${c.qtd_funcionarios}/${c.limite_consultas_mes})`).join(", ")}
                 </p>
               </div>
             </div>
@@ -261,8 +261,8 @@ export default function AdminGestaoB2B() {
                       <td>{c.plano_nome ?? "—"}</td>
                       <td className="text-right tabular-nums">{brl(c.valor_mensal_centavos)}</td>
                       <td className="text-right">
-                        <span className={c.vidas_ativas > c.vidas_contratadas ? "text-destructive font-semibold" : ""}>
-                          {c.vidas_ativas}/{c.vidas_contratadas}
+                        <span className={c.qtd_funcionarios > c.limite_consultas_mes ? "text-destructive font-semibold" : ""}>
+                          {c.qtd_funcionarios}/{c.limite_consultas_mes}
                         </span>
                       </td>
                       <td>{fmtDate(c.inicio)}</td>
@@ -313,10 +313,10 @@ export default function AdminGestaoB2B() {
                 <p className="py-10 text-center text-muted-foreground">Nenhum contrato ativo para análise de utilização.</p>
               )}
               {contratos
-                .filter(c => c.status === "ativo" && c.vidas_contratadas > 0)
+                .filter(c => c.status === "ativo" && c.limite_consultas_mes > 0)
                 .sort((a, b) => (b.vidas_ativas / b.vidas_contratadas) - (a.vidas_ativas / a.vidas_contratadas))
                 .map(c => {
-                  const pct = Math.round((c.vidas_ativas / c.vidas_contratadas) * 100);
+                  const pct = Math.round((c.qtd_funcionarios / c.limite_consultas_mes) * 100);
                   const isOver = pct > 100;
                   return (
                     <div key={c.id} className="card-elevated p-4">
@@ -327,14 +327,14 @@ export default function AdminGestaoB2B() {
                         </div>
                         <div className="text-right">
                           <p className={`text-lg font-bold ${isOver ? "text-destructive" : ""}`}>{pct}%</p>
-                          <p className="text-xs text-muted-foreground">{c.vidas_ativas} de {c.vidas_contratadas} vidas</p>
+                          <p className="text-xs text-muted-foreground">{c.qtd_funcionarios} de {c.limite_consultas_mes} vidas</p>
                         </div>
                       </div>
                       <Progress value={Math.min(pct, 100)} className={`h-2 ${isOver ? "[&>div]:bg-destructive" : ""}`} />
                       {isOver && (
                         <p className="mt-1 text-xs text-destructive flex items-center gap-1">
                           <ArrowUpRight className="h-3 w-3" />
-                          {c.vidas_ativas - c.vidas_contratadas} vidas acima do contrato
+                          {c.qtd_funcionarios - c.limite_consultas_mes} vidas acima do contrato
                         </p>
                       )}
                     </div>
