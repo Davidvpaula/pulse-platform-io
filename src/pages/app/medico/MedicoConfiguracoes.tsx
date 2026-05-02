@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { User, Stethoscope, Video, Bell, Save, Zap, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { User, Stethoscope, Video, Bell, Save, Zap, Loader2, Link2, Unlink, ExternalLink, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import {
   listEspecialidades,
   listVinculosDoMedico,
