@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Building2, Users, Calendar, Loader2, Search, BadgeCheck, User,
+  Send, DollarSign, Percent, CheckCircle2, XCircle, Clock, FileText,
+  MessageSquareText,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
