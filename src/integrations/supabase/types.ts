@@ -5865,19 +5865,19 @@ export type Database = {
       }
       admin_consulta_cancelar: {
         Args: { _consulta_id: string; _motivo: string }
-        Returns: Json
+        Returns: undefined
       }
       admin_consulta_forcar_confirmacao: {
         Args: { _consulta_id: string; _motivo: string }
-        Returns: Json
+        Returns: undefined
       }
       admin_consulta_marcar_realizada: {
-        Args: { _consulta_id: string; _observacao: string }
-        Returns: Json
+        Args: { _consulta_id: string; _observacao?: string }
+        Returns: undefined
       }
       admin_consulta_reenviar_link: {
         Args: { _consulta_id: string }
-        Returns: Json
+        Returns: undefined
       }
       admin_consulta_trocar_medico: {
         Args: {
@@ -6170,7 +6170,7 @@ export type Database = {
           _motivo: string
           _novo_status: Database["public"]["Enums"]["consulta_status"]
         }
-        Returns: Json
+        Returns: undefined
       }
       has_permission: {
         Args: { _key: string; _user_id: string }
