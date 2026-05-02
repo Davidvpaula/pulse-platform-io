@@ -85,12 +85,12 @@ export default function ServicoDetalhe() {
         supabase.from("medicos").select("id,nome,especialidade").in("id", ids),
         supabase.from("medico_ranking" as any).select("medico_id,avaliacao_media,total_avaliacoes,ranking_score").in("medico_id", ids),
         supabase.from("medico_premium" as any).select("medico_id,ativo").in("medico_id", ids),
-        supabase.from("impulsionamento_campanhas" as any).select("medico_id").eq("status", "ativa").in("medico_id", ids),
+        supabase.from("impulsionamento_campanhas" as any).select("id,medico_id").eq("status", "ativa").in("medico_id", ids),
       ]);
 
       const rankMap = new Map(((rankingRes.data ?? []) as any[]).map((r) => [r.medico_id, r]));
       const premMap = new Map(((premiumRes.data ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
-      const adsSet = new Set(((campanhasRes.data ?? []) as any[]).map((c) => c.medico_id));
+      const adsMap = new Map(((campanhasRes.data ?? []) as any[]).map((c) => [c.medico_id, c.id]));
 
       const cards: MedicoItem[] = [];
       for (const id of ids) {
