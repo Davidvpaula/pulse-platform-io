@@ -64,7 +64,7 @@ export default function SecretariaFinanceiro() {
         <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}Atualizar
         </Button>
-        {podeCobrar && <Button size="sm" onClick={abrirNova}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>}
+        {podeCobrar && <Button size="sm" onClick={() => setNovaOpen(true)}><Link2 className="h-4 w-4 mr-2" />Nova cobrança</Button>}
       </div>
 
       <Tabs defaultValue="pagamentos">
