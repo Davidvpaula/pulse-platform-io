@@ -7,7 +7,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
-import { StatusBadge } from "@/components/StatusBadge";
+
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { cn } from "@/lib/utils";
