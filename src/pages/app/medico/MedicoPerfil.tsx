@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
 import { MedicoDadosBancarios } from "@/components/medico/MedicoDadosBancarios";
 import { MedicoDocumentosFiscais } from "@/components/medico/MedicoDocumentosFiscais";
+import MeusAceites from "@/components/shared/MeusAceites";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
