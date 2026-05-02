@@ -220,6 +220,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Permissões", to: "/app/admin/permissoes" },
           { label: "Log de permissões", to: "/app/admin/permissoes/log" },
           { label: "Sessões ativas", to: "/app/admin/sessoes" },
+          { label: "Alertas de segurança", to: "/app/admin/alertas-seguranca" },
           { label: "Política de senhas", to: "/app/admin/seguranca" },
           { label: "Impersonar usuário", to: "/app/admin/impersonar" },
         ],
