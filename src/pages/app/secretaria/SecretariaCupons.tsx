@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power, Filter } from "lucide-react";
+import { Plus, Search, Loader2, Pencil, Trash2, Tag, Power, Filter, AlertTriangle, Ban } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,6 +189,9 @@ export default function SecretariaCupons() {
         ) : (
           <div className="divide-y">
             {lista.map((c) => {
+              const agora = Date.now();
+              const expirado = !!c.valido_ate && new Date(c.valido_ate).getTime() < agora;
+              const esgotado = !!c.uso_maximo && c.uso_atual >= c.uso_maximo;
               const escopoLabel =
                 c.escopo === "global" ? "Global" :
                 c.escopo === "medico" ? `Médico: ${c.medico_nome ?? "—"}` :
@@ -199,6 +202,7 @@ export default function SecretariaCupons() {
               const usoLabel = c.uso_maximo
                 ? `${c.uso_atual}/${c.uso_maximo}`
                 : `${c.uso_atual} usos`;
+              const usoPct = c.uso_maximo ? Math.min(100, Math.round((c.uso_atual / c.uso_maximo) * 100)) : null;
               return (
                 <div key={c.id} className="grid grid-cols-[1fr_auto] items-start gap-3 p-4">
                   <div className="min-w-0 space-y-1.5">
@@ -210,6 +214,16 @@ export default function SecretariaCupons() {
                       <Badge variant={c.ativo ? "default" : "secondary"}>
                         {c.ativo ? "Ativo" : "Inativo"}
                       </Badge>
+                      {expirado && (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" /> Expirado
+                        </Badge>
+                      )}
+                      {esgotado && (
+                        <Badge variant="outline" className="gap-1 border-orange-500 text-orange-600 dark:text-orange-400">
+                          <Ban className="h-3 w-3" /> Esgotado
+                        </Badge>
+                      )}
                     </div>
                     {c.descricao && (
                       <p className="text-sm text-muted-foreground">{c.descricao}</p>
@@ -223,6 +237,19 @@ export default function SecretariaCupons() {
                       <span>•</span>
                       <span>{usoLabel}</span>
                     </div>
+                    {usoPct !== null && (
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden max-w-[180px]">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              usoPct >= 100 ? "bg-orange-500" : usoPct >= 80 ? "bg-yellow-500" : "bg-primary"
+                            }`}
+                            style={{ width: `${usoPct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{usoPct}%</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
