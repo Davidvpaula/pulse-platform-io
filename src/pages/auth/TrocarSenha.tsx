@@ -47,6 +47,15 @@ export default function TrocarSenha() {
       toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
       return;
     }
+    const validation = await validatePassword(parsed.data.senha);
+    if (!validation.valid) {
+      toast({
+        title: "Senha não atende aos requisitos",
+        description: validation.errors.join(", "),
+        variant: "destructive",
+      });
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.auth.updateUser({ password: parsed.data.senha });
     if (error) {
