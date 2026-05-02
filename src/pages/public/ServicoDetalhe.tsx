@@ -38,6 +38,7 @@ export default function ServicoDetalhe() {
   const [loading, setLoading] = useState(true);
   const [servico, setServico] = useState<Servico | null>(null);
   const [medicos, setMedicos] = useState<MedicoItem[]>([]);
+  const [ordenacao, setOrdenacao] = useState<"ranking" | "avaliacao" | "preco">("ranking");
 
   useEffect(() => {
     (async () => {
@@ -53,7 +54,7 @@ export default function ServicoDetalhe() {
       }
       setServico(s as Servico);
 
-      // Médicos com adesão ativa (com ranking via RPC se possível)
+      // Médicos com adesão ativa
       let ids: string[] = [];
       try {
         const { data: rk } = await supabase.rpc("fn_ranking_medico_servico" as any, {
@@ -76,14 +77,22 @@ export default function ServicoDetalhe() {
         setLoading(false);
         return;
       }
-      const { data: meds } = await supabase
-        .from("medicos")
-        .select("id,nome,especialidade")
-        .in("id", ids);
+
+      // Fetch médicos, ranking e premium em paralelo
+      const [medsRes, rankingRes, premiumRes, campanhasRes] = await Promise.all([
+        supabase.from("medicos").select("id,nome,especialidade").in("id", ids),
+        supabase.from("medico_ranking" as any).select("medico_id,avaliacao_media,total_avaliacoes,ranking_score").in("medico_id", ids),
+        supabase.from("medico_premium" as any).select("medico_id,ativo").in("medico_id", ids),
+        supabase.from("impulsionamento_campanhas" as any).select("medico_id").eq("status", "ativa").in("medico_id", ids),
+      ]);
+
+      const rankMap = new Map(((rankingRes.data ?? []) as any[]).map((r) => [r.medico_id, r]));
+      const premMap = new Map(((premiumRes.data ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
+      const adsSet = new Set(((campanhasRes.data ?? []) as any[]).map((c) => c.medico_id));
 
       const cards: MedicoItem[] = [];
       for (const id of ids) {
-        const m = (meds ?? []).find((x: any) => x.id === id);
+        const m = (medsRes.data ?? []).find((x: any) => x.id === id);
         if (!m) continue;
         const { data: slot } = await supabase
           .from("agenda_slots")
@@ -94,12 +103,18 @@ export default function ServicoDetalhe() {
           .order("inicio", { ascending: true })
           .limit(1)
           .maybeSingle();
+        const rk = rankMap.get(id);
         cards.push({
           medico_id: id,
           nome: (m as any).nome,
           especialidade: (m as any).especialidade ?? null,
           proximo_slot_id: slot?.id ?? null,
           proximo_slot_iso: slot?.inicio ?? null,
+          avaliacao_media: rk?.avaliacao_media ?? 0,
+          total_avaliacoes: rk?.total_avaliacoes ?? 0,
+          ranking_score: rk?.ranking_score ?? 0,
+          is_premium: premMap.get(id) ?? false,
+          is_patrocinado: adsSet.has(id),
         });
       }
       setMedicos(cards);
