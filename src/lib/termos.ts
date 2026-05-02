@@ -107,9 +107,8 @@ export async function registrarAceite(termoId: string) {
 }
 
 export async function verificarAceite(tipo: TermoTipo, userId: string): Promise<boolean> {
-  // Busca o termo ativo deste tipo
   const termo = await buscarTermoAtivo(tipo);
-  if (!termo) return true; // se não existe termo ativo, não bloqueia
+  if (!termo) return true;
 
   const { data, error } = await supabase
     .from("user_terms_acceptance")
@@ -119,6 +118,44 @@ export async function verificarAceite(tipo: TermoTipo, userId: string): Promise<
     .limit(1);
   if (error) throw error;
   return (data?.length ?? 0) > 0;
+}
+
+/**
+ * Retorna todos os termos ativos que o usuário ainda NÃO aceitou.
+ * Filtra por categoria (paciente/medico) se fornecida.
+ */
+export async function buscarTermosPendentes(
+  categoria?: "paciente" | "medico",
+): Promise<TermoRow[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Busca todos os termos ativos
+  const { data: ativos, error: e1 } = await supabase
+    .from("termos_condicoes")
+    .select("*")
+    .eq("status", "ativo");
+  if (e1) throw e1;
+  if (!ativos?.length) return [];
+
+  // Filtra por categoria se fornecida
+  const tipos = categoria ? TERMO_CATEGORIAS[categoria] : undefined;
+  const filtrados = tipos
+    ? ativos.filter(t => (tipos as string[]).includes(t.tipo))
+    : ativos;
+  if (!filtrados.length) return [];
+
+  // Busca aceites do usuário para esses termos
+  const ids = filtrados.map(t => t.id);
+  const { data: aceitos, error: e2 } = await supabase
+    .from("user_terms_acceptance")
+    .select("termo_id")
+    .eq("user_id", user.id)
+    .in("termo_id", ids);
+  if (e2) throw e2;
+
+  const aceitoSet = new Set((aceitos ?? []).map(a => a.termo_id));
+  return filtrados.filter(t => !aceitoSet.has(t.id));
 }
 
 export async function listarAceitesDoTermo(termoId: string) {
