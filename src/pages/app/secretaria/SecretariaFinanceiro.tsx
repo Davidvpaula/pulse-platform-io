@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validarCobranca } from "@/lib/validation/cobranca";
+import { brl } from "@/lib/relatorios/utils";
 
-const brl = (c: number) => ((c || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmt = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
 export default function SecretariaFinanceiro() {
