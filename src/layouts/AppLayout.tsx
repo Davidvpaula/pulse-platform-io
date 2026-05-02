@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
+  Building2, Heart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -25,14 +26,45 @@ import { usePermissionsBatch } from "@/lib/permissions/usePermissionsBatch";
 import { colaboradorMenu, collectMenuKeys, type MenuNode } from "@/lib/menu/menuCatalog";
 import { validateMenuKeys } from "@/lib/menu/validateMenuKeys";
 
+/* ─── Flow context detection ─── */
+type FlowContext = { cls: string; label: string; icon: typeof Building2; description: string };
+
+function getFlowContext(profileKey: ProfileKey, pathname: string): FlowContext {
+  // B2B contexts
+  if (profileKey === "empresa") {
+    return { cls: "flow-b2b", label: "B2B", icon: Building2, description: "Corporativo" };
+  }
+  if (profileKey === "admin" && (
+    pathname.includes("/empresas") || pathname.includes("/gestao-b2b") ||
+    pathname.includes("/faturamento-b2b") || pathname.includes("/relatorios-b2b") ||
+    pathname.includes("/planos-empresariais") || pathname.includes("/contrato-b2b")
+  )) {
+    return { cls: "flow-b2b", label: "B2B", icon: Building2, description: "Gestão corporativa" };
+  }
+  // B2C
+  if (profileKey === "paciente") {
+    return { cls: "flow-b2c", label: "B2C", icon: Heart, description: "Paciente" };
+  }
+  // Other profiles
+  if (profileKey === "medico") {
+    return { cls: "flow-medico", label: "Médico", icon: ShieldCheck, description: "Profissional" };
+  }
+  if (profileKey === "secretaria" || profileKey === "colaborador") {
+    return { cls: "flow-secretaria", label: "Operação", icon: ShieldCheck, description: "Equipe" };
+  }
+  return { cls: "flow-admin", label: "Admin", icon: ShieldCheck, description: "Plataforma" };
+}
+
 export default function AppLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { profileKey, setProfileKey, user } = useAuth();
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
   const isDev = import.meta.env.DEV;
   const showDemoSwitcher = isDev && !session;
+  const flow = getFlowContext(profileKey, pathname);
 
   const handleLogout = async () => {
     if (session) {
@@ -49,18 +81,20 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
       <div className="flex flex-1 w-full">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <SidebarBody profileKey={profileKey} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+        <div className="flow-stripe w-full" />
+        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
-            <SidebarBody profileKey={profileKey} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+            <div className="flow-stripe w-full" />
+            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
           </aside>
         </div>
       )}
@@ -70,6 +104,12 @@ export default function AppLayout() {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
+
+          {/* Flow context badge */}
+          <span className="flow-badge hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
+            <flow.icon className="h-3 w-3" />
+            {flow.label}
+          </span>
 
           <div className="flex-1" />
 
@@ -140,9 +180,10 @@ type RenderItem = {
 };
 
 function SidebarBody({
-  profileKey, onNavigate, switchProfile, showDemoSwitcher,
+  profileKey, flow, onNavigate, switchProfile, showDemoSwitcher,
 }: {
   profileKey: ProfileKey;
+  flow: FlowContext;
   onNavigate: () => void;
   switchProfile: (k: ProfileKey) => void;
   showDemoSwitcher: boolean;
@@ -231,10 +272,10 @@ function SidebarBody({
       {showDemoSwitcher ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-left hover:bg-sidebar-accent">
-              <ShieldCheck className="h-4 w-4 text-primary" />
+            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-left hover:opacity-90 flow-sidebar-card">
+              <flow.icon className="h-4 w-4 flow-icon shrink-0" />
               <span className="flex-1">
-                <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil (demo)</span>
+                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Perfil (demo) · {flow.label}</span>
                 <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
               </span>
               <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
@@ -256,12 +297,13 @@ function SidebarBody({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2">
-          <ShieldCheck className="h-4 w-4 text-primary" />
+        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
+          <flow.icon className="h-4 w-4 flow-icon shrink-0" />
           <span className="flex-1">
-            <span className="block text-xs uppercase tracking-wider text-muted-foreground">Perfil</span>
+            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
             <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
           </span>
+          <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
         </div>
       )}
 
