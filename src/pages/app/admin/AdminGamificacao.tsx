@@ -477,6 +477,86 @@ export default function AdminGamificacao() {
             </div>
           </div>
         </TabsContent>
+
+        {/* ── Tab Auditoria ── */}
+        <TabsContent value="auditoria" className="space-y-6">
+          <div className="card-elevated p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History className="h-5 w-5 text-primary" />
+                <h3 className="font-display text-lg font-semibold">Log de Alterações</h3>
+                <Badge variant="outline" className="text-[10px]">Mock</Badge>
+              </div>
+              <Select value={auditFiltro} onValueChange={(v) => setAuditFiltro(v as AuditTipo | "todos")}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="mr-2 h-3.5 w-3.5" />
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os tipos</SelectItem>
+                  <SelectItem value="peso">Peso ranking</SelectItem>
+                  <SelectItem value="premium">Regra premium</SelectItem>
+                  <SelectItem value="cpc">CPC</SelectItem>
+                  <SelectItem value="saldo">Saldo</SelectItem>
+                  <SelectItem value="recalculo">Recálculo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(() => {
+              const filtered = auditFiltro === "todos"
+                ? AUDIT_MOCK
+                : AUDIT_MOCK.filter((a) => a.tipo === auditFiltro);
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    Nenhum registro de auditoria encontrado para este filtro.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                        <th className="pb-2 pr-3">Data / Hora</th>
+                        <th className="pb-2 pr-3">Usuário</th>
+                        <th className="pb-2 pr-3">Tipo</th>
+                        <th className="pb-2 pr-3">Campo</th>
+                        <th className="pb-2 pr-3 text-right">Anterior</th>
+                        <th className="pb-2 pr-3 text-center">→</th>
+                        <th className="pb-2 text-left">Novo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filtered.map((a) => {
+                        const t = AUDIT_TIPO_LABEL[a.tipo];
+                        const dt = new Date(a.data);
+                        return (
+                          <tr key={a.id} className="hover:bg-muted/30">
+                            <td className="py-2.5 pr-3 text-xs text-muted-foreground whitespace-nowrap">
+                              {dt.toLocaleDateString("pt-BR")} {dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            </td>
+                            <td className="py-2.5 pr-3 font-medium">{a.usuario}</td>
+                            <td className="py-2.5 pr-3">
+                              <Badge className={cn("text-[10px]", t.cls)}>{t.label}</Badge>
+                            </td>
+                            <td className="py-2.5 pr-3 font-mono text-xs">{a.campo}</td>
+                            <td className="py-2.5 pr-3 text-right font-mono text-xs text-muted-foreground">{a.anterior}</td>
+                            <td className="py-2.5 pr-3 text-center text-muted-foreground">→</td>
+                            <td className="py-2.5 font-mono text-xs font-semibold">{a.novo}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
