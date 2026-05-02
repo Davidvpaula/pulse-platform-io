@@ -223,6 +223,14 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye, requiresCapability: "auditoria.ver" },
+      {
+        label: "Gamificação",
+        icon: Trophy,
+        children: [
+          { label: "Configuração & Ranking", to: "/app/admin/gamificacao" },
+          { label: "Financeiro", to: "/app/admin/gamificacao/financeiro" },
+        ],
+      },
       { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
