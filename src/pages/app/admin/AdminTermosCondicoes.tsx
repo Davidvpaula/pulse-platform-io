@@ -320,12 +320,16 @@ export default function AdminTermosCondicoes() {
         <TabsList>
           <TabsTrigger value="paciente">Paciente</TabsTrigger>
           <TabsTrigger value="medico">Médico</TabsTrigger>
+          <TabsTrigger value="empresa">Empresa</TabsTrigger>
         </TabsList>
         <TabsContent value="paciente" className="mt-4">
           {renderCategoria("Termos para Pacientes", TERMO_CATEGORIAS.paciente)}
         </TabsContent>
         <TabsContent value="medico" className="mt-4">
           {renderCategoria("Termos para Médicos", TERMO_CATEGORIAS.medico)}
+        </TabsContent>
+        <TabsContent value="empresa" className="mt-4">
+          {renderCategoria("Termos para Empresas", TERMO_CATEGORIAS.empresa)}
         </TabsContent>
       </Tabs>
 
