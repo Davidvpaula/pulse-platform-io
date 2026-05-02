@@ -259,10 +259,12 @@ const App = () => (
               <Route path="colaborador/tarefas" element={<Tarefas />} />
               <Route path="colaborador/equipe" element={<G perm="supervisor.fila_geral"><SupervisorEquipe /></G>} />
               <Route path="colaborador/relatorios" element={<G perm="relatorios.ver_operacional"><SecretariaRelatorios /></G>} />
-              <Route path="colaborador/produtividade" element={<G perm="supervisor.ver_produtividade"><SupervisorEquipe /></G>} />
+              <Route path="colaborador/produtividade" element={<Navigate to="/app/colaborador/equipe" replace />} />
               <Route path="colaborador/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="colaborador/pendencias-integracao" element={<G perm="supervisor.pendencias_feegow"><PendenciasIntegracao /></G>} />
               <Route path="colaborador/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
+              <Route path="colaborador/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
+              <Route path="colaborador/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
 
               {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
               <Route path="admin/dashboard" element={<AdminDashboard />} />

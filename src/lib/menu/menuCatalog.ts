@@ -106,22 +106,18 @@ export const colaboradorMenu: MenuNode[] = [
     label: "Supervisão",
     icon: Activity,
     children: [
-      { label: "Visão da equipe", to: "/app/colaborador/equipe", key: "supervisor.fila_geral" },
+      { label: "Equipe & Produtividade", to: "/app/colaborador/equipe", key: "supervisor.fila_geral" },
       { label: "Relatórios operacionais", to: "/app/colaborador/relatorios", key: "relatorios.ver_operacional" },
-      { label: "Produtividade", to: "/app/colaborador/produtividade", key: "supervisor.ver_produtividade" },
     ],
   },
   {
     label: "Gamificação",
-    to: "/app/admin/gamificacao",
     icon: Trophy,
     key: "gamificacao.configurar",
-  },
-  {
-    label: "Gaming Financeiro",
-    to: "/app/admin/gamificacao/financeiro",
-    icon: Trophy,
-    key: "gamificacao.configurar",
+    children: [
+      { label: "Configuração & Ranking", to: "/app/colaborador/gamificacao" },
+      { label: "Financeiro", to: "/app/colaborador/gamificacao/financeiro" },
+    ],
   },
   {
     label: "Auditoria",
