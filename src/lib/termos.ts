@@ -1,0 +1,132 @@
+/**
+ * Camada de serviço para Termos e Condições.
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+export type TermoTipo = Database["public"]["Enums"]["termo_tipo"];
+export type TermoRow = Database["public"]["Tables"]["termos_condicoes"]["Row"];
+export type AcceptanceRow = Database["public"]["Tables"]["user_terms_acceptance"]["Row"];
+
+/* ─── Labels dos tipos ─── */
+export const TERMO_TIPO_LABELS: Record<TermoTipo, string> = {
+  consulta_paciente: "Termos de compra de consulta",
+  privacidade: "Política de privacidade",
+  plano_plataforma: "Termos de planos da plataforma",
+  plano_medico: "Termos de planos de médicos",
+  contrato_medico: "Contrato inicial (cadastro)",
+  gamificacao_premium: "Termos de gamificação / premium",
+  criacao_plano_medico: "Termos de criação de planos",
+  uso_feegow: "Termos de uso da Feegow",
+};
+
+export const TERMO_CATEGORIAS = {
+  paciente: ["consulta_paciente", "privacidade", "plano_plataforma", "plano_medico"] as TermoTipo[],
+  medico: ["contrato_medico", "gamificacao_premium", "criacao_plano_medico", "uso_feegow"] as TermoTipo[],
+};
+
+/* ─── Queries ─── */
+
+export async function listarTermos() {
+  const { data, error } = await supabase
+    .from("termos_condicoes")
+    .select("*")
+    .order("tipo")
+    .order("versao", { ascending: false });
+  if (error) throw error;
+  return data as TermoRow[];
+}
+
+export async function buscarTermoAtivo(tipo: TermoTipo) {
+  const { data, error } = await supabase
+    .from("termos_condicoes")
+    .select("*")
+    .eq("tipo", tipo)
+    .eq("status", "ativo")
+    .maybeSingle();
+  if (error) throw error;
+  return data as TermoRow | null;
+}
+
+export async function criarTermo(input: { tipo: TermoTipo; titulo: string; conteudo: string; status?: string }) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("termos_condicoes")
+    .insert({
+      tipo: input.tipo,
+      titulo: input.titulo,
+      conteudo: input.conteudo,
+      status: input.status ?? "inativo",
+      created_by: user?.id ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as TermoRow;
+}
+
+export async function ativarTermo(id: string) {
+  const { error } = await supabase
+    .from("termos_condicoes")
+    .update({ status: "ativo" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function desativarTermo(id: string) {
+  const { error } = await supabase
+    .from("termos_condicoes")
+    .update({ status: "inativo" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/* ─── Aceite ─── */
+
+export async function registrarAceite(termoId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Usuário não autenticado");
+
+  // Tenta capturar IP via serviço externo (fallback vazio)
+  let ip = "";
+  try {
+    const r = await fetch("https://api.ipify.org?format=json");
+    const j = await r.json();
+    ip = j.ip ?? "";
+  } catch { /* ignore */ }
+
+  const { error } = await supabase
+    .from("user_terms_acceptance")
+    .insert({
+      user_id: user.id,
+      termo_id: termoId,
+      ip_address: ip,
+      user_agent: navigator.userAgent,
+    });
+  if (error) throw error;
+}
+
+export async function verificarAceite(tipo: TermoTipo, userId: string): Promise<boolean> {
+  // Busca o termo ativo deste tipo
+  const termo = await buscarTermoAtivo(tipo);
+  if (!termo) return true; // se não existe termo ativo, não bloqueia
+
+  const { data, error } = await supabase
+    .from("user_terms_acceptance")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("termo_id", termo.id)
+    .limit(1);
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
+export async function listarAceitesDoTermo(termoId: string) {
+  const { data, error } = await supabase
+    .from("user_terms_acceptance")
+    .select("*, profiles:user_id(nome_completo, email)")
+    .eq("termo_id", termoId)
+    .order("aceito_em", { ascending: false });
+  if (error) throw error;
+  return data;
+}
