@@ -26,8 +26,9 @@ type ContratoView = {
   inicio: string | null;
   fim: string | null;
   valor_mensal_centavos: number;
-  vidas_contratadas: number;
-  vidas_ativas: number;
+  limite_consultas_mes: number;
+  qtd_funcionarios: number;
+  modelo_financeiro: string;
 };
 
 type FaturaView = {
@@ -39,6 +40,7 @@ type FaturaView = {
   status: string;
   emitida_em: string;
   vencimento: string | null;
+  qtd_funcionarios: number;
 };
 
 export default function AdminGestaoB2B() {
@@ -68,30 +70,32 @@ export default function AdminGestaoB2B() {
       ]);
 
       setContratos(
-        (contratosRaw ?? []).map((c: any) => ({
+        (contratosRaw ?? []).map((c) => ({
           id: c.id,
           empresa_id: c.empresa_id,
-          razao_social: c.empresas?.razao_social ?? "—",
-          plano_nome: c.planos?.nome ?? c.plano_nome ?? null,
+          razao_social: (c as any).empresas?.razao_social ?? "—",
+          plano_nome: (c as any).planos?.nome ?? null,
           status: c.status ?? "rascunho",
-          inicio: c.data_inicio ?? c.inicio ?? null,
-          fim: c.data_fim ?? c.fim ?? null,
-          valor_mensal_centavos: c.valor_mensal_centavos ?? 0,
-          vidas_contratadas: c.vidas_contratadas ?? 0,
-          vidas_ativas: c.vidas_ativas ?? 0,
+          inicio: c.data_inicio ?? null,
+          fim: c.data_fim ?? null,
+          valor_mensal_centavos: c.plano_mensal_centavos ?? 0,
+          limite_consultas_mes: c.limite_consultas_mes ?? 0,
+          qtd_funcionarios: 0, // populated below
+          modelo_financeiro: c.modelo_financeiro ?? "por_consulta",
         }))
       );
 
       setFaturas(
-        (faturasRaw ?? []).map((f: any) => ({
+        (faturasRaw ?? []).map((f) => ({
           id: f.id,
           empresa_id: f.empresa_id,
-          razao_social: f.empresas?.razao_social ?? "—",
-          competencia: f.competencia ?? "—",
-          valor_centavos: f.valor_centavos ?? 0,
+          razao_social: (f as any).empresas?.razao_social ?? "—",
+          competencia: `${String(f.competencia_mes).padStart(2, "0")}/${f.competencia_ano}`,
+          valor_centavos: f.valor_total_centavos ?? 0,
           status: f.status ?? "pendente",
-          emitida_em: f.emitida_em ?? f.created_at ?? "",
+          emitida_em: f.created_at ?? "",
           vencimento: f.vencimento ?? null,
+          qtd_funcionarios: f.qtd_funcionarios ?? 0,
         }))
       );
     } catch (e: any) {
