@@ -97,6 +97,10 @@ export default function PacienteDashboard() {
         }
       />
 
+
+      {/* Auto-prompt: consultas pendentes de avaliação */}
+      {session && <AvaliacaoPendenteBanner />}
+
       {/* Vínculo do paciente */}
       <div className="card-elevated flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3">
