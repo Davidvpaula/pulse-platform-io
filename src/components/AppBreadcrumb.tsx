@@ -127,7 +127,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/fluxo":                [admin(), { label: "Fluxo operacional" }],
   "/app/admin/configuracoes":        [admin(), { label: "Configurações" }],
   "/app/admin/agendamentos":         [admin(), { label: "Agendamentos" }],
-  "/app/admin/planos-empresariais":  [admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Planos empresariais" }],
+  "/app/admin/planos-empresariais":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Planos empresariais" }],
 
   // ── Médico (gamificação gerada via buildGroup) ──
   "/app/medico/dashboard":       [{ label: "Médico" }, { label: "Dashboard" }],
