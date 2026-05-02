@@ -72,6 +72,30 @@ export default function AdminFaturamentoB2B() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [filtroAno, setFiltroAno] = useState(String(new Date().getFullYear()));
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
+
+  type SortKey = "valor" | "competencia" | "vencimento";
+  type SortDir = "asc" | "desc";
+  const [sortKey, setSortKey] = useState<SortKey>("competencia");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 20;
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+    setPagina(1);
+  }
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <ArrowUpDown className="ml-1 inline h-3 w-3 opacity-40" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="ml-1 inline h-3 w-3 text-primary" />
+      : <ArrowDown className="ml-1 inline h-3 w-3 text-primary" />;
+  }
   const [detalheAberto, setDetalheAberto] = useState<FaturaRow | null>(null);
   const [medicosVinculados, setMedicosVinculados] = useState<{ id: string; nome: string; qtd: number }[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
