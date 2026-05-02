@@ -154,7 +154,27 @@ export default function AdminTermosCondicoes() {
     }
   };
 
-  const handleNovaVersao = (tipo: TermoTipo) => {
+  const handleOpenEdit = (t: TermoRow) => {
+    setEditTermo(t);
+    setEditTitulo(t.titulo);
+    setEditConteudo(t.conteudo);
+  };
+
+  const handleSalvarEdicao = async () => {
+    if (!editTermo || !editTitulo.trim() || !editConteudo.trim()) return;
+    setEditSaving(true);
+    try {
+      await editarTermo(editTermo.id, { titulo: editTitulo.trim(), conteudo: editConteudo.trim() });
+      toast.success("Rascunho atualizado!");
+      setEditTermo(null);
+      await carregar();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
     const ativo = termos.find(t => t.tipo === tipo && t.status === "ativo");
     setCreateTipo(tipo);
     setCreateTitulo(ativo?.titulo ?? TERMO_TIPO_LABELS[tipo]);
