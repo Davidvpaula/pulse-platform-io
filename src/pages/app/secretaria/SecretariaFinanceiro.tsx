@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link2, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
