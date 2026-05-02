@@ -285,6 +285,14 @@ export default function MedicoPlanos() {
         onSaved={load}
         medicoMode
       />
+
+      {/* Terms enforcement dialog */}
+      <TermsAcceptanceDialog
+        tipo="criacao_plano_medico"
+        open={termsPlano.showDialog}
+        onOpenChange={termsPlano.setShowDialog}
+        onAccepted={termsPlano.onAccepted}
+      />
     </PageShell>
   );
 }
