@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
+  Building2, Heart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,35 @@ import TermosPendentesBanner from "@/components/shared/TermosPendentesBanner";
 import { usePermissionsBatch } from "@/lib/permissions/usePermissionsBatch";
 import { colaboradorMenu, collectMenuKeys, type MenuNode } from "@/lib/menu/menuCatalog";
 import { validateMenuKeys } from "@/lib/menu/validateMenuKeys";
+
+/* ─── Flow context detection ─── */
+type FlowContext = { cls: string; label: string; icon: typeof Building2; description: string };
+
+function getFlowContext(profileKey: ProfileKey, pathname: string): FlowContext {
+  // B2B contexts
+  if (profileKey === "empresa") {
+    return { cls: "flow-b2b", label: "B2B", icon: Building2, description: "Corporativo" };
+  }
+  if (profileKey === "admin" && (
+    pathname.includes("/empresas") || pathname.includes("/gestao-b2b") ||
+    pathname.includes("/faturamento-b2b") || pathname.includes("/relatorios-b2b") ||
+    pathname.includes("/planos-empresariais") || pathname.includes("/contrato-b2b")
+  )) {
+    return { cls: "flow-b2b", label: "B2B", icon: Building2, description: "Gestão corporativa" };
+  }
+  // B2C
+  if (profileKey === "paciente") {
+    return { cls: "flow-b2c", label: "B2C", icon: Heart, description: "Paciente" };
+  }
+  // Other profiles
+  if (profileKey === "medico") {
+    return { cls: "flow-medico", label: "Médico", icon: ShieldCheck, description: "Profissional" };
+  }
+  if (profileKey === "secretaria" || profileKey === "colaborador") {
+    return { cls: "flow-secretaria", label: "Operação", icon: ShieldCheck, description: "Equipe" };
+  }
+  return { cls: "flow-admin", label: "Admin", icon: ShieldCheck, description: "Plataforma" };
+}
 
 export default function AppLayout() {
   const navigate = useNavigate();
