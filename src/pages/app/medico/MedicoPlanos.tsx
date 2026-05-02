@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import PageShell from "@/components/PageShell";
@@ -120,7 +121,7 @@ export default function MedicoPlanos() {
     }
   }
 
-  const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+  
 
   const canCancel = (p: any) => ["ativo", "inativo"].includes(p.status);
 
@@ -159,7 +160,7 @@ export default function MedicoPlanos() {
                   <p className="text-sm text-muted-foreground line-clamp-2">{p.descricao_comercial}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold">{toReais(p.valor_mensal_centavos)}<span className="text-xs font-normal text-muted-foreground">/mês</span></span>
+                  <span className="text-lg font-bold">{brl(p.valor_mensal_centavos)}<span className="text-xs font-normal text-muted-foreground">/mês</span></span>
                   <div className="flex gap-1">
                     {!["encerramento_pendente", "encerrado"].includes(p.status) && (
                       <Button size="icon" variant="ghost" onClick={() => { setEditId(p.id); setBuilderOpen(true); }}>
@@ -230,7 +231,7 @@ export default function MedicoPlanos() {
               <div className="rounded border p-3 text-sm space-y-1">
                 <p><strong>Plano:</strong> {cancelTarget.nome}</p>
                 <p><strong>Pacientes ativos:</strong> {cancelInfo?.pacientes ?? "..."}</p>
-                <p><strong>Valor comprometido:</strong> {cancelInfo ? toReais(cancelInfo.valor) : "..."}</p>
+                <p><strong>Valor comprometido:</strong> {cancelInfo ? brl(cancelInfo.valor) : "..."}</p>
               </div>
 
               <div>

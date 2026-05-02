@@ -2,12 +2,15 @@
  * Formata centavos para moeda BRL.
  * Ex.: brl(15000) => "R$ 150,00"
  */
-export function brl(centavos: number): string {
-  return (centavos / 100).toLocaleString("pt-BR", {
+export function brl(centavos: number | null | undefined): string {
+  return ((centavos || 0) / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
 }
+
+/** Alias para compatibilidade — idêntico a brl() */
+export const formatBRL = brl;
 
 /**
  * Formata valor em reais (não centavos) para moeda BRL.

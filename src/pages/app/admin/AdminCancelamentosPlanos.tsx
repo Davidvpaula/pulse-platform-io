@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import PageShell from "@/components/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelado: "bg-red-100 text-red-800",
 };
 
-const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+
 
 export default function AdminCancelamentosPlanos() {
   const [eventos, setEventos] = useState<any[]>([]);
@@ -140,7 +141,7 @@ export default function AdminCancelamentosPlanos() {
                         <TableCell>{(evt.plano?.medicos as any)?.nome ?? "—"}</TableCell>
                         <TableCell className="font-medium">{evt.plano?.nome ?? "—"}</TableCell>
                         <TableCell>{evt.total_pacientes}</TableCell>
-                        <TableCell>{toReais(evt.valor_total_comprometido_centavos)}</TableCell>
+                        <TableCell>{brl(evt.valor_total_comprometido_centavos)}</TableCell>
                         <TableCell><Badge variant="outline">{evt.tipo_encerramento}</Badge></TableCell>
                         <TableCell><Badge className={STATUS_COLORS[evt.status] ?? ""}>{evt.status}</Badge></TableCell>
                         <TableCell className="text-sm">{new Date(evt.created_at).toLocaleDateString("pt-BR")}</TableCell>
@@ -191,8 +192,8 @@ export default function AdminCancelamentosPlanos() {
                     {reembolsos.map(r => (
                       <TableRow key={r.id}>
                         <TableCell>{r.plano?.nome ?? "—"}</TableCell>
-                        <TableCell>{toReais(r.valor_centavos)}</TableCell>
-                        <TableCell className="font-medium">{toReais(r.valor_proporcional_centavos)}</TableCell>
+                        <TableCell>{brl(r.valor_centavos)}</TableCell>
+                        <TableCell className="font-medium">{brl(r.valor_proporcional_centavos)}</TableCell>
                         <TableCell>{r.dias_restantes}/{r.dias_total_ciclo}</TableCell>
                         <TableCell><Badge variant="outline">{r.status}</Badge></TableCell>
                         <TableCell className="text-sm">{new Date(r.created_at).toLocaleDateString("pt-BR")}</TableCell>
@@ -226,7 +227,7 @@ export default function AdminCancelamentosPlanos() {
               <div className="rounded border p-3 text-sm space-y-1">
                 <p><strong>Plano:</strong> {actionTarget.plano?.nome}</p>
                 <p><strong>Pacientes afetados:</strong> {actionTarget.total_pacientes}</p>
-                <p><strong>Valor comprometido:</strong> {toReais(actionTarget.valor_total_comprometido_centavos)}</p>
+                <p><strong>Valor comprometido:</strong> {brl(actionTarget.valor_total_comprometido_centavos)}</p>
                 {actionTarget.motivo && <p><strong>Motivo do médico:</strong> {actionTarget.motivo}</p>}
               </div>
               <div>

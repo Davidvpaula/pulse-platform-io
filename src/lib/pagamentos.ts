@@ -188,9 +188,4 @@ export async function getPagamento(pagamentoId: string): Promise<Pagamento | nul
   return data;
 }
 
-export function formatBRL(centavos: number): string {
-  return (centavos / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
+export { formatBRL } from "@/lib/format";

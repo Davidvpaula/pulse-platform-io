@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import PageShell from "@/components/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export default function AdminPlanosMedicos() {
 
   useEffect(() => { load(); }, []);
 
-  const toReais = (c: number) => `R$ ${((c || 0) / 100).toFixed(2).replace(".", ",")}`;
+  
 
   async function toggleAprovacao(p: any) {
     const novo = !p.aprovado_admin;
@@ -83,7 +84,7 @@ export default function AdminPlanosMedicos() {
                   <TableCell className="font-medium">{p.nome}</TableCell>
                   <TableCell>{(p.medicos as any)?.nome ?? "—"}</TableCell>
                   <TableCell>{(p.medicos as any)?.especialidade ?? "—"}</TableCell>
-                  <TableCell>{toReais(p.valor_mensal_centavos)}</TableCell>
+                  <TableCell>{brl(p.valor_mensal_centavos)}</TableCell>
                   <TableCell>
                     <Badge className={STATUS_COLORS[p.status] ?? ""}>{p.status}</Badge>
                   </TableCell>

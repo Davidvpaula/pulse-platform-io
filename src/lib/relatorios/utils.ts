@@ -1,5 +1,4 @@
-export const brl = (centavos: number | null | undefined) =>
-  ((centavos || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+export { brl } from "@/lib/format";
 
 export const pct = (n: number | null | undefined, casas = 1) =>
   `${(Number(n) || 0).toFixed(casas)}%`;

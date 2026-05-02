@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import PageShell from "@/components/PageShell";
@@ -59,7 +60,7 @@ export default function PacienteMontarPlano() {
   const valorBruto = selectedIds.size * valorBasePorMedico;
   const valorFinal = Math.round(valorBruto * (1 - descontoPct / 100));
 
-  const toReais = (c: number) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+  
 
   const filtered = medicos.filter(m =>
     !busca || m.nome.toLowerCase().includes(busca.toLowerCase()) || m.especialidade.toLowerCase().includes(busca.toLowerCase())
@@ -196,7 +197,7 @@ export default function PacienteMontarPlano() {
               <div className="rounded-lg bg-success/10 p-3">
                 <p className="text-sm font-semibold text-success">🎉 Desconto progressivo: {descontoPct}%</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Valor base: {toReais(valorBruto)} → Valor final: <strong>{toReais(valorFinal)}</strong>/mês
+                  Valor base: {brl(valorBruto)} → Valor final: <strong>{brl(valorFinal)}</strong>/mês
                 </p>
               </div>
             )}
