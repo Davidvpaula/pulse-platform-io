@@ -297,7 +297,7 @@ export default function AdminFaturamentoB2B() {
               {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filtroAno} onValueChange={setFiltroAno}>
+          <Select value={filtroAno} onValueChange={v => { setFiltroAno(v); setPagina(1); }}>
             <SelectTrigger className="w-[120px]">
               <CalendarDays className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
