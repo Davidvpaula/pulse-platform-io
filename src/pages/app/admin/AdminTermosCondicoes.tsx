@@ -51,6 +51,12 @@ export default function AdminTermosCondicoes() {
   // Preview
   const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
 
+  // Edit draft
+  const [editTermo, setEditTermo] = useState<TermoRow | null>(null);
+  const [editTitulo, setEditTitulo] = useState("");
+  const [editConteudo, setEditConteudo] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
   // Filtered termos
   const termosFiltrados = useMemo(() => {
     return termos.filter(t => {
