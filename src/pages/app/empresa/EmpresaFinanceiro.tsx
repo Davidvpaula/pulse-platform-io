@@ -83,7 +83,7 @@ export default function EmpresaFinanceiro() {
       const { data: fats, error } = await supabase
         .from("empresas_faturas")
         .select("*")
-        .eq("empresa_id", emp.id)
+        .eq("empresa_id", eid)
         .order("competencia_ano", { ascending: false })
         .order("competencia_mes", { ascending: false })
         .limit(50);
