@@ -179,6 +179,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/empresa/documentos":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Documentos" }],
   "/app/empresa/relatorios":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Relatórios" }],
   "/app/empresa/financeiro":   [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Financeiro" }],
+  "/app/empresa/propostas":    [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Propostas Comerciais" }],
   "/app/empresa/termos":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Termos" }],
   "/app/empresa/perfil":       [{ label: "Empresa", to: "/app/empresa/dashboard" }, { label: "Perfil" }],
 };
