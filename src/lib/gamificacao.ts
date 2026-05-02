@@ -23,6 +23,7 @@ export type SaldoCrescimentoItem = {
   referencia_id: string | null;
   created_at: string;
 };
+
 export type AvaliacaoMedica = {
   id: string;
   paciente_id: string;
@@ -62,6 +63,13 @@ export type RankingConfig = {
   min_avaliacoes_exibir: number;
   recencia_dias_ativo: number;
   recencia_dias_penalidade: number;
+  cpc_padrao_centavos: number;
+  saldo_por_consulta: number;
+  premium_min_atendimentos: number;
+  premium_min_avaliacao: number;
+  premium_max_no_show: number;
+  premium_min_meses_ativo: number;
+  premium_bonus_ranking: number;
   updated_at: string;
 };
 
@@ -93,6 +101,16 @@ export type ImpulsionamentoCampanha = {
   especialidade_ids: string[];
   created_at: string;
   updated_at: string;
+};
+
+export type ImpulsionamentoConversao = {
+  id: string;
+  clique_id: string | null;
+  campanha_id: string;
+  consulta_id: string | null;
+  medico_id: string;
+  paciente_id: string | null;
+  created_at: string;
 };
 
 /* ── Avaliações ── */
@@ -192,6 +210,13 @@ export async function salvarRankingConfig(config: Partial<RankingConfig> & { id:
       min_avaliacoes_exibir: config.min_avaliacoes_exibir,
       recencia_dias_ativo: config.recencia_dias_ativo,
       recencia_dias_penalidade: config.recencia_dias_penalidade,
+      cpc_padrao_centavos: config.cpc_padrao_centavos,
+      saldo_por_consulta: config.saldo_por_consulta,
+      premium_min_atendimentos: config.premium_min_atendimentos,
+      premium_min_avaliacao: config.premium_min_avaliacao,
+      premium_max_no_show: config.premium_max_no_show,
+      premium_min_meses_ativo: config.premium_min_meses_ativo,
+      premium_bonus_ranking: config.premium_bonus_ranking,
       updated_at: new Date().toISOString(),
     })
     .eq("id", config.id);
@@ -268,6 +293,14 @@ export async function togglePremiumAdmin(medico_id: string, ativo: boolean, tipo
   if (error) throw error;
 }
 
+export async function verificarPremiumConquistado(medico_id: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("verificar_premium_conquistado" as any, {
+    p_medico_id: medico_id,
+  });
+  if (error) throw error;
+  return data as boolean;
+}
+
 /* ── Impulsionamento / Campanhas ── */
 
 export async function listarCampanhasMedico(medico_id: string): Promise<ImpulsionamentoCampanha[]> {
@@ -287,13 +320,20 @@ export async function criarCampanha(params: {
   cpc_centavos?: number;
   especialidade_ids?: string[];
 }) {
+  // Get default CPC from config if not specified
+  let cpc = params.cpc_centavos;
+  if (!cpc) {
+    const config = await getRankingConfig();
+    cpc = config?.cpc_padrao_centavos ?? 50;
+  }
+
   const { data, error } = await supabase
     .from("impulsionamento_campanhas" as any)
     .insert({
       medico_id: params.medico_id,
       titulo: params.titulo,
       orcamento_centavos: params.orcamento_centavos,
-      cpc_centavos: params.cpc_centavos ?? 50,
+      cpc_centavos: cpc,
       especialidade_ids: params.especialidade_ids ?? [],
     })
     .select()
@@ -326,4 +366,31 @@ export async function registrarClique(campanha_id: string, paciente_id?: string,
     p_origem: origem,
   });
   if (error) throw error;
+}
+
+/* ── Conversões ── */
+
+export async function listarConversoes(campanha_id?: string): Promise<ImpulsionamentoConversao[]> {
+  let query = supabase
+    .from("impulsionamento_conversoes" as any)
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (campanha_id) {
+    query = query.eq("campanha_id", campanha_id);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as unknown as ImpulsionamentoConversao[];
+}
+
+export async function getConversoesPorCampanha(): Promise<Record<string, number>> {
+  const { data } = await supabase
+    .from("impulsionamento_conversoes" as any)
+    .select("campanha_id");
+  const map: Record<string, number> = {};
+  for (const row of (data ?? []) as any[]) {
+    map[row.campanha_id] = (map[row.campanha_id] || 0) + 1;
+  }
+  return map;
 }

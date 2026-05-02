@@ -1,40 +1,41 @@
 import { useEffect, useState } from "react";
 import {
-  Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Users,
+  Loader2, DollarSign, Crown, Megaphone, TrendingUp, BarChart3, Target, Zap,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
 import {
-  listarTodasCampanhas, listarTodosPremium,
+  listarTodasCampanhas, listarTodosPremium, getConversoesPorCampanha,
   type ImpulsionamentoCampanha, type MedicoPremium,
 } from "@/lib/gamificacao";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
+function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
 
 export default function AdminGamificacaoFinanceiro() {
   const [loading, setLoading] = useState(true);
-  const [campanhas, setCampanhas] = useState<(ImpulsionamentoCampanha & { nome?: string })[]>([]);
+  const [campanhas, setCampanhas] = useState<(ImpulsionamentoCampanha & { nome?: string; conversoes?: number })[]>([]);
   const [premiums, setPremiums] = useState<(MedicoPremium & { nome?: string })[]>([]);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [camps, prems] = await Promise.all([
+      const [camps, prems, convMap] = await Promise.all([
         listarTodasCampanhas(100),
         listarTodosPremium(),
+        getConversoesPorCampanha(),
       ]);
 
-      // Enriquecer com nomes
       const ids = [...new Set([...camps.map((c) => c.medico_id), ...prems.map((p) => p.medico_id)])];
       let nomeMap = new Map<string, string>();
       if (ids.length) {
         const { data } = await supabase.from("medicos").select("id,nome").in("id", ids);
         nomeMap = new Map((data ?? []).map((m) => [m.id, m.nome]));
       }
-      setCampanhas(camps.map((c) => ({ ...c, nome: nomeMap.get(c.medico_id) ?? "—" })));
+      setCampanhas(camps.map((c) => ({ ...c, nome: nomeMap.get(c.medico_id) ?? "—", conversoes: convMap[c.id] ?? 0 })));
       setPremiums(prems.map((p) => ({ ...p, nome: nomeMap.get(p.medico_id) ?? "—" })));
       setLoading(false);
     })();
@@ -51,42 +52,25 @@ export default function AdminGamificacaoFinanceiro() {
   const totalGastoCPC = campanhas.reduce((s, c) => s + c.gasto_centavos, 0);
   const totalOrcamentoCPC = campanhas.reduce((s, c) => s + c.orcamento_centavos, 0);
   const totalCliques = campanhas.reduce((s, c) => s + c.cliques, 0);
+  const totalConversoes = campanhas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
   const campanhasAtivas = campanhas.filter((c) => c.status === "ativa").length;
   const premiumsAtivos = premiums.filter((p) => p.ativo).length;
+  const taxaConvGlobal = totalCliques > 0 ? totalConversoes / totalCliques : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Financeiro da Gamificação"
-        description="Receita de assinaturas premium, consumo CPC de impulsionamento e métricas consolidadas."
+        description="Receita de assinaturas premium, consumo CPC, conversões e métricas de ROI."
       />
 
       {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          label="Receita CPC total"
-          value={brl(totalGastoCPC)}
-          icon={DollarSign}
-          hint={`${brl(totalOrcamentoCPC)} em orçamento total`}
-        />
-        <StatCard
-          label="Cliques totais"
-          value={String(totalCliques)}
-          icon={TrendingUp}
-          hint={`${campanhasAtivas} campanhas ativas`}
-        />
-        <StatCard
-          label="Médicos Premium"
-          value={String(premiumsAtivos)}
-          icon={Crown}
-          hint={`${premiums.length} registros totais`}
-        />
-        <StatCard
-          label="Campanhas"
-          value={String(campanhas.length)}
-          icon={Megaphone}
-          hint={`${campanhasAtivas} ativas agora`}
-        />
+      <div className="grid gap-4 md:grid-cols-5">
+        <StatCard label="Receita CPC total" value={brl(totalGastoCPC)} icon={DollarSign} hint={`${brl(totalOrcamentoCPC)} em orçamento`} />
+        <StatCard label="Cliques totais" value={String(totalCliques)} icon={TrendingUp} hint={`${campanhasAtivas} campanhas ativas`} />
+        <StatCard label="Conversões" value={String(totalConversoes)} icon={Target} hint={`${pct(taxaConvGlobal)} de taxa`} />
+        <StatCard label="Premium ativos" value={String(premiumsAtivos)} icon={Crown} hint={`${premiums.length} registros totais`} />
+        <StatCard label="Campanhas" value={String(campanhas.length)} icon={Megaphone} hint={`${campanhasAtivas} ativas agora`} />
       </div>
 
       {/* Premium members */}
@@ -133,12 +117,12 @@ export default function AdminGamificacaoFinanceiro() {
         )}
       </div>
 
-      {/* Campanhas overview */}
+      {/* Campanhas com ROI */}
       <div className="card-elevated p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <h3 className="font-display text-lg font-semibold">Todas as Campanhas CPC</h3>
+            <h3 className="font-display text-lg font-semibold">Campanhas CPC — ROI</h3>
           </div>
           <Badge variant="secondary">{campanhas.length} total</Badge>
         </div>
@@ -156,30 +140,35 @@ export default function AdminGamificacaoFinanceiro() {
                   <th className="pb-2 pr-3 text-right">Orçamento</th>
                   <th className="pb-2 pr-3 text-right">Gasto</th>
                   <th className="pb-2 pr-3 text-center">Cliques</th>
-                  <th className="pb-2 pr-3 text-center">Impressões</th>
-                  <th className="pb-2 text-right">CPC</th>
+                  <th className="pb-2 pr-3 text-center">Conv.</th>
+                  <th className="pb-2 pr-3 text-right">CPC</th>
+                  <th className="pb-2 text-right">ROI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {campanhas.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/30">
-                    <td className="py-2.5 pr-3 font-medium truncate max-w-[150px]">{c.nome}</td>
-                    <td className="py-2.5 pr-3 truncate max-w-[150px]">{c.titulo}</td>
-                    <td className="py-2.5 pr-3 text-center">
-                      <Badge className={cn("text-[10px]",
-                        c.status === "ativa" ? "bg-success/15 text-success" :
-                        c.status === "pausada" ? "bg-warning/15 text-warning" :
-                        c.status === "encerrada" ? "bg-muted text-muted-foreground" :
-                        "bg-destructive/15 text-destructive"
-                      )}>{c.status}</Badge>
-                    </td>
-                    <td className="py-2.5 pr-3 text-right font-mono">{brl(c.orcamento_centavos)}</td>
-                    <td className="py-2.5 pr-3 text-right font-mono">{brl(c.gasto_centavos)}</td>
-                    <td className="py-2.5 pr-3 text-center">{c.cliques}</td>
-                    <td className="py-2.5 pr-3 text-center">{c.impressoes}</td>
-                    <td className="py-2.5 text-right font-mono">{brl(c.cpc_centavos)}</td>
-                  </tr>
-                ))}
+                {campanhas.map((c) => {
+                  const roi = c.cliques > 0 ? ((c.conversoes ?? 0) / c.cliques * 100).toFixed(1) : "0.0";
+                  return (
+                    <tr key={c.id} className="hover:bg-muted/30">
+                      <td className="py-2.5 pr-3 font-medium truncate max-w-[150px]">{c.nome}</td>
+                      <td className="py-2.5 pr-3 truncate max-w-[150px]">{c.titulo}</td>
+                      <td className="py-2.5 pr-3 text-center">
+                        <Badge className={cn("text-[10px]",
+                          c.status === "ativa" ? "bg-success/15 text-success" :
+                          c.status === "pausada" ? "bg-warning/15 text-warning" :
+                          c.status === "encerrada" ? "bg-muted text-muted-foreground" :
+                          "bg-destructive/15 text-destructive"
+                        )}>{c.status}</Badge>
+                      </td>
+                      <td className="py-2.5 pr-3 text-right font-mono">{brl(c.orcamento_centavos)}</td>
+                      <td className="py-2.5 pr-3 text-right font-mono">{brl(c.gasto_centavos)}</td>
+                      <td className="py-2.5 pr-3 text-center">{c.cliques}</td>
+                      <td className="py-2.5 pr-3 text-center">{c.conversoes ?? 0}</td>
+                      <td className="py-2.5 pr-3 text-right font-mono">{brl(c.cpc_centavos)}</td>
+                      <td className="py-2.5 text-right font-mono">{roi}%</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

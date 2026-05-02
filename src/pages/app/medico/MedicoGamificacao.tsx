@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
-  Crown, Megaphone, PlusCircle, Pause, Play, XCircle,
+  Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -19,7 +19,9 @@ import { getMedicoAtual } from "@/lib/clinico";
 import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
-  type AvaliacaoMedica, type MedicoRanking, type MedicoPremium, type ImpulsionamentoCampanha,
+  listarSaldoCrescimento, getRankingConfig,
+  type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
+  type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
 } from "@/lib/gamificacao";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +41,12 @@ export default function MedicoGamificacao() {
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoMedica[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
   const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
+  const [saldoHistorico, setSaldoHistorico] = useState<SaldoCrescimentoItem[]>([]);
   const [premium, setPremium] = useState<MedicoPremium | null>(null);
   const [campanhas, setCampanhas] = useState<ImpulsionamentoCampanha[]>([]);
   const [novaCampanhaOpen, setNovaCampanhaOpen] = useState(false);
+  const [config, setConfig] = useState<RankingConfig | null>(null);
+  const [showSaldoHistory, setShowSaldoHistory] = useState(false);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
@@ -49,18 +54,22 @@ export default function MedicoGamificacao() {
     const medico = await getMedicoAtual();
     if (!medico) { setLoading(false); return; }
     setMedicoId(medico.id);
-    const [r, a, saldo, prem, camps] = await Promise.all([
+    const [r, a, saldo, hist, prem, camps, cfg] = await Promise.all([
       getRankingMedico(medico.id),
       listarAvaliacoesMedico(medico.id),
       getSaldoAtual(medico.id),
+      listarSaldoCrescimento(medico.id),
       getMedicoPremium(medico.id),
       listarCampanhasMedico(medico.id),
+      getRankingConfig(),
     ]);
     setRanking(r);
     setAvaliacoes(a);
     setSaldoCrescimento(saldo);
+    setSaldoHistorico(hist);
     setPremium(prem);
     setCampanhas(camps);
+    setConfig(cfg);
     setLoading(false);
   };
 
@@ -84,15 +93,12 @@ export default function MedicoGamificacao() {
   const handleStatusCampanha = async (camp: ImpulsionamentoCampanha, novoStatus: ImpulsionamentoCampanha["status"]) => {
     try {
       await atualizarStatusCampanha(camp.id, novoStatus);
-      setCamphas((prev) => prev.map((c) => c.id === camp.id ? { ...c, status: novoStatus } : c));
+      setCampanhas((prev) => prev.map((c) => c.id === camp.id ? { ...c, status: novoStatus } : c));
       toast.success(`Campanha ${novoStatus}`);
     } catch {
       toast.error("Erro ao atualizar campanha");
     }
   };
-
-  // fix typo helper
-  const setCamphas = setCampanhas;
 
   if (loading) {
     return (
@@ -104,6 +110,13 @@ export default function MedicoGamificacao() {
 
   const rec = ranking ? recenciaLabel(ranking.fator_recencia) : null;
   const isPremium = premium?.ativo ?? false;
+
+  // Premium qualification progress
+  const premiumProgress = config && ranking ? {
+    atendimentos: { atual: ranking.total_atendimentos, meta: config.premium_min_atendimentos, ok: ranking.total_atendimentos >= config.premium_min_atendimentos },
+    avaliacao: { atual: ranking.avaliacao_media, meta: config.premium_min_avaliacao, ok: ranking.avaliacao_media >= config.premium_min_avaliacao },
+    noShow: { atual: ranking.taxa_no_show, meta: config.premium_max_no_show, ok: ranking.taxa_no_show <= config.premium_max_no_show },
+  } : null;
 
   return (
     <div className="space-y-6">
@@ -140,15 +153,76 @@ export default function MedicoGamificacao() {
               <p className="font-semibold">{isPremium ? "Você é Premium!" : "Plano Premium"}</p>
               <p className="text-xs text-muted-foreground">
                 {isPremium
-                  ? `Ativo desde ${premium?.inicio ? new Date(premium.inicio).toLocaleDateString("pt-BR") : "—"} · Bônus de 1.2x no ranking`
-                  : "Desbloqueie o bônus de 1.2x no ranking e destaque nos resultados de busca."}
+                  ? `Ativo desde ${premium?.inicio ? new Date(premium.inicio).toLocaleDateString("pt-BR") : "—"} · Bônus de ${config?.premium_bonus_ranking ?? 1.2}x no ranking`
+                  : "Desbloqueie o bônus no ranking e destaque nos resultados de busca."}
               </p>
             </div>
           </div>
-          {!isPremium && (
-            <Badge variant="secondary" className="text-xs">Em breve</Badge>
-          )}
         </div>
+
+        {/* Premium qualification progress */}
+        {!isPremium && premiumProgress && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className={cn("rounded-lg p-3 border", premiumProgress.atendimentos.ok ? "border-success/30 bg-success/5" : "border-border")}>
+              <p className="text-xs font-medium">Atendimentos</p>
+              <p className="text-lg font-bold">{premiumProgress.atendimentos.atual} <span className="text-xs text-muted-foreground font-normal">/ {premiumProgress.atendimentos.meta}</span></p>
+              {premiumProgress.atendimentos.ok && <Badge className="bg-success/15 text-success text-[10px] mt-1">✓ Atingido</Badge>}
+            </div>
+            <div className={cn("rounded-lg p-3 border", premiumProgress.avaliacao.ok ? "border-success/30 bg-success/5" : "border-border")}>
+              <p className="text-xs font-medium">Nota média</p>
+              <p className="text-lg font-bold">{premiumProgress.avaliacao.atual.toFixed(1)} <span className="text-xs text-muted-foreground font-normal">/ {premiumProgress.avaliacao.meta.toFixed(1)}</span></p>
+              {premiumProgress.avaliacao.ok && <Badge className="bg-success/15 text-success text-[10px] mt-1">✓ Atingido</Badge>}
+            </div>
+            <div className={cn("rounded-lg p-3 border", premiumProgress.noShow.ok ? "border-success/30 bg-success/5" : "border-border")}>
+              <p className="text-xs font-medium">No-show</p>
+              <p className="text-lg font-bold">{pct(premiumProgress.noShow.atual)} <span className="text-xs text-muted-foreground font-normal">máx {pct(premiumProgress.noShow.meta)}</span></p>
+              {premiumProgress.noShow.ok && <Badge className="bg-success/15 text-success text-[10px] mt-1">✓ Atingido</Badge>}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Saldo de Crescimento */}
+      <div className="card-elevated p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg font-semibold">Saldo de Crescimento</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-lg font-bold">{saldoCrescimento.toFixed(0)} pts</Badge>
+            <Button size="sm" variant="ghost" onClick={() => setShowSaldoHistory(!showSaldoHistory)}>
+              <History className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Ganhe {config?.saldo_por_consulta ?? 10} pontos por consulta concluída. Use para impulsionar seu perfil.
+        </p>
+        {showSaldoHistory && (
+          <div className="border-t border-border pt-3 max-h-60 overflow-y-auto">
+            {saldoHistorico.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum movimento ainda.</p>
+            ) : (
+              <div className="divide-y divide-border">
+                {saldoHistorico.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-2 text-sm">
+                    <div>
+                      <p className={cn("font-medium", item.tipo === "credito" ? "text-success" : "text-destructive")}>
+                        {item.tipo === "credito" ? "+" : "-"}{item.valor.toFixed(0)} pts
+                      </p>
+                      <p className="text-xs text-muted-foreground">{item.motivo}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-xs font-mono">Saldo: {item.saldo_apos.toFixed(0)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Detalhes performance */}
@@ -159,7 +233,7 @@ export default function MedicoGamificacao() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="mt-2 text-2xl font-bold">{ranking ? pct(ranking.taxa_no_show) : "—"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Faltas dos pacientes em relação ao total de agendamentos</p>
+          <p className="mt-1 text-xs text-muted-foreground">Faltas dos pacientes em relação ao total</p>
         </div>
         <div className="card-elevated p-5">
           <div className="flex items-center justify-between">
@@ -175,7 +249,7 @@ export default function MedicoGamificacao() {
             <Award className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-2 text-2xl font-bold">{ranking ? ranking.ranking_score.toFixed(2) : "—"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Calculado com base em avaliações, volume, conversão, recência e mais</p>
+          <p className="mt-1 text-xs text-muted-foreground">Calculado com avaliações, volume, conversão, recência</p>
         </div>
       </div>
 
@@ -284,6 +358,8 @@ export default function MedicoGamificacao() {
           open={novaCampanhaOpen}
           onOpenChange={setNovaCampanhaOpen}
           medicoId={medicoId}
+          saldoAtual={saldoCrescimento}
+          cpcPadrao={config?.cpc_padrao_centavos ?? 50}
           onCriada={() => { setNovaCampanhaOpen(false); void carregar(); }}
         />
       )}
@@ -292,17 +368,18 @@ export default function MedicoGamificacao() {
 }
 
 /* ─── Dialog criar campanha ─── */
-function NovaCampanhaDialog({ open, onOpenChange, medicoId, onCriada }: {
-  open: boolean; onOpenChange: (v: boolean) => void; medicoId: string; onCriada: () => void;
+function NovaCampanhaDialog({ open, onOpenChange, medicoId, saldoAtual, cpcPadrao, onCriada }: {
+  open: boolean; onOpenChange: (v: boolean) => void; medicoId: string; saldoAtual: number; cpcPadrao: number; onCriada: () => void;
 }) {
   const [titulo, setTitulo] = useState("");
   const [orcamento, setOrcamento] = useState("50");
-  const [cpc, setCpc] = useState("0.50");
+  const [cpc, setCpc] = useState((cpcPadrao / 100).toFixed(2));
   const [criando, setCriando] = useState(false);
+
+  const orc = Math.round(parseFloat(orcamento) * 100);
 
   const handleCriar = async () => {
     if (!titulo.trim()) { toast.error("Informe um título"); return; }
-    const orc = Math.round(parseFloat(orcamento) * 100);
     const cpcVal = Math.round(parseFloat(cpc) * 100);
     if (orc < 500) { toast.error("Orçamento mínimo R$ 5,00"); return; }
     if (cpcVal < 10) { toast.error("CPC mínimo R$ 0,10"); return; }
@@ -310,7 +387,7 @@ function NovaCampanhaDialog({ open, onOpenChange, medicoId, onCriada }: {
     try {
       await criarCampanha({ medico_id: medicoId, titulo: titulo.trim(), orcamento_centavos: orc, cpc_centavos: cpcVal });
       toast.success("Campanha criada com sucesso!");
-      setTitulo(""); setOrcamento("50"); setCpc("0.50");
+      setTitulo(""); setOrcamento("50"); setCpc((cpcPadrao / 100).toFixed(2));
       onCriada();
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao criar campanha");
@@ -326,6 +403,13 @@ function NovaCampanhaDialog({ open, onOpenChange, medicoId, onCriada }: {
           <DialogTitle>Nova campanha de impulsionamento</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="text-sm">Saldo disponível: <strong>{saldoAtual.toFixed(0)} pts</strong></span>
+            {orc > saldoAtual && (
+              <Badge className="bg-warning/15 text-warning text-[10px]">Saldo insuficiente</Badge>
+            )}
+          </div>
           <div className="space-y-1">
             <Label>Título da campanha</Label>
             <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex: Destaque Cardiologia" />

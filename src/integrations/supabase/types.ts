@@ -2628,6 +2628,65 @@ export type Database = {
           },
         ]
       }
+      impulsionamento_conversoes: {
+        Row: {
+          campanha_id: string
+          clique_id: string | null
+          consulta_id: string | null
+          created_at: string
+          id: string
+          medico_id: string
+          paciente_id: string | null
+        }
+        Insert: {
+          campanha_id: string
+          clique_id?: string | null
+          consulta_id?: string | null
+          created_at?: string
+          id?: string
+          medico_id: string
+          paciente_id?: string | null
+        }
+        Update: {
+          campanha_id?: string
+          clique_id?: string | null
+          consulta_id?: string | null
+          created_at?: string
+          id?: string
+          medico_id?: string
+          paciente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impulsionamento_conversoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "impulsionamento_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_clique_id_fkey"
+            columns: ["clique_id"]
+            isOneToOne: false
+            referencedRelation: "impulsionamento_cliques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integracoes_config: {
         Row: {
           ambiente: string
@@ -3403,6 +3462,47 @@ export type Database = {
             foreignKeyName: "medico_ranking_medico_id_fkey"
             columns: ["medico_id"]
             isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_saldo_crescimento: {
+        Row: {
+          created_at: string
+          id: string
+          medico_id: string
+          motivo: string
+          referencia_id: string | null
+          saldo_apos: number
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medico_id: string
+          motivo?: string
+          referencia_id?: string | null
+          saldo_apos?: number
+          tipo?: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medico_id?: string
+          motivo?: string
+          referencia_id?: string | null
+          saldo_apos?: number
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_saldo_crescimento_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
@@ -4751,6 +4851,7 @@ export type Database = {
       }
       ranking_config: {
         Row: {
+          cpc_padrao_centavos: number
           id: string
           min_avaliacoes_exibir: number
           peso_atendimentos: number
@@ -4759,12 +4860,19 @@ export type Database = {
           peso_no_show: number
           peso_premium: number
           peso_recencia: number
+          premium_bonus_ranking: number
+          premium_max_no_show: number
+          premium_min_atendimentos: number
+          premium_min_avaliacao: number
+          premium_min_meses_ativo: number
           recencia_dias_ativo: number
           recencia_dias_penalidade: number
+          saldo_por_consulta: number
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          cpc_padrao_centavos?: number
           id?: string
           min_avaliacoes_exibir?: number
           peso_atendimentos?: number
@@ -4773,12 +4881,19 @@ export type Database = {
           peso_no_show?: number
           peso_premium?: number
           peso_recencia?: number
+          premium_bonus_ranking?: number
+          premium_max_no_show?: number
+          premium_min_atendimentos?: number
+          premium_min_avaliacao?: number
+          premium_min_meses_ativo?: number
           recencia_dias_ativo?: number
           recencia_dias_penalidade?: number
+          saldo_por_consulta?: number
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          cpc_padrao_centavos?: number
           id?: string
           min_avaliacoes_exibir?: number
           peso_atendimentos?: number
@@ -4787,8 +4902,14 @@ export type Database = {
           peso_no_show?: number
           peso_premium?: number
           peso_recencia?: number
+          premium_bonus_ranking?: number
+          premium_max_no_show?: number
+          premium_min_atendimentos?: number
+          premium_min_avaliacao?: number
+          premium_min_meses_ativo?: number
           recencia_dias_ativo?: number
           recencia_dias_penalidade?: number
+          saldo_por_consulta?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -6057,6 +6178,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      registrar_conversao_impulsionamento: {
+        Args: {
+          p_campanha_id: string
+          p_clique_id?: string
+          p_consulta_id: string
+          p_medico_id: string
+          p_paciente_id?: string
+        }
+        Returns: undefined
+      }
       relatorios_clinica: {
         Args: {
           p_canal?: string
@@ -6179,6 +6310,10 @@ export type Database = {
       validar_e_aplicar_cupom: {
         Args: { _codigo: string; _pagamento_id: string }
         Returns: Json
+      }
+      verificar_premium_conquistado: {
+        Args: { p_medico_id: string }
+        Returns: boolean
       }
     }
     Enums: {
