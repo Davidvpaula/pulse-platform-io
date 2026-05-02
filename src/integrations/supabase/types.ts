@@ -1778,6 +1778,7 @@ export type Database = {
           titulo: string
           updated_at: string
           user_id: string
+          visibilidade_empresa: boolean
         }
         Insert: {
           created_at?: string
@@ -1791,6 +1792,7 @@ export type Database = {
           titulo: string
           updated_at?: string
           user_id: string
+          visibilidade_empresa?: boolean
         }
         Update: {
           created_at?: string
@@ -1804,6 +1806,7 @@ export type Database = {
           titulo?: string
           updated_at?: string
           user_id?: string
+          visibilidade_empresa?: boolean
         }
         Relationships: []
       }
@@ -1822,6 +1825,7 @@ export type Database = {
           modelo_financeiro: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia: string | null
           observacoes: string | null
+          plano_id: string | null
           plano_mensal_centavos: number
           porte: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social: string
@@ -1849,6 +1853,7 @@ export type Database = {
           modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia?: string | null
           observacoes?: string | null
+          plano_id?: string | null
           plano_mensal_centavos?: number
           porte?: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social: string
@@ -1876,6 +1881,7 @@ export type Database = {
           modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           nome_fantasia?: string | null
           observacoes?: string | null
+          plano_id?: string | null
           plano_mensal_centavos?: number
           porte?: Database["public"]["Enums"]["empresa_porte"] | null
           razao_social?: string
@@ -1889,7 +1895,15 @@ export type Database = {
           valor_colaborador_centavos?: number
           valor_consulta_centavos?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       empresas_auditoria: {
         Row: {
@@ -1953,6 +1967,7 @@ export type Database = {
           limite_consultas_mes: number | null
           modelo_financeiro: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           observacoes: string | null
+          plano_id: string | null
           plano_mensal_centavos: number
           status: Database["public"]["Enums"]["empresa_contrato_status"]
           updated_at: string
@@ -1970,6 +1985,7 @@ export type Database = {
           limite_consultas_mes?: number | null
           modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           observacoes?: string | null
+          plano_id?: string | null
           plano_mensal_centavos?: number
           status?: Database["public"]["Enums"]["empresa_contrato_status"]
           updated_at?: string
@@ -1987,6 +2003,7 @@ export type Database = {
           limite_consultas_mes?: number | null
           modelo_financeiro?: Database["public"]["Enums"]["empresa_modelo_financeiro"]
           observacoes?: string | null
+          plano_id?: string | null
           plano_mensal_centavos?: number
           status?: Database["public"]["Enums"]["empresa_contrato_status"]
           updated_at?: string
@@ -1999,6 +2016,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresas_contratos_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
             referencedColumns: ["id"]
           },
         ]
@@ -4562,6 +4586,7 @@ export type Database = {
         Row: {
           aprovado_admin: boolean
           categoria: Database["public"]["Enums"]["plano_categoria"]
+          coparticipacao_pct: number
           created_at: string
           created_by: string | null
           cta_texto: string | null
@@ -4573,6 +4598,7 @@ export type Database = {
           destacado: boolean
           empresa_id: string | null
           especialidade_id: string | null
+          especialidades_liberadas: string[]
           icone: string | null
           id: string
           imagem_url: string | null
@@ -4586,6 +4612,8 @@ export type Database = {
           publicado_site: boolean
           publico: Database["public"]["Enums"]["plano_publico"]
           regra_acesso: Database["public"]["Enums"]["plano_regra_acesso"]
+          regras_uso_json: Json
+          sla_prioridade: string
           status: Database["public"]["Enums"]["plano_status"]
           taxa_adesao_centavos: number
           taxa_pagamento_pct: number
@@ -4593,12 +4621,14 @@ export type Database = {
           updated_at: string
           valor_anual_centavos: number
           valor_mensal_centavos: number
+          valor_por_vida_centavos: number
           valor_promocional_centavos: number | null
           versao: number
         }
         Insert: {
           aprovado_admin?: boolean
           categoria?: Database["public"]["Enums"]["plano_categoria"]
+          coparticipacao_pct?: number
           created_at?: string
           created_by?: string | null
           cta_texto?: string | null
@@ -4610,6 +4640,7 @@ export type Database = {
           destacado?: boolean
           empresa_id?: string | null
           especialidade_id?: string | null
+          especialidades_liberadas?: string[]
           icone?: string | null
           id?: string
           imagem_url?: string | null
@@ -4623,6 +4654,8 @@ export type Database = {
           publicado_site?: boolean
           publico?: Database["public"]["Enums"]["plano_publico"]
           regra_acesso?: Database["public"]["Enums"]["plano_regra_acesso"]
+          regras_uso_json?: Json
+          sla_prioridade?: string
           status?: Database["public"]["Enums"]["plano_status"]
           taxa_adesao_centavos?: number
           taxa_pagamento_pct?: number
@@ -4630,12 +4663,14 @@ export type Database = {
           updated_at?: string
           valor_anual_centavos?: number
           valor_mensal_centavos?: number
+          valor_por_vida_centavos?: number
           valor_promocional_centavos?: number | null
           versao?: number
         }
         Update: {
           aprovado_admin?: boolean
           categoria?: Database["public"]["Enums"]["plano_categoria"]
+          coparticipacao_pct?: number
           created_at?: string
           created_by?: string | null
           cta_texto?: string | null
@@ -4647,6 +4682,7 @@ export type Database = {
           destacado?: boolean
           empresa_id?: string | null
           especialidade_id?: string | null
+          especialidades_liberadas?: string[]
           icone?: string | null
           id?: string
           imagem_url?: string | null
@@ -4660,6 +4696,8 @@ export type Database = {
           publicado_site?: boolean
           publico?: Database["public"]["Enums"]["plano_publico"]
           regra_acesso?: Database["public"]["Enums"]["plano_regra_acesso"]
+          regras_uso_json?: Json
+          sla_prioridade?: string
           status?: Database["public"]["Enums"]["plano_status"]
           taxa_adesao_centavos?: number
           taxa_pagamento_pct?: number
@@ -4667,6 +4705,7 @@ export type Database = {
           updated_at?: string
           valor_anual_centavos?: number
           valor_mensal_centavos?: number
+          valor_por_vida_centavos?: number
           valor_promocional_centavos?: number | null
           versao?: number
         }
