@@ -26,6 +26,8 @@ import {
 import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 /* ─────────── Validação ─────────── */
 
