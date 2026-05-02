@@ -4,6 +4,25 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /* ── Types ── */
+
+export type ConsultaPendenteAvaliacao = {
+  consulta_id: string;
+  medico_id: string;
+  medico_nome: string | null;
+  especialidade_nome: string | null;
+  concluida_em: string;
+};
+
+export type SaldoCrescimentoItem = {
+  id: string;
+  medico_id: string;
+  tipo: "credito" | "debito";
+  valor: number;
+  saldo_apos: number;
+  motivo: string;
+  referencia_id: string | null;
+  created_at: string;
+};
 export type AvaliacaoMedica = {
   id: string;
   paciente_id: string;
@@ -152,4 +171,36 @@ export async function salvarRankingConfig(config: Partial<RankingConfig> & { id:
 export async function recalcularRankingTodos() {
   const { error } = await supabase.rpc("recalcular_ranking_todos" as any);
   if (error) throw error;
+}
+
+/* ── Consultas pendentes de avaliação (auto-prompt) ── */
+
+export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAvaliacao[]> {
+  const { data, error } = await supabase.rpc("consultas_pendentes_avaliacao" as any);
+  if (error) throw error;
+  return (data ?? []) as unknown as ConsultaPendenteAvaliacao[];
+}
+
+/* ── Saldo de Crescimento ── */
+
+export async function listarSaldoCrescimento(medico_id: string): Promise<SaldoCrescimentoItem[]> {
+  const { data, error } = await supabase
+    .from("medico_saldo_crescimento" as any)
+    .select("*")
+    .eq("medico_id", medico_id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as unknown as SaldoCrescimentoItem[];
+}
+
+export async function getSaldoAtual(medico_id: string): Promise<number> {
+  const { data } = await supabase
+    .from("medico_saldo_crescimento" as any)
+    .select("saldo_apos")
+    .eq("medico_id", medico_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as any)?.saldo_apos ?? 0;
 }

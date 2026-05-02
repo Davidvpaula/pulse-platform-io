@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import { getMedicoAtual } from "@/lib/clinico";
 import {
-  getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil,
+  getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   type AvaliacaoMedica, type MedicoRanking,
 } from "@/lib/gamificacao";
 import { cn } from "@/lib/utils";
@@ -28,18 +28,21 @@ export default function MedicoGamificacao() {
   const [ranking, setRanking] = useState<MedicoRanking | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoMedica[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
     if (!session) { setLoading(false); return; }
     setLoading(true);
     const medico = await getMedicoAtual();
     if (!medico) { setLoading(false); return; }
-    const [r, a] = await Promise.all([
+    const [r, a, saldo] = await Promise.all([
       getRankingMedico(medico.id),
       listarAvaliacoesMedico(medico.id),
+      getSaldoAtual(medico.id),
     ]);
     setRanking(r);
     setAvaliacoes(a);
+    setSaldoCrescimento(saldo);
     setLoading(false);
   };
 
@@ -78,7 +81,7 @@ export default function MedicoGamificacao() {
       />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <StatCard
           label="Nota média"
           value={ranking ? ranking.avaliacao_media.toFixed(1) : "—"}
@@ -102,6 +105,12 @@ export default function MedicoGamificacao() {
           value={String(ranking?.total_atendimentos ?? 0)}
           icon={Users}
           hint={`${ranking?.total_agendamentos ?? 0} agendamentos no total`}
+        />
+        <StatCard
+          label="Saldo crescimento"
+          value={saldoCrescimento.toFixed(0)}
+          icon={Award}
+          hint="Pontos acumulados por performance"
         />
       </div>
 

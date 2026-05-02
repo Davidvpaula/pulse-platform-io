@@ -5463,6 +5463,16 @@ export type Database = {
         }
         Returns: Json
       }
+      consultas_pendentes_avaliacao: {
+        Args: never
+        Returns: {
+          concluida_em: string
+          consulta_id: string
+          especialidade_nome: string
+          medico_id: string
+          medico_nome: string
+        }[]
+      }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
       criar_consulta_com_reserva: {
         Args: {
