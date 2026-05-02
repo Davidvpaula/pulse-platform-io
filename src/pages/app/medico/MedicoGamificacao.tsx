@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
+  FileText, CheckCircle2, AlertTriangle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -13,16 +14,21 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import { getMedicoAtual } from "@/lib/clinico";
 import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
-  listarSaldoCrescimento, getRankingConfig,
+  listarSaldoCrescimento, getRankingConfig, ativarPremiumConquistado,
   type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
   type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
 } from "@/lib/gamificacao";
+import {
+  buscarTermosPendentes, registrarAceite, TERMO_TIPO_LABELS,
+  type TermoRow,
+} from "@/lib/termos";
 import { cn } from "@/lib/utils";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
