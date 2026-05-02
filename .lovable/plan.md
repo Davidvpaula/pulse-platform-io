@@ -1,48 +1,38 @@
 
-# Revisão: Tópicos B2B solicitados vs. implementado
+# Página Faturamento B2B Detalhado
 
-## Status por tópico
+## O que será criado
 
-### 1) PLANOS EMPRESARIAIS — Parcialmente implementado
-- **Feito:** Página `AdminPlanosEmpresariais` existe em `/admin/planos-empresariais`, com listagem de planos, filtros e integração com `PlanoBuilder`.
-- **Falta:**
-  - Campos específicos de "valor por vida", "tipo de cobrança (mensal, uso, híbrido)" e "regras de uso" não estão explícitos no schema (`planos_empresariais` não existe como tabela dedicada — usa a tabela `planos` genérica com filtro `categoria=empresarial`). Não há colunas como `valor_por_vida`, `tipo_cobranca`, `regras_uso` dedicadas.
-  - O `PlanoBuilder` é reutilizado, mas não tem campos específicos para B2B (regras de uso, SLA, limite de especialidades).
+Uma nova página `/app/admin/faturamento-b2b` com:
 
-### 2) VÍNCULO EMPRESA-MÉDICO — Parcialmente implementado
-- **Feito:** `AdminGestaoB2B` mostra contratos e faturas por empresa. `MedicoCorporativo` lista consultas corporativas do médico (filtra por `empresa_id` preenchido).
-- **Falta:**
-  - Não há tela no Admin para vincular médicos a empresas (tabela de vínculo médico-empresa não existe).
-  - Não há configuração de "preços diferenciados por empresa" no painel do médico.
+### KPIs no topo
+- Total no período (valor + qtd faturas)
+- Em aberto (valor + qtd)
+- Atrasadas (valor + qtd)
+- Pagas (valor + qtd)
 
-### 3) PAINEL DO MÉDICO CORPORATIVO — Implementado
-- **Feito:** `MedicoCorporativo` com abas de Consultas e Pacientes corporativos, filtro por empresa, identificação de origem (empresa vs particular) via presença de `empresa_id`.
-- **Falta:** Nenhum gap crítico.
+### Filtros
+- Busca por nome da empresa ou competência
+- Filtro por status (todos, em_aberto, paga, atrasada, cancelada)
+- Filtro por ano
+- Filtro por empresa (dropdown dinâmico)
 
-### 4) DOCUMENTOS COMPARTILHADOS — Parcialmente implementado
-- **Feito:** Coluna `visibilidade_empresa` existe no schema (`documentos_paciente`). `EmpresaDocumentos` filtra apenas documentos com `visibilidade_empresa = true`.
-- **Falta:**
-  - **O médico não tem UI para marcar documentos como privado/compartilhável.** `MedicoDocumentos.tsx` não referencia `visibilidade_empresa` em nenhum lugar. O toggle/switch para o médico definir visibilidade não foi implementado.
+### Tabela de faturas
+Colunas: Empresa, Competência, Valor, Funcionários, Consultas, Vencimento, Pago em, Status (badge colorido com ícone), Ações.
 
-### 5) UX/UI — SEPARAÇÃO B2C vs B2B — Parcialmente implementado
-- **Feito:** Rotas separadas (`/empresa/*` vs `/paciente/*`), sidebar separado, páginas dedicadas.
-- **Falta:**
-  - Na visão do médico, `MedicoCorporativo` é uma página separada, mas dentro das consultas normais (`MedicoConsultas`) não há badge/tag visual indicando "corporativo" vs "particular".
-  - Não há separação visual explícita no financeiro do médico entre receita B2B e B2C.
+### Modal de detalhes
+Ao clicar "ver" em uma fatura: exibe dados completos (empresa, valor, vencimento, funcionários, consultas, observações, detalhamento JSON, botão de download placeholder).
 
-### 6) AUDITABILIDADE / NÃO DUPLICAR LÓGICA — OK
-- **Feito:** `EmpresaTermos` reutiliza `registrarAceite` e `MeusAceites`. Planos empresariais reutilizam `PlanoBuilder`. Não há duplicação evidente.
+### Exportação CSV
+Botão no header que exporta todas as faturas filtradas em CSV com separador `;`.
 
----
+## Alterações técnicas
 
-## Resumo do que falta implementar
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/app/admin/AdminFaturamentoB2B.tsx` | **Criar** — página completa com query à tabela `empresas_faturas` (join `empresas.razao_social`) |
+| `src/App.tsx` | Adicionar rota `admin/faturamento-b2b` com permissão `empresas.ver` e import lazy |
+| `src/lib/profiles.ts` | Adicionar item no sidebar Admin (seção Cadastros/B2B) |
+| `src/components/AppBreadcrumb.tsx` | Adicionar breadcrumb para a nova rota |
 
-| # | Item | Esforço |
-|---|------|---------|
-| 1 | Toggle `visibilidade_empresa` na UI do médico (MedicoDocumentos) | Pequeno |
-| 2 | Campos específicos B2B no PlanoBuilder (valor/vida, tipo cobrança, regras de uso) | Médio |
-| 3 | Vínculo médico-empresa no Admin (tabela + UI) | Médio |
-| 4 | Badge "Corporativo" nas consultas gerais do médico | Pequeno |
-| 5 | Separação visual B2B/B2C no financeiro do médico | Pequeno |
-
-Deseja que eu implemente todos esses itens pendentes?
+Nenhuma migração de banco necessária — usa tabela `empresas_faturas` existente com colunas: `empresa_id`, `competencia_mes`, `competencia_ano`, `vencimento`, `valor_total_centavos`, `qtd_funcionarios`, `qtd_consultas`, `status` (enum: em_aberto, paga, atrasada, cancelada), `pago_em`, `observacoes`, `detalhamento`.
