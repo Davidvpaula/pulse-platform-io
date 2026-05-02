@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
-type StatusConta = "ativo" | "suspenso" | "bloqueado";
+type StatusConta = "ativo" | "suspenso" | "bloqueado" | "banido" | "pendente";
 type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
 
 type PacienteRow = {
@@ -52,6 +52,8 @@ const filtrosPrincipais = [
   { key: "ativo", label: "Ativos" },
   { key: "suspenso", label: "Suspensos" },
   { key: "bloqueado", label: "Bloqueados" },
+  { key: "banido", label: "Banidos" },
+  { key: "pendente", label: "Pendentes" },
   { key: "particular", label: "Particular" },
   { key: "empresarial", label: "Empresarial" },
   { key: "feegow_ok", label: "Sincronizado Feegow" },
@@ -71,11 +73,15 @@ const motivosSugeridos = [
 ];
 
 function statusContaBadge(s: StatusConta) {
-  if (s === "ativo")
-    return <Badge variant="outline" className="border-success/40 text-success">Ativo</Badge>;
-  if (s === "suspenso")
-    return <Badge variant="outline" className="border-warning/40 text-warning">Suspenso</Badge>;
-  return <Badge variant="outline" className="border-destructive/40 text-destructive">Bloqueado</Badge>;
+  const map: Record<StatusConta, { label: string; cls: string }> = {
+    ativo:     { label: "Ativo",     cls: "border-success/40 text-success" },
+    pendente:  { label: "Pendente",  cls: "border-muted-foreground/40 text-muted-foreground" },
+    suspenso:  { label: "Suspenso",  cls: "border-warning/40 text-warning" },
+    bloqueado: { label: "Bloqueado", cls: "border-destructive/40 text-destructive" },
+    banido:    { label: "Banido",    cls: "border-destructive/60 text-destructive font-semibold" },
+  };
+  const v = map[s] ?? map.ativo;
+  return <Badge variant="outline" className={v.cls}>{v.label}</Badge>;
 }
 
 function feegowBadge(s: FeegowStatus) {
