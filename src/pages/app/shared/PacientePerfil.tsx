@@ -859,6 +859,92 @@ export default function PacientePerfil() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ── Dialog: Solicitar Reembolso ── */}
+      <Dialog open={reembolsoOpen} onOpenChange={setReembolsoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar reembolso</DialogTitle>
+            <DialogDescription>Selecione o pagamento e informe os detalhes do reembolso.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Pagamento</Label>
+              <Select value={reembolsoForm.pagamento_id} onValueChange={v => setReembolsoForm(f => ({ ...f, pagamento_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {pagamentos.filter(p => p.status === "pago").map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {fmtData(p.created_at)} — {brl(p.valor_centavos)} ({p.metodo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <Select value={reembolsoForm.tipo} onValueChange={v => setReembolsoForm(f => ({ ...f, tipo: v as "total" | "parcial" }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total">Total</SelectItem>
+                  <SelectItem value="parcial">Parcial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {reembolsoForm.tipo === "parcial" && (
+              <div>
+                <Label>Valor (R$)</Label>
+                <Input type="number" step="0.01" min="0.01" placeholder="0,00" value={reembolsoForm.valor} onChange={e => setReembolsoForm(f => ({ ...f, valor: e.target.value }))} />
+              </div>
+            )}
+            <div>
+              <Label>Motivo *</Label>
+              <Textarea rows={3} placeholder="Descreva o motivo do reembolso..." value={reembolsoForm.motivo} onChange={e => setReembolsoForm(f => ({ ...f, motivo: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReembolsoOpen(false)} disabled={reembolsoCriando}>Cancelar</Button>
+            <Button onClick={criarReembolso} disabled={reembolsoCriando}>
+              {reembolsoCriando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Solicitar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog: Ação de Status ── */}
+      <Dialog open={statusActionOpen} onOpenChange={setStatusActionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar status para "{statusAction.label}"</DialogTitle>
+            <DialogDescription>Esta ação será registrada na auditoria do paciente.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Motivo *</Label>
+              <Textarea rows={3} placeholder="Motivo obrigatório..." value={statusMotivo} onChange={e => setStatusMotivo(e.target.value)} />
+            </div>
+            <div>
+              <Label>Observação adicional</Label>
+              <Textarea rows={2} placeholder="Opcional..." value={statusObs} onChange={e => setStatusObs(e.target.value)} />
+            </div>
+            {statusAction.novoStatus === "bloqueado" && (
+              <div>
+                <Label>Bloqueio até (temporário)</Label>
+                <Input type="datetime-local" value={statusBloqueadoAte} onChange={e => setStatusBloqueadoAte(e.target.value)} />
+                <p className="text-xs text-muted-foreground mt-1">Deixe vazio para bloqueio permanente.</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusActionOpen(false)} disabled={statusSalvando}>Cancelar</Button>
+            <Button variant={statusAction.novoStatus === "ativo" ? "default" : "destructive"} onClick={executarStatusAction} disabled={statusSalvando}>
+              {statusSalvando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
