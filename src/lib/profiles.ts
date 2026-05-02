@@ -227,6 +227,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       {
         label: "Gamificação",
         icon: Trophy,
+        requiresCapability: "gamificacao.configurar",
         children: [
           { label: "Configuração & Ranking", to: "/app/admin/gamificacao" },
           { label: "Financeiro", to: "/app/admin/gamificacao/financeiro" },
