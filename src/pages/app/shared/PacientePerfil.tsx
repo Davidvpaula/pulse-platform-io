@@ -638,6 +638,13 @@ export default function PacientePerfil() {
 
         {/* ── FINANCEIRO ── */}
         <TabsContent value="financeiro">
+          <div className="flex justify-end mb-4">
+            <RequirePermission perm="pacientes.reembolsar">
+              <Button variant="outline" onClick={() => setReembolsoOpen(true)} disabled={pagamentos.filter(p => p.status === "pago").length === 0}>
+                <Undo2 className="h-4 w-4 mr-2" />Solicitar reembolso
+              </Button>
+            </RequirePermission>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <Kpi label="Total gasto" value={brl(finKpis.totalGasto)} icon={CreditCard} cls="text-primary" />
             <Kpi label="Pendentes" value={String(finKpis.pendentes)} icon={Clock} cls="text-warning" />
