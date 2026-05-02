@@ -125,7 +125,7 @@ export default function FluxoOperacional() {
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-semibold">Pacientes em sincronização</h3>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/app/admin/usuarios">Ver todos</Link>
+              <Link to="/app/admin/pacientes">Ver todos</Link>
             </Button>
           </div>
           <ul className="mt-4 space-y-2">
