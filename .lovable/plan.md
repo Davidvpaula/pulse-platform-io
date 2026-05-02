@@ -1,117 +1,77 @@
 
-# Diagnóstico: Gestão de Pacientes/Usuários (Admin)
+# Plano: Gestão de Pacientes (top-level) + Reembolso avulso + Checkup de rotas
+
+## Diagnóstico atual
+
+**Menu Admin** -- "Pacientes" está dentro de "Cadastros" como "Usuários/Pacientes". Conforme a imagem de referência, deveria ser um item top-level separado.
+
+**Reembolso** -- A tabela `reembolsos` existe (colunas: id, consulta_id, pagamento_id, valor_centavos, status enum [solicitado, em_analise, aprovado, recusado, concluido], tipo [total, parcial], motivo, etc.). RPCs `financeiro_reembolso_aprovar` e `financeiro_reembolso_recusar` existem. Porém:
+- Nao existe UI para **solicitar/criar** um reembolso avulso (admin/secretaria)
+- O `PacientePerfil.tsx` mostra reembolsos em lista read-only mas sem botao de acao
+
+**Auditoria de banimento** -- A RPC `alterar_status_conta_paciente` ja registra em `pacientes_auditoria`. Falta UI no `PacientePerfil` para ver timeline de mudancas de status (incluindo banimento) e falta o campo `bloqueado_ate` na aba de acoes.
+
+**Rotas** -- `admin/pacientes/:id` existe e aponta para `PacientePerfil`. Rota da lista e `admin/usuarios`. Precisa harmonizar nomenclatura.
 
 ---
 
-## A) O que já existe no código
+## Etapa 1 -- Reorganizar menu Admin
 
-### Páginas
-| Arquivo | Linhas | Descrição | Dados |
-|---------|--------|-----------|-------|
-| `AdminUsuarios.tsx` | 614 | Listagem com busca (nome/CPF/email/telefone), filtros (status, vínculo, Feegow, pgto pendente), paginação, criação de paciente, suspender/bloquear/reativar com motivo e auditoria | **Dados reais** |
-| `PacientePerfil.tsx` (shared) | 225 | Perfil do paciente com dados, últimas 20 consultas, ações rápidas (agendar, WhatsApp, financeiro) | **Dados reais, mas básico** |
-| `SecretariaPacientes.tsx` | 259 | Listagem para secretaria | Dados reais |
+Alterar `src/lib/profiles.ts`:
+- Remover "Usuarios/Pacientes" de dentro de "Cadastros"
+- Criar item top-level "Pacientes" com submenu:
+  - "Gestao de pacientes" -> `/app/admin/pacientes` (lista)
+  - "Perfil do paciente" nao precisa de menu (acesso via lista)
+- Manter "Cadastros" apenas com: Medicos, Colaboradores
+- Ajustar "Empresas" ja existente como top-level (ja esta)
+- Adicionar rota `/app/admin/pacientes` no `App.tsx` (redirect ou alias para AdminUsuarios)
+- Atualizar breadcrumbs em `AppBreadcrumb.tsx`
 
-### Rotas
-- `/app/admin/usuarios` -> `AdminUsuarios` (com guard `pacientes.ver`)
-- `/app/admin/pacientes/:id` -> `PacientePerfil` (com guard `pacientes.ver`)
-- `/app/colaborador/pacientes` -> reutiliza `SecretariaPacientes` (com guard)
-- `/app/colaborador/pacientes/:id` -> reutiliza `PacientePerfil` (com guard)
-- `/app/secretaria/pacientes` e `/app/secretaria/pacientes/:id` -> sem guard (acesso direto)
+## Etapa 2 -- Completar UI de reembolso avulso
 
-### Menu Admin
-Em `profiles.ts` -> Cadastros -> "Usuários" (aponta para `/app/admin/usuarios`). Empresas **NÃO está dentro de Cadastros** (está em grupo separado). Falta "Médicos" no mesmo sub-menu (já tem rota `/app/admin/medicos`).
+Criar botao "Solicitar reembolso" no `PacientePerfil.tsx` (aba Financeiro), visivel com `RequirePermission perm="pacientes.reembolsar"`:
+- Dialog com: selecao de consulta/pagamento, tipo (total/parcial), valor, motivo
+- Insert na tabela `reembolsos` com status `solicitado`
+- Tambem adicionar botao na `AdminFinanceiroCentral.tsx` para criar reembolso avulso
 
-## B) Quais RPCs/funções existem
+**Como funciona o reembolso de consulta avulsa:**
+1. Admin/Secretaria abre o perfil do paciente -> aba Financeiro
+2. Clica "Solicitar reembolso" -> seleciona o pagamento da consulta
+3. Escolhe tipo (total/parcial), valor e motivo
+4. O reembolso entra como `solicitado` na fila
+5. Admin aprova via `AdminFinanceiroCentral` (RPCs ja existem)
+6. Integracao com Stripe para estorno real sera feita na etapa de integracao final
 
-| RPC | Descrição |
-|-----|-----------|
-| `alterar_status_conta_paciente` | Muda status (ativo/suspenso/bloqueado), exige motivo, verifica permissão (`pacientes.suspender/bloquear/reativar`), gera auditoria em `pacientes_auditoria` |
-| Edge function `admin-criar-paciente` | Cria paciente + convite por email |
+## Etapa 3 -- Auditoria de banimento e acoes de status
 
-## C) Tabelas relevantes existentes
+No `PacientePerfil.tsx`:
+- Adicionar botoes de acao de status (Suspender/Bloquear/Banir/Reativar) na aba principal, com dialog de motivo + campo `bloqueado_ate` para bloqueio temporario
+- Usar RPC `alterar_status_conta_paciente` ja existente
+- Garantir que a aba "Auditoria" mostra timeline completa incluindo acoes de banimento com badges coloridos
 
-| Tabela | Estado |
-|--------|--------|
-| `pacientes` | Completa (41 colunas): dados pessoais, endereço, status_conta (enum: ativo/suspenso/bloqueado), Feegow, empresa, tags, observacoes_internas |
-| `pacientes_auditoria` | Completa: paciente_id, actor_id, acao, status_anterior, status_novo, motivo, observacao, payload, created_at |
-| `consultas` | Completa com todos os status |
-| `pagamentos` | Completa (34 colunas): inclui valor_reembolsado_centavos |
-| `reembolsos` | Existe: consulta_id, motivo, valor_centavos, status (enum), tipo (enum), actor_id, pagamento_id, analisado_por, decidido_em, snapshot_estornado |
-| `financeiro_auditoria` | Existe |
+## Etapa 4 -- Checkup completo de rotas cruzadas
 
-## D) Permissões existentes (em AdminColaboradores)
-
-Já definidas para atribuição a colaboradores:
-- `pacientes.ver`, `pacientes.criar`, `pacientes.editar`
-- `pacientes.suspender`, `pacientes.bloquear`, `pacientes.reativar`
-- `pacientes.ver_documentos`, `pacientes.ver_financeiro`, `pacientes.agendar`
-
-**Faltam:** `pacientes.reembolsar`, `pacientes.ver_agendamentos`, `pacientes.ver_comunicacao`, `pacientes.adicionar_observacao`
-
-## E) O que está duplicado
-
-- Nenhuma duplicação grave identificada. `PacientePerfil` é compartilhado entre admin/secretaria/colaborador.
-- `AdminUsuarios` tem sua própria lógica de busca (não compartilha com SecretariaPacientes, mas são contextos diferentes -- ok).
-
-## F) O que está mockado/simulado
-
-- **Nada mockado** neste módulo. `AdminUsuarios` e `PacientePerfil` usam dados reais do banco.
-
-## G) O que falta implementar
-
-### Status do paciente
-1. **Enum incompleto**: Faltam `banido` e `pendente` (hoje: ativo/suspenso/bloqueado). Precisa ALTER TYPE + ajustar RPC.
-2. **Bloqueio temporário** (até data X): não existe campo `bloqueado_ate` na tabela.
-
-### PacientePerfil (detalhe) -- precisa virar página completa com abas
-Hoje é básico (dados + consultas). Faltam:
-3. **Aba Financeiro**: pagamentos, pendentes, falhos, reembolsos, total gasto
-4. **Aba Comunicação**: conversas WhatsApp vinculadas, mensagens
-5. **Aba Planos**: planos ativos vinculados
-6. **Aba Auditoria**: timeline de `pacientes_auditoria`
-7. **Aba Observações internas**: campo existe em `pacientes.observacoes_internas` mas não há UI de edição nem histórico
-8. **Aba Consultas**: expandir (hoje mostra 20 sem filtro/detalhes)
-9. **Ações de reembolso**: botão para iniciar reembolso a partir de um pagamento
-10. **KPIs no topo da listagem**: total pacientes, ativos, suspensos/bloqueados, com pgto pendente
-
-### Permissões
-11. Adicionar novas permissões ao catálogo de colaboradores
-12. Aplicar guards nas abas do perfil
-
-### Menu
-13. Reorganizar menu: mover Empresas para dentro de Cadastros (ou ao menos "Cadastro" de empresa)
-
-## H) Plano de ação em etapas curtas
-
-### Etapa 1 -- Schema (migration)
-- Adicionar `banido` e `pendente` ao enum `status_conta_paciente`
-- Adicionar coluna `bloqueado_ate` (timestamptz, nullable) na tabela `pacientes`
-- Ajustar RPC `alterar_status_conta_paciente` para suportar banir + pendente + bloqueio temporário
-- Adicionar permissões faltantes em `AdminColaboradores`
-
-### Etapa 2 -- KPIs + Melhorias na listagem
-- Adicionar cards de KPI no topo (total, ativos, suspensos, bloqueados, pgto pendente)
-- Adicionar status "banido"/"pendente" nos filtros
-- Ações de banir no dropdown
-
-### Etapa 3 -- PacientePerfil com abas
-- Refatorar `PacientePerfil` para ter abas: Visão geral, Consultas, Financeiro, Comunicação, Planos, Auditoria, Observações
-- Aba Visão geral: dados atuais + status + ações
-- Aba Consultas: expandida com filtros e ações (reenviar link, cancelar, reagendar)
-- Aba Financeiro: pagamentos + reembolsos + total gasto
-- Guards por permissão em cada aba
-
-### Etapa 4 -- Comunicação + Observações + Auditoria
-- Aba Comunicação: conversas vinculadas ao paciente
-- Aba Observações: edição + histórico (com auditoria)
-- Aba Auditoria: timeline de `pacientes_auditoria`
-- Aba Planos: planos vinculados
-
-### Etapa 5 -- Menu + Permissões finais
-- Reorganizar menu Cadastros
-- Revisar guards em todas as rotas e botões
+Verificar e corrigir:
+- Links de `AdminUsuarios` -> `PacientePerfil` (ajustar para `/app/admin/pacientes/:id`)
+- Links de `SecretariaPacientes` -> `PacientePerfil` (ja funciona)
+- Links de `PacientePerfil` -> Financeiro (pagamentos, consultas)
+- Links de `AdminFinanceiroCentral` -> paciente (click no nome abre perfil)
+- Links de `AdminAgendamentos` -> paciente e medico
+- Garantir navegacao bidirecional: Paciente <-> Financeiro <-> Agendamento <-> Medico
+- Atualizar `scripts/validate-routes.mjs` se necessario
 
 ---
 
-**Deseja que eu comece pela Etapa 1?** Ou prefere ajustar algo no plano antes?
+## Detalhes tecnicos
+
+**Migrations**: Nenhuma necessaria -- tabela `reembolsos`, RPC de status e colunas `bloqueado_ate` ja existem.
+
+**Permissoes**: `pacientes.reembolsar`, `pacientes.banir`, `pacientes.suspender` ja cadastradas em `AdminColaboradores.tsx`.
+
+**Arquivos modificados**:
+- `src/lib/profiles.ts` (menu)
+- `src/App.tsx` (rotas)
+- `src/components/AppBreadcrumb.tsx` (breadcrumbs)
+- `src/pages/app/shared/PacientePerfil.tsx` (reembolso dialog + acoes de status)
+- `src/pages/app/admin/AdminUsuarios.tsx` (links atualizados)
+- `src/pages/app/admin/AdminFinanceiroCentral.tsx` (link para perfil paciente)
