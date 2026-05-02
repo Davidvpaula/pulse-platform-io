@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Calendar, Users, Wallet, MessageCircle, MessageSquare,
   ClipboardList, ListTodo, BadgeCheck, Activity, FileBarChart, Eye,
-  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp,
+  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp, Trophy,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
