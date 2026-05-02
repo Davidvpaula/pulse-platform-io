@@ -37,7 +37,6 @@ export default function AdminFinanceiroCentral() {
   const [detalheSnapshot, setDetalheSnapshot] = useState<any | null>(null);
   const [novaCobrancaOpen, setNovaCobrancaOpen] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [loteCancelOpen, setLoteCancelOpen] = useState(false);
   const [loteCancelMotivo, setLoteCancelMotivo] = useState("");
   const [loteRunning, setLoteRunning] = useState(false);
