@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
 import type { Database } from "@/integrations/supabase/types";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 
 type PropostaRow = Database["public"]["Tables"]["propostas_empresa_medico"]["Row"];
 type PropostaStatus = Database["public"]["Enums"]["proposta_empresa_status"];

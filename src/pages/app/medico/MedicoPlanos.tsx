@@ -11,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit2, Eye, FileText, Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PlanoBuilder } from "@/components/planos/PlanoBuilder";
+import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
