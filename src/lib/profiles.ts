@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
