@@ -326,7 +326,76 @@ export default function PacientePerfil() {
     setObsSalvando(false);
   }
 
-  if (loading) {
+  // ── Solicitar reembolso ──
+  async function criarReembolso() {
+    if (!pac || !reembolsoForm.pagamento_id || !reembolsoForm.motivo.trim()) {
+      toast({ title: "Preencha pagamento e motivo", variant: "destructive" });
+      return;
+    }
+    const pag = pagamentos.find(p => p.id === reembolsoForm.pagamento_id);
+    if (!pag) return;
+    const valorCentavos = reembolsoForm.tipo === "total"
+      ? pag.valor_centavos
+      : Math.round(parseFloat(reembolsoForm.valor || "0") * 100);
+    if (valorCentavos <= 0 || valorCentavos > pag.valor_centavos) {
+      toast({ title: "Valor inválido", description: "O valor deve ser maior que 0 e menor ou igual ao pagamento.", variant: "destructive" });
+      return;
+    }
+    setReembolsoCriando(true);
+    // Find consulta_id from pagamento
+    const consultaId = pag.consulta_id;
+    const { error } = await supabase.from("reembolsos").insert({
+      consulta_id: consultaId,
+      pagamento_id: pag.id,
+      valor_centavos: valorCentavos,
+      motivo: reembolsoForm.motivo.trim(),
+      tipo: reembolsoForm.tipo,
+      status: "solicitado",
+      actor_id: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
+    setReembolsoCriando(false);
+    if (error) {
+      toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Reembolso solicitado", description: "O reembolso entrará na fila para aprovação." });
+      setReembolsoOpen(false);
+      setReembolsoForm({ pagamento_id: "", tipo: "total", valor: "", motivo: "" });
+      carregar();
+    }
+  }
+
+  // ── Ação de status ──
+  function openStatusAction(novoStatus: string, label: string) {
+    setStatusAction({ novoStatus, label });
+    setStatusMotivo("");
+    setStatusObs("");
+    setStatusBloqueadoAte("");
+    setStatusActionOpen(true);
+  }
+
+  async function executarStatusAction() {
+    if (!pac || !statusMotivo.trim()) {
+      toast({ title: "Informe o motivo", variant: "destructive" });
+      return;
+    }
+    setStatusSalvando(true);
+    const { error } = await supabase.rpc("alterar_status_conta_paciente" as any, {
+      _paciente_id: pac.id,
+      _novo_status: statusAction.novoStatus,
+      _motivo: statusMotivo.trim(),
+      _observacao: statusObs.trim() || null,
+      _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? statusBloqueadoAte : null,
+    });
+    setStatusSalvando(false);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `Status alterado para "${statusAction.label}"` });
+      setStatusActionOpen(false);
+      carregar();
+    }
+  }
+
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
