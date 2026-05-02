@@ -10,6 +10,13 @@ export function brl(centavos: number): string {
 }
 
 /**
+ * Formata valor em reais (não centavos) para moeda BRL.
+ */
+export function brlReais(valor: number): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
+}
+
+/**
  * Formata string ISO ou Date para hora "HH:mm".
  */
 export function fmtHora(d: string | Date): string {
