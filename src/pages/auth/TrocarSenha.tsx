@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ShieldAlert } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 const schema = z.object({
   senha: z.string().min(8, "Mínimo 8 caracteres"),
