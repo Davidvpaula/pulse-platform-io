@@ -20,6 +20,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useSession } from "@/lib/session";
 import { ImpersonationBanner } from "@/components/impersonation/ImpersonationBanner";
+import TermosPendentesBanner from "@/components/shared/TermosPendentesBanner";
 import { usePermissionsBatch } from "@/lib/permissions/usePermissionsBatch";
 import { colaboradorMenu, collectMenuKeys, type MenuNode } from "@/lib/menu/menuCatalog";
 import { validateMenuKeys } from "@/lib/menu/validateMenuKeys";
