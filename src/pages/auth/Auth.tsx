@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Loader2, Stethoscope } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 
 const signupSchema = z.object({
   nome: z.string().trim().min(2, "Nome muito curto").max(120),
