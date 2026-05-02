@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import {
   listCupons, deleteCupom, toggleCupomAtivo,
   type CupomDetalhado,
-} from "@/lib/clinico";
+} from "@/lib/cupons";
 import CupomDialog from "@/components/secretaria/CupomDialog";
 import { useSession } from "@/lib/session";
 
