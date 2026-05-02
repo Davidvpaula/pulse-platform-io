@@ -272,6 +272,21 @@ export default function PacienteAgendamentos() {
                         </Button>
                       </>
                     )}
+                    {c.status === "concluida" && !avaliadas.has(c.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-warning hover:text-warning"
+                        onClick={() => setAvaliarConsulta(c)}
+                      >
+                        <Star className="mr-1.5 h-3.5 w-3.5" /> Avaliar
+                      </Button>
+                    )}
+                    {c.status === "concluida" && avaliadas.has(c.id) && (
+                      <Badge variant="secondary" className="text-[11px]">
+                        <Star className="mr-1 h-3 w-3 fill-warning text-warning" /> Avaliado
+                      </Badge>
+                    )}
                   </div>
                 </li>
               );
