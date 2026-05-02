@@ -28,6 +28,7 @@ import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
 
 /* ─────────── Validação ─────────── */
 
@@ -112,6 +113,14 @@ export default function PacienteAgendarConfirmar() {
       }
       const [s, p] = await Promise.all([getSlotDisponivel(slotId), getPacienteAtual()]);
       setSlot(s);
+      if (s) {
+        // Analytics: paciente iniciou o fluxo de agendamento
+        trackEvent("inicio_agendamento", {
+          slot_id: slotId,
+          especialidade: s.especialidade_nome,
+          medico: s.medico_nome,
+        }).catch(() => {});
+      }
       if (p) {
         form.reset({
           nome_completo: p.nome_completo ?? "",
@@ -149,6 +158,15 @@ export default function PacienteAgendarConfirmar() {
         valorCentavos: res.valor_centavos,
         descricao: `${slot.especialidade_nome} · ${slot.medico_nome}`,
       });
+
+      // Analytics: agendamento concluído (consulta criada + checkout aberto)
+      trackConversion({
+        tipo: "agendamento",
+        valor: res.valor_centavos / 100,
+        consulta_id: res.consulta_id,
+        servico: slot.especialidade_nome,
+        medico_id: slot.medico_id,
+      }).catch(() => {});
 
       toast.success("Horário reservado por 15 minutos. Conclua o pagamento.");
       abrirCheckout(session, navigate);
