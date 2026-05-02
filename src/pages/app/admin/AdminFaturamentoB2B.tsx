@@ -307,7 +307,7 @@ export default function AdminFaturamentoB2B() {
               {gerarAnosDisponiveis().map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filtroEmpresa} onValueChange={setFiltroEmpresa}>
+          <Select value={filtroEmpresa} onValueChange={v => { setFiltroEmpresa(v); setPagina(1); }}>
             <SelectTrigger className="w-[200px]">
               <Building2 className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
