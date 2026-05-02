@@ -72,6 +72,43 @@ export default function AdminFaturamentoB2B() {
   const [filtroAno, setFiltroAno] = useState(String(new Date().getFullYear()));
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
   const [detalheAberto, setDetalheAberto] = useState<FaturaRow | null>(null);
+  const [medicosVinculados, setMedicosVinculados] = useState<{ id: string; nome: string; qtd: number }[]>([]);
+  const [loadingMedicos, setLoadingMedicos] = useState(false);
+
+  async function carregarMedicosFatura(fatura: FaturaRow) {
+    setLoadingMedicos(true);
+    try {
+      const { data } = await supabase
+        .from("consultas")
+        .select("medico_id, medico:profiles!consultas_medico_id_fkey(id, full_name)")
+        .eq("empresa_id", fatura.empresa_id)
+        .gte("data_hora", `${fatura.competencia_ano}-${String(fatura.competencia_mes).padStart(2, "0")}-01`)
+        .lt("data_hora", fatura.competencia_mes === 12
+          ? `${fatura.competencia_ano + 1}-01-01`
+          : `${fatura.competencia_ano}-${String(fatura.competencia_mes + 1).padStart(2, "0")}-01`
+        );
+
+      const map = new Map<string, { id: string; nome: string; qtd: number }>();
+      (data ?? []).forEach((c: any) => {
+        const id = c.medico_id;
+        const nome = c.medico?.full_name ?? "Médico";
+        const existing = map.get(id);
+        if (existing) existing.qtd++;
+        else map.set(id, { id, nome, qtd: 1 });
+      });
+      setMedicosVinculados(Array.from(map.values()).sort((a, b) => b.qtd - a.qtd));
+    } catch {
+      setMedicosVinculados([]);
+    } finally {
+      setLoadingMedicos(false);
+    }
+  }
+
+  function abrirDetalhe(f: FaturaRow) {
+    setDetalheAberto(f);
+    setMedicosVinculados([]);
+    carregarMedicosFatura(f);
+  }
 
   const empresasUnicas = useMemo(() => {
     const map = new Map<string, string>();
