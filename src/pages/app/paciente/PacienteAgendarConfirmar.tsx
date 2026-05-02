@@ -376,6 +376,13 @@ export default function PacienteAgendarConfirmar() {
           </p>
         </aside>
       </div>
+
+      <TermsAcceptanceDialog
+        tipo="consulta_paciente"
+        open={termsCheck.showDialog}
+        onOpenChange={termsCheck.setShowDialog}
+        onAccepted={handleTermsAccepted}
+      />
     </div>
   );
 }
