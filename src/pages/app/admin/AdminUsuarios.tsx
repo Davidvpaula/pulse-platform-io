@@ -267,7 +267,8 @@ export default function AdminUsuarios() {
       _novo_status: acao,
       _motivo: motivo,
       _observacao: observacao.trim() || null,
-    });
+      _bloqueado_ate: acao === "bloqueado" && bloqueadoAte ? new Date(bloqueadoAte).toISOString() : null,
+    } as any);
     setSalvando(false);
     if (error) {
       toast({ title: "Não foi possível alterar", description: error.message, variant: "destructive" });
