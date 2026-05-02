@@ -1,37 +1,48 @@
-## Problem
 
-`AdminGestaoB2B.tsx` maps DB columns using incorrect field names (`valor_mensal_centavos`, `vidas_contratadas`, `competencia`, `valor_centavos`, `emitida_em`) that don't exist in the actual schema. The code uses `as any` casts which suppress TS errors but causes all values to render as defaults (0, "---").
+# Revisão: Tópicos B2B solicitados vs. implementado
 
-### Actual schema
+## Status por tópico
 
-**empresas_contratos**: `plano_mensal_centavos`, `valor_colaborador_centavos`, `valor_consulta_centavos`, `data_inicio`, `data_fim`, `status`, `limite_consultas_mes`, `modelo_financeiro`  
-**empresas_faturas**: `competencia_ano`, `competencia_mes`, `valor_total_centavos`, `vencimento`, `status`, `qtd_funcionarios`, `qtd_consultas`, `pago_em`
+### 1) PLANOS EMPRESARIAIS — Parcialmente implementado
+- **Feito:** Página `AdminPlanosEmpresariais` existe em `/admin/planos-empresariais`, com listagem de planos, filtros e integração com `PlanoBuilder`.
+- **Falta:**
+  - Campos específicos de "valor por vida", "tipo de cobrança (mensal, uso, híbrido)" e "regras de uso" não estão explícitos no schema (`planos_empresariais` não existe como tabela dedicada — usa a tabela `planos` genérica com filtro `categoria=empresarial`). Não há colunas como `valor_por_vida`, `tipo_cobranca`, `regras_uso` dedicadas.
+  - O `PlanoBuilder` é reutilizado, mas não tem campos específicos para B2B (regras de uso, SLA, limite de especialidades).
 
-No `vidas_contratadas` or `vidas_ativas` columns exist on contratos -- those would come from counting `empresas_funcionarios`.
+### 2) VÍNCULO EMPRESA-MÉDICO — Parcialmente implementado
+- **Feito:** `AdminGestaoB2B` mostra contratos e faturas por empresa. `MedicoCorporativo` lista consultas corporativas do médico (filtra por `empresa_id` preenchido).
+- **Falta:**
+  - Não há tela no Admin para vincular médicos a empresas (tabela de vínculo médico-empresa não existe).
+  - Não há configuração de "preços diferenciados por empresa" no painel do médico.
 
-## Plan
+### 3) PAINEL DO MÉDICO CORPORATIVO — Implementado
+- **Feito:** `MedicoCorporativo` com abas de Consultas e Pacientes corporativos, filtro por empresa, identificação de origem (empresa vs particular) via presença de `empresa_id`.
+- **Falta:** Nenhum gap crítico.
 
-### 1. Fix AdminGestaoB2B.tsx field mappings
+### 4) DOCUMENTOS COMPARTILHADOS — Parcialmente implementado
+- **Feito:** Coluna `visibilidade_empresa` existe no schema (`documentos_paciente`). `EmpresaDocumentos` filtra apenas documentos com `visibilidade_empresa = true`.
+- **Falta:**
+  - **O médico não tem UI para marcar documentos como privado/compartilhável.** `MedicoDocumentos.tsx` não referencia `visibilidade_empresa` em nenhum lugar. O toggle/switch para o médico definir visibilidade não foi implementado.
 
-Update the `carregarDados` function to map real column names:
+### 5) UX/UI — SEPARAÇÃO B2C vs B2B — Parcialmente implementado
+- **Feito:** Rotas separadas (`/empresa/*` vs `/paciente/*`), sidebar separado, páginas dedicadas.
+- **Falta:**
+  - Na visão do médico, `MedicoCorporativo` é uma página separada, mas dentro das consultas normais (`MedicoConsultas`) não há badge/tag visual indicando "corporativo" vs "particular".
+  - Não há separação visual explícita no financeiro do médico entre receita B2B e B2C.
 
-**Contratos:**
-- `valor_mensal_centavos` -> `c.plano_mensal_centavos`
-- `vidas_contratadas` -> `c.limite_consultas_mes ?? 0` (approximate; or query funcionarios count)
-- `vidas_ativas` -> query `empresas_funcionarios` count per empresa (or set 0 for now)
-- `inicio` -> `c.data_inicio`
-- `fim` -> `c.data_fim`
+### 6) AUDITABILIDADE / NÃO DUPLICAR LÓGICA — OK
+- **Feito:** `EmpresaTermos` reutiliza `registrarAceite` e `MeusAceites`. Planos empresariais reutilizam `PlanoBuilder`. Não há duplicação evidente.
 
-**Faturas:**
-- `competencia` -> `${f.competencia_mes}/${f.competencia_ano}`
-- `valor_centavos` -> `f.valor_total_centavos`
-- `emitida_em` -> `f.created_at`
-- `vencimento` -> `f.vencimento`
+---
 
-### 2. Fix AdminRelatoriosB2B.tsx StatCard ref warning
+## Resumo do que falta implementar
 
-The console shows `Function components cannot be given refs` for StatCard used in AdminRelatoriosB2B. This is a non-blocking warning but will clean it up if StatCard doesn't use forwardRef.
+| # | Item | Esforço |
+|---|------|---------|
+| 1 | Toggle `visibilidade_empresa` na UI do médico (MedicoDocumentos) | Pequeno |
+| 2 | Campos específicos B2B no PlanoBuilder (valor/vida, tipo cobrança, regras de uso) | Médio |
+| 3 | Vínculo médico-empresa no Admin (tabela + UI) | Médio |
+| 4 | Badge "Corporativo" nas consultas gerais do médico | Pequeno |
+| 5 | Separação visual B2B/B2C no financeiro do médico | Pequeno |
 
-### Files changed
-- `src/pages/app/admin/AdminGestaoB2B.tsx` -- fix all column mappings
-- `src/pages/app/admin/AdminRelatoriosB2B.tsx` -- minor cleanup if needed
+Deseja que eu implemente todos esses itens pendentes?
