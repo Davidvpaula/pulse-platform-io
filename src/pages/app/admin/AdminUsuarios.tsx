@@ -250,6 +250,7 @@ export default function AdminUsuarios() {
     setMotivoSel(motivosSugeridos[0]);
     setMotivoTxt("");
     setObservacao("");
+    setBloqueadoAte("");
     setDialogOpen(true);
   }
 
