@@ -128,7 +128,7 @@ export default function PacienteAgendarConfirmar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotId, session]);
 
-  const onSubmit = async (values: FormData) => {
+  const doSubmit = useCallback(async (values: FormData) => {
     if (!slot) return;
     setSubmitting(true);
     try {
@@ -144,7 +144,6 @@ export default function PacienteAgendarConfirmar() {
         cep: values.cep,
       });
 
-      // Dispara checkout — Stripe (hosted) ou mock conforme app_settings
       const session = await criarCheckoutSession({
         consultaId: res.consulta_id,
         valorCentavos: res.valor_centavos,
@@ -158,7 +157,24 @@ export default function PacienteAgendarConfirmar() {
     } finally {
       setSubmitting(false);
     }
+  }, [slot, navigate]);
+
+  const onSubmit = async (values: FormData) => {
+    if (termsCheck.needsAcceptance) {
+      setPendingFormData(values);
+      termsCheck.setShowDialog(true);
+      return;
+    }
+    await doSubmit(values);
   };
+
+  const handleTermsAccepted = useCallback(() => {
+    termsCheck.onAccepted();
+    if (pendingFormData) {
+      doSubmit(pendingFormData);
+      setPendingFormData(null);
+    }
+  }, [termsCheck, pendingFormData, doSubmit]);
 
   if (loading) {
     return (
