@@ -86,7 +86,11 @@ export default function TrocarSenha() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="senha">Nova senha</Label>
-              <Input id="senha" name="senha" type="password" required minLength={policy?.min_length ?? 8} />
+              <Input
+                id="senha" name="senha" type="password" required minLength={policy?.min_length ?? 8}
+                value={senha} onChange={(e) => setSenha(e.target.value)}
+              />
+              <PasswordStrengthIndicator password={senha} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmacao">Confirme a senha</Label>
