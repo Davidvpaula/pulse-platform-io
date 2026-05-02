@@ -98,7 +98,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/permissoes":     [admin(), { label: "Segurança & Acessos" }, { label: "Permissões" }],
   "/app/admin/permissoes/log": [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Log de permissões" }],
   "/app/admin/sessoes":        [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Sessões ativas" }],
-  "/app/admin/seguranca":      [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Alertas de segurança" }],
+  "/app/admin/seguranca":      [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Política de senhas" }],
   "/app/admin/impersonar":     [admin(), { label: "Segurança & Acessos", to: "/app/admin/permissoes" }, { label: "Impersonar usuário" }],
 
   // ── Admin: Análises ──
