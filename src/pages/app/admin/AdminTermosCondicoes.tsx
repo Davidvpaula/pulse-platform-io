@@ -455,6 +455,31 @@ export default function AdminTermosCondicoes() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog: Editar rascunho */}
+      <Dialog open={!!editTermo} onOpenChange={(o) => { if (!o) setEditTermo(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar rascunho — {editTermo && TERMO_TIPO_LABELS[editTermo.tipo]}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Título</Label>
+              <Input value={editTitulo} onChange={e => setEditTitulo(e.target.value)} maxLength={200} />
+            </div>
+            <div>
+              <Label>Conteúdo (suporta HTML)</Label>
+              <Textarea value={editConteudo} onChange={e => setEditConteudo(e.target.value)} rows={12} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTermo(null)}>Cancelar</Button>
+            <Button onClick={handleSalvarEdicao} disabled={editSaving}>
+              {editSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
