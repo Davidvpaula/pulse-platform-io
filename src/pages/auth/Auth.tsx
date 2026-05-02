@@ -105,6 +105,17 @@ export default function Auth() {
       toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
       return;
     }
+    // Valida contra password_policy do admin
+    const validation = await validatePassword(parsed.data.senha);
+    if (!validation.valid) {
+      setLoading(false);
+      toast({
+        title: "Senha não atende aos requisitos",
+        description: validation.errors.join(", "),
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: parsed.data.email,
