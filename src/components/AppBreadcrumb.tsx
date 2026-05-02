@@ -55,7 +55,7 @@ const medicoGamificacao = buildGroup(
 
 const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   // ── Admin: Cadastros ──
-  "/app/admin/usuarios":       [admin(), { label: "Cadastros" }, { label: "Usuários" }],
+  "/app/admin/usuarios":       [admin(), { label: "Cadastros" }, { label: "Usuários/Pacientes" }],
   "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos" }],
   "/app/admin/colaboradores":  [admin(), { label: "Cadastros" }, { label: "Colaboradores" }],
   "/app/admin/empresas":        [admin(), { label: "Empresas" }, { label: "Cadastro" }],
