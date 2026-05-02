@@ -143,15 +143,17 @@ export function AppBreadcrumb() {
       <BreadcrumbList>
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1;
+          const isSelfLink = crumb.to === pathname;
+          const showAsLink = !isLast && crumb.to && !isSelfLink;
           return (
             <BreadcrumbItem key={i}>
               {i > 0 && <BreadcrumbSeparator className="mr-1.5" />}
-              {isLast || !crumb.to ? (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              ) : (
+              {showAsLink ? (
                 <BreadcrumbLink asChild>
-                  <Link to={crumb.to}>{crumb.label}</Link>
+                  <Link to={crumb.to!}>{crumb.label}</Link>
                 </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
               )}
             </BreadcrumbItem>
           );
