@@ -145,6 +145,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Gestão B2B", to: "/app/admin/gestao-b2b" },
           { label: "Planos empresariais", to: "/app/admin/planos-empresariais" },
           { label: "Faturamento", to: "/app/admin/faturamento-b2b" },
+          { label: "Propostas B2B", to: "/app/admin/propostas-b2b" },
           { label: "Relatórios", to: "/app/admin/relatorios-b2b" },
         ],
       },
