@@ -101,7 +101,7 @@ export default function EmpresaTermos() {
       )}
 
       {/* Histórico de aceites */}
-      <MeusAceites role="paciente" />
+      <MeusAceites />
 
       {/* Modal de aceite */}
       <Dialog open={!!aceitando} onOpenChange={() => !saving && setAceitando(null)}>
