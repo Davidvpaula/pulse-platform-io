@@ -3906,6 +3906,7 @@ export type Database = {
         Row: {
           alergias: string | null
           bairro: string | null
+          bloqueado_ate: string | null
           cep: string | null
           cidade: string | null
           complemento: string | null
@@ -3950,6 +3951,7 @@ export type Database = {
         Insert: {
           alergias?: string | null
           bairro?: string | null
+          bloqueado_ate?: string | null
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -3994,6 +3996,7 @@ export type Database = {
         Update: {
           alergias?: string | null
           bairro?: string | null
+          bloqueado_ate?: string | null
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -5894,15 +5897,26 @@ export type Database = {
         Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
         Returns: Json
       }
-      alterar_status_conta_paciente: {
-        Args: {
-          _motivo: string
-          _novo_status: Database["public"]["Enums"]["status_conta_paciente"]
-          _observacao?: string
-          _paciente_id: string
-        }
-        Returns: Json
-      }
+      alterar_status_conta_paciente:
+        | {
+            Args: {
+              _motivo: string
+              _novo_status: Database["public"]["Enums"]["status_conta_paciente"]
+              _observacao?: string
+              _paciente_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _bloqueado_ate?: string
+              _motivo: string
+              _novo_status: Database["public"]["Enums"]["status_conta_paciente"]
+              _observacao?: string
+              _paciente_id: string
+            }
+            Returns: Json
+          }
       analytics_conversao: { Args: { _dias?: number }; Returns: Json }
       analytics_financeiro: { Args: { _dias?: number }; Returns: Json }
       analytics_overview: { Args: { _dias?: number }; Returns: Json }
@@ -6823,7 +6837,12 @@ export type Database = {
         | "suspenso"
         | "bloqueado"
         | "removido"
-      status_conta_paciente: "ativo" | "suspenso" | "bloqueado"
+      status_conta_paciente:
+        | "ativo"
+        | "suspenso"
+        | "bloqueado"
+        | "banido"
+        | "pendente"
       template_category:
         | "confirmacao"
         | "lembrete_24h"
@@ -7319,7 +7338,13 @@ export const Constants = {
         "bloqueado",
         "removido",
       ],
-      status_conta_paciente: ["ativo", "suspenso", "bloqueado"],
+      status_conta_paciente: [
+        "ativo",
+        "suspenso",
+        "bloqueado",
+        "banido",
+        "pendente",
+      ],
       template_category: [
         "confirmacao",
         "lembrete_24h",
