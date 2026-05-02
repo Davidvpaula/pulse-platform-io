@@ -250,6 +250,10 @@ export default function MedicoPerfil() {
             )}
           </div>
         </TabsContent>
+
+        <TabsContent value="termos">
+          <MeusAceites />
+        </TabsContent>
       </Tabs>
     </div>
   );
