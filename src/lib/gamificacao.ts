@@ -234,3 +234,96 @@ export async function getSaldoAtual(medico_id: string): Promise<number> {
     .maybeSingle();
   return (data as any)?.saldo_apos ?? 0;
 }
+
+/* ── Premium ── */
+
+export async function getMedicoPremium(medico_id: string): Promise<MedicoPremium | null> {
+  const { data } = await supabase
+    .from("medico_premium" as any)
+    .select("*")
+    .eq("medico_id", medico_id)
+    .maybeSingle();
+  return data as unknown as MedicoPremium | null;
+}
+
+export async function listarTodosPremium(): Promise<(MedicoPremium & { nome?: string })[]> {
+  const { data } = await supabase
+    .from("medico_premium" as any)
+    .select("*")
+    .order("updated_at", { ascending: false });
+  return (data ?? []) as unknown as (MedicoPremium & { nome?: string })[];
+}
+
+export async function togglePremiumAdmin(medico_id: string, ativo: boolean, tipo: "pago" | "conquistado" = "conquistado") {
+  const { error } = await supabase
+    .from("medico_premium" as any)
+    .upsert({
+      medico_id,
+      ativo,
+      tipo,
+      inicio: ativo ? new Date().toISOString() : null,
+      fim: null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "medico_id" });
+  if (error) throw error;
+}
+
+/* ── Impulsionamento / Campanhas ── */
+
+export async function listarCampanhasMedico(medico_id: string): Promise<ImpulsionamentoCampanha[]> {
+  const { data, error } = await supabase
+    .from("impulsionamento_campanhas" as any)
+    .select("*")
+    .eq("medico_id", medico_id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as ImpulsionamentoCampanha[];
+}
+
+export async function criarCampanha(params: {
+  medico_id: string;
+  titulo: string;
+  orcamento_centavos: number;
+  cpc_centavos?: number;
+  especialidade_ids?: string[];
+}) {
+  const { data, error } = await supabase
+    .from("impulsionamento_campanhas" as any)
+    .insert({
+      medico_id: params.medico_id,
+      titulo: params.titulo,
+      orcamento_centavos: params.orcamento_centavos,
+      cpc_centavos: params.cpc_centavos ?? 50,
+      especialidade_ids: params.especialidade_ids ?? [],
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function atualizarStatusCampanha(campanha_id: string, status: ImpulsionamentoCampanha["status"]) {
+  const { error } = await supabase
+    .from("impulsionamento_campanhas" as any)
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", campanha_id);
+  if (error) throw error;
+}
+
+export async function listarTodasCampanhas(limit = 50): Promise<ImpulsionamentoCampanha[]> {
+  const { data } = await supabase
+    .from("impulsionamento_campanhas" as any)
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []) as unknown as ImpulsionamentoCampanha[];
+}
+
+export async function registrarClique(campanha_id: string, paciente_id?: string, origem = "busca") {
+  const { error } = await supabase.rpc("registrar_clique_impulsionamento" as any, {
+    p_campanha_id: campanha_id,
+    p_paciente_id: paciente_id ?? null,
+    p_origem: origem,
+  });
+  if (error) throw error;
+}
