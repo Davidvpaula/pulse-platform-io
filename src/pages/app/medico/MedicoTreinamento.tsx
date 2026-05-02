@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Play, CheckCircle2, BookOpen, Clock, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Play, CheckCircle2, BookOpen, Clock, ExternalLink, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   listModulosComAulas, listMinhasConclusoes,
@@ -49,12 +50,30 @@ export default function MedicoTreinamento() {
   const totalAulas = modulos.reduce((s, m) => s + m.aulas.length, 0);
   const progresso = totalAulas ? Math.round((concluidas.size / totalAulas) * 100) : 0;
 
+  // Mandatory training check
+  const obrigatorios = modulos.filter(m => m.obrigatorio);
+  const aulasObrigatorias = obrigatorios.flatMap(m => m.aulas);
+  const obrigFaltando = aulasObrigatorias.filter(a => !concluidas.has(a.id)).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Treinamento"
         description="Vídeos, aulas e boas práticas para uso da plataforma."
       />
+
+      {/* Aviso de treinamento obrigatório pendente */}
+      {obrigFaltando > 0 && (
+        <div className="card-elevated border-l-4 border-l-destructive p-4 flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Você precisa concluir o treinamento para aparecer para pacientes</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {obrigFaltando} aula{obrigFaltando > 1 ? "s" : ""} obrigatória{obrigFaltando > 1 ? "s" : ""} pendente{obrigFaltando > 1 ? "s" : ""}. Assista e confirme cada uma.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Progresso geral */}
       <div className="card-elevated p-6">
@@ -99,7 +118,14 @@ export default function MedicoTreinamento() {
               <div key={m.id} className="card-elevated overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-5">
                   <div>
-                    <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-lg font-semibold">{m.titulo}</h3>
+                      {m.obrigatorio && (
+                        <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
+                          <ShieldCheck className="mr-1 h-3 w-3" /> Obrigatório
+                        </Badge>
+                      )}
+                    </div>
                     {m.descricao && <p className="text-sm text-muted-foreground">{m.descricao}</p>}
                   </div>
                   <div className="text-xs text-muted-foreground">

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
   AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope, Trophy,
-  Star, Award, Crown,
+  Star, Award, Crown, CreditCard, ShieldCheck, User,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -23,6 +23,7 @@ import { usePermission } from "@/lib/permissions/usePermission";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
+import { checkTreinamentoObrigatorio } from "@/lib/treinamentos";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -44,6 +45,12 @@ type Onboarding = {
   semSala: boolean;
   semEspecialidade: boolean;
   pendente: boolean;
+  treinamentoConcluido: boolean;
+  treinamentoTotal: number;
+  treinamentoFeito: number;
+  perfilIncompleto: boolean;
+  semDadosBancarios: boolean;
+  semTermos: boolean;
 };
 
 export default function MedicoDashboard() {
@@ -62,7 +69,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
-  const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false });
+  const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
   const [stats, setStats] = useState({
     hoje: 0,
@@ -97,16 +104,35 @@ export default function MedicoDashboard() {
     setSaldoCrescimento(saldoRes);
 
     // Onboarding: link de sala + ao menos 1 vínculo de especialidade ativo
-    const { count: vinculos } = await supabase
-      .from("medico_especialidades")
-      .select("id", { count: "exact", head: true })
-      .eq("medico_id", medico.id)
-      .eq("ativo", true);
+    const [{ count: vinculos }, treinCheck, { count: dadosBanc }, termosCheck] = await Promise.all([
+      supabase
+        .from("medico_especialidades")
+        .select("id", { count: "exact", head: true })
+        .eq("medico_id", medico.id)
+        .eq("ativo", true),
+      checkTreinamentoObrigatorio(),
+      supabase
+        .from("medico_dados_bancarios")
+        .select("id", { count: "exact", head: true })
+        .eq("medico_id", medico.id)
+        .eq("ativo", true),
+      // Termos: reuse termsContrato hook state (already loaded separately)
+      Promise.resolve(null),
+    ]);
+
+    // Perfil completo: nome, CRM, especialidade, bio
+    const perfilIncompleto = !medico.nome?.trim() || !medico.crm?.trim() || !medico.especialidade?.trim() || !medico.bio?.trim();
 
     setOnb({
       semSala: !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0,
       semEspecialidade: (vinculos ?? 0) === 0,
       pendente: medico.status !== "aprovado",
+      treinamentoConcluido: treinCheck.concluido,
+      treinamentoTotal: treinCheck.totalObrigatorias,
+      treinamentoFeito: treinCheck.concluidasObrigatorias,
+      perfilIncompleto,
+      semDadosBancarios: (dadosBanc ?? 0) === 0,
+      semTermos: false, // handled by TermsAcceptanceDialog
     });
 
     // Janelas de tempo
@@ -225,7 +251,8 @@ export default function MedicoDashboard() {
       ok: !onb.pendente,
       titulo: "Cadastro aprovado",
       desc: onb.pendente ? "Aguardando aprovação do administrador." : "Você já pode atender pacientes.",
-      link: onb.pendente ? "/app/medico/aguardando-aprovacao" : null,
+      link: onb.pendente ? "/app/medico/perfil" : null,
+      icon: CheckCircle2,
     },
     {
       ok: !onb.semSala,
@@ -234,6 +261,7 @@ export default function MedicoDashboard() {
         ? "Configure o link padrão (Meet, Zoom...) para receber consultas online."
         : "Sala configurada — slots online liberados.",
       link: onb.semSala ? "/app/medico/configuracoes" : null,
+      icon: Video,
     },
     {
       ok: !onb.semEspecialidade,
@@ -242,9 +270,40 @@ export default function MedicoDashboard() {
         ? "Vincule ao menos uma especialidade com preço para aparecer na busca."
         : "Você está visível na busca de pacientes.",
       link: onb.semEspecialidade ? "/app/medico/configuracoes" : null,
+      icon: Stethoscope,
+    },
+    {
+      ok: onb.treinamentoConcluido,
+      titulo: "Treinamento obrigatório",
+      desc: onb.treinamentoConcluido
+        ? "Todos os treinamentos obrigatórios concluídos."
+        : `${onb.treinamentoFeito}/${onb.treinamentoTotal} aulas concluídas — assista e confirme.`,
+      link: !onb.treinamentoConcluido ? "/app/medico/treinamento" : null,
+      icon: BookOpen,
+    },
+    {
+      ok: !onb.perfilIncompleto,
+      titulo: "Perfil completo",
+      desc: onb.perfilIncompleto
+        ? "Preencha nome, CRM, especialidade principal e bio."
+        : "Informações do perfil completas.",
+      link: onb.perfilIncompleto ? "/app/medico/perfil" : null,
+      icon: User,
+    },
+    {
+      ok: !onb.semDadosBancarios,
+      titulo: "Dados financeiros configurados",
+      desc: onb.semDadosBancarios
+        ? "Cadastre conta bancária ou chave PIX para receber repasses."
+        : "Dados bancários configurados.",
+      link: onb.semDadosBancarios ? "/app/medico/financeiro" : null,
+      icon: CreditCard,
     },
   ];
   const pendencias = checklistItems.filter((i) => !i.ok).length;
+  const concluidos = checklistItems.length - pendencias;
+  const progressoPct = Math.round((concluidos / checklistItems.length) * 100);
+  const todoConcluido = pendencias === 0;
 
   return (
     <div className="space-y-6">
@@ -274,18 +333,47 @@ export default function MedicoDashboard() {
         </div>
       )}
 
-      {/* Onboarding / pendências */}
-      {pendencias > 0 && (
-        <div className="card-elevated border-l-4 border-l-warning p-5">
+      {/* Onboarding checklist */}
+      {isMedico && (
+        <div className={cn(
+          "card-elevated border-l-4 p-5",
+          todoConcluido ? "border-l-success" : "border-l-warning",
+        )}>
           <div className="flex items-start gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-warning/10 text-warning">
-              <AlertTriangle className="h-4 w-4" />
+            <span className={cn(
+              "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
+              todoConcluido ? "bg-success/10 text-success" : "bg-warning/10 text-warning",
+            )}>
+              {todoConcluido ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">Finalize sua configuração ({pendencias} pendência{pendencias > 1 ? "s" : ""})</p>
-              <p className="text-xs text-muted-foreground">
-                Conclua os passos abaixo para começar a receber agendamentos.
-              </p>
+              {todoConcluido ? (
+                <>
+                  <p className="font-semibold text-success">✓ Perfil pronto para receber pacientes</p>
+                  <p className="text-xs text-muted-foreground">
+                    Todas as etapas de ativação estão concluídas. Você está visível na busca.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Finalize sua configuração ({pendencias} pendência{pendencias > 1 ? "s" : ""})</p>
+                  <p className="text-xs text-muted-foreground">
+                    Conclua os passos abaixo para começar a receber agendamentos.
+                  </p>
+                </>
+              )}
+
+              {/* Progress bar */}
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn("h-full transition-all", todoConcluido ? "bg-success" : "bg-gradient-primary")}
+                    style={{ width: `${progressoPct}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{concluidos}/{checklistItems.length}</span>
+              </div>
+
               <ul className="mt-3 space-y-2">
                 {checklistItems.map((it, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -299,7 +387,7 @@ export default function MedicoDashboard() {
                       <span className="block text-xs text-muted-foreground">{it.desc}</span>
                     </span>
                     {it.link && (
-                      <Link to={it.link} className="text-xs font-semibold text-primary hover:underline">
+                      <Link to={it.link} className="text-xs font-semibold text-primary hover:underline whitespace-nowrap">
                         Resolver →
                       </Link>
                     )}

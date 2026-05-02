@@ -6,6 +6,7 @@ export type TreinamentoModulo = {
   descricao: string | null;
   ordem: number;
   ativo: boolean;
+  obrigatorio: boolean;
 };
 
 export type TreinamentoAula = {
@@ -108,11 +109,12 @@ export async function desmarcarAulaConcluida(aulaId: string): Promise<boolean> {
 
 /* ─── ADMIN ─── */
 
-export async function adminCreateModulo(input: { titulo: string; descricao?: string; ordem?: number }) {
+export async function adminCreateModulo(input: { titulo: string; descricao?: string; ordem?: number; obrigatorio?: boolean }) {
   return supabase.from("treinamentos_modulos").insert({
     titulo: input.titulo,
     descricao: input.descricao ?? null,
     ordem: input.ordem ?? 0,
+    obrigatorio: input.obrigatorio ?? false,
   }).select().single();
 }
 
@@ -148,4 +150,43 @@ export async function adminUpdateAula(id: string, patch: Partial<TreinamentoAula
 
 export async function adminDeleteAula(id: string) {
   return supabase.from("treinamentos_aulas").delete().eq("id", id);
+}
+
+/**
+ * Verifica se o usuário logado completou TODAS as aulas de módulos obrigatórios.
+ * Retorna { concluido, totalObrigatorias, concluidasObrigatorias }.
+ */
+export async function checkTreinamentoObrigatorio(): Promise<{
+  concluido: boolean;
+  totalObrigatorias: number;
+  concluidasObrigatorias: number;
+}> {
+  const modulos = await listModulosComAulas();
+  const obrigatorios = modulos.filter(m => m.obrigatorio);
+  if (obrigatorios.length === 0) return { concluido: true, totalObrigatorias: 0, concluidasObrigatorias: 0 };
+
+  const aulasObrigatorias = obrigatorios.flatMap(m => m.aulas);
+  if (aulasObrigatorias.length === 0) return { concluido: true, totalObrigatorias: 0, concluidasObrigatorias: 0 };
+
+  const minhas = await listMinhasConclusoes();
+  const concluidasObrigatorias = aulasObrigatorias.filter(a => minhas.has(a.id)).length;
+
+  return {
+    concluido: concluidasObrigatorias >= aulasObrigatorias.length,
+    totalObrigatorias: aulasObrigatorias.length,
+    concluidasObrigatorias,
+  };
+}
+
+/**
+ * Admin: lista conclusões de todos os médicos para um módulo.
+ */
+export async function adminListConclusoesPorModulo(): Promise<
+  { user_id: string; aula_id: string; concluido_em: string }[]
+> {
+  const { data, error } = await supabase
+    .from("treinamentos_conclusoes")
+    .select("user_id, aula_id, concluido_em");
+  if (error) { console.error("[treinamentos] admin conclusoes:", error); return []; }
+  return data ?? [];
 }
