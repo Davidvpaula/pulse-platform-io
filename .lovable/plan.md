@@ -1,38 +1,58 @@
 
-# Página Faturamento B2B Detalhado
+# Detalhes do Contrato B2B
 
-## O que será criado
+Nova página `/app/admin/contrato-b2b/:id` acessível a partir da Gestão B2B, exibindo informações completas de um contrato específico.
 
-Uma nova página `/app/admin/faturamento-b2b` com:
+---
 
-### KPIs no topo
-- Total no período (valor + qtd faturas)
-- Em aberto (valor + qtd)
-- Atrasadas (valor + qtd)
-- Pagas (valor + qtd)
+## O que será construído
 
-### Filtros
-- Busca por nome da empresa ou competência
-- Filtro por status (todos, em_aberto, paga, atrasada, cancelada)
-- Filtro por ano
-- Filtro por empresa (dropdown dinâmico)
+### 1. Página `AdminContratoDetalhes.tsx`
 
-### Tabela de faturas
-Colunas: Empresa, Competência, Valor, Funcionários, Consultas, Vencimento, Pago em, Status (badge colorido com ícone), Ações.
+**Cabeçalho**: Nome da empresa, status do contrato (badge colorido), botão voltar.
 
-### Modal de detalhes
-Ao clicar "ver" em uma fatura: exibe dados completos (empresa, valor, vencimento, funcionários, consultas, observações, detalhamento JSON, botão de download placeholder).
+**Seção "Dados do Contrato"**:
+- Modelo financeiro, valor mensal/por consulta/por colaborador
+- Datas de início, fim e renovação
+- Limite de consultas/mês, plano vinculado
+- Observações
 
-### Exportação CSV
-Botão no header que exporta todas as faturas filtradas em CSV com separador `;`.
+**Seção "Regras de Uso do Plano"**:
+- Limite de consultas por mês vs. uso atual (barra de progresso)
+- Quantidade de funcionários vinculados
+- Modelo financeiro explicado em texto legível
+- Se existe plano vinculado, exibir nome e detalhes
 
-## Alterações técnicas
+**Seção "Alertas"**:
+- Contrato vencendo em menos de 30 dias (alerta amarelo)
+- Contrato vencido (alerta vermelho)
+- Uso acima do limite de consultas (alerta vermelho)
+- Contrato suspenso/encerrado (alerta cinza)
 
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/app/admin/AdminFaturamentoB2B.tsx` | **Criar** — página completa com query à tabela `empresas_faturas` (join `empresas.razao_social`) |
-| `src/App.tsx` | Adicionar rota `admin/faturamento-b2b` com permissão `empresas.ver` e import lazy |
-| `src/lib/profiles.ts` | Adicionar item no sidebar Admin (seção Cadastros/B2B) |
-| `src/components/AppBreadcrumb.tsx` | Adicionar breadcrumb para a nova rota |
+**Seção "Histórico de Alterações"**:
+- Consulta `empresas_auditoria` filtrando pelo `empresa_id` do contrato
+- Timeline com: data, ação, campo alterado, valor anterior -> valor novo, motivo, observação
+- Ordenado do mais recente ao mais antigo
 
-Nenhuma migração de banco necessária — usa tabela `empresas_faturas` existente com colunas: `empresa_id`, `competencia_mes`, `competencia_ano`, `vencimento`, `valor_total_centavos`, `qtd_funcionarios`, `qtd_consultas`, `status` (enum: em_aberto, paga, atrasada, cancelada), `pago_em`, `observacoes`, `detalhamento`.
+### 2. Rota e Navegação
+
+- Rota em `App.tsx`: `/app/admin/contrato-b2b/:id` com permissão `empresas.ver`
+- Breadcrumb: Admin > Empresas > Gestão B2B > Detalhes do Contrato
+- Link "Ver detalhes" na tabela de contratos do `AdminGestaoB2B.tsx` apontando para a nova página
+
+### 3. Dados utilizados (sem migrações)
+
+- `empresas_contratos` (join com `empresas` e `planos`)
+- `empresas_auditoria` (histórico)
+- `empresas_funcionarios` (contagem de funcionários ativos)
+
+---
+
+## Arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/pages/app/admin/AdminContratoDetalhes.tsx` |
+| Editar | `src/App.tsx` (rota) |
+| Editar | `src/components/AppBreadcrumb.tsx` (breadcrumb) |
+| Editar | `src/pages/app/admin/AdminGestaoB2B.tsx` (link para detalhes) |

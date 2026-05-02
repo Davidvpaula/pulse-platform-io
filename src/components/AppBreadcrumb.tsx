@@ -62,6 +62,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/gestao-b2b":      [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B" }],
   "/app/admin/relatorios-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Relatórios" }],
   "/app/admin/faturamento-b2b": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Faturamento" }],
+  "/app/admin/contrato-b2b/:id": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B", to: "/app/admin/gestao-b2b" }, { label: "Detalhes do Contrato" }],
 
   // ── Admin: Financeiro ──
   "/app/admin/financeiro":               [admin(), { label: "Financeiro" }, { label: "Visão geral" }],
@@ -182,7 +183,20 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
 
 export function AppBreadcrumb() {
   const { pathname } = useLocation();
-  const crumbs = BREADCRUMB_MAP[pathname];
+
+  // Try exact match first, then pattern match for dynamic routes
+  let crumbs = BREADCRUMB_MAP[pathname];
+  if (!crumbs) {
+    for (const [pattern, value] of Object.entries(BREADCRUMB_MAP)) {
+      if (pattern.includes(":")) {
+        const regex = new RegExp("^" + pattern.replace(/:[^/]+/g, "[^/]+") + "$");
+        if (regex.test(pathname)) {
+          crumbs = value;
+          break;
+        }
+      }
+    }
+  }
 
   if (!crumbs || crumbs.length <= 1) return null;
 
