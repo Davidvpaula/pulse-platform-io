@@ -163,7 +163,21 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/secretaria/equipe":        [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Supervisão" }, { label: "Visão da equipe" }],
   "/app/secretaria/relatorios":    [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Supervisão" }, { label: "Relatórios operacionais" }],
 
-  // ── Paciente ──
+  // ── Colaborador ──
+  "/app/colaborador/dashboard":     [{ label: "Colaborador" }, { label: "Dashboard" }],
+  "/app/colaborador/pacientes":     [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Pacientes" }],
+  "/app/colaborador/agenda":        [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Agenda" }],
+  "/app/colaborador/agendamentos":  [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Agendamentos" }],
+  "/app/colaborador/cupons":        [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Cupons" }],
+  "/app/colaborador/cupons/log":    [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Cupons", to: "/app/colaborador/cupons" }, { label: "Log de uso" }],
+  "/app/colaborador/financeiro":    [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Financeiro" }],
+  "/app/colaborador/tarefas":       [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Tarefas" }],
+  "/app/colaborador/equipe":        [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Supervisão" }, { label: "Visão da equipe" }],
+  "/app/colaborador/relatorios":    [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Supervisão" }, { label: "Relatórios operacionais" }],
+  "/app/colaborador/comunicacao-interna": [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Comunicação interna" }],
+  "/app/colaborador/gamificacao":          [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Gamificação" }],
+  "/app/colaborador/gamificacao/financeiro": [{ label: "Colaborador", to: "/app/colaborador/dashboard" }, { label: "Gamificação", to: "/app/colaborador/gamificacao" }, { label: "Financeiro" }],
+
   "/app/paciente/dashboard":     [{ label: "Paciente" }, { label: "Dashboard" }],
   "/app/paciente/agendamentos":  [{ label: "Paciente", to: "/app/paciente/dashboard" }, { label: "Agendamentos" }],
   "/app/paciente/documentos":    [{ label: "Paciente", to: "/app/paciente/dashboard" }, { label: "Documentos" }],
