@@ -104,16 +104,35 @@ export default function MedicoDashboard() {
     setSaldoCrescimento(saldoRes);
 
     // Onboarding: link de sala + ao menos 1 vínculo de especialidade ativo
-    const { count: vinculos } = await supabase
-      .from("medico_especialidades")
-      .select("id", { count: "exact", head: true })
-      .eq("medico_id", medico.id)
-      .eq("ativo", true);
+    const [{ count: vinculos }, treinCheck, { count: dadosBanc }, termosCheck] = await Promise.all([
+      supabase
+        .from("medico_especialidades")
+        .select("id", { count: "exact", head: true })
+        .eq("medico_id", medico.id)
+        .eq("ativo", true),
+      checkTreinamentoObrigatorio(),
+      supabase
+        .from("medico_dados_bancarios")
+        .select("id", { count: "exact", head: true })
+        .eq("medico_id", medico.id)
+        .eq("ativo", true),
+      // Termos: reuse termsContrato hook state (already loaded separately)
+      Promise.resolve(null),
+    ]);
+
+    // Perfil completo: nome, CRM, especialidade, bio
+    const perfilIncompleto = !medico.nome?.trim() || !medico.crm?.trim() || !medico.especialidade?.trim() || !medico.bio?.trim();
 
     setOnb({
       semSala: !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0,
       semEspecialidade: (vinculos ?? 0) === 0,
       pendente: medico.status !== "aprovado",
+      treinamentoConcluido: treinCheck.concluido,
+      treinamentoTotal: treinCheck.totalObrigatorias,
+      treinamentoFeito: treinCheck.concluidasObrigatorias,
+      perfilIncompleto,
+      semDadosBancarios: (dadosBanc ?? 0) === 0,
+      semTermos: false, // handled by TermsAcceptanceDialog
     });
 
     // Janelas de tempo
