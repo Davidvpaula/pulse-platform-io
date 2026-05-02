@@ -241,6 +241,7 @@ export default function PacienteMontarPlano() {
           </CardContent>
         </Card>
       )}
+      <TermsAcceptanceDialog tipo="plano_plataforma" open={termsPlano.showDialog} onOpenChange={termsPlano.setShowDialog} onAccepted={termsPlano.onAccepted} />
     </PageShell>
   );
 }
