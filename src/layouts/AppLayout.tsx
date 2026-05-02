@@ -180,9 +180,10 @@ type RenderItem = {
 };
 
 function SidebarBody({
-  profileKey, onNavigate, switchProfile, showDemoSwitcher,
+  profileKey, flow, onNavigate, switchProfile, showDemoSwitcher,
 }: {
   profileKey: ProfileKey;
+  flow: FlowContext;
   onNavigate: () => void;
   switchProfile: (k: ProfileKey) => void;
   showDemoSwitcher: boolean;
