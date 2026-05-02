@@ -223,11 +223,12 @@ export default function PacientePerfilPage() {
         </div>
       ) : (
         <Tabs defaultValue="dados" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="saude">Saúde</TabsTrigger>
             <TabsTrigger value="conta">Conta & senha</TabsTrigger>
+            <TabsTrigger value="termos">Termos</TabsTrigger>
           </TabsList>
 
           <form onSubmit={salvar} className="space-y-6">
