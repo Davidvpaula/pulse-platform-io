@@ -129,13 +129,18 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
       { label: "Fluxo operacional", to: "/app/admin/fluxo", icon: Activity },
       {
-        label: "Cadastros",
+        label: "Pacientes",
         icon: Users,
         children: [
-          { label: "Usuários/Pacientes", to: "/app/admin/usuarios" },
+          { label: "Gestão de pacientes", to: "/app/admin/pacientes" },
+        ],
+      },
+      {
+        label: "Cadastros",
+        icon: UserCog,
+        children: [
           { label: "Médicos", to: "/app/admin/medicos" },
           { label: "Colaboradores", to: "/app/admin/colaboradores" },
-          { label: "Empresas", to: "/app/admin/empresas" },
         ],
       },
       { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
