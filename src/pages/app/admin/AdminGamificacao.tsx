@@ -189,6 +189,7 @@ export default function AdminGamificacao() {
           <TabsTrigger value="premium"><Crown className="mr-1.5 h-4 w-4" /> Premium</TabsTrigger>
           <TabsTrigger value="cpc"><Megaphone className="mr-1.5 h-4 w-4" /> CPC & Campanhas</TabsTrigger>
           <TabsTrigger value="saldo"><Zap className="mr-1.5 h-4 w-4" /> Saldo</TabsTrigger>
+          <TabsTrigger value="auditoria"><History className="mr-1.5 h-4 w-4" /> Auditoria</TabsTrigger>
         </TabsList>
 
         {/* ── Tab Ranking ── */}
