@@ -216,7 +216,7 @@ export default function ServicoDetalhe() {
                     <div className="flex items-center gap-1.5">
                       <p className="font-medium truncate">Dr(a). {m.nome}</p>
                       {m.is_premium && (
-                        <Crown className="h-4 w-4 text-amber-500 shrink-0" title="Premium" />
+                        <span title="Premium"><Crown className="h-4 w-4 text-amber-500 shrink-0" /></span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
