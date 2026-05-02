@@ -182,7 +182,7 @@ export default function AdminFaturamentoB2B() {
     }
   }
 
-  const lista = useMemo(() => {
+  const listaFiltrada = useMemo(() => {
     let arr = faturas;
     if (filtroStatus !== "todos") arr = arr.filter(f => f.status === filtroStatus);
     if (filtroAno !== "todos") arr = arr.filter(f => String(f.competencia_ano) === filtroAno);
@@ -191,8 +191,26 @@ export default function AdminFaturamentoB2B() {
       const q = busca.toLowerCase();
       arr = arr.filter(f => f.razao_social.toLowerCase().includes(q) || f.competencia_label.includes(q));
     }
-    return arr;
-  }, [faturas, filtroStatus, filtroAno, filtroEmpresa, busca]);
+    // Ordenação
+    const sorted = [...arr].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "valor") {
+        cmp = a.valor_total_centavos - b.valor_total_centavos;
+      } else if (sortKey === "competencia") {
+        cmp = (a.competencia_ano * 100 + a.competencia_mes) - (b.competencia_ano * 100 + b.competencia_mes);
+      } else if (sortKey === "vencimento") {
+        cmp = (a.vencimento ?? "").localeCompare(b.vencimento ?? "");
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [faturas, filtroStatus, filtroAno, filtroEmpresa, busca, sortKey, sortDir]);
+
+  const totalPaginas = Math.max(1, Math.ceil(listaFiltrada.length / POR_PAGINA));
+  const lista = useMemo(() => {
+    const inicio = (pagina - 1) * POR_PAGINA;
+    return listaFiltrada.slice(inicio, inicio + POR_PAGINA);
+  }, [listaFiltrada, pagina]);
 
   const kpis = useMemo(() => {
     const abertas = lista.filter(f => f.status === "em_aberto");
