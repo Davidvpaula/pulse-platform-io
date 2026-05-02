@@ -65,6 +65,36 @@ export type RankingConfig = {
   updated_at: string;
 };
 
+export type MedicoPremium = {
+  id: string;
+  medico_id: string;
+  ativo: boolean;
+  tipo: "pago" | "conquistado";
+  inicio: string | null;
+  fim: string | null;
+  auto_renovar: boolean;
+  stripe_subscription_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImpulsionamentoCampanha = {
+  id: string;
+  medico_id: string;
+  titulo: string;
+  orcamento_centavos: number;
+  gasto_centavos: number;
+  cpc_centavos: number;
+  cliques: number;
+  impressoes: number;
+  status: "ativa" | "pausada" | "encerrada" | "cancelada";
+  inicio: string;
+  fim: string | null;
+  especialidade_ids: string[];
+  created_at: string;
+  updated_at: string;
+};
+
 /* ── Avaliações ── */
 
 export async function enviarAvaliacao(params: {
