@@ -358,7 +358,7 @@ export default function EmpresaPropostas() {
                 </SelectTrigger>
                 <SelectContent>
                   {medicos.map(m => (
-                    <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>
+                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
