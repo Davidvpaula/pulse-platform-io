@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   TrendingUp, Wallet, Users, Activity, Download, Building2, Loader2,
   BarChart3, ArrowUpRight, ArrowDownRight, CalendarDays, Filter, Search,
+  Percent, Stethoscope,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,8 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { brl } from "@/lib/format";
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
 /* ─── Types ─── */
@@ -60,12 +61,27 @@ type FaturaRow = {
 
 type EmpresaBasic = { id: string; razao_social: string };
 
+type PropostaB2B = {
+  id: string;
+  empresa_id: string;
+  medico_id: string;
+  valor_mensal_centavos: number;
+  valor_ajustado_centavos: number | null;
+  taxa_plataforma_pct: number | null;
+  tipo_contrato: string;
+  status: string;
+  created_at: string;
+  empresa_nome?: string;
+  medico_nome?: string;
+};
+
 export default function AdminRelatoriosB2B() {
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<ConsultaRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<FuncionarioRow[]>([]);
   const [faturas, setFaturas] = useState<FaturaRow[]>([]);
   const [empresas, setEmpresas] = useState<EmpresaBasic[]>([]);
+  const [propostas, setPropostas] = useState<PropostaB2B[]>([]);
 
   const [de, setDe] = useState<Date>(startOfMonth(subMonths(new Date(), 2)));
   const [ate, setAte] = useState<Date>(endOfMonth(new Date()));
@@ -81,7 +97,7 @@ export default function AdminRelatoriosB2B() {
       const deISO = de.toISOString();
       const ateISO = ate.toISOString();
 
-      const [{ data: emp }, { data: cons }, { data: funcs }, { data: fats }] = await Promise.all([
+      const [{ data: emp }, { data: cons }, { data: funcs }, { data: fats }, { data: props }] = await Promise.all([
         supabase.from("empresas").select("id, razao_social").eq("ativo", true).order("razao_social"),
         supabase.from("consultas").select("id, empresa_id, paciente_id, status, inicio, valor_centavos, valor_snapshot_centavos")
           .not("empresa_id", "is", null)
@@ -93,12 +109,23 @@ export default function AdminRelatoriosB2B() {
           .order("competencia_ano", { ascending: false })
           .order("competencia_mes", { ascending: false })
           .limit(500),
+        supabase.from("propostas_empresa_medico")
+          .select("id, empresa_id, medico_id, valor_mensal_centavos, valor_ajustado_centavos, taxa_plataforma_pct, tipo_contrato, status, created_at, empresa:empresas(razao_social), medico:profiles!propostas_empresa_medico_medico_id_fkey(nome)")
+          .order("created_at", { ascending: false })
+          .limit(500),
       ]);
 
       setEmpresas(emp ?? []);
       setConsultas((cons ?? []) as ConsultaRow[]);
       setFuncionarios((funcs ?? []) as FuncionarioRow[]);
       setFaturas((fats ?? []) as FaturaRow[]);
+      setPropostas(
+        (props ?? []).map((p: any) => ({
+          ...p,
+          empresa_nome: p.empresa?.razao_social ?? "—",
+          medico_nome: p.medico?.nome ?? "—",
+        }))
+      );
     } catch (e: any) {
       toast.error("Erro ao carregar relatórios", { description: e.message });
     } finally {
@@ -127,6 +154,19 @@ export default function AdminRelatoriosB2B() {
     return faturas.filter(f => f.empresa_id === filtroEmpresa);
   }, [faturas, filtroEmpresa]);
 
+  const filteredPropostas = useMemo(() => {
+    let arr = propostas;
+    if (filtroEmpresa !== "todas") arr = arr.filter(p => p.empresa_id === filtroEmpresa);
+    if (busca.trim()) {
+      const q = busca.toLowerCase();
+      arr = arr.filter(p =>
+        (p.empresa_nome ?? "").toLowerCase().includes(q) ||
+        (p.medico_nome ?? "").toLowerCase().includes(q)
+      );
+    }
+    return arr;
+  }, [propostas, filtroEmpresa, busca]);
+
   /* ─── KPIs ─── */
   const kpis = useMemo(() => {
     const realizadas = filteredConsultas.filter(c => c.status === "concluida");
@@ -145,6 +185,31 @@ export default function AdminRelatoriosB2B() {
       custoMedio,
     };
   }, [filteredConsultas, filteredFuncionarios]);
+
+  /* ─── Propostas KPIs ─── */
+  const propostasKpis = useMemo(() => {
+    const comTaxa = filteredPropostas.filter(p => (p.taxa_plataforma_pct ?? 0) > 0);
+    const ativas = comTaxa.filter(p => ["aceita", "convertida", "enviada_medico", "aprovada_admin"].includes(p.status));
+
+    let totalReceita = 0;
+    let totalTaxa = 0;
+    let totalRepasse = 0;
+
+    for (const p of ativas) {
+      const base = p.valor_ajustado_centavos || p.valor_mensal_centavos;
+      const taxa = p.taxa_plataforma_pct ?? 0;
+      const taxaVal = Math.round(base * taxa / 100);
+      totalReceita += base;
+      totalTaxa += taxaVal;
+      totalRepasse += base - taxaVal;
+    }
+
+    const taxaMedia = ativas.length > 0
+      ? (ativas.reduce((s, p) => s + (p.taxa_plataforma_pct ?? 0), 0) / ativas.length).toFixed(1)
+      : "0";
+
+    return { totalReceita, totalTaxa, totalRepasse, taxaMedia, qtdAtivas: ativas.length, qtdTotal: filteredPropostas.length };
+  }, [filteredPropostas]);
 
   /* ─── Consumo por funcionário ─── */
   const consumoPorFunc = useMemo(() => {
@@ -195,6 +260,27 @@ export default function AdminRelatoriosB2B() {
 
   /* ─── Export ─── */
   function exportCsv() {
+    if (tab === "taxas") {
+      if (filteredPropostas.length === 0) { toast.info("Nada para exportar"); return; }
+      const header = "Empresa;Médico;Valor Base (R$);Taxa %;Taxa (R$);Repasse Médico (R$);Tipo;Status;Criada em";
+      const rows = filteredPropostas.map(p => {
+        const base = p.valor_ajustado_centavos || p.valor_mensal_centavos;
+        const taxa = p.taxa_plataforma_pct ?? 0;
+        const taxaVal = Math.round(base * taxa / 100);
+        const repasse = base - taxaVal;
+        return `"${p.empresa_nome}";"${p.medico_nome}";${(base / 100).toFixed(2).replace(".", ",")};${taxa};${(taxaVal / 100).toFixed(2).replace(".", ",")};${(repasse / 100).toFixed(2).replace(".", ",")};${p.tipo_contrato};${p.status};${fmtDate(p.created_at)}`;
+      });
+      const blob = new Blob([header + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-taxas-b2b-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("CSV de taxas exportado");
+      return;
+    }
+
     if (consumoPorFunc.length === 0) { toast.info("Nada para exportar"); return; }
     const header = "Funcionário;Setor;Consultas;Valor (R$);No-Show";
     const rows = consumoPorFunc.map(f =>
@@ -212,6 +298,17 @@ export default function AdminRelatoriosB2B() {
 
   const empNome = (id: string) => empresas.find(e => e.id === id)?.razao_social ?? "—";
 
+  const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    criada: { label: "Criada", variant: "secondary" },
+    em_analise: { label: "Em análise", variant: "outline" },
+    aprovada_admin: { label: "Aprovada", variant: "default" },
+    enviada_medico: { label: "Enviada", variant: "default" },
+    aceita: { label: "Aceita", variant: "default" },
+    recusada: { label: "Recusada", variant: "destructive" },
+    convertida: { label: "Convertida", variant: "default" },
+    cancelada: { label: "Cancelada", variant: "secondary" },
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -224,7 +321,7 @@ export default function AdminRelatoriosB2B() {
     <div className="space-y-6">
       <PageHeader
         title="Relatórios B2B Corporativos"
-        description="Consumo por funcionário, coparticipação e faturamento detalhado por período."
+        description="Consumo por funcionário, coparticipação, taxas & repasses e faturamento detalhado."
         actions={
           <Button onClick={exportCsv} variant="outline">
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
@@ -267,6 +364,7 @@ export default function AdminRelatoriosB2B() {
         <TabsList>
           <TabsTrigger value="consumo">Consumo por funcionário</TabsTrigger>
           <TabsTrigger value="comparativo">Comparativo empresas</TabsTrigger>
+          <TabsTrigger value="taxas">Taxas & Repasses</TabsTrigger>
           <TabsTrigger value="faturamento">Faturamento detalhado</TabsTrigger>
         </TabsList>
 
@@ -389,6 +487,140 @@ export default function AdminRelatoriosB2B() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ─── Tab Taxas & Repasses ─── */}
+        <TabsContent value="taxas" className="mt-4 space-y-4">
+          {/* KPIs de Taxas */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="card-elevated p-4">
+              <p className="text-xs text-muted-foreground">Propostas ativas</p>
+              <p className="text-2xl font-bold">{propostasKpis.qtdAtivas}<span className="text-sm font-normal text-muted-foreground"> / {propostasKpis.qtdTotal}</span></p>
+            </div>
+            <div className="card-elevated p-4">
+              <p className="text-xs text-muted-foreground">Receita bruta (propostas)</p>
+              <p className="text-2xl font-bold">{brl(propostasKpis.totalReceita)}</p>
+            </div>
+            <div className="card-elevated p-4">
+              <p className="text-xs text-muted-foreground flex items-center gap-1"><Percent className="h-3 w-3" /> Receita plataforma</p>
+              <p className="text-2xl font-bold text-primary">{brl(propostasKpis.totalTaxa)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Taxa média: {propostasKpis.taxaMedia}%</p>
+            </div>
+            <div className="card-elevated p-4">
+              <p className="text-xs text-muted-foreground flex items-center gap-1"><Stethoscope className="h-3 w-3" /> Repasse médicos</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{brl(propostasKpis.totalRepasse)}</p>
+            </div>
+          </div>
+
+          {/* Tabela detalhada */}
+          <div className="card-elevated p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input className="pl-9" placeholder="Buscar empresa ou médico…" value={busca} onChange={e => setBusca(e.target.value)} />
+              </div>
+              <span className="text-xs text-muted-foreground">{filteredPropostas.length} proposta(s)</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-4 py-3">Empresa</th>
+                    <th className="text-left px-3 py-3">Médico</th>
+                    <th className="text-right px-3 py-3">Valor Base</th>
+                    <th className="text-center px-3 py-3">Taxa %</th>
+                    <th className="text-right px-3 py-3">Taxa R$</th>
+                    <th className="text-right px-3 py-3">Repasse Médico</th>
+                    <th className="text-left px-3 py-3">Tipo</th>
+                    <th className="text-left px-3 py-3">Status</th>
+                    <th className="text-left px-3 py-3">Criada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPropostas.length === 0 && (
+                    <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">Nenhuma proposta encontrada.</td></tr>
+                  )}
+                  {filteredPropostas.map(p => {
+                    const base = p.valor_ajustado_centavos || p.valor_mensal_centavos;
+                    const taxa = p.taxa_plataforma_pct ?? 0;
+                    const taxaVal = Math.round(base * taxa / 100);
+                    const repasse = base - taxaVal;
+                    const cfg = STATUS_BADGE[p.status] ?? STATUS_BADGE.criada;
+                    return (
+                      <tr key={p.id} className="border-t border-border hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3 font-medium">{p.empresa_nome}</td>
+                        <td className="px-3 py-3">{p.medico_nome}</td>
+                        <td className="px-3 py-3 text-right tabular-nums">{brl(base)}</td>
+                        <td className="px-3 py-3 text-center tabular-nums">{taxa > 0 ? `${taxa}%` : "—"}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-primary font-medium">{taxa > 0 ? brl(taxaVal) : "—"}</td>
+                        <td className="px-3 py-3 text-right tabular-nums">
+                          {taxa > 0 ? (
+                            <span className="font-medium text-green-600 dark:text-green-400">{brl(repasse)}</span>
+                          ) : "—"}
+                        </td>
+                        <td className="px-3 py-3 capitalize">{p.tipo_contrato}</td>
+                        <td className="px-3 py-3"><Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge></td>
+                        <td className="px-3 py-3 tabular-nums">{fmtDate(p.created_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Resumo por empresa */}
+          {filteredPropostas.length > 0 && (
+            <div className="card-elevated p-6">
+              <h3 className="font-semibold flex items-center gap-2 mb-4">
+                <BarChart3 className="h-4 w-4 text-primary" /> Resumo por empresa
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-4 py-2">Empresa</th>
+                      <th className="text-right px-3 py-2">Propostas</th>
+                      <th className="text-right px-3 py-2">Receita bruta</th>
+                      <th className="text-right px-3 py-2">Taxa média</th>
+                      <th className="text-right px-3 py-2">Receita plataforma</th>
+                      <th className="text-right px-3 py-2">Repasse total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const map = new Map<string, { nome: string; count: number; receita: number; taxaSum: number; taxaR: number; repasse: number }>();
+                      for (const p of filteredPropostas) {
+                        if (!["aceita", "convertida", "enviada_medico", "aprovada_admin"].includes(p.status)) continue;
+                        const base = p.valor_ajustado_centavos || p.valor_mensal_centavos;
+                        const taxa = p.taxa_plataforma_pct ?? 0;
+                        const taxaVal = Math.round(base * taxa / 100);
+                        const entry = map.get(p.empresa_id) ?? { nome: p.empresa_nome ?? "—", count: 0, receita: 0, taxaSum: 0, taxaR: 0, repasse: 0 };
+                        entry.count++;
+                        entry.receita += base;
+                        entry.taxaSum += taxa;
+                        entry.taxaR += taxaVal;
+                        entry.repasse += base - taxaVal;
+                        map.set(p.empresa_id, entry);
+                      }
+                      const rows = [...map.values()].sort((a, b) => b.receita - a.receita);
+                      if (rows.length === 0) return <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">Nenhuma proposta ativa com taxa.</td></tr>;
+                      return rows.map((r, i) => (
+                        <tr key={i} className="border-t border-border hover:bg-muted/20">
+                          <td className="px-4 py-2 font-medium">{r.nome}</td>
+                          <td className="px-3 py-2 text-right">{r.count}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{brl(r.receita)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{r.count > 0 ? (r.taxaSum / r.count).toFixed(1) : 0}%</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-primary font-medium">{brl(r.taxaR)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium text-green-600 dark:text-green-400">{brl(r.repasse)}</td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
