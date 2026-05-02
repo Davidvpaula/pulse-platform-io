@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FileText, Download, Search, Loader2, Building2, Wallet,
   Clock, CheckCircle2, AlertTriangle, XCircle, Filter, CalendarDays,
-  ReceiptText, Eye,
+  ReceiptText, Eye, ExternalLink, Stethoscope,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
