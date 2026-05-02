@@ -479,6 +479,7 @@ function ContaSeguranca({ emailAtual, onEmailChange }: { emailAtual: string; onE
           <Field label="Nova senha">
             <Input type="password" autoComplete="new-password" minLength={8}
               value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
+            <PasswordStrengthIndicator password={novaSenha} />
           </Field>
           <Field label="Confirmar nova senha">
             <Input type="password" autoComplete="new-password" minLength={8}
