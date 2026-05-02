@@ -1,34 +1,29 @@
 
-## Situação atual
+## Contexto
 
-- O **menu lateral** já usa `NavLink` com `isActive` e já destaca o item ativo com `bg-primary text-primary-foreground`. O grupo "Gamificação" no Admin já expande automaticamente quando a rota ativa pertence a ele (`defaultOpen={open}`). Portanto, o **destaque de menu ativo já funciona**.
-- O componente `Breadcrumb` (shadcn) existe em `src/components/ui/breadcrumb.tsx` mas **nenhuma página o utiliza ainda**.
-- As 3 páginas de gamificação usam `PageHeader` sem breadcrumbs.
+A tela `AdminGamificacao` já possui 4 tabs completas:
+- **Ranking**: pesos (avaliação, atendimentos, conversão, no-show, recência, premium) + parâmetros gerais (min avaliações, dias ativo, dias penalidade) + tabela top médicos
+- **Premium**: regras de conquista (min atendimentos, min avaliação, max no-show, meses ativos, bônus ranking)
+- **CPC & Campanhas**: config CPC, tabela de campanhas com ROI
+- **Saldo**: pontos por consulta concluída
 
-## O que será feito
+O que falta: uma **aba de Auditoria** mostrando o histórico de quem alterou as regras e quando.
 
-### 1. Adicionar breadcrumbs nas páginas de gamificação
+## Alterações
 
-Adicionar um bloco de breadcrumbs acima do `PageHeader` em cada página:
+### `src/pages/app/admin/AdminGamificacao.tsx`
 
-- **AdminGamificacao** (`src/pages/app/admin/AdminGamificacao.tsx`)
-  - `Admin > Gamificação > Configuração & Ranking`
+1. Adicionar import de ícones `History`, `Clock`, `User`
+2. Adicionar nova tab **"Auditoria"** com ícone `History` no `TabsList`
+3. Criar `TabsContent value="auditoria"` com:
+   - Tabela mock de log de alterações contendo:
+     - Data/hora
+     - Usuário (admin)
+     - Campo alterado (ex: "peso_avaliacao", "premium_min_atendimentos")
+     - Valor anterior → Valor novo
+     - Tipo de ação (alteração de peso, alteração de regra premium, alteração de CPC, recálculo manual)
+   - Dados mock hardcoded com ~8 entradas variadas
+   - Badges coloridos por tipo de ação
+   - Filtro simples por tipo de ação (select)
 
-- **AdminGamificacaoFinanceiro** (`src/pages/app/admin/AdminGamificacaoFinanceiro.tsx`)
-  - `Admin > Gamificação > Financeiro`
-  - Link "Configuração & Ranking" apontando para `/app/admin/gamificacao`
-
-- **MedicoGamificacao** (`src/pages/app/medico/MedicoGamificacao.tsx`)
-  - `Médico > Gamificação & Ranking`
-
-Os breadcrumbs usarão os componentes `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator` já existentes, com `Link` do react-router para navegação.
-
-### 2. Arquivos modificados
-
-| Arquivo | Alteração |
-|---|---|
-| `src/pages/app/admin/AdminGamificacao.tsx` | Adicionar breadcrumb acima do PageHeader |
-| `src/pages/app/admin/AdminGamificacaoFinanceiro.tsx` | Adicionar breadcrumb acima do PageHeader |
-| `src/pages/app/medico/MedicoGamificacao.tsx` | Adicionar breadcrumb acima do PageHeader |
-
-Nenhuma migração de banco necessária. Nenhum componente novo — apenas uso dos existentes.
+Nenhuma migração necessária (dados mock). Nenhum arquivo novo.

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
-  Crown, Megaphone, DollarSign, Target, Zap,
+  Crown, Megaphone, DollarSign, Target, Zap, History, Filter,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,33 @@ import {
 } from "@/lib/gamificacao";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 function pct(v: number) { return `${(v * 100).toFixed(1)}%`; }
 function brl(c: number) { return `R$ ${(c / 100).toFixed(2)}`; }
+
+type AuditTipo = "peso" | "premium" | "cpc" | "saldo" | "recalculo";
+
+const AUDIT_MOCK: { id: string; data: string; usuario: string; tipo: AuditTipo; campo: string; anterior: string; novo: string }[] = [
+  { id: "a1", data: "2026-05-02T13:40:00Z", usuario: "Carlos Mendes", tipo: "peso", campo: "peso_avaliacao", anterior: "0.25", novo: "0.30" },
+  { id: "a2", data: "2026-05-02T13:40:00Z", usuario: "Carlos Mendes", tipo: "peso", campo: "peso_recencia", anterior: "0.15", novo: "0.10" },
+  { id: "a3", data: "2026-05-01T10:15:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_min_atendimentos", anterior: "30", novo: "50" },
+  { id: "a4", data: "2026-05-01T10:15:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_min_avaliacao", anterior: "3.5", novo: "4.0" },
+  { id: "a5", data: "2026-04-28T16:00:00Z", usuario: "Carlos Mendes", tipo: "cpc", campo: "cpc_padrao_centavos", anterior: "30", novo: "50" },
+  { id: "a6", data: "2026-04-28T15:55:00Z", usuario: "Carlos Mendes", tipo: "recalculo", campo: "ranking_completo", anterior: "—", novo: "15 médicos recalculados" },
+  { id: "a7", data: "2026-04-25T09:30:00Z", usuario: "Carlos Mendes", tipo: "saldo", campo: "saldo_por_consulta", anterior: "5", novo: "10" },
+  { id: "a8", data: "2026-04-20T14:10:00Z", usuario: "Carlos Mendes", tipo: "premium", campo: "premium_max_no_show", anterior: "0.15", novo: "0.10" },
+];
+
+const AUDIT_TIPO_LABEL: Record<AuditTipo, { label: string; cls: string }> = {
+  peso:      { label: "Peso ranking", cls: "bg-primary/15 text-primary" },
+  premium:   { label: "Regra premium", cls: "bg-amber-500/15 text-amber-600" },
+  cpc:       { label: "CPC", cls: "bg-emerald-500/15 text-emerald-600" },
+  saldo:     { label: "Saldo", cls: "bg-violet-500/15 text-violet-600" },
+  recalculo: { label: "Recálculo", cls: "bg-blue-500/15 text-blue-600" },
+};
 
 export default function AdminGamificacao() {
   const [loading, setLoading] = useState(true);
@@ -30,6 +54,7 @@ export default function AdminGamificacao() {
   const [top, setTop] = useState<(MedicoRanking & { nome?: string; premium_ativo?: boolean })[]>([]);
   const [campanhas, setCampanhas] = useState<(ImpulsionamentoCampanha & { nome?: string; conversoes?: number })[]>([]);
   const [togglingPremium, setTogglingPremium] = useState<string | null>(null);
+  const [auditFiltro, setAuditFiltro] = useState<AuditTipo | "todos">("todos");
 
   const carregar = async () => {
     setLoading(true);
@@ -164,6 +189,7 @@ export default function AdminGamificacao() {
           <TabsTrigger value="premium"><Crown className="mr-1.5 h-4 w-4" /> Premium</TabsTrigger>
           <TabsTrigger value="cpc"><Megaphone className="mr-1.5 h-4 w-4" /> CPC & Campanhas</TabsTrigger>
           <TabsTrigger value="saldo"><Zap className="mr-1.5 h-4 w-4" /> Saldo</TabsTrigger>
+          <TabsTrigger value="auditoria"><History className="mr-1.5 h-4 w-4" /> Auditoria</TabsTrigger>
         </TabsList>
 
         {/* ── Tab Ranking ── */}
@@ -449,6 +475,86 @@ export default function AdminGamificacao() {
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Salvar
               </Button>
             </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Tab Auditoria ── */}
+        <TabsContent value="auditoria" className="space-y-6">
+          <div className="card-elevated p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History className="h-5 w-5 text-primary" />
+                <h3 className="font-display text-lg font-semibold">Log de Alterações</h3>
+                <Badge variant="outline" className="text-[10px]">Mock</Badge>
+              </div>
+              <Select value={auditFiltro} onValueChange={(v) => setAuditFiltro(v as AuditTipo | "todos")}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="mr-2 h-3.5 w-3.5" />
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os tipos</SelectItem>
+                  <SelectItem value="peso">Peso ranking</SelectItem>
+                  <SelectItem value="premium">Regra premium</SelectItem>
+                  <SelectItem value="cpc">CPC</SelectItem>
+                  <SelectItem value="saldo">Saldo</SelectItem>
+                  <SelectItem value="recalculo">Recálculo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(() => {
+              const filtered = auditFiltro === "todos"
+                ? AUDIT_MOCK
+                : AUDIT_MOCK.filter((a) => a.tipo === auditFiltro);
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    Nenhum registro de auditoria encontrado para este filtro.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                        <th className="pb-2 pr-3">Data / Hora</th>
+                        <th className="pb-2 pr-3">Usuário</th>
+                        <th className="pb-2 pr-3">Tipo</th>
+                        <th className="pb-2 pr-3">Campo</th>
+                        <th className="pb-2 pr-3 text-right">Anterior</th>
+                        <th className="pb-2 pr-3 text-center">→</th>
+                        <th className="pb-2 text-left">Novo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filtered.map((a) => {
+                        const t = AUDIT_TIPO_LABEL[a.tipo];
+                        const dt = new Date(a.data);
+                        return (
+                          <tr key={a.id} className="hover:bg-muted/30">
+                            <td className="py-2.5 pr-3 text-xs text-muted-foreground whitespace-nowrap">
+                              {dt.toLocaleDateString("pt-BR")} {dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            </td>
+                            <td className="py-2.5 pr-3 font-medium">{a.usuario}</td>
+                            <td className="py-2.5 pr-3">
+                              <Badge className={cn("text-[10px]", t.cls)}>{t.label}</Badge>
+                            </td>
+                            <td className="py-2.5 pr-3 font-mono text-xs">{a.campo}</td>
+                            <td className="py-2.5 pr-3 text-right font-mono text-xs text-muted-foreground">{a.anterior}</td>
+                            <td className="py-2.5 pr-3 text-center text-muted-foreground">→</td>
+                            <td className="py-2.5 font-mono text-xs font-semibold">{a.novo}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         </TabsContent>
       </Tabs>
