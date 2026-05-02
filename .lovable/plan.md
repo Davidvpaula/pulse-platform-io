@@ -1,52 +1,84 @@
 
-## Plano: 7 itens pendentes do sistema de saques médicos
+# Fase 1 — Avaliações + Ranking + Dashboards Separados
 
-### 1. Permissões nos Role Templates
-Adicionar 7 novas permissões ao `roleTemplates.ts`:
-- `financeiro.saques_ver` / `financeiro.saques_aprovar` / `financeiro.saques_recusar` / `financeiro.saques_marcar_pago`
-- `financeiro.dados_bancarios_ver`
-- `financeiro.saques_config`
-- `financeiro.saques_solicitar_correcao`
-
-Incluir nos templates "Financeiro" e "Gestor Operacional".
-
-### 2. Guards de permissão no Admin
-Envolver botões de ação em `AdminSaquesMedicos.tsx` com `<RequirePermission>`:
-- Aprovar: `financeiro.saques_aprovar`
-- Recusar: `financeiro.saques_recusar`
-- Marcar pago: `financeiro.saques_marcar_pago`
-- Ver dados bancários (sheet): `financeiro.dados_bancarios_ver`
-- Configurar regras: `financeiro.saques_config`
-
-### 3. Seção "Documentos Fiscais" standalone para médico
-Criar `src/components/medico/MedicoDocumentosFiscais.tsx` — lista NFes do médico (independente de saque), com upload avulso. Adicionar como nova aba "Documentos Fiscais" em `MedicoPerfil.tsx`.
-
-### 4. Auditoria de alterações de configuração
-Na função `salvarConfig` de `AdminSaquesMedicos.tsx`, após gravar, inserir registro em `financeiro_auditoria` com `tipo = 'config_saque'` e os valores antes/depois.
-
-### 5. Metadados periodo_inicio / periodo_fim
-No `SolicitarSaqueDialog.tsx`, ao criar o saque, calcular `periodo_inicio` (menor `data_consulta` dos itens selecionados) e `periodo_fim` (maior `data_consulta`), e incluir no insert.
-
-### 6. Fluxo "Solicitar correção" no Admin
-Adicionar status `correcao_solicitada` ao enum via migration. No `AdminSaquesMedicos.tsx`, adicionar botão "Solicitar correção" (com motivo) para saques solicitados/em_analise. No `MedicoFinanceiro.tsx` / `SaqueHistorico.tsx`, exibir badge e motivo quando status = `correcao_solicitada`.
-
-### 7. Ajuste RLS para dados pessoais do médico
-Migration para adicionar policy permitindo UPDATE em `medico_dados_bancarios` quando o médico tem status `aprovado` (atualmente restrito a `pendente`/`reprovado`). Ajustar para `medico_enderecos` também.
+## Resumo
+Criar o sistema de avaliação de pacientes, ranking dinâmico de médicos, e duas páginas dedicadas (médico e admin) completamente separadas do financeiro e outros módulos.
 
 ---
 
-### Detalhes técnicos
+## 1. Banco de dados (migração)
 
-**Migration SQL** (1 migration):
-- `ALTER TYPE saque_medico_status ADD VALUE 'correcao_solicitada'`
-- DROP + CREATE das RLS policies de UPDATE em `medico_dados_bancarios` e `medico_enderecos` para incluir médicos aprovados
+**3 novas tabelas + funções + triggers:**
 
-**Arquivos modificados:**
-- `src/lib/permissions/roleTemplates.ts`
-- `src/pages/app/admin/AdminSaquesMedicos.tsx`
-- `src/components/medico/SolicitarSaqueDialog.tsx`
-- `src/components/medico/SaqueHistorico.tsx`
-- `src/pages/app/medico/MedicoPerfil.tsx`
+- `ranking_config` — configuração admin (pesos da fórmula, mín. avaliações para exibir, dias de recência). RLS: apenas admin.
+- `avaliacoes_medicas` — paciente_id, medico_id, consulta_id (unique), nota 1-5, comentário, flags público/exibir_no_perfil. RLS: paciente insere/lê próprias, médico lê as dele e atualiza `exibir_no_perfil`, admin lê tudo, anon lê públicas.
+- `medico_ranking` — tabela materializada com avaliacao_media, total_atendimentos, taxa_conversao, taxa_no_show, fator_recencia, ranking_score, posicao. RLS: médico lê próprio, admin tudo, público leitura.
 
-**Arquivo criado:**
-- `src/components/medico/MedicoDocumentosFiscais.tsx`
+**Triggers:**
+- `trg_validar_avaliacao` — BEFORE INSERT: verifica consulta concluída, paciente correto, médico correto
+- `trg_after_avaliacao_recalc` — AFTER INSERT: recalcula ranking do médico
+
+**Funções:**
+- `recalcular_ranking_medico(uuid)` — calcula score usando fórmula oficial
+- `recalcular_ranking_todos()` — loop em médicos aprovados + atualiza posições
+
+**Permissões:** `gamificacao.ver` e `gamificacao.configurar` no catálogo.
+
+## 2. Service layer
+
+**Novo arquivo `src/lib/gamificacao.ts`:**
+- `enviarAvaliacao()`, `consultaJaAvaliada()`, `listarAvaliacoesMedico()`, `toggleExibirNoPerfil()`
+- `getRankingMedico()`, `listarRankingTop()`
+- `getRankingConfig()`, `salvarRankingConfig()`, `recalcularRankingTodos()`
+
+## 3. Componente de avaliação
+
+**Novo `src/components/paciente/AvaliarMedicoDialog.tsx`:**
+- Dialog com estrelas clicáveis (1-5), campo de comentário, checkbox "tornar público"
+- Validação: só aparece para consultas concluídas sem avaliação existente
+- Feedback visual após envio
+
+## 4. Integração no PacienteAgendamentos
+
+- Botão "Avaliar" ao lado de cada consulta concluída (verifica se já avaliou)
+- Abre o `AvaliarMedicoDialog`
+
+## 5. Dashboard Médico — `/app/medico/gamificacao`
+
+**Nova página `src/pages/app/medico/MedicoGamificacao.tsx`:**
+- **Performance**: nota média, total avaliações, atendimentos, posição no ranking, taxa de conversão, taxa de no-show, fator de recência
+- **Avaliações**: lista de comentários recebidos com toggle para exibir/ocultar no perfil público
+- Página separada, não mistura com financeiro
+
+## 6. Dashboard Admin — `/app/admin/gamificacao`
+
+**Nova página `src/pages/app/admin/AdminGamificacao.tsx`:**
+- **Pesos do ranking**: formulário com sliders para os 6 pesos (validação soma = 1.0)
+- **Configuração**: mín. avaliações para exibir, dias recência ativo/penalidade
+- **Top médicos**: tabela com ranking, score, avaliações, atendimentos
+- **Botão recalcular**: recalcula ranking de todos os médicos
+- Página separada, protegida por `gamificacao.configurar`
+
+## 7. Rotas e menus
+
+- `App.tsx`: adicionar rotas `/app/medico/gamificacao` e `/app/admin/gamificacao`
+- `menuCatalog.ts`: adicionar item "Gamificação" no menu do colaborador (admin)
+- Imports e guards adequados (`MedicoGuard`, `RequireRoutePermission`)
+
+## Arquivos criados/modificados
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/...gamificacao_fase1.sql` | Criar |
+| `src/lib/gamificacao.ts` | Criar |
+| `src/components/paciente/AvaliarMedicoDialog.tsx` | Criar |
+| `src/pages/app/medico/MedicoGamificacao.tsx` | Criar |
+| `src/pages/app/admin/AdminGamificacao.tsx` | Criar |
+| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Modificar (botão avaliar) |
+| `src/App.tsx` | Modificar (2 rotas) |
+| `src/lib/menu/menuCatalog.ts` | Modificar (menu item) |
+
+## O que NÃO será alterado
+- Financeiro existente (saques, repasse, snapshots)
+- Planos e assinaturas
+- Nenhuma lógica de consulta existente
