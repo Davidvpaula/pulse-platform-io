@@ -116,6 +116,7 @@ export default function AdminUsuarios() {
   const [motivoSel, setMotivoSel] = useState<string>(motivosSugeridos[0]);
   const [motivoTxt, setMotivoTxt] = useState("");
   const [observacao, setObservacao] = useState("");
+  const [bloqueadoAte, setBloqueadoAte] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   // diálogo novo paciente
