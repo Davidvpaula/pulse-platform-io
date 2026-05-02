@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { Link, useParams } from "react-router-dom";
 import { Loader2, Clock, Stethoscope, ArrowRight, Star, Crown, Megaphone } from "lucide-react";
 import PageShell from "@/components/PageShell";
@@ -33,7 +34,7 @@ type MedicoItem = {
   ranking_score?: number;
 };
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
