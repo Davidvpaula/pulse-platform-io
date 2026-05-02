@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, ShieldCheck } from "lucide-react";
+import { Loader2, Save, ShieldCheck, Search, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Policy = {
   id: number;
@@ -33,7 +34,8 @@ export default function AdminSeguranca() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
-
+  const [filtroResultado, setFiltroResultado] = useState<string>("todos");
+  const [filtroBusca, setFiltroBusca] = useState("");
   async function load() {
     setLoading(true);
     const [{ data: p }, { data: a }] = await Promise.all([
@@ -174,11 +176,32 @@ export default function AdminSeguranca() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="tentativas">
+        <TabsContent value="tentativas" className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por email..."
+                value={filtroBusca} onChange={e => setFiltroBusca(e.target.value)}
+                className="pl-8 w-64"
+              />
+            </div>
+            <Select value={filtroResultado} onValueChange={setFiltroResultado}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="sucesso">Sucesso</SelectItem>
+                <SelectItem value="falha">Falha</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={load}>
+              <RefreshCw className="h-4 w-4 mr-1" /> Atualizar
+            </Button>
+          </div>
           <Card>
             <CardHeader>
-              <CardTitle>Últimas tentativas (50)</CardTitle>
-              <CardDescription>Inclui sucessos e falhas.</CardDescription>
+              <CardTitle>Tentativas de login</CardTitle>
+              <CardDescription>Últimas 50 tentativas. Use os filtros para investigar.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -192,18 +215,28 @@ export default function AdminSeguranca() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {attempts.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Sem registros</TableCell></TableRow>
-                    ) : attempts.map((a) => (
-                      <TableRow key={a.id}>
-                        <TableCell className="text-xs">{new Date(a.attempted_at).toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-sm">{a.email_norm}</TableCell>
-                        <TableCell className="font-mono text-xs">{a.ip_address ?? "—"}</TableCell>
-                        <TableCell>
-                          {a.success ? <Badge>Sucesso</Badge> : <Badge variant="destructive">Falha</Badge>}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {(() => {
+                      let list = attempts;
+                      if (filtroResultado === "sucesso") list = list.filter(a => a.success);
+                      if (filtroResultado === "falha") list = list.filter(a => !a.success);
+                      if (filtroBusca) {
+                        const b = filtroBusca.toLowerCase();
+                        list = list.filter(a => a.email_norm.toLowerCase().includes(b));
+                      }
+                      if (list.length === 0) {
+                        return <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Sem registros</TableCell></TableRow>;
+                      }
+                      return list.map((a) => (
+                        <TableRow key={a.id}>
+                          <TableCell className="text-xs">{new Date(a.attempted_at).toLocaleString("pt-BR")}</TableCell>
+                          <TableCell className="text-sm">{a.email_norm}</TableCell>
+                          <TableCell className="font-mono text-xs">{a.ip_address ?? "—"}</TableCell>
+                          <TableCell>
+                            {a.success ? <Badge>Sucesso</Badge> : <Badge variant="destructive">Falha</Badge>}
+                          </TableCell>
+                        </TableRow>
+                      ));
+                    })()}
                   </TableBody>
                 </Table>
               </div>

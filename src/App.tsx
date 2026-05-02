@@ -90,6 +90,7 @@ import PermissoesLog from "@/pages/app/admin/PermissoesLog";
 import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
 import AdminSessoes from "@/pages/app/admin/AdminSessoes";
 import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
+import AdminAlertasSeguranca from "@/pages/app/admin/AdminAlertasSeguranca";
 import AdminServicos from "@/pages/app/admin/AdminServicos";
 import AdminTreinamentos from "@/pages/app/admin/AdminTreinamentos";
 import MedicoServicos from "@/pages/app/medico/MedicoServicos";
@@ -304,6 +305,7 @@ const App = () => (
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
               <Route path="admin/sessoes" element={<G perm="colaboradores.alterar_permissoes"><AdminSessoes /></G>} />
               <Route path="admin/seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminSeguranca /></G>} />
+              <Route path="admin/alertas-seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminAlertasSeguranca /></G>} />
               <Route path="admin/servicos" element={<G perm="financeiro.servicos_gerenciar"><AdminServicos /></G>} />
               <Route path="admin/atendimento-imediato" element={<G perm="financeiro.servicos_gerenciar"><AdminAtendimentoImediato /></G>} />
               <Route path="admin/treinamentos" element={<G perm="colaboradores.alterar_permissoes"><AdminTreinamentos /></G>} />

@@ -82,6 +82,18 @@ export default function AdminSessoes() {
     load();
   }
 
+  async function revokeAll() {
+    const ativas = rows.filter(r => !r.revoked_at);
+    if (ativas.length === 0) return;
+    let ok = 0;
+    for (const r of ativas) {
+      const { error } = await supabase.rpc("session_revoke", { _session_id: r.id, _reason: "Revogação em massa pelo admin" });
+      if (!error) ok++;
+    }
+    toast({ title: `${ok} sessão(ões) revogada(s)` });
+    load();
+  }
+
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
     if (!t) return rows;
@@ -119,6 +131,25 @@ export default function AdminSessoes() {
             <Button variant="outline" size="sm" onClick={() => setShowRevoked((v) => !v)}>
               {showRevoked ? "Esconder revogadas" : "Mostrar revogadas"}
             </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={rows.filter(r => !r.revoked_at).length === 0}>
+                  <ShieldOff className="h-4 w-4 mr-1" /> Revogar todas
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Revogar TODAS as sessões ativas?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Isso deslogará {rows.filter(r => !r.revoked_at).length} usuário(s) em até 1 minuto. Use apenas em emergências.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={revokeAll}>Revogar todas</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button variant="outline" size="sm" onClick={load}>
               <RefreshCw className="h-4 w-4" />
             </Button>
