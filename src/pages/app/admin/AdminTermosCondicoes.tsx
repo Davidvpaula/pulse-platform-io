@@ -417,7 +417,7 @@ export default function AdminTermosCondicoes() {
           <DialogHeader>
             <DialogTitle>{previewTermo?.titulo} (v{previewTermo?.versao})</DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: previewTermo?.conteudo ?? "" }} />
+          <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewTermo?.conteudo ?? "") }} />
         </DialogContent>
       </Dialog>
 

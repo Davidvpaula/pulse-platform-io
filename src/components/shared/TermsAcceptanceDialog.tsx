@@ -73,7 +73,7 @@ export function TermsAcceptanceDialog({ tipo, open, onOpenChange, onAccepted, ob
               ref={scrollRef}
               className="flex-1 overflow-y-auto border rounded-md p-4 prose prose-sm dark:prose-invert max-w-none"
               style={{ maxHeight: "50vh" }}
-              dangerouslySetInnerHTML={{ __html: termo.conteudo }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(termo.conteudo) }}
             />
 
             <div className="flex items-center gap-2 mt-4">
