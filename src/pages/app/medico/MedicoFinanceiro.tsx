@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter, Banknote, CalendarClock, ArrowDownToLine } from "lucide-react";
+import { Wallet, TrendingUp, Clock, CheckCircle2, AlertCircle, Loader2, Filter, Banknote, CalendarClock, ArrowDownToLine, Building2, User } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
