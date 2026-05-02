@@ -73,6 +73,12 @@ const PERIODOS = [
   ["total", "Total do plano"],
 ] as const;
 
+const SLA_OPTIONS = [
+  ["padrao", "Padrão"],
+  ["prioritario", "Prioritário"],
+  ["vip", "VIP"],
+] as const;
+
 function emptyPlano(): Plano {
   return {
     nome: "",
@@ -94,6 +100,11 @@ function emptyPlano(): Plano {
     destacado: false,
     ordem_exibicao: 0,
     cta_texto: "Quero esse plano",
+    valor_por_vida_centavos: null,
+    coparticipacao_pct: null,
+    sla_prioridade: "padrao",
+    especialidades_liberadas: [],
+    regras_uso_json: null,
   };
 }
 
