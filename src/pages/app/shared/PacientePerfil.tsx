@@ -170,7 +170,7 @@ export default function PacientePerfil() {
   const defaultTab = searchParams.get("tab") || "visao-geral";
 
   const voltarTo = location.pathname.startsWith("/app/admin")
-    ? "/app/admin/usuarios"
+    ? "/app/admin/pacientes"
     : location.pathname.startsWith("/app/colaborador")
     ? "/app/colaborador/pacientes"
     : "/app/secretaria/pacientes";
