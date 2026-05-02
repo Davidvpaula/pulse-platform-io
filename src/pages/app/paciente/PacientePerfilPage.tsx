@@ -379,6 +379,10 @@ export default function PacientePerfilPage() {
               <ContaSeguranca emailAtual={email} onEmailChange={setEmail} />
             </TabsContent>
 
+            <TabsContent value="termos">
+              <MeusAceites />
+            </TabsContent>
+
             <div className="flex justify-end">
               <Button type="submit" disabled={saving} className="bg-gradient-primary hover:opacity-90">
                 {saving
