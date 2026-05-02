@@ -29,7 +29,9 @@ export default function TermosPendentesBanner() {
     ? "paciente" as const
     : profileKey === "medico"
       ? "medico" as const
-      : undefined;
+      : profileKey === "empresa"
+        ? "empresa" as const
+        : undefined;
 
   const check = useCallback(async () => {
     if (!session) return;
