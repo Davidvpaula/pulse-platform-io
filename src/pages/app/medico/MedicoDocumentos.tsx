@@ -118,6 +118,20 @@ export default function MedicoDocumentos() {
     carregar();
   }
 
+  async function toggleVisibilidadeEmpresa(consultaId: string) {
+    const novoValor = !visibMap[consultaId];
+    const { error } = await supabase
+      .from("anexos_consulta")
+      .update({ visibilidade_empresa: novoValor } as any)
+      .eq("consulta_id", consultaId);
+    if (error) {
+      toast.error("Erro ao alterar visibilidade");
+      return;
+    }
+    setVisibMap(prev => ({ ...prev, [consultaId]: novoValor }));
+    toast.success(novoValor ? "Documentos compartilhados com empresa" : "Documentos marcados como privados");
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
