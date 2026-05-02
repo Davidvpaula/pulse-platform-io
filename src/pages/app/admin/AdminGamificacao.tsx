@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Settings, Trophy, RefreshCw, Loader2, Users, Star, Save, AlertTriangle,
-  Crown, Megaphone, DollarSign, Target, Zap,
+  Crown, Megaphone, DollarSign, Target, Zap, History, Filter,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
