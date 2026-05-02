@@ -16,6 +16,7 @@ interface Props {
 }
 
 export function MatrizPermissoes({ scope, scopeValue }: Props) {
+  const { session } = useSession();
   const [catalog, setCatalog] = useState<Perm[]>([]);
   const [ativos, setAtivos] = useState<Set<string>>(new Set());
   const [busca, setBusca] = useState("");
