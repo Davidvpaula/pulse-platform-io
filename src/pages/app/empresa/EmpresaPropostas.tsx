@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import {
   Plus, Loader2, Send, Building2, Stethoscope, Clock,
   CheckCircle2, XCircle, ArrowRight, FileText, Search,
+  Target, DollarSign, MessageSquareText,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
@@ -84,8 +82,6 @@ export default function EmpresaPropostas() {
     if (!session?.user?.id) return;
     setLoading(true);
     try {
-      // Get empresa id from empresas_funcionarios or is_empresa_owner
-      // For empresa user, find their empresa
       const { data: empFunc } = await supabase
         .from("empresas_funcionarios")
         .select("empresa_id")
@@ -95,7 +91,6 @@ export default function EmpresaPropostas() {
 
       const eid = empFunc?.empresa_id;
       if (!eid) {
-        // Try from pacientes table
         const { data: pac } = await supabase
           .from("pacientes")
           .select("empresa_id")
@@ -166,6 +161,10 @@ export default function EmpresaPropostas() {
       toast.error("Informe um valor válido");
       return;
     }
+    if (!formMensagem.trim()) {
+      toast.error("Descreva seus interesses e objetivos");
+      return;
+    }
     if (!formTermoAceito) {
       toast.error("Aceite os termos para continuar");
       return;
@@ -180,12 +179,12 @@ export default function EmpresaPropostas() {
         tipo_contrato: formTipoContrato,
         valor_mensal_centavos: valorCentavos,
         qtd_atendimentos: formQtd ? parseInt(formQtd) : null,
-        mensagem_empresa: formMensagem || null,
+        mensagem_empresa: formMensagem.trim(),
         termo_empresa_aceito: true,
         termo_empresa_versao: termoVersao,
       });
       if (error) throw error;
-      toast.success("Proposta enviada com sucesso");
+      toast.success("Proposta enviada com sucesso! Será analisada pela Lasmar Telemed.");
       setShowForm(false);
       resetForm();
       carregarDados();
@@ -223,11 +222,184 @@ export default function EmpresaPropostas() {
     );
   }
 
+  // ─── NEW PROPOSAL FORM (card-based, inline) ───
+  if (showForm) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto">
+        <PageHeader
+          title="Nova Proposta Personalizada"
+          description="Descreva seus interesses e objetivos, selecione o médico e faça sua oferta."
+          actions={
+            <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>
+              Cancelar
+            </Button>
+          }
+        />
+
+        {/* Step 1: Select doctor */}
+        <Card className="card-elevated border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Stethoscope className="h-4 w-4 text-primary" />
+              Médico e Especialidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Médico *</Label>
+              <Select value={formMedicoId} onValueChange={setFormMedicoId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um médico" />
+                </SelectTrigger>
+                <SelectContent>
+                  {medicos.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Especialidade (opcional)</Label>
+              <Select value={formEspecialidadeId} onValueChange={setFormEspecialidadeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Qualquer especialidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {especialidades.map(e => (
+                    <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Step 2: Interests & Objectives */}
+        <Card className="card-elevated border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              Interesses e Objetivos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Descreva sua proposta *</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Explique o que sua empresa busca, tipo de atendimento desejado, público-alvo dos colaboradores, frequência esperada e qualquer detalhe relevante.
+              </p>
+              <Textarea
+                placeholder="Ex: Buscamos atendimento de saúde ocupacional para nossos 200 colaboradores, com foco em consultas preventivas mensais e acompanhamento de casos crônicos..."
+                value={formMensagem}
+                onChange={e => setFormMensagem(e.target.value)}
+                rows={6}
+                className="resize-none"
+              />
+            </div>
+            <div>
+              <Label>Qtd. de atendimentos estimada (opcional)</Label>
+              <Input
+                type="number"
+                placeholder="Ex: 20 atendimentos/mês"
+                value={formQtd}
+                onChange={e => setFormQtd(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Step 3: Offer */}
+        <Card className="card-elevated border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" />
+              Sua Oferta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Tipo de contrato *</Label>
+                <Select value={formTipoContrato} onValueChange={v => setFormTipoContrato(v as TipoContrato)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mensal">Mensal</SelectItem>
+                    <SelectItem value="pacote">Pacote</SelectItem>
+                    <SelectItem value="recorrente">Recorrente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Valor ofertado (R$) *</Label>
+                <Input
+                  type="text"
+                  placeholder="1.500,00"
+                  value={formValor}
+                  onChange={e => setFormValor(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Este valor será analisado pela Lasmar Telemed antes de ser encaminhado ao médico.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Step 4: Terms */}
+        <Card className="card-elevated border-border">
+          <CardContent className="pt-6 space-y-3">
+            {termoConteudo && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 max-h-40 overflow-auto text-xs leading-relaxed">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Termos e Condições — Lasmar Telemed
+                </p>
+                {termoConteudo}
+              </div>
+            )}
+            {!termoConteudo && (
+              <p className="text-xs text-muted-foreground italic">
+                Os termos de proposta comercial serão disponibilizados em breve.
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="termo-empresa"
+                checked={formTermoAceito}
+                onCheckedChange={v => setFormTermoAceito(v === true)}
+              />
+              <Label htmlFor="termo-empresa" className="text-xs">
+                Li e aceito os termos de proposta comercial da Lasmar Telemed
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit */}
+        <div className="flex justify-end gap-3 pb-8">
+          <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>
+            Cancelar
+          </Button>
+          <Button
+            size="lg"
+            onClick={enviarProposta}
+            disabled={sending || !formMedicoId || !formValor || !formMensagem.trim() || !formTermoAceito}
+          >
+            {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            Enviar Proposta
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── LIST VIEW ───
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Propostas Comerciais"
-        description="Envie propostas de atendimento diretamente para médicos da plataforma."
+        title="Planos Personalizados"
+        description="Monte propostas de atendimento diretamente para médicos da plataforma."
         actions={
           <Button onClick={() => setShowForm(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nova Proposta
@@ -288,7 +460,7 @@ export default function EmpresaPropostas() {
 
                   <div className="grid grid-cols-3 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-muted-foreground">Valor</p>
+                      <p className="text-xs text-muted-foreground">Valor ofertado</p>
                       <p className="font-semibold">{brl(p.valor_mensal_centavos)}</p>
                     </div>
                     <div>
@@ -307,9 +479,14 @@ export default function EmpresaPropostas() {
                     </p>
                   )}
                   {p.mensagem_empresa && (
-                    <p className="text-xs text-muted-foreground border-l-2 border-primary/20 pl-2 italic">
-                      {p.mensagem_empresa}
-                    </p>
+                    <div className="border-l-2 border-primary/20 pl-3 py-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-0.5">
+                        <MessageSquareText className="h-3 w-3" /> Interesses e objetivos
+                      </p>
+                      <p className="text-xs text-muted-foreground italic line-clamp-3">
+                        {p.mensagem_empresa}
+                      </p>
+                    </div>
                   )}
 
                   {/* Timeline */}
@@ -338,118 +515,6 @@ export default function EmpresaPropostas() {
           })}
         </div>
       )}
-
-      {/* New proposal dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-primary" />
-              Nova Proposta Comercial
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label>Médico *</Label>
-              <Select value={formMedicoId} onValueChange={setFormMedicoId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um médico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {medicos.map(m => (
-                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Especialidade</Label>
-              <Select value={formEspecialidadeId} onValueChange={setFormEspecialidadeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Opcional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {especialidades.map(e => (
-                    <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Tipo de contrato *</Label>
-                <Select value={formTipoContrato} onValueChange={v => setFormTipoContrato(v as TipoContrato)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mensal">Mensal</SelectItem>
-                    <SelectItem value="pacote">Pacote</SelectItem>
-                    <SelectItem value="recorrente">Recorrente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Valor mensal (R$) *</Label>
-                <Input
-                  type="text"
-                  placeholder="1.500,00"
-                  value={formValor}
-                  onChange={e => setFormValor(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Qtd. de atendimentos (opcional)</Label>
-              <Input
-                type="number"
-                placeholder="Ex: 20"
-                value={formQtd}
-                onChange={e => setFormQtd(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label>Mensagem para o médico</Label>
-              <Textarea
-                placeholder="Descreva os detalhes da proposta…"
-                value={formMensagem}
-                onChange={e => setFormMensagem(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {termoConteudo && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3 max-h-32 overflow-auto text-xs">
-                {termoConteudo}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="termo-empresa"
-                checked={formTermoAceito}
-                onCheckedChange={v => setFormTermoAceito(v === true)}
-              />
-              <Label htmlFor="termo-empresa" className="text-xs">
-                Li e aceito os termos de proposta comercial
-              </Label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-            <Button onClick={enviarProposta} disabled={sending || !formMedicoId || !formValor || !formTermoAceito}>
-              {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              Enviar Proposta
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
