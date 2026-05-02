@@ -78,7 +78,6 @@ export default function AdminServicos() {
   const [saving, setSaving] = useState(false);
   const [pctValid, setPctValid] = useState<boolean>(true);
   const [paServicoId, setPaServicoId] = useState<string | null>(null);
-  const [savingPa, setSavingPa] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -98,18 +97,6 @@ export default function AdminServicos() {
   }
   useEffect(() => { load(); }, []);
 
-  async function salvarPa(id: string | null) {
-    setSavingPa(true);
-    const { error } = await supabase
-      .from("app_settings")
-      .update({ value: id as any })
-      .eq("key", "atendimento_imediato.servico_id");
-    setSavingPa(false);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
-    setPaServicoId(id);
-    broadcastAtendimentoImediatoConfigChanged();
-    toast({ title: id ? "Atendimento imediato configurado" : "Atendimento imediato desativado" });
-  }
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
@@ -198,37 +185,25 @@ export default function AdminServicos() {
         </Button>
       </div>
 
-      {/* Configuração da porta pública /atendimento-imediato */}
+      {/* Atalho: Atendimento imediato */}
       <Card className="border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
         <CardHeader>
           <CardTitle className="text-base">⚡ Atendimento imediato (porta pública)</CardTitle>
           <CardDescription>
-            Escolha qual serviço de Pronto Atendimento alimenta a página pública{" "}
-            <code className="text-xs">/atendimento-imediato</code>. Apenas serviços ativos
-            do tipo "pronto_atendimento" com pelo menos 1 médico aderido aparecem.
+            Configure o serviço vinculado à porta pública, preço, duração e repasse no painel dedicado.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-3">
-            <Select
-              value={paServicoId ?? "none"}
-              onValueChange={(v) => salvarPa(v === "none" ? null : v)}
-              disabled={savingPa}
-            >
-              <SelectTrigger className="w-80">
-                <SelectValue placeholder="Selecione um serviço" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Desativar porta pública —</SelectItem>
-                {rows
-                  .filter((r) => r.ativo && r.tipo === "pronto_atendimento" && (counts[r.id] ?? 0) > 0)
-                  .map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.nome} · {brl(r.valor_paciente_centavos)} · {counts[r.id]} médico(s)
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            {paServicoId ? (
+              <Badge variant="secondary" className="text-xs">
+                Serviço vinculado ativo
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs text-warning border-warning/30">
+                Nenhum serviço vinculado
+              </Badge>
+            )}
             {paServicoId && (
               <Button asChild variant="outline" size="sm">
                 <a href="/atendimento-imediato" target="_blank" rel="noreferrer">
@@ -242,11 +217,6 @@ export default function AdminServicos() {
               </a>
             </Button>
           </div>
-          {rows.filter((r) => r.ativo && r.tipo === "pronto_atendimento" && (counts[r.id] ?? 0) > 0).length === 0 && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              Nenhum serviço de Pronto Atendimento elegível. Crie um serviço tipo "pronto_atendimento", ative-o e tenha ao menos 1 médico aderido.
-            </p>
-          )}
         </CardContent>
       </Card>
 

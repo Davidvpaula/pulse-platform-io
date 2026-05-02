@@ -693,8 +693,9 @@ export async function getAppSetting<T = unknown>(key: string): Promise<T | null>
 }
 
 export async function getProntoAtendimentoDuracao(): Promise<number> {
-  const v = await getAppSetting<number>("pronto_atendimento_duracao_min");
-  return typeof v === "number" && v > 0 ? v : 15;
+  const cfg = await getServicoAtendimentoImediato();
+  if (cfg && cfg.duracao_min > 0) return cfg.duracao_min;
+  return 15;
 }
 
 /**
