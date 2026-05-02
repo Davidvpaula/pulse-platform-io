@@ -13,17 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validarCobranca } from "@/lib/validation/cobranca";
+import { brl, downloadCSV } from "@/lib/relatorios/utils";
 
-const brl = (c: number) => ((c || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
-
-function downloadCSV(filename: string, rows: (string | number)[][]) {
-  const csv = rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
 
 export default function AdminFinanceiroCentral() {
   const hoje = new Date();
