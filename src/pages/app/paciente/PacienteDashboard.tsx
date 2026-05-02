@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { proximasConsultasPaciente, documentosPaciente, timelinePaciente, type Status } from "@/lib/mock";
 import { CategorizedTimeline } from "@/components/CategorizedTimeline";
 import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
+import AvaliacaoPendenteBanner from "@/components/paciente/AvaliacaoPendenteBanner";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
