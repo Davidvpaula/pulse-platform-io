@@ -62,6 +62,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/gestao-b2b":      [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B" }],
   "/app/admin/relatorios-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Relatórios" }],
   "/app/admin/faturamento-b2b": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Faturamento" }],
+  "/app/admin/propostas-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Propostas B2B" }],
   "/app/admin/contrato-b2b/:id": [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B", to: "/app/admin/gestao-b2b" }, { label: "Detalhes do Contrato" }],
 
   // ── Admin: Financeiro ──
