@@ -291,7 +291,7 @@ export default function SecretariaDashboard() {
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                   {f.canal_origem && <span className="rounded-full bg-muted px-2 py-0.5">{f.canal_origem}</span>}
-                  <StatusBadge status={f.status} />
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium capitalize">{f.status.replace(/_/g, " ")}</span>
                   {f.espera > 0 && (
                     <span className="text-muted-foreground"><Clock className="inline h-3 w-3 mr-0.5" />{f.espera} min</span>
                   )}
