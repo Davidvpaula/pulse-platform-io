@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { registrarClique } from "@/lib/gamificacao";
 
 type Servico = {
   id: string;
