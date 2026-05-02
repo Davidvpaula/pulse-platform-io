@@ -6263,23 +6263,23 @@ export type Database = {
       medico_acesso_efetivo: { Args: { _medico_id: string }; Returns: string }
       medico_aprovar: {
         Args: { _id: string; _observacao?: string }
-        Returns: Json
+        Returns: undefined
       }
       medico_bloquear: {
         Args: { _id: string; _motivo: string; _observacao?: string }
-        Returns: Json
+        Returns: undefined
       }
       medico_colocar_em_analise: {
         Args: { _id: string; _observacao?: string }
-        Returns: Json
+        Returns: undefined
       }
       medico_reativar: {
         Args: { _id: string; _justificativa: string }
-        Returns: Json
+        Returns: undefined
       }
       medico_reprovar: {
         Args: { _id: string; _motivo: string; _observacao?: string }
-        Returns: Json
+        Returns: undefined
       }
       medico_servico_toggle: {
         Args: { _ativo: boolean; _servico_id: string }
@@ -6293,7 +6293,7 @@ export type Database = {
           _motivo: string
           _observacao?: string
         }
-        Returns: Json
+        Returns: undefined
       }
       password_mark_changed: { Args: never; Returns: undefined }
       password_status: {
