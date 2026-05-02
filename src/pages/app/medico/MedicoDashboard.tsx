@@ -22,6 +22,7 @@ import { useAuth, useCan } from "@/lib/auth";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 
 function formatBRL(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
