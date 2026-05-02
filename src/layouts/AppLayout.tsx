@@ -105,6 +105,12 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
 
+          {/* Flow context badge */}
+          <span className="flow-badge hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
+            <flow.icon className="h-3 w-3" />
+            {flow.label}
+          </span>
+
           <div className="flex-1" />
 
           <NotificationsBell />
