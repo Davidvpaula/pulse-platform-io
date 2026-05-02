@@ -112,6 +112,8 @@ import AdminRelatorioAuditoria from "@/pages/app/admin/AdminRelatorioAuditoria";
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
+import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
+import MedicoCorporativo from "@/pages/app/medico/MedicoCorporativo";
 import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
@@ -215,6 +217,8 @@ const App = () => (
               <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
               <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
 
+              <Route path="medico/corporativo" element={<MedicoGuard><MedicoCorporativo /></MedicoGuard>} />
+
               {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
               <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
               <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
@@ -265,6 +269,7 @@ const App = () => (
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/planos-cancelamentos" element={<G perm="financeiro.servicos_gerenciar"><AdminCancelamentosPlanos /></G>} />
+              <Route path="admin/planos-empresariais" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosEmpresariais /></G>} />
               <Route path="admin/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
               <Route path="admin/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
               <Route path="admin/termos-condicoes" element={<AdminTermosCondicoes />} />
