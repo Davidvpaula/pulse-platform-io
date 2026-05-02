@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FileText, Download, Search, Loader2, Building2, Wallet,
   Clock, CheckCircle2, AlertTriangle, XCircle, Filter, CalendarDays,
-  ReceiptText, Eye, ExternalLink, Stethoscope,
+  ReceiptText, Eye, ExternalLink, Stethoscope, ArrowUpDown, ArrowUp, ArrowDown,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
@@ -71,6 +72,30 @@ export default function AdminFaturamentoB2B() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [filtroAno, setFiltroAno] = useState(String(new Date().getFullYear()));
   const [filtroEmpresa, setFiltroEmpresa] = useState("todas");
+
+  type SortKey = "valor" | "competencia" | "vencimento";
+  type SortDir = "asc" | "desc";
+  const [sortKey, setSortKey] = useState<SortKey>("competencia");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [pagina, setPagina] = useState(1);
+  const POR_PAGINA = 20;
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+    setPagina(1);
+  }
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <ArrowUpDown className="ml-1 inline h-3 w-3 opacity-40" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="ml-1 inline h-3 w-3 text-primary" />
+      : <ArrowDown className="ml-1 inline h-3 w-3 text-primary" />;
+  }
   const [detalheAberto, setDetalheAberto] = useState<FaturaRow | null>(null);
   const [medicosVinculados, setMedicosVinculados] = useState<{ id: string; nome: string; qtd: number }[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
@@ -157,7 +182,7 @@ export default function AdminFaturamentoB2B() {
     }
   }
 
-  const lista = useMemo(() => {
+  const listaFiltrada = useMemo(() => {
     let arr = faturas;
     if (filtroStatus !== "todos") arr = arr.filter(f => f.status === filtroStatus);
     if (filtroAno !== "todos") arr = arr.filter(f => String(f.competencia_ano) === filtroAno);
@@ -166,16 +191,34 @@ export default function AdminFaturamentoB2B() {
       const q = busca.toLowerCase();
       arr = arr.filter(f => f.razao_social.toLowerCase().includes(q) || f.competencia_label.includes(q));
     }
-    return arr;
-  }, [faturas, filtroStatus, filtroAno, filtroEmpresa, busca]);
+    // Ordenação
+    const sorted = [...arr].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "valor") {
+        cmp = a.valor_total_centavos - b.valor_total_centavos;
+      } else if (sortKey === "competencia") {
+        cmp = (a.competencia_ano * 100 + a.competencia_mes) - (b.competencia_ano * 100 + b.competencia_mes);
+      } else if (sortKey === "vencimento") {
+        cmp = (a.vencimento ?? "").localeCompare(b.vencimento ?? "");
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [faturas, filtroStatus, filtroAno, filtroEmpresa, busca, sortKey, sortDir]);
+
+  const totalPaginas = Math.max(1, Math.ceil(listaFiltrada.length / POR_PAGINA));
+  const lista = useMemo(() => {
+    const inicio = (pagina - 1) * POR_PAGINA;
+    return listaFiltrada.slice(inicio, inicio + POR_PAGINA);
+  }, [listaFiltrada, pagina]);
 
   const kpis = useMemo(() => {
-    const abertas = lista.filter(f => f.status === "em_aberto");
-    const atrasadas = lista.filter(f => f.status === "atrasada");
-    const pagas = lista.filter(f => f.status === "paga");
+    const abertas = listaFiltrada.filter(f => f.status === "em_aberto");
+    const atrasadas = listaFiltrada.filter(f => f.status === "atrasada");
+    const pagas = listaFiltrada.filter(f => f.status === "paga");
     return {
-      total: lista.length,
-      valorTotal: lista.reduce((s, f) => s + f.valor_total_centavos, 0),
+      total: listaFiltrada.length,
+      valorTotal: listaFiltrada.reduce((s, f) => s + f.valor_total_centavos, 0),
       abertas: abertas.length,
       valorAberto: abertas.reduce((s, f) => s + f.valor_total_centavos, 0),
       atrasadas: atrasadas.length,
@@ -183,12 +226,12 @@ export default function AdminFaturamentoB2B() {
       pagas: pagas.length,
       valorPago: pagas.reduce((s, f) => s + f.valor_total_centavos, 0),
     };
-  }, [lista]);
+  }, [listaFiltrada]);
 
   function exportarCSV() {
-    if (lista.length === 0) { toast.info("Nenhuma fatura para exportar"); return; }
+    if (listaFiltrada.length === 0) { toast.info("Nenhuma fatura para exportar"); return; }
     const header = "Empresa;Competência;Vencimento;Valor (R$);Funcionários;Consultas;Status;Pago em\n";
-    const rows = lista.map(f =>
+    const rows = listaFiltrada.map(f =>
       [
         f.razao_social,
         f.competencia_label,
@@ -243,9 +286,9 @@ export default function AdminFaturamentoB2B() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Buscar empresa ou competência…" value={busca} onChange={e => setBusca(e.target.value)} />
+            <Input className="pl-9" placeholder="Buscar empresa ou competência…" value={busca} onChange={e => { setBusca(e.target.value); setPagina(1); }} />
           </div>
-          <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+          <Select value={filtroStatus} onValueChange={v => { setFiltroStatus(v); setPagina(1); }}>
             <SelectTrigger className="w-[150px]">
               <Filter className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
@@ -254,7 +297,7 @@ export default function AdminFaturamentoB2B() {
               {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filtroAno} onValueChange={setFiltroAno}>
+          <Select value={filtroAno} onValueChange={v => { setFiltroAno(v); setPagina(1); }}>
             <SelectTrigger className="w-[120px]">
               <CalendarDays className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
@@ -264,7 +307,7 @@ export default function AdminFaturamentoB2B() {
               {gerarAnosDisponiveis().map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filtroEmpresa} onValueChange={setFiltroEmpresa}>
+          <Select value={filtroEmpresa} onValueChange={v => { setFiltroEmpresa(v); setPagina(1); }}>
             <SelectTrigger className="w-[200px]">
               <Building2 className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
@@ -274,7 +317,7 @@ export default function AdminFaturamentoB2B() {
               {empresasUnicas.map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground">{lista.length} resultado(s)</span>
+          <span className="text-xs text-muted-foreground">{listaFiltrada.length} resultado(s)</span>
         </div>
       </div>
 
@@ -284,11 +327,17 @@ export default function AdminFaturamentoB2B() {
           <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="text-left px-4 py-3">Empresa</th>
-              <th className="text-left px-3 py-3">Competência</th>
-              <th className="text-right px-3 py-3">Valor</th>
+              <th className="text-left px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("competencia")}>
+                Competência <SortIcon col="competencia" />
+              </th>
+              <th className="text-right px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("valor")}>
+                Valor <SortIcon col="valor" />
+              </th>
               <th className="text-right px-3 py-3">Funcionários</th>
               <th className="text-right px-3 py-3">Consultas</th>
-              <th className="text-left px-3 py-3">Vencimento</th>
+              <th className="text-left px-3 py-3 cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("vencimento")}>
+                Vencimento <SortIcon col="vencimento" />
+              </th>
               <th className="text-left px-3 py-3">Pago em</th>
               <th className="text-left px-3 py-3">Status</th>
               <th className="text-right px-4 py-3">Ações</th>
@@ -338,7 +387,46 @@ export default function AdminFaturamentoB2B() {
         </table>
       </div>
 
-      {/* Modal de detalhes */}
+      {/* Paginação */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-muted-foreground">
+            Mostrando {(pagina - 1) * POR_PAGINA + 1}–{Math.min(pagina * POR_PAGINA, listaFiltrada.length)} de {listaFiltrada.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" disabled={pagina <= 1} onClick={() => setPagina(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: Math.min(totalPaginas, 7) }, (_, i) => {
+              let p: number;
+              if (totalPaginas <= 7) {
+                p = i + 1;
+              } else if (pagina <= 4) {
+                p = i + 1;
+              } else if (pagina >= totalPaginas - 3) {
+                p = totalPaginas - 6 + i;
+              } else {
+                p = pagina - 3 + i;
+              }
+              return (
+                <Button
+                  key={p}
+                  variant={p === pagina ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => setPagina(p)}
+                >
+                  {p}
+                </Button>
+              );
+            })}
+            <Button variant="outline" size="sm" disabled={pagina >= totalPaginas} onClick={() => setPagina(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={!!detalheAberto} onOpenChange={() => setDetalheAberto(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
