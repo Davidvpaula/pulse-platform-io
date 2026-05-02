@@ -2534,6 +2534,100 @@ export type Database = {
         }
         Relationships: []
       }
+      impulsionamento_campanhas: {
+        Row: {
+          cliques: number
+          cpc_centavos: number
+          created_at: string
+          especialidade_ids: string[] | null
+          fim: string | null
+          gasto_centavos: number
+          id: string
+          impressoes: number
+          inicio: string
+          medico_id: string
+          orcamento_centavos: number
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          cliques?: number
+          cpc_centavos?: number
+          created_at?: string
+          especialidade_ids?: string[] | null
+          fim?: string | null
+          gasto_centavos?: number
+          id?: string
+          impressoes?: number
+          inicio?: string
+          medico_id: string
+          orcamento_centavos?: number
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          cliques?: number
+          cpc_centavos?: number
+          created_at?: string
+          especialidade_ids?: string[] | null
+          fim?: string | null
+          gasto_centavos?: number
+          id?: string
+          impressoes?: number
+          inicio?: string
+          medico_id?: string
+          orcamento_centavos?: number
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impulsionamento_campanhas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impulsionamento_cliques: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          id: string
+          ip_hash: string | null
+          origem: string | null
+          paciente_id: string | null
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          origem?: string | null
+          paciente_id?: string | null
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          origem?: string | null
+          paciente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impulsionamento_cliques_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "impulsionamento_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integracoes_config: {
         Row: {
           ambiente: string
@@ -3207,6 +3301,53 @@ export type Database = {
             columns: ["saque_id"]
             isOneToOne: false
             referencedRelation: "saques_medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_premium: {
+        Row: {
+          ativo: boolean
+          auto_renovar: boolean
+          created_at: string
+          fim: string | null
+          id: string
+          inicio: string | null
+          medico_id: string
+          stripe_subscription_id: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          auto_renovar?: boolean
+          created_at?: string
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+          medico_id: string
+          stripe_subscription_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          auto_renovar?: boolean
+          created_at?: string
+          fim?: string | null
+          id?: string
+          inicio?: string | null
+          medico_id?: string
+          stripe_subscription_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_premium_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
         ]
@@ -5835,6 +5976,15 @@ export type Database = {
           _valor_novo?: string
         }
         Returns: string
+      }
+      registrar_clique_impulsionamento: {
+        Args: {
+          p_campanha_id: string
+          p_ip_hash?: string
+          p_origem?: string
+          p_paciente_id?: string
+        }
+        Returns: undefined
       }
       relatorios_clinica: {
         Args: {
