@@ -223,6 +223,8 @@ export default function AdminUsuarios() {
       if (filtro === "ativo" && r.status_conta !== "ativo") return false;
       if (filtro === "suspenso" && r.status_conta !== "suspenso") return false;
       if (filtro === "bloqueado" && r.status_conta !== "bloqueado") return false;
+      if (filtro === "banido" && r.status_conta !== "banido") return false;
+      if (filtro === "pendente" && r.status_conta !== "pendente") return false;
       if (filtro === "particular" && r.empresa_id) return false;
       if (filtro === "empresarial" && !r.empresa_id) return false;
       if (filtro === "feegow_ok" && r.feegow_status !== "liberado") return false;
