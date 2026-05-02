@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import PageShell from "@/components/PageShell";
 import { Card, CardContent } from "@/components/ui/card";

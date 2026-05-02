@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import PageShell from "@/components/PageShell";
