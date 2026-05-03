@@ -88,9 +88,9 @@ export default function AdminRelatorios() {
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Visão analítica completa dos eventos sensíveis: filtros por entidade, usuário, severidade e período, com exportação CSV/PDF.
             </p>
-            <a href="/app/admin/relatorios/auditoria" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+            <Link to="/app/admin/auditoria?tab=painel" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
               Abrir relatório completo de auditoria →
-            </a>
+            </Link>
           </Card>
         </TabsContent>
       </Tabs>
