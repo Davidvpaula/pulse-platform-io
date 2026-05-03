@@ -244,14 +244,14 @@ export async function salvarRankingConfig(config: Partial<RankingConfig> & { id:
 }
 
 export async function recalcularRankingTodos() {
-  const { error } = await supabase.rpc("recalcular_ranking_todos" as any);
+  const { error } = await rpcCall("recalcular_ranking_todos");
   if (error) throw error;
 }
 
 /* ── Consultas pendentes de avaliação (auto-prompt) ── */
 
 export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAvaliacao[]> {
-  const { data, error } = await supabase.rpc("consultas_pendentes_avaliacao" as any);
+  const { data, error } = await rpcCall("consultas_pendentes_avaliacao");
   if (error) throw error;
   return (data ?? []) as unknown as ConsultaPendenteAvaliacao[];
 }
@@ -314,7 +314,7 @@ export async function togglePremiumAdmin(medico_id: string, ativo: boolean, tipo
 }
 
 export async function verificarPremiumConquistado(medico_id: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("verificar_premium_conquistado" as any, {
+  const { data, error } = await rpcCall("verificar_premium_conquistado", {
     p_medico_id: medico_id,
   });
   if (error) throw error;
@@ -323,7 +323,7 @@ export async function verificarPremiumConquistado(medico_id: string): Promise<bo
 
 /** Médico solicita ativação Premium (tipo "conquistado") — executa via RPC SECURITY DEFINER. */
 export async function ativarPremiumConquistado(_medico_id: string) {
-  const { data, error } = await supabase.rpc("ativar_premium_conquistado" as any);
+  const { data, error } = await rpcCall("ativar_premium_conquistado");
   if (error) throw error;
   if (data === false) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
 }
@@ -387,7 +387,7 @@ export async function listarTodasCampanhas(limit = 50): Promise<ImpulsionamentoC
 }
 
 export async function registrarClique(campanha_id: string, paciente_id?: string, origem = "busca") {
-  const { error } = await supabase.rpc("registrar_clique_impulsionamento" as any, {
+  const { error } = await rpcCall("registrar_clique_impulsionamento", {
     p_campanha_id: campanha_id,
     p_paciente_id: paciente_id ?? null,
     p_origem: origem,
