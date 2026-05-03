@@ -63,7 +63,7 @@ export function FiltrosGlobaisBar({ value, onChange, showClinicos = true, showEm
     })();
   }, [showClinicos, showEmpresa]);
 
-  const setPreset = (p: "hoje" | "7d" | "30d" | "mes" | "ano") => {
+  const setPreset = (p: "hoje" | "7d" | "30d" | "90d" | "mes" | "ano") => {
     const { inicio, fim } = periodoPreset(p);
     onChange({ ...value, inicio, fim });
   };

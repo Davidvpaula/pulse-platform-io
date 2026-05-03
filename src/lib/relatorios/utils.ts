@@ -16,13 +16,14 @@ export type FiltrosGlobais = {
   empresa_id?: string | null;
 };
 
-export function periodoPreset(preset: "hoje" | "7d" | "30d" | "mes" | "ano"): { inicio: string; fim: string } {
+export function periodoPreset(preset: "hoje" | "7d" | "30d" | "90d" | "mes" | "ano"): { inicio: string; fim: string } {
   const hoje = new Date();
   const fim = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
   let inicio = new Date(hoje);
   if (preset === "hoje") inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
   else if (preset === "7d") inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 6);
   else if (preset === "30d") inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 29);
+  else if (preset === "90d") inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 89);
   else if (preset === "mes") inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   else if (preset === "ano") inicio = new Date(hoje.getFullYear(), 0, 1);
   return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) };
