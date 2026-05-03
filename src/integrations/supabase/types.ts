@@ -5950,6 +5950,7 @@ export type Database = {
       analytics_overview: { Args: { _dias?: number }; Returns: Json }
       analytics_tempo_real: { Args: never; Returns: Json }
       analytics_trafego: { Args: { _dias?: number }; Returns: Json }
+      ativar_premium_conquistado: { Args: never; Returns: boolean }
       auditoria_dashboard: {
         Args: { p_fim?: string; p_inicio?: string }
         Returns: Json
@@ -6089,6 +6090,7 @@ export type Database = {
           especialidade_nome: string
           medico_id: string
           medico_nome: string
+          paciente_id: string
         }[]
       }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }

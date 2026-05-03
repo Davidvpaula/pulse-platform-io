@@ -1,7 +1,26 @@
 /**
  * Camada de serviço para gamificação médica.
+ *
+ * NOTA: As tabelas de gamificação (avaliacoes_medicas, medico_ranking, ranking_config,
+ * medico_premium, medico_saldo_crescimento, impulsionamento_*) não estão no types.ts
+ * auto-gerado. Por isso usamos `as any` nas chamadas do Supabase client.
+ * Os tipos locais abaixo garantem tipagem segura no restante do código.
  */
 import { supabase } from "@/integrations/supabase/client";
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- tabelas fora do types.ts gerado */
+
+/**
+ * Helper tipado: faz `.from(table as any)` uma única vez e retorna o builder.
+ * Centraliza o `as any` para não espalhar em toda função.
+ */
+function fromTable(table: string) {
+  return supabase.from(table as any);
+}
+
+function rpcCall(fn: string, params?: Record<string, unknown>) {
+  return supabase.rpc(fn as any, params as any);
+}
 
 /* ── Types ── */
 
@@ -11,6 +30,7 @@ export type ConsultaPendenteAvaliacao = {
   medico_nome: string | null;
   especialidade_nome: string | null;
   concluida_em: string;
+  paciente_id: string;
 };
 
 export type SaldoCrescimentoItem = {
@@ -123,8 +143,7 @@ export async function enviarAvaliacao(params: {
   comentario?: string;
   avaliacao_publica: boolean;
 }) {
-  const { data, error } = await supabase
-    .from("avaliacoes_medicas" as any)
+  const { data, error } = await fromTable("avaliacoes_medicas")
     .insert({
       paciente_id: params.paciente_id,
       medico_id: params.medico_id,
@@ -141,16 +160,14 @@ export async function enviarAvaliacao(params: {
 
 export async function consultasAvaliadasIds(consulta_ids: string[]): Promise<Set<string>> {
   if (!consulta_ids.length) return new Set();
-  const { data } = await supabase
-    .from("avaliacoes_medicas" as any)
+  const { data } = await fromTable("avaliacoes_medicas")
     .select("consulta_id")
     .in("consulta_id", consulta_ids);
   return new Set((data ?? []).map((r: any) => r.consulta_id));
 }
 
 export async function listarAvaliacoesMedico(medico_id: string): Promise<AvaliacaoMedica[]> {
-  const { data, error } = await supabase
-    .from("avaliacoes_medicas" as any)
+  const { data, error } = await fromTable("avaliacoes_medicas")
     .select("*")
     .eq("medico_id", medico_id)
     .order("created_at", { ascending: false });
@@ -159,8 +176,7 @@ export async function listarAvaliacoesMedico(medico_id: string): Promise<Avaliac
 }
 
 export async function toggleExibirNoPerfil(avaliacao_id: string, exibir: boolean) {
-  const { error } = await supabase
-    .from("avaliacoes_medicas" as any)
+  const { error } = await fromTable("avaliacoes_medicas")
     .update({ exibir_no_perfil: exibir })
     .eq("id", avaliacao_id);
   if (error) throw error;
@@ -169,8 +185,7 @@ export async function toggleExibirNoPerfil(avaliacao_id: string, exibir: boolean
 /* ── Ranking ── */
 
 export async function getRankingMedico(medico_id: string): Promise<MedicoRanking | null> {
-  const { data } = await supabase
-    .from("medico_ranking" as any)
+  const { data } = await fromTable("medico_ranking")
     .select("*")
     .eq("medico_id", medico_id)
     .maybeSingle();
@@ -178,8 +193,7 @@ export async function getRankingMedico(medico_id: string): Promise<MedicoRanking
 }
 
 export async function listarRankingTop(limit = 20): Promise<MedicoRanking[]> {
-  const { data } = await supabase
-    .from("medico_ranking" as any)
+  const { data } = await fromTable("medico_ranking")
     .select("*")
     .order("ranking_score", { ascending: false })
     .limit(limit);
@@ -189,8 +203,7 @@ export async function listarRankingTop(limit = 20): Promise<MedicoRanking[]> {
 /* ── Config Admin ── */
 
 export async function getRankingConfig(): Promise<RankingConfig | null> {
-  const { data } = await supabase
-    .from("ranking_config" as any)
+  const { data } = await fromTable("ranking_config")
     .select("*")
     .limit(1)
     .maybeSingle();
@@ -198,8 +211,7 @@ export async function getRankingConfig(): Promise<RankingConfig | null> {
 }
 
 export async function salvarRankingConfig(config: Partial<RankingConfig> & { id: string }) {
-  const { error } = await supabase
-    .from("ranking_config" as any)
+  const { error } = await fromTable("ranking_config")
     .update({
       peso_avaliacao: config.peso_avaliacao,
       peso_atendimentos: config.peso_atendimentos,
@@ -224,14 +236,14 @@ export async function salvarRankingConfig(config: Partial<RankingConfig> & { id:
 }
 
 export async function recalcularRankingTodos() {
-  const { error } = await supabase.rpc("recalcular_ranking_todos" as any);
+  const { error } = await rpcCall("recalcular_ranking_todos");
   if (error) throw error;
 }
 
 /* ── Consultas pendentes de avaliação (auto-prompt) ── */
 
 export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAvaliacao[]> {
-  const { data, error } = await supabase.rpc("consultas_pendentes_avaliacao" as any);
+  const { data, error } = await rpcCall("consultas_pendentes_avaliacao");
   if (error) throw error;
   return (data ?? []) as unknown as ConsultaPendenteAvaliacao[];
 }
@@ -239,8 +251,7 @@ export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAva
 /* ── Saldo de Crescimento ── */
 
 export async function listarSaldoCrescimento(medico_id: string): Promise<SaldoCrescimentoItem[]> {
-  const { data, error } = await supabase
-    .from("medico_saldo_crescimento" as any)
+  const { data, error } = await fromTable("medico_saldo_crescimento")
     .select("*")
     .eq("medico_id", medico_id)
     .order("created_at", { ascending: false })
@@ -250,8 +261,7 @@ export async function listarSaldoCrescimento(medico_id: string): Promise<SaldoCr
 }
 
 export async function getSaldoAtual(medico_id: string): Promise<number> {
-  const { data } = await supabase
-    .from("medico_saldo_crescimento" as any)
+  const { data } = await fromTable("medico_saldo_crescimento")
     .select("saldo_apos")
     .eq("medico_id", medico_id)
     .order("created_at", { ascending: false })
@@ -263,8 +273,7 @@ export async function getSaldoAtual(medico_id: string): Promise<number> {
 /* ── Premium ── */
 
 export async function getMedicoPremium(medico_id: string): Promise<MedicoPremium | null> {
-  const { data } = await supabase
-    .from("medico_premium" as any)
+  const { data } = await fromTable("medico_premium")
     .select("*")
     .eq("medico_id", medico_id)
     .maybeSingle();
@@ -272,16 +281,14 @@ export async function getMedicoPremium(medico_id: string): Promise<MedicoPremium
 }
 
 export async function listarTodosPremium(): Promise<(MedicoPremium & { nome?: string })[]> {
-  const { data } = await supabase
-    .from("medico_premium" as any)
+  const { data } = await fromTable("medico_premium")
     .select("*")
     .order("updated_at", { ascending: false });
   return (data ?? []) as unknown as (MedicoPremium & { nome?: string })[];
 }
 
 export async function togglePremiumAdmin(medico_id: string, ativo: boolean, tipo: "pago" | "conquistado" = "conquistado") {
-  const { error } = await supabase
-    .from("medico_premium" as any)
+  const { error } = await fromTable("medico_premium")
     .upsert({
       medico_id,
       ativo,
@@ -294,35 +301,24 @@ export async function togglePremiumAdmin(medico_id: string, ativo: boolean, tipo
 }
 
 export async function verificarPremiumConquistado(medico_id: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("verificar_premium_conquistado" as any, {
+  const { data, error } = await rpcCall("verificar_premium_conquistado", {
     p_medico_id: medico_id,
   });
   if (error) throw error;
   return data as boolean;
 }
 
-/** Médico solicita ativação Premium (tipo "conquistado") — só funciona se qualificado. */
-export async function ativarPremiumConquistado(medico_id: string) {
-  const qualificado = await verificarPremiumConquistado(medico_id);
-  if (!qualificado) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
-  const { error } = await supabase
-    .from("medico_premium" as any)
-    .upsert({
-      medico_id,
-      ativo: true,
-      tipo: "conquistado",
-      inicio: new Date().toISOString(),
-      fim: null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "medico_id" });
+/** Médico solicita ativação Premium (tipo "conquistado") — executa via RPC SECURITY DEFINER. */
+export async function ativarPremiumConquistado(_medico_id: string) {
+  const { data, error } = await rpcCall("ativar_premium_conquistado");
   if (error) throw error;
+  if (data === false) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
 }
 
 /* ── Impulsionamento / Campanhas ── */
 
 export async function listarCampanhasMedico(medico_id: string): Promise<ImpulsionamentoCampanha[]> {
-  const { data, error } = await supabase
-    .from("impulsionamento_campanhas" as any)
+  const { data, error } = await fromTable("impulsionamento_campanhas")
     .select("*")
     .eq("medico_id", medico_id)
     .order("created_at", { ascending: false });
@@ -344,8 +340,7 @@ export async function criarCampanha(params: {
     cpc = config?.cpc_padrao_centavos ?? 50;
   }
 
-  const { data, error } = await supabase
-    .from("impulsionamento_campanhas" as any)
+  const { data, error } = await fromTable("impulsionamento_campanhas")
     .insert({
       medico_id: params.medico_id,
       titulo: params.titulo,
@@ -360,16 +355,14 @@ export async function criarCampanha(params: {
 }
 
 export async function atualizarStatusCampanha(campanha_id: string, status: ImpulsionamentoCampanha["status"]) {
-  const { error } = await supabase
-    .from("impulsionamento_campanhas" as any)
+  const { error } = await fromTable("impulsionamento_campanhas")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", campanha_id);
   if (error) throw error;
 }
 
 export async function listarTodasCampanhas(limit = 50): Promise<ImpulsionamentoCampanha[]> {
-  const { data } = await supabase
-    .from("impulsionamento_campanhas" as any)
+  const { data } = await fromTable("impulsionamento_campanhas")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -377,7 +370,7 @@ export async function listarTodasCampanhas(limit = 50): Promise<ImpulsionamentoC
 }
 
 export async function registrarClique(campanha_id: string, paciente_id?: string, origem = "busca") {
-  const { error } = await supabase.rpc("registrar_clique_impulsionamento" as any, {
+  const { error } = await rpcCall("registrar_clique_impulsionamento", {
     p_campanha_id: campanha_id,
     p_paciente_id: paciente_id ?? null,
     p_origem: origem,
@@ -388,8 +381,7 @@ export async function registrarClique(campanha_id: string, paciente_id?: string,
 /* ── Conversões ── */
 
 export async function listarConversoes(campanha_id?: string): Promise<ImpulsionamentoConversao[]> {
-  let query = supabase
-    .from("impulsionamento_conversoes" as any)
+  let query = fromTable("impulsionamento_conversoes")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(100);
@@ -402,8 +394,7 @@ export async function listarConversoes(campanha_id?: string): Promise<Impulsiona
 }
 
 export async function getConversoesPorCampanha(): Promise<Record<string, number>> {
-  const { data } = await supabase
-    .from("impulsionamento_conversoes" as any)
+  const { data } = await fromTable("impulsionamento_conversoes")
     .select("campanha_id");
   const map: Record<string, number> = {};
   for (const row of (data ?? []) as any[]) {
