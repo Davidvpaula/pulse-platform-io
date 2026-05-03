@@ -307,66 +307,7 @@ function SidebarBody({
         </div>
       )}
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {loading && !isDemoMode ? (
-          <ul className="space-y-1.5 px-1">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <li key={i} className="h-8 rounded-lg bg-sidebar-accent/40 animate-pulse" />
-            ))}
-          </ul>
-        ) : (
-          <ul className="space-y-0.5">
-            {visibleNav.map((item) => {
-              if (item.children?.length) {
-                const open = item.children.some(c => pathname.startsWith(c.to));
-                return (
-                  <li key={item.label}>
-                    <Collapsible defaultOpen={open}>
-                      <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1 text-left truncate">{item.label}</span>
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform data-[state=closed]:-rotate-90" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-0.5 space-y-0.5 pl-7">
-                        {item.children.map(c => (
-                          <NavLink
-                            key={c.to}
-                            to={c.to}
-                            onClick={onNavigate}
-                            className={({ isActive }) =>
-                              cn(
-                                "block rounded-md px-3 py-1.5 text-sm transition-colors",
-                                isActive
-                                  ? "bg-primary-soft text-primary font-semibold"
-                                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                              )
-                            }
-                          >
-                            {c.label}
-                          </NavLink>
-                        ))}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </li>
-                );
-              }
-              return (
-                <li key={item.to ?? item.label}>
-                  <NavLink to={item.to!} onClick={onNavigate} className={linkClass}>
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </NavLink>
-                </li>
-              );
-            })}
-            {visibleNav.length === 0 && profileKey === "colaborador" && (
-              <li className="px-3 py-4 text-xs text-muted-foreground">
-                Nenhum módulo liberado para o seu usuário ainda. Fale com um administrador.
-              </li>
-            )}
-          </ul>
-        )}
-      </nav>
+      <AccordionNav visibleNav={visibleNav} loading={loading} isDemoMode={isDemoMode} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
 
       <div className="border-t border-sidebar-border p-3">
         <div className="rounded-lg bg-gradient-primary p-3 text-primary-foreground">
@@ -377,5 +318,98 @@ function SidebarBody({
         </div>
       </div>
     </>
+  );
+}
+
+/* ─── Accordion Nav: only one group open at a time ─── */
+function AccordionNav({
+  visibleNav, loading, isDemoMode, profileKey, pathname, onNavigate, linkClass,
+}: {
+  visibleNav: RenderItem[];
+  loading: boolean;
+  isDemoMode: boolean;
+  profileKey: ProfileKey;
+  pathname: string;
+  onNavigate: () => void;
+  linkClass: (p: { isActive: boolean }) => string;
+}) {
+  // Derive active group from pathname
+  const activeGroupLabel = useMemo(() => {
+    return visibleNav.find(
+      (item) => item.children?.some((c) => pathname.startsWith(c.to))
+    )?.label ?? null;
+  }, [visibleNav, pathname]);
+
+  const [openGroup, setOpenGroup] = useState<string | null>(activeGroupLabel);
+
+  // Sync when route changes (e.g. navigating from outside the sidebar)
+  useEffect(() => {
+    if (activeGroupLabel) setOpenGroup(activeGroupLabel);
+  }, [activeGroupLabel]);
+
+  return (
+    <nav className="flex-1 overflow-y-auto px-3 py-4">
+      {loading && !isDemoMode ? (
+        <ul className="space-y-1.5 px-1">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <li key={i} className="h-8 rounded-lg bg-sidebar-accent/40 animate-pulse" />
+          ))}
+        </ul>
+      ) : (
+        <ul className="space-y-0.5">
+          {visibleNav.map((item) => {
+            if (item.children?.length) {
+              const isOpen = openGroup === item.label;
+              return (
+                <li key={item.label}>
+                  <Collapsible
+                    open={isOpen}
+                    onOpenChange={(val) => setOpenGroup(val ? item.label : null)}
+                  >
+                    <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 text-left truncate">{item.label}</span>
+                      <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-200", !isOpen && "-rotate-90")} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-0.5 space-y-0.5 pl-7">
+                      {item.children.map(c => (
+                        <NavLink
+                          key={c.to}
+                          to={c.to}
+                          onClick={onNavigate}
+                          className={({ isActive }) =>
+                            cn(
+                              "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                              isActive
+                                ? "bg-primary-soft text-primary font-semibold"
+                                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                            )
+                          }
+                        >
+                          {c.label}
+                        </NavLink>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </li>
+              );
+            }
+            return (
+              <li key={item.to ?? item.label}>
+                <NavLink to={item.to!} onClick={onNavigate} className={linkClass}>
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </NavLink>
+              </li>
+            );
+          })}
+          {visibleNav.length === 0 && profileKey === "colaborador" && (
+            <li className="px-3 py-4 text-xs text-muted-foreground">
+              Nenhum módulo liberado para o seu usuário ainda. Fale com um administrador.
+            </li>
+          )}
+        </ul>
+      )}
+    </nav>
   );
 }
