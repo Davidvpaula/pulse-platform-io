@@ -319,7 +319,7 @@ const App = () => (
               <Route path="admin/analises/comparativo" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/relatorios" element={<G perm="relatorios.ver"><AdminRelatorios /></G>} />
               <Route path="admin/relatorios/financeiro" element={<G perm="relatorios.ver"><AdminRelatorioFinanceiro /></G>} />
-              <Route path="admin/relatorios/auditoria" element={<G perm="auditoria.ver"><AdminRelatorioAuditoria /></G>} />
+              <Route path="admin/relatorios/auditoria" element={<Navigate to="/app/admin/auditoria?tab=painel" replace />} />
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
