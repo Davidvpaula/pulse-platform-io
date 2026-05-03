@@ -535,7 +535,21 @@ export default function AdminAuditoria() {
                   <Field label="Ator" value={detalhe.actor_nome || "Sistema"} />
                   <Field label="Ator ID" value={<span className="font-mono text-xs">{detalhe.actor_id || "—"}</span>} />
                   <Field label="Entidade" value={detalhe.entidade_tipo || "—"} />
-                  <Field label="Entidade ID" value={<span className="font-mono text-xs break-all">{detalhe.entidade_id || "—"}</span>} />
+                  <Field label="Entidade ID" value={
+                    detalhe.entidade_id ? (
+                      <span className="font-mono text-xs break-all">
+                        {String(detalhe.entidade_id)}
+                        {(() => {
+                          const href = linkEntidade(detalhe.entidade_tipo, String(detalhe.entidade_id));
+                          return href ? (
+                            <Link to={href} className="ml-2 text-primary hover:underline text-[11px] font-sans" onClick={() => setDetalhe(null)}>
+                              Ver →
+                            </Link>
+                          ) : null;
+                        })()}
+                      </span>
+                    ) : "—"
+                  } />
                 </div>
 
                 {(detalhe.campo || detalhe.valor_anterior || detalhe.valor_novo) && (
