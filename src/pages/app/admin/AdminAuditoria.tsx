@@ -52,6 +52,22 @@ function periodoInicial(): { inicio: string; fim: string } {
   return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) };
 }
 
+/** Mapa entidade_tipo → rota admin (quando aplicável) */
+function linkEntidade(tipo: string | null, id: string | null): string | null {
+  if (!tipo || !id) return null;
+  const map: Record<string, string> = {
+    consulta: `/app/admin/agendamentos`,
+    colaborador: `/app/admin/colaboradores`,
+    medico: `/app/admin/medicos`,
+    paciente: `/app/admin/pacientes/${id}`,
+    empresa: `/app/admin/empresas`,
+    plano: `/app/admin/planos`,
+    assinatura: `/app/admin/planos`,
+    permissao: `/app/admin/permissoes`,
+  };
+  return map[tipo] || null;
+}
+
 export default function AdminAuditoria() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabInicial = searchParams.get("tab") || "eventos";
