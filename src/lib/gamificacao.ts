@@ -1,7 +1,26 @@
 /**
  * Camada de serviço para gamificação médica.
+ *
+ * NOTA: As tabelas de gamificação (avaliacoes_medicas, medico_ranking, ranking_config,
+ * medico_premium, medico_saldo_crescimento, impulsionamento_*) não estão no types.ts
+ * auto-gerado. Por isso usamos `as any` nas chamadas do Supabase client.
+ * Os tipos locais abaixo garantem tipagem segura no restante do código.
  */
 import { supabase } from "@/integrations/supabase/client";
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- tabelas fora do types.ts gerado */
+
+/**
+ * Helper tipado: faz `.from(table as any)` uma única vez e retorna o builder.
+ * Centraliza o `as any` para não espalhar em toda função.
+ */
+function fromTable(table: string) {
+  return supabase.from(table as any);
+}
+
+function rpcCall(fn: string, params?: Record<string, unknown>) {
+  return supabase.rpc(fn as any, params as any);
+}
 
 /* ── Types ── */
 
