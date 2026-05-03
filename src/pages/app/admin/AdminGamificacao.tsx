@@ -84,7 +84,7 @@ export default function AdminGamificacao() {
         .from("medico_premium" as any)
         .select("medico_id, ativo")
         .in("medico_id", allMedicoIds);
-      premiumMap = new Map(((premiums ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
+      premiumMap = new Map(((premiums ?? []) as { medico_id: string; ativo: boolean }[]).map((p) => [p.medico_id, p.ativo]));
     }
 
     setTop(ranking.map((r) => ({ ...r, nome: nomeMap.get(r.medico_id) ?? "—", premium_ativo: premiumMap.get(r.medico_id) ?? false })));
