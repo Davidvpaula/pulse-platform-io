@@ -197,6 +197,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Templates", to: "/app/comunicacao/templates" },
           { label: "Automações", to: "/app/comunicacao/automacoes" },
           { label: "Métricas", to: "/app/comunicacao/metricas" },
+          { label: "Configurações", to: "/app/comunicacao/configuracoes" },
           { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
         ],
       },
