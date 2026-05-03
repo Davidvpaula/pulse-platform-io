@@ -53,6 +53,19 @@ export function downloadCSV(filename: string, rows: (string | number | null | un
   URL.revokeObjectURL(url);
 }
 
+/** Gera CSV a partir de array de objetos (auto-detecta colunas). */
+export function downloadCSVFromObjects(filename: string, rows: Record<string, any>[]) {
+  if (!rows.length) return;
+  const cols = Object.keys(rows[0]);
+  const csv = [cols.join(","), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? "")).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 export const formatDia = (s: string) => {
   const d = new Date(s + "T00:00:00");
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
