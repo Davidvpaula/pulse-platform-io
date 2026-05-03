@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarCheck, Video, ShieldCheck, Stethoscope, Building2, Sparkles, Star, Clock, HeartPulse, Activity } from "lucide-react";
+import { ArrowRight, CalendarCheck, Video, ShieldCheck, Stethoscope, Building2, Sparkles, Star, Clock, HeartPulse, Activity, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { especialidades, medicos } from "@/lib/mock";
+import { Badge } from "@/components/ui/badge";
+import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
+import { useMedicosDestaque } from "@/hooks/useMedicosDestaque";
+import EmBreveDialog from "@/components/EmBreveDialog";
 
 export default function Home() {
+  const { especialidades, loading: loadingEsps } = useEspecialidadesPublicas();
+  const { medicos, loading: loadingMedicos } = useMedicosDestaque();
+  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
+
   return (
     <>
       {/* HERO */}
@@ -96,48 +104,85 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* ESPECIALIDADES */}
+      {/* ESPECIALIDADES — dados reais do banco */}
       <section className="container py-20">
         <SectionHead title="Especialidades disponíveis" subtitle="Encontre o profissional certo para você" link={{ to: "/especialidades", label: "Ver todas" }} />
-        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {especialidades.map((e) => (
-            <Link key={e.slug} to={`/medicos`} className="group card-elevated p-5 transition hover:-translate-y-0.5 hover:shadow-elegant">
-              <div className="text-2xl">{e.icon}</div>
-              <p className="mt-3 font-semibold">{e.nome}</p>
-              <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary">Ver médicos →</p>
-            </Link>
-          ))}
-        </div>
+        {loadingEsps ? (
+          <div className="mt-10 flex items-center justify-center py-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando especialidades…
+          </div>
+        ) : (
+          <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {especialidades.map((e) => {
+              const temMedicos = e.total_medicos > 0;
+              return temMedicos ? (
+                <Link
+                  key={e.id}
+                  to={`/agendar?esp=${e.id}`}
+                  className="group card-elevated p-5 transition hover:-translate-y-0.5 hover:shadow-elegant"
+                >
+                  <div className="text-2xl">{e.icone ?? "🩺"}</div>
+                  <p className="mt-3 font-semibold">{e.nome}</p>
+                  <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary">
+                    {e.total_medicos} {e.total_medicos === 1 ? "médico" : "médicos"} →
+                  </p>
+                </Link>
+              ) : (
+                <button
+                  key={e.id}
+                  onClick={() => setEmBreveNome(e.nome)}
+                  className="card-elevated p-5 text-left opacity-70 cursor-pointer hover:opacity-85 transition"
+                >
+                  <div className="text-2xl grayscale">{e.icone ?? "🩺"}</div>
+                  <p className="mt-3 font-semibold">{e.nome}</p>
+                  <Badge className="mt-1.5 bg-muted text-muted-foreground text-[10px]">
+                    <Clock className="mr-1 h-3 w-3" /> Em breve
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      {/* MÉDICOS */}
+      {/* MÉDICOS EM DESTAQUE — dados reais */}
       <section className="bg-muted/30 py-20">
         <div className="container">
           <SectionHead title="Médicos em destaque" subtitle="Profissionais avaliados pelos pacientes" link={{ to: "/medicos", label: "Ver todos" }} />
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {medicos.slice(0, 3).map((m) => (
-              <div key={m.slug} className="card-elevated p-6">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
-                    {m.nome.split(" ").map(s => s[0]).slice(0,2).join("")}
+          {loadingMedicos ? (
+            <div className="mt-10 flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando médicos…
+            </div>
+          ) : medicos.length === 0 ? (
+            <div className="mt-10 card-elevated p-8 text-center text-sm text-muted-foreground">
+              Médicos em destaque aparecerão aqui em breve.
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {medicos.map((m) => (
+                <div key={m.id} className="card-elevated p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
+                      {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{m.nome}</p>
+                      <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{m.nome}</p>
-                    <p className="text-xs text-muted-foreground">{m.especialidade} · {m.crm}</p>
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <span className="inline-flex items-center gap-1 text-warning">
+                      <Star className="h-4 w-4 fill-current" /> {m.avaliacao_media?.toFixed(1) ?? "—"}
+                    </span>
+                    {m.online && <Badge className="bg-success/10 text-success text-[10px]">Online</Badge>}
                   </div>
+                  <Button asChild className="mt-5 w-full bg-gradient-primary hover:opacity-90">
+                    <Link to={`/agendar`}>Agendar consulta</Link>
+                  </Button>
                 </div>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="inline-flex items-center gap-1 text-warning">
-                    <Star className="h-4 w-4 fill-current" /> {m.rating}
-                  </span>
-                  <span className="font-semibold text-foreground">R$ {m.valor}</span>
-                </div>
-                <Button asChild className="mt-5 w-full bg-gradient-primary hover:opacity-90">
-                  <Link to={`/medicos/${m.slug}`}>Ver perfil</Link>
-                </Button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -158,6 +203,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Dialog Em Breve */}
+      <EmBreveDialog
+        open={!!emBreveNome}
+        onOpenChange={(v) => { if (!v) setEmBreveNome(null); }}
+        especialidade={emBreveNome ?? ""}
+      />
     </>
   );
 }
