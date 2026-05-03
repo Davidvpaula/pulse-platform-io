@@ -112,7 +112,7 @@ import AdminAtendimentoImediato from "@/pages/app/admin/AdminAtendimentoImediato
 import AdminPlanos from "@/pages/app/admin/AdminPlanos";
 import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
 import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro";
-import AdminRelatorioAuditoria from "@/pages/app/admin/AdminRelatorioAuditoria";
+// AdminRelatorioAuditoria unificado com AdminAuditoria — rota redireciona via Navigate
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
