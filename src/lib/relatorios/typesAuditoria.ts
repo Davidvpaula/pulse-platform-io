@@ -39,6 +39,12 @@ export const MODULOS_AUDITORIA = [
   { value: "colaboradores", label: "Colaboradores" },
   { value: "planos", label: "Planos & Assinaturas" },
   { value: "comunicacao", label: "Comunicação" },
+  { value: "financeiro", label: "Financeiro" },
+  { value: "medicos", label: "Médicos" },
+  { value: "pacientes", label: "Pacientes" },
+  { value: "empresas", label: "Empresas" },
+  { value: "permissoes", label: "Permissões" },
+  { value: "geral", label: "Geral / Sistema" },
 ];
 
 export const RISCOS_AUDITORIA = [
