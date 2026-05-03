@@ -78,24 +78,45 @@ export function gerarPdfAuditoria(d: DadosRelatorioAuditoriaPdf) {
   });
   y = (doc as any).lastAutoTable.finalY + 14;
 
-  // KPIs
+  // KPIs — adaptado ao formato da RPC auditoria_dashboard
   const k = d.dashboard || {};
+  const risco = k.por_risco || {};
+  const origem = k.por_origem || {};
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("Indicadores do período", margin, y);
   autoTable(doc, {
     startY: y + 6,
-    head: [["Total", "Hoje", "Críticos", "Altos", "Médios", "Financeiro", "Permissões", "Integrações", "Bloqueios", "Não revisados"]],
+    head: [["Total", "Últimas 24h", "Críticos", "Altos", "Médios", "Baixos", "Manual", "Sistema", "Revisados", "Não revisados"]],
     body: [[
-      k.total ?? 0, k.hoje ?? 0, k.criticos ?? 0, k.altos ?? 0, k.medios ?? 0,
-      k.financeiro ?? 0, k.permissoes ?? 0, k.integracao ?? 0, k.bloqueios ?? 0,
-      k.nao_revisados_sensiveis ?? 0,
+      k.total ?? 0, k.ultimas_24h ?? 0,
+      risco.critico ?? 0, risco.alto ?? 0, risco.medio ?? 0, risco.baixo ?? 0,
+      origem.manual ?? 0, origem.sistema ?? 0,
+      k.revisados ?? 0, k.nao_revisados ?? 0,
     ].map((v) => String(v))],
     styles: { fontSize: 9, cellPadding: 5, halign: "center" },
     headStyles: { fillColor: [15, 23, 42], textColor: 255 },
     margin: { left: margin, right: margin },
   });
   y = (doc as any).lastAutoTable.finalY + 18;
+
+  // Distribuição por módulo
+  const porModulo = k.por_modulo || {};
+  const moduloEntries = Object.entries(porModulo);
+  if (moduloEntries.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Distribuição por módulo", margin, y);
+    autoTable(doc, {
+      startY: y + 6,
+      head: [["Módulo", "Eventos"]],
+      body: moduloEntries.map(([mod, cnt]) => [mod, String(cnt)]),
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+      margin: { left: margin, right: margin },
+    });
+    y = (doc as any).lastAutoTable.finalY + 18;
+  }
 
   // Top atores
   if (Array.isArray(k.top_atores) && k.top_atores.length) {
@@ -132,7 +153,7 @@ export function gerarPdfAuditoria(d: DadosRelatorioAuditoriaPdf) {
       e.modulo || "",
       trunc(e.acao, 36),
       trunc(e.actor_nome, 26),
-      trunc(`${e.entidade_tipo || ""}${e.entidade_id ? ":" + e.entidade_id.slice(0, 8) : ""}`, 28),
+      trunc(`${e.entidade_tipo || ""}${e.entidade_id ? ":" + String(e.entidade_id).slice(0, 8) : ""}`, 28),
       trunc(e.campo, 18),
       trunc(`${e.valor_anterior || ""} → ${e.valor_novo || ""}`, 50),
       e.origem || "",
