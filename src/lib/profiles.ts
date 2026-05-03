@@ -247,7 +247,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         children: [
           { label: "Visão geral", to: "/app/admin/relatorios" },
           { label: "Financeiro", to: "/app/admin/relatorios/financeiro" },
-          { label: "Auditoria", to: "/app/admin/relatorios/auditoria", requiresCapability: "auditoria.ver" },
+          { label: "Auditoria", to: "/app/admin/auditoria?tab=painel", requiresCapability: "auditoria.ver" },
         ],
       },
       { label: "Auditoria", to: "/app/admin/auditoria", icon: Eye, requiresCapability: "auditoria.ver" },

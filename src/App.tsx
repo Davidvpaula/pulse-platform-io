@@ -112,7 +112,7 @@ import AdminAtendimentoImediato from "@/pages/app/admin/AdminAtendimentoImediato
 import AdminPlanos from "@/pages/app/admin/AdminPlanos";
 import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
 import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro";
-import AdminRelatorioAuditoria from "@/pages/app/admin/AdminRelatorioAuditoria";
+// AdminRelatorioAuditoria unificado com AdminAuditoria — rota redireciona via Navigate
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
@@ -319,7 +319,7 @@ const App = () => (
               <Route path="admin/analises/comparativo" element={<G perm="analises.ver"><AdminAnalises /></G>} />
               <Route path="admin/relatorios" element={<G perm="relatorios.ver"><AdminRelatorios /></G>} />
               <Route path="admin/relatorios/financeiro" element={<G perm="relatorios.ver"><AdminRelatorioFinanceiro /></G>} />
-              <Route path="admin/relatorios/auditoria" element={<G perm="auditoria.ver"><AdminRelatorioAuditoria /></G>} />
+              <Route path="admin/relatorios/auditoria" element={<Navigate to="/app/admin/auditoria?tab=painel" replace />} />
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
