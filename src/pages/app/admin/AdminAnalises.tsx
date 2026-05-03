@@ -38,17 +38,7 @@ function pct(now: number, prev: number) {
   return Math.round(((now - prev) / prev) * 100);
 }
 
-function downloadCSV(filename: string, rows: any[]) {
-  if (!rows.length) return;
-  const cols = Object.keys(rows[0]);
-  const csv = [cols.join(","), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? "")).join(","))].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-}
-
+// downloadCSV importado de @/lib/relatorios/utils
 export default function AdminAnalises() {
   const location = useLocation();
   const navigate = useNavigate();
