@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { downloadCSVFromObjects as downloadCSV } from "@/lib/relatorios/utils";
 import { brlReais as brl } from "@/lib/format";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
