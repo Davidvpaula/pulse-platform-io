@@ -6536,17 +6536,19 @@ export type Database = {
         }
         Returns: Json
       }
-      relatorios_financeiro: {
-        Args: {
-          p_empresa_id?: string
-          p_fim: string
-          p_inicio: string
-          p_medico_id?: string
-        }
-        Returns: Json
-      }
+      relatorios_financeiro:
+        | { Args: { p_fim?: string; p_inicio?: string }; Returns: Json }
+        | {
+            Args: {
+              p_empresa_id?: string
+              p_fim: string
+              p_inicio: string
+              p_medico_id?: string
+            }
+            Returns: Json
+          }
       relatorios_financeiro_snapshot: {
-        Args: { p_compare_mode?: string; p_fim: string; p_inicio: string }
+        Args: { p_fim?: string; p_inicio?: string; p_medico?: string }
         Returns: Json
       }
       relatorios_marketing_funil: {
