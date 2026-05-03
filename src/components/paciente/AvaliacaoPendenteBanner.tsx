@@ -78,7 +78,7 @@ export default function AvaliacaoPendenteBanner() {
           onOpenChange={(v) => { if (!v) setAvaliarItem(null); }}
           consulta={{
             id: avaliarItem.consulta_id,
-            paciente_id: session!.user.id,
+            paciente_id: avaliarItem.paciente_id,
             medico_id: avaliarItem.medico_id,
             medico_nome: avaliarItem.medico_nome,
           }}
