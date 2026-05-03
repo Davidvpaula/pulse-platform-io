@@ -101,6 +101,7 @@ import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
 import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
 import Inbox from "@/pages/app/comunicacao/Inbox";
 import IAAvatar from "@/pages/app/comunicacao/IAAvatar";
+import InboxConfiguracoes from "@/pages/app/comunicacao/InboxConfiguracoes";
 import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
 import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
 import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
