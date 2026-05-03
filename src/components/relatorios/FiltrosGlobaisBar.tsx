@@ -84,6 +84,7 @@ export function FiltrosGlobaisBar({ value, onChange, showClinicos = true, showEm
            <Button size="sm" variant="ghost" onClick={() => setPreset("30d")}>30d</Button>
            <Button size="sm" variant="ghost" onClick={() => setPreset("90d")}>90d</Button>
            <Button size="sm" variant="ghost" onClick={() => setPreset("mes")}>Mês</Button>
+          <Button size="sm" variant="ghost" onClick={() => setPreset("ano")}>Ano</Button>
           <Button size="sm" variant="outline" onClick={limpar}>
             <RotateCcw className="h-3 w-3 mr-1" /> Limpar
           </Button>
