@@ -28,6 +28,19 @@ const ABAS = [
   { value: "auditoria", label: "Auditoria" },
 ];
 
+function LinkAba({ titulo, descricao, to, iconeTexto }: { titulo: string; descricao: string; to: string; iconeTexto: string }) {
+  return (
+    <Card className="p-8 text-center space-y-3">
+      <FileBarChart className="h-10 w-10 mx-auto text-primary" />
+      <h3 className="font-semibold">{titulo}</h3>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto">{descricao}</p>
+      <Link to={to} className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+        {iconeTexto} →
+      </Link>
+    </Card>
+  );
+}
+
 function PlaceholderAba({ titulo, descricao }: { titulo: string; descricao: string }) {
   return (
     <Card className="p-12 text-center">
