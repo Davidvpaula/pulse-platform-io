@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,22 @@ function periodoInicial(): { inicio: string; fim: string } {
   const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 30);
   const fim = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
   return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) };
+}
+
+/** Mapa entidade_tipo → rota admin (quando aplicável) */
+function linkEntidade(tipo: string | null, id: string | null): string | null {
+  if (!tipo || !id) return null;
+  const map: Record<string, string> = {
+    consulta: `/app/admin/agendamentos`,
+    colaborador: `/app/admin/colaboradores`,
+    medico: `/app/admin/medicos`,
+    paciente: `/app/admin/pacientes/${id}`,
+    empresa: `/app/admin/empresas`,
+    plano: `/app/admin/planos`,
+    assinatura: `/app/admin/planos`,
+    permissao: `/app/admin/permissoes`,
+  };
+  return map[tipo] || null;
 }
 
 export default function AdminAuditoria() {
@@ -519,7 +535,21 @@ export default function AdminAuditoria() {
                   <Field label="Ator" value={detalhe.actor_nome || "Sistema"} />
                   <Field label="Ator ID" value={<span className="font-mono text-xs">{detalhe.actor_id || "—"}</span>} />
                   <Field label="Entidade" value={detalhe.entidade_tipo || "—"} />
-                  <Field label="Entidade ID" value={<span className="font-mono text-xs break-all">{detalhe.entidade_id || "—"}</span>} />
+                  <Field label="Entidade ID" value={
+                    detalhe.entidade_id ? (
+                      <span className="font-mono text-xs break-all">
+                        {String(detalhe.entidade_id)}
+                        {(() => {
+                          const href = linkEntidade(detalhe.entidade_tipo, String(detalhe.entidade_id));
+                          return href ? (
+                            <Link to={href} className="ml-2 text-primary hover:underline text-[11px] font-sans" onClick={() => setDetalhe(null)}>
+                              Ver →
+                            </Link>
+                          ) : null;
+                        })()}
+                      </span>
+                    ) : "—"
+                  } />
                 </div>
 
                 {(detalhe.campo || detalhe.valor_anterior || detalhe.valor_novo) && (
