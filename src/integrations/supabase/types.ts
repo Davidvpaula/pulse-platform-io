@@ -81,6 +81,53 @@ export type Database = {
           },
         ]
       }
+      ai_handoff_rules: {
+        Row: {
+          action: string
+          active: boolean
+          ai_settings_id: string | null
+          created_at: string
+          id: string
+          intent: string | null
+          keyword: string
+          level: Database["public"]["Enums"]["ai_handoff_level"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          active?: boolean
+          ai_settings_id?: string | null
+          created_at?: string
+          id?: string
+          intent?: string | null
+          keyword: string
+          level?: Database["public"]["Enums"]["ai_handoff_level"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          active?: boolean
+          ai_settings_id?: string | null
+          created_at?: string
+          id?: string
+          intent?: string | null
+          keyword?: string
+          level?: Database["public"]["Enums"]["ai_handoff_level"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_handoff_rules_ai_settings_id_fkey"
+            columns: ["ai_settings_id"]
+            isOneToOne: false
+            referencedRelation: "ai_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_logs: {
         Row: {
           action_taken: string | null
@@ -147,6 +194,8 @@ export type Database = {
           model: string | null
           provider: Database["public"]["Enums"]["ai_provider"]
           safety_rules: string | null
+          sugestao_medicos_ativa: boolean
+          sugestao_prioridade: Json
           temperature: number | null
           updated_at: string
         }
@@ -162,6 +211,8 @@ export type Database = {
           model?: string | null
           provider?: Database["public"]["Enums"]["ai_provider"]
           safety_rules?: string | null
+          sugestao_medicos_ativa?: boolean
+          sugestao_prioridade?: Json
           temperature?: number | null
           updated_at?: string
         }
@@ -177,6 +228,8 @@ export type Database = {
           model?: string | null
           provider?: Database["public"]["Enums"]["ai_provider"]
           safety_rules?: string | null
+          sugestao_medicos_ativa?: boolean
+          sugestao_prioridade?: Json
           temperature?: number | null
           updated_at?: string
         }
@@ -6631,6 +6684,7 @@ export type Database = {
       }
     }
     Enums: {
+      ai_handoff_level: "urgente" | "moderado" | "baixo"
       ai_provider: "lovable" | "openai" | "anthropic" | "gemini" | "outro"
       app_role:
         | "paciente"
@@ -7096,6 +7150,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_handoff_level: ["urgente", "moderado", "baixo"],
       ai_provider: ["lovable", "openai", "anthropic", "gemini", "outro"],
       app_role: [
         "paciente",
