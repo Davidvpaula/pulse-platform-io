@@ -354,6 +354,7 @@ const App = () => (
               <Route path="comunicacao/templates" element={<Templates />} />
               <Route path="comunicacao/automacoes" element={<Automacoes />} />
               <Route path="comunicacao/metricas" element={<Metricas />} />
+              <Route path="comunicacao/configuracoes" element={<InboxConfiguracoes />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
