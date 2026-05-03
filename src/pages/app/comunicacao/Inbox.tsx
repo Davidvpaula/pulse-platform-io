@@ -319,7 +319,7 @@ export default function ComunicacaoInbox() {
     if (!active || !acessoMedicoId || !acessoMotivo.trim()) return;
     setAcessoLoading(true);
     const expiraEm = new Date(Date.now() + acessoHoras * 3600000).toISOString();
-    const { error } = await supabase.from("inbox_acesso_temporario").insert({
+    const { error } = await (supabase.from("inbox_acesso_temporario") as any).insert({
       conversa_id: active.id,
       medico_id: acessoMedicoId,
       concedido_por: user?.id,
