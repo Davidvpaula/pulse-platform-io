@@ -3,13 +3,17 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { FileBarChart, Construction } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileBarChart, Construction, Download, Loader2 } from "lucide-react";
 import { FiltrosGlobaisBar } from "@/components/relatorios/FiltrosGlobaisBar";
-import { FiltrosGlobais, periodoPreset } from "@/lib/relatorios/utils";
+import { FiltrosGlobais, periodoPreset, toRpcArgs } from "@/lib/relatorios/utils";
 import VisaoExecutivaTab from "@/components/relatorios/VisaoExecutivaTab";
 import OperacaoClinicaTab from "@/components/relatorios/OperacaoClinicaTab";
 import FinanceiroTab from "@/components/relatorios/FinanceiroTab";
 import MedicosTab from "@/components/relatorios/MedicosTab";
+import { supabase } from "@/integrations/supabase/client";
+import { gerarPdfGeral } from "@/lib/relatorios/pdfRelatoriosGeral";
+import { toast } from "sonner";
 
 const ABAS = [
   { value: "executivo", label: "Visão Executiva" },
@@ -42,13 +46,47 @@ export default function AdminRelatorios() {
     fim: inicial.fim,
   });
   const [tab, setTab] = useState("executivo");
+  const [exportando, setExportando] = useState(false);
+
+  const exportarPdf = async () => {
+    setExportando(true);
+    try {
+      const args = toRpcArgs(filtros);
+      const [{ data: ex }, { data: cli }, { data: fin }] = await Promise.all([
+        supabase.rpc("relatorios_executivo", args),
+        supabase.rpc("relatorios_clinica", {
+          p_inicio: args.p_inicio, p_fim: args.p_fim,
+          p_medico_id: args.p_medico_id, p_especialidade: args.p_especialidade,
+          p_canal: args.p_canal, p_empresa_id: args.p_empresa_id,
+        }),
+        supabase.rpc("relatorios_financeiro", { p_inicio: filtros.inicio, p_fim: filtros.fim }),
+      ]);
+      gerarPdfGeral({
+        periodo: { inicio: filtros.inicio, fim: filtros.fim },
+        executivo: ex as Record<string, any> | null,
+        clinica: cli as Record<string, any> | null,
+        financeiro: fin as Record<string, any> | null,
+      });
+      toast.success("PDF gerado com sucesso");
+    } catch (e: any) {
+      toast.error("Erro ao gerar PDF", { description: e.message });
+    } finally {
+      setExportando(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Relatórios"
-        description="Centro de inteligência da plataforma — operação, financeiro, comunicação, marketing e mais."
-      />
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <PageHeader
+          title="Relatórios"
+          description="Centro de inteligência da plataforma — operação, financeiro, comunicação, marketing e mais."
+        />
+        <Button variant="outline" size="sm" onClick={exportarPdf} disabled={exportando}>
+          {exportando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+          Exportar PDF geral
+        </Button>
+      </div>
 
       <FiltrosGlobaisBar value={filtros} onChange={setFiltros} />
 
