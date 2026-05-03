@@ -115,7 +115,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   // ── Admin: Relatórios ──
   "/app/admin/relatorios":            [admin(), { label: "Relatórios" }, { label: "Visão geral" }],
   "/app/admin/relatorios/financeiro": [admin(), { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Financeiro" }],
-  "/app/admin/relatorios/auditoria":  [admin(), { label: "Relatórios", to: "/app/admin/relatorios" }, { label: "Auditoria" }],
+  // /app/admin/relatorios/auditoria redireciona para /app/admin/auditoria?tab=painel
 
   // ── Admin: Gamificação (gerado via buildGroup) ──
   ...adminGamificacao,
