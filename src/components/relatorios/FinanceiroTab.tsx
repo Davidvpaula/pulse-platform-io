@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,9 +63,9 @@ export default function FinanceiroTab({ filtros }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <a href="/app/admin/relatorios/financeiro" className="text-sm text-primary hover:underline">
+        <Link to="/app/admin/relatorios/financeiro" className="text-sm text-primary hover:underline">
           Ver relatório completo com snapshots imutáveis e exportação PDF →
-        </a>
+        </Link>
         <Button size="sm" variant="outline" onClick={exportar}><Download className="h-4 w-4 mr-1" /> Exportar CSV</Button>
       </div>
 

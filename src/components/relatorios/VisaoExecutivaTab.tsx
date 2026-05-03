@@ -40,7 +40,7 @@ export default function VisaoExecutivaTab({ filtros }: Props) {
       setSerie((dia || []).map((d: any) => ({
         ...d, dia_label: formatDia(d.dia), receita: (d.receita_centavos || 0) / 100,
       })));
-      setPorEspec(((cli as any)?.por_especialidade || []).slice(0, 8));
+      setPorEspec(((cli as Record<string, any>)?.por_especialidade || []).slice(0, 8));
     } catch (e: any) {
       toast.error("Erro ao carregar visão executiva", { description: e.message });
     } finally {

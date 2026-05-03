@@ -31,7 +31,7 @@ export default function OperacaoClinicaTab({ filtros }: Props) {
       setData(cli);
 
       const ins: string[] = [];
-      const horarios = ((cli as any)?.por_horario || []) as any[];
+      const horarios = ((cli as Record<string, any>)?.por_horario || []) as Array<{ hora: number; total: number }>;
       if (horarios.length > 0) {
         const pico = horarios.reduce((a, b) => (a.total > b.total ? a : b));
         ins.push(`🕒 Horário de pico: ${pico.hora}h com ${pico.total} consultas`);
@@ -40,12 +40,12 @@ export default function OperacaoClinicaTab({ filtros }: Props) {
           ins.push(`💤 Horário ocioso: ${ocioso.hora}h com apenas ${ocioso.total} consultas`);
         }
       }
-      const espec = ((cli as any)?.por_especialidade || []) as any[];
+      const espec = ((cli as Record<string, any>)?.por_especialidade || []) as Array<{ especialidade: string; total: number }>;
       if (espec.length > 0) {
         ins.push(`📈 Especialidade líder: ${espec[0].especialidade} (${espec[0].total} consultas)`);
       }
-      if ((cli as any)?.taxa_retorno_pct < 20) {
-        ins.push(`⚠️ Taxa de retorno baixa (${(cli as any).taxa_retorno_pct}%) — investigar engajamento.`);
+      if ((cli as Record<string, any>)?.taxa_retorno_pct < 20) {
+        ins.push(`⚠️ Taxa de retorno baixa (${(cli as Record<string, any>).taxa_retorno_pct}%) — investigar engajamento.`);
       }
       setInsights(ins);
     } catch (e: any) {
@@ -68,7 +68,7 @@ export default function OperacaoClinicaTab({ filtros }: Props) {
 
   const horariosCompletos = Array.from({ length: 24 }, (_, h) => ({
     hora: `${h}h`,
-    total: ((data?.por_horario || []) as any[]).find((x) => x.hora === h)?.total || 0,
+    total: ((data?.por_horario || []) as Array<{ hora: number; total: number }>).find((x) => x.hora === h)?.total || 0,
   }));
 
   return (
