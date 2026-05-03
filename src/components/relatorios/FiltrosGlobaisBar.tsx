@@ -63,7 +63,7 @@ export function FiltrosGlobaisBar({ value, onChange, showClinicos = true, showEm
     })();
   }, [showClinicos, showEmpresa]);
 
-  const setPreset = (p: "hoje" | "7d" | "30d" | "mes" | "ano") => {
+  const setPreset = (p: "hoje" | "7d" | "30d" | "90d" | "mes" | "ano") => {
     const { inicio, fim } = periodoPreset(p);
     onChange({ ...value, inicio, fim });
   };
@@ -81,8 +81,9 @@ export function FiltrosGlobaisBar({ value, onChange, showClinicos = true, showEm
         <div className="ml-auto flex gap-1">
           <Button size="sm" variant="ghost" onClick={() => setPreset("hoje")}>Hoje</Button>
           <Button size="sm" variant="ghost" onClick={() => setPreset("7d")}>7d</Button>
-          <Button size="sm" variant="ghost" onClick={() => setPreset("30d")}>30d</Button>
-          <Button size="sm" variant="ghost" onClick={() => setPreset("mes")}>Mês</Button>
+           <Button size="sm" variant="ghost" onClick={() => setPreset("30d")}>30d</Button>
+           <Button size="sm" variant="ghost" onClick={() => setPreset("90d")}>90d</Button>
+           <Button size="sm" variant="ghost" onClick={() => setPreset("mes")}>Mês</Button>
           <Button size="sm" variant="ghost" onClick={() => setPreset("ano")}>Ano</Button>
           <Button size="sm" variant="outline" onClick={limpar}>
             <RotateCcw className="h-3 w-3 mr-1" /> Limpar
