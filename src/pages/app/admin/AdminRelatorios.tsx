@@ -127,7 +127,7 @@ export default function AdminRelatorios() {
           <PlaceholderAba titulo="Comunicação (WhatsApp / Bot / IA)" descricao="Mensagens enviadas/recebidas, taxa e tempo médio de resposta, conversões via WhatsApp, Bot vs humano, IA vs humano." />
         </TabsContent>
         <TabsContent value="marketing" className="mt-4">
-          <LinkAba titulo="Marketing & Tráfego" descricao="Cadastro manual de campanhas, eventos por fonte, funil visitante → lead → consulta, CPL, CPA e ROI." to="/app/admin/analises" iconeTexto="Abrir Análises & Marketing" />
+          <LinkAba titulo="Marketing & Tráfego" descricao="Cadastro manual de campanhas, eventos por fonte, funil visitante → lead → consulta, CPL, CPA e ROI." to="/app/admin/analises/marketing" iconeTexto="Abrir Análises & Marketing" />
         </TabsContent>
         <TabsContent value="planos" className="mt-4">
           <LinkAba titulo="Planos & Assinaturas" descricao="Receita recorrente, uso médio, lucro/prejuízo por plano e planos pouco utilizados." to="/app/admin/planos" iconeTexto="Abrir Gestão de Planos" />
