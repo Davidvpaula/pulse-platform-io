@@ -102,7 +102,7 @@ export default function AdminAuditoria() {
   const carregarDashboard = useCallback(async () => {
     setLoadingDash(true);
     try {
-      const { data, error } = await supabase.rpc("auditoria_dashboard" as any, {
+      const { data, error } = await supabase.rpc("auditoria_dashboard", {
         p_inicio: new Date(aplicado.inicio + "T00:00:00").toISOString(),
         p_fim: new Date(aplicado.fim + "T00:00:00").toISOString(),
       });
@@ -118,7 +118,7 @@ export default function AdminAuditoria() {
   const carregarLista = useCallback(async () => {
     setLoadingLista(true);
     try {
-      const { data, error } = await supabase.rpc("auditoria_listar" as any, {
+      const { data, error } = await supabase.rpc("auditoria_listar", {
         p_inicio: new Date(aplicado.inicio + "T00:00:00").toISOString(),
         p_fim: new Date(aplicado.fim + "T00:00:00").toISOString(),
         p_modulo: aplicado.modulo === "todos" ? "todos" : aplicado.modulo,
@@ -167,7 +167,7 @@ export default function AdminAuditoria() {
 
   // ─── Export ───
   const buscarTodosEventos = useCallback(async (): Promise<EventoAuditoria[]> => {
-    const { data, error } = await supabase.rpc("auditoria_listar" as any, {
+    const { data, error } = await supabase.rpc("auditoria_listar", {
       p_inicio: new Date(aplicado.inicio + "T00:00:00").toISOString(),
       p_fim: new Date(aplicado.fim + "T00:00:00").toISOString(),
       p_modulo: aplicado.modulo === "todos" ? "todos" : aplicado.modulo,
@@ -232,7 +232,7 @@ export default function AdminAuditoria() {
         evento_id: detalhe.id,
         reviewed_by: u.user.id,
         nota: revisaoNota || null,
-      } as any);
+      });
       if (error) throw error;
       toast.success("Evento marcado como revisado");
       setDetalhe(null); setRevisaoNota("");
