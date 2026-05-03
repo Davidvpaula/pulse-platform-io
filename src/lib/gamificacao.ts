@@ -11,6 +11,7 @@ export type ConsultaPendenteAvaliacao = {
   medico_nome: string | null;
   especialidade_nome: string | null;
   concluida_em: string;
+  paciente_id: string;
 };
 
 export type SaldoCrescimentoItem = {
@@ -301,21 +302,11 @@ export async function verificarPremiumConquistado(medico_id: string): Promise<bo
   return data as boolean;
 }
 
-/** Médico solicita ativação Premium (tipo "conquistado") — só funciona se qualificado. */
-export async function ativarPremiumConquistado(medico_id: string) {
-  const qualificado = await verificarPremiumConquistado(medico_id);
-  if (!qualificado) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
-  const { error } = await supabase
-    .from("medico_premium" as any)
-    .upsert({
-      medico_id,
-      ativo: true,
-      tipo: "conquistado",
-      inicio: new Date().toISOString(),
-      fim: null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "medico_id" });
+/** Médico solicita ativação Premium (tipo "conquistado") — executa via RPC SECURITY DEFINER. */
+export async function ativarPremiumConquistado(_medico_id: string) {
+  const { data, error } = await supabase.rpc("ativar_premium_conquistado" as any);
   if (error) throw error;
+  if (data === false) throw new Error("Você ainda não atingiu os requisitos mínimos para o Premium.");
 }
 
 /* ── Impulsionamento / Campanhas ── */
