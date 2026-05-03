@@ -28,6 +28,19 @@ const ABAS = [
   { value: "auditoria", label: "Auditoria" },
 ];
 
+function LinkAba({ titulo, descricao, to, iconeTexto }: { titulo: string; descricao: string; to: string; iconeTexto: string }) {
+  return (
+    <Card className="p-8 text-center space-y-3">
+      <FileBarChart className="h-10 w-10 mx-auto text-primary" />
+      <h3 className="font-semibold">{titulo}</h3>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto">{descricao}</p>
+      <Link to={to} className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+        {iconeTexto} →
+      </Link>
+    </Card>
+  );
+}
+
 function PlaceholderAba({ titulo, descricao }: { titulo: string; descricao: string }) {
   return (
     <Card className="p-12 text-center">
@@ -108,16 +121,16 @@ export default function AdminRelatorios() {
           <PlaceholderAba titulo="Pacientes" descricao="Indicadores de novos pacientes, recorrentes, LTV, segmentação por idade/sexo/região, frequência média e abandono." />
         </TabsContent>
         <TabsContent value="empresas" className="mt-4">
-          <PlaceholderAba titulo="Empresas (B2B)" descricao="Ranking de empresas, uso por colaborador, custo por empresa e ROI empresarial." />
+          <LinkAba titulo="Empresas (B2B)" descricao="Ranking de empresas, uso por colaborador, custo por empresa e ROI empresarial." to="/app/admin/relatorios-b2b" iconeTexto="Abrir Relatórios B2B" />
         </TabsContent>
         <TabsContent value="comunicacao" className="mt-4">
           <PlaceholderAba titulo="Comunicação (WhatsApp / Bot / IA)" descricao="Mensagens enviadas/recebidas, taxa e tempo médio de resposta, conversões via WhatsApp, Bot vs humano, IA vs humano." />
         </TabsContent>
         <TabsContent value="marketing" className="mt-4">
-          <PlaceholderAba titulo="Marketing & Tráfego" descricao="Cadastro manual de campanhas, eventos por fonte, funil visitante → lead → consulta, CPL, CPA e ROI." />
+          <LinkAba titulo="Marketing & Tráfego" descricao="Cadastro manual de campanhas, eventos por fonte, funil visitante → lead → consulta, CPL, CPA e ROI." to="/app/admin/analises/marketing" iconeTexto="Abrir Análises & Marketing" />
         </TabsContent>
         <TabsContent value="planos" className="mt-4">
-          <PlaceholderAba titulo="Planos & Assinaturas" descricao="Receita recorrente, uso médio, lucro/prejuízo por plano e planos pouco utilizados (já existe módulo dedicado em Admin > Planos)." />
+          <LinkAba titulo="Planos & Assinaturas" descricao="Receita recorrente, uso médio, lucro/prejuízo por plano e planos pouco utilizados." to="/app/admin/planos" iconeTexto="Abrir Gestão de Planos" />
         </TabsContent>
         <TabsContent value="auditoria" className="mt-4">
           <Card className="p-8 text-center space-y-3">
