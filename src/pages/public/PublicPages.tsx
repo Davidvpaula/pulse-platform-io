@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
-import { especialidades, medicos } from "@/lib/mock";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,73 +14,172 @@ import {
   type SlotDisponivel,
   type Especialidade,
 } from "@/lib/clinico";
+import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
+import { useMedicosDestaque } from "@/hooks/useMedicosDestaque";
+import EmBreveDialog from "@/components/EmBreveDialog";
 
-export const Especialidades = () => (
-  <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      {especialidades.map((e) => (
-        <Link key={e.slug} to="/medicos" className="card-elevated p-6 hover:shadow-elegant transition">
-          <div className="text-3xl">{e.icon}</div>
-          <p className="mt-3 font-semibold">{e.nome}</p>
-        </Link>
-      ))}
-    </div>
-  </PageShell>
-);
+/* ── Especialidades ── */
 
-export const Medicos = () => (
-  <PageShell title="Nossos médicos" subtitle="Todos com CRM ativo e perfil verificado.">
-    <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {medicos.map((m) => (
-        <div key={m.slug} className="card-elevated p-6">
-          <div className="flex items-start gap-4">
-            <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
-              {m.nome.split(" ").map(s => s[0]).slice(0,2).join("")}
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold">{m.nome}</p>
-              <p className="text-xs text-muted-foreground">{m.especialidade} · {m.crm}</p>
-              <p className="mt-1 inline-flex items-center gap-1 text-xs text-warning">
-                <Star className="h-3.5 w-3.5 fill-current" /> {m.rating}
-              </p>
-            </div>
-            {m.online && <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Online</span>}
-          </div>
-          <div className="mt-5 flex items-center justify-between">
-            <span className="font-semibold">R$ {m.valor}</span>
-            <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
-              <Link to={`/medicos/${m.slug}`}>Ver perfil</Link>
-            </Button>
-          </div>
+export const Especialidades = () => {
+  const { especialidades, loading } = useEspecialidadesPublicas();
+  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
+
+  return (
+    <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
+      {loading ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
         </div>
-      ))}
-    </div>
-  </PageShell>
-);
+      ) : especialidades.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Nenhuma especialidade disponível no momento.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {especialidades.map((e) => {
+            const temMedicos = e.total_medicos > 0;
+            return temMedicos ? (
+              <Link key={e.id} to={`/agendar?esp=${e.id}`} className="card-elevated p-6 hover:shadow-elegant transition">
+                <div className="text-3xl">{e.icone ?? "🩺"}</div>
+                <p className="mt-3 font-semibold">{e.nome}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {e.total_medicos} {e.total_medicos === 1 ? "médico" : "médicos"} disponíveis
+                </p>
+              </Link>
+            ) : (
+              <button
+                key={e.id}
+                onClick={() => setEmBreveNome(e.nome)}
+                className="card-elevated p-6 text-left opacity-60 hover:opacity-80 transition cursor-pointer"
+              >
+                <div className="text-3xl grayscale">{e.icone ?? "🩺"}</div>
+                <p className="mt-3 font-semibold">{e.nome}</p>
+                <Badge className="mt-1.5 bg-muted text-muted-foreground text-[10px]">
+                  <Clock className="mr-1 h-3 w-3" /> Em breve
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <EmBreveDialog
+        open={!!emBreveNome}
+        onOpenChange={(v) => { if (!v) setEmBreveNome(null); }}
+        especialidade={emBreveNome ?? ""}
+      />
+    </PageShell>
+  );
+};
+
+/* ── Médicos ── */
+
+export const Medicos = () => {
+  const { medicos, loading } = useMedicosDestaque(20);
+
+  return (
+    <PageShell title="Nossos médicos" subtitle="Todos com CRM ativo e perfil verificado.">
+      {loading ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
+        </div>
+      ) : medicos.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">Nenhum médico disponível no momento.</p>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {medicos.map((m) => (
+            <div key={m.id} className="card-elevated p-6">
+              <div className="flex items-start gap-4">
+                <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
+                  {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">{m.nome}</p>
+                  <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-warning">
+                    <Star className="h-3.5 w-3.5 fill-current" /> {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "Novo"}
+                  </p>
+                </div>
+                {m.online && <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Online</span>}
+              </div>
+              <div className="mt-5 flex items-center justify-end">
+                <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                  <Link to="/agendar">Agendar</Link>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </PageShell>
+  );
+};
+
+/* ── Detalhe do Médico ── */
 
 export const MedicoDetalhe = () => {
   const { slug } = useParams();
-  const m = medicos.find((x) => x.slug === slug) ?? medicos[0];
+  const [medico, setMedico] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      // Try finding by slug-like name match
+      const { data } = await supabase
+        .from("medicos")
+        .select("id, nome, especialidade, crm, link_sala_padrao")
+        .eq("status", "aprovado")
+        .limit(20);
+
+      const found = (data ?? []).find((m) => {
+        const mSlug = m.nome
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+        return mSlug === slug;
+      });
+
+      setMedico(found ?? (data?.[0] ?? null));
+      setLoading(false);
+    })();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <PageShell title="Carregando…" subtitle="">
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!medico) {
+    return (
+      <PageShell title="Médico não encontrado" subtitle="">
+        <p className="text-muted-foreground">O perfil solicitado não foi encontrado.</p>
+      </PageShell>
+    );
+  }
+
   return (
-    <PageShell title={m.nome} subtitle={`${m.especialidade} · ${m.crm}`}>
+    <PageShell title={medico.nome} subtitle={`${medico.especialidade ?? "Clínica"} · ${medico.crm}`}>
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         <div className="card-elevated p-6 space-y-5">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <GraduationCap className="h-4 w-4 text-primary" /> Graduação UFMG · Residência InCor
+            <GraduationCap className="h-4 w-4 text-primary" /> Médico verificado na plataforma
           </div>
           <p className="text-foreground/90">
-            Médico com mais de 12 anos de experiência clínica em {m.especialidade.toLowerCase()},
-            atendendo casos preventivos, acompanhamento de pacientes crônicos e telemedicina.
+            Profissional com CRM ativo, atendendo por telemedicina com consultas integradas à plataforma.
           </p>
           <div className="grid grid-cols-3 gap-3 text-sm">
-            <div><p className="text-muted-foreground">Avaliação</p><p className="font-semibold">{m.rating} / 5</p></div>
+            <div><p className="text-muted-foreground">Especialidade</p><p className="font-semibold">{medico.especialidade ?? "Clínica"}</p></div>
             <div><p className="text-muted-foreground">Modalidade</p><p className="font-semibold">Online</p></div>
-            <div><p className="text-muted-foreground">Idiomas</p><p className="font-semibold">PT, EN</p></div>
+            <div><p className="text-muted-foreground">CRM</p><p className="font-semibold">{medico.crm}</p></div>
           </div>
         </div>
         <div className="card-elevated p-6 h-fit">
-          <p className="text-sm text-muted-foreground">Consulta a partir de</p>
-          <p className="font-display text-3xl font-bold">R$ {m.valor}</p>
+          <p className="text-sm text-muted-foreground">Agendar consulta</p>
           <Button asChild className="mt-4 w-full bg-gradient-primary hover:opacity-90">
             <Link to="/agendar"><Video className="mr-2 h-4 w-4" /> Agendar telemedicina</Link>
           </Button>
@@ -96,28 +195,32 @@ export const MedicoDetalhe = () => {
   );
 };
 
+/* ── Agendar ── */
+
 export const Agendar = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { session } = useSession();
-  const [esps, setEsps] = useState<Especialidade[]>([]);
+  const { especialidades, loading: loadingEspHook } = useEspecialidadesPublicas();
   const [espId, setEspId] = useState<string>("");
   const [slots, setSlots] = useState<SlotDisponivel[]>([]);
-  const [loadingEsps, setLoadingEsps] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
 
+  // Set initial esp from URL or first available
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("especialidades")
-        .select("*")
-        .eq("ativo", true)
-        .order("nome", { ascending: true });
-      setEsps(data ?? []);
-      if (data?.[0]) setEspId(data[0].id);
-      setLoadingEsps(false);
-    })();
-  }, []);
+    if (loadingEspHook || !especialidades.length) return;
+    const urlEsp = searchParams.get("esp");
+    if (urlEsp && especialidades.find((e) => e.id === urlEsp)) {
+      setEspId(urlEsp);
+    } else {
+      // Pick first with medicos, or first overall
+      const comMedicos = especialidades.find((e) => e.total_medicos > 0);
+      setEspId(comMedicos?.id ?? especialidades[0].id);
+    }
+  }, [loadingEspHook, especialidades, searchParams]);
 
+  // Load slots when espId changes
   useEffect(() => {
     if (!espId) return;
     setLoadingSlots(true);
@@ -125,6 +228,15 @@ export const Agendar = () => {
       .then(setSlots)
       .finally(() => setLoadingSlots(false));
   }, [espId]);
+
+  const handleEspChange = (newEspId: string) => {
+    const esp = especialidades.find((e) => e.id === newEspId);
+    if (esp && esp.total_medicos === 0) {
+      setEmBreveNome(esp.nome);
+      return;
+    }
+    setEspId(newEspId);
+  };
 
   const escolher = (slotId: string) => {
     if (!session) {
@@ -134,6 +246,8 @@ export const Agendar = () => {
     navigate(`/app/paciente/agendar/confirmar/${slotId}`);
   };
 
+  const espAtual = especialidades.find((e) => e.id === espId);
+
   return (
     <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o horário disponível.">
       <div className="card-elevated p-6">
@@ -142,11 +256,15 @@ export const Agendar = () => {
           <select
             className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
             value={espId}
-            onChange={(e) => setEspId(e.target.value)}
-            disabled={loadingEsps}
+            onChange={(e) => handleEspChange(e.target.value)}
+            disabled={loadingEspHook}
           >
-            {loadingEsps && <option>Carregando…</option>}
-            {esps.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+            {loadingEspHook && <option>Carregando…</option>}
+            {especialidades.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nome}{e.total_medicos === 0 ? " (Em breve)" : ""}
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -155,6 +273,15 @@ export const Agendar = () => {
         {loadingSlots ? (
           <div className="flex h-32 items-center justify-center text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando horários…
+          </div>
+        ) : espAtual && espAtual.total_medicos === 0 ? (
+          <div className="card-elevated p-8 text-center">
+            <Clock className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+            <p className="font-semibold text-lg">Em breve!</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              A especialidade <strong>{espAtual.nome}</strong> ainda não possui médicos disponíveis.
+              Novos profissionais estão sendo cadastrados constantemente.
+            </p>
           </div>
         ) : slots.length === 0 ? (
           <div className="card-elevated p-8 text-center text-sm text-muted-foreground">
@@ -189,9 +316,17 @@ export const Agendar = () => {
           </div>
         )}
       </div>
+
+      <EmBreveDialog
+        open={!!emBreveNome}
+        onOpenChange={(v) => { if (!v) setEmBreveNome(null); }}
+        especialidade={emBreveNome ?? ""}
+      />
     </PageShell>
   );
 };
+
+/* ── Planos ── */
 
 export const Planos = () => {
   const planos = [
@@ -221,6 +356,8 @@ export const Planos = () => {
   );
 };
 
+/* ── Empresas ── */
+
 export const Empresas = () => (
   <PageShell title="Lasmar para empresas" subtitle="Saúde corporativa para sua equipe, com relatórios e gestão de uso.">
     <div className="grid gap-5 md:grid-cols-3">
@@ -235,6 +372,8 @@ export const Empresas = () => (
     <div className="mt-8"><Button className="bg-gradient-primary hover:opacity-90">Falar com especialista</Button></div>
   </PageShell>
 );
+
+/* ── Para Médicos ── */
 
 export const ParaMedicos = () => (
   <PageShell title="Lasmar para médicos" subtitle="Atenda online com agenda integrada, prontuário e pagamentos.">
@@ -258,6 +397,8 @@ export const ParaMedicos = () => (
   </PageShell>
 );
 
+/* ── FAQ ── */
+
 export const Faq = () => {
   const itens = [
     { q: "Como funciona a telemedicina?", a: "Você agenda, recebe um link de vídeo seguro e atende pelo navegador ou app." },
@@ -279,12 +420,13 @@ export const Faq = () => {
   );
 };
 
+/* ── Login (dev only) ── */
+
 export const Login = () => {
   const { setProfileKey } = useAuth();
   const navigate = useNavigate();
   const isDev = import.meta.env.DEV;
 
-  // Em produção, /login redireciona para a página real de auth.
   React.useEffect(() => {
     if (!isDev) navigate("/auth", { replace: true });
   }, [isDev, navigate]);

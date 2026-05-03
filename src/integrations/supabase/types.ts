@@ -2278,6 +2278,7 @@ export type Database = {
           ativo: boolean
           created_at: string
           descricao: string | null
+          icone: string | null
           id: string
           nome: string
           slug: string
@@ -2287,6 +2288,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          icone?: string | null
           id?: string
           nome: string
           slug: string
@@ -2296,6 +2298,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          icone?: string | null
           id?: string
           nome?: string
           slug?: string
