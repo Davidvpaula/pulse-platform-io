@@ -259,6 +259,7 @@ const App = () => (
               <Route path="secretaria/relatorios" element={<SecretariaRelatorios />} />
               <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
+              <Route path="secretaria/perfil" element={<SecretariaPerfil />} />
 
               {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
               <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
