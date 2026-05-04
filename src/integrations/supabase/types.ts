@@ -6663,6 +6663,7 @@ export type Database = {
           risco: string
         }[]
       }
+      plano_pertence_medico: { Args: { _plano_id: string }; Returns: boolean }
       plano_saude_financeira: { Args: { _plano_id: string }; Returns: Json }
       processar_pagamento_confirmado: {
         Args: {

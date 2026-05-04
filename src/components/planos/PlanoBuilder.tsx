@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSession } from "@/lib/session";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,6 +128,8 @@ const toReais = (c: number) => ((c || 0) / 100).toString().replace(".", ",");
 const toCentavos = (s: string) => Math.round(Number(String(s).replace(/\./g, "").replace(",", ".") || 0) * 100);
 
 export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = false }: Props) {
+  const { session } = useSession();
+  const uid = session?.user?.id;
   const [plano, setPlano] = useState<Plano>(emptyPlano());
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(false);
@@ -238,6 +241,16 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       if (medicoMode) {
         payload.nivel = "medico";
         payload.termos_aceitos = true;
+        payload.medico_id = uid;
+        payload.created_by = uid;
+        // Médico não pode se auto-aprovar — sempre rascunho na criação
+        if (!planoId) {
+          payload.status = "rascunho";
+        }
+        // Impede médico de mudar para ativo sem aprovação admin
+        if (planoId && !plano.aprovado_admin && payload.status === "ativo") {
+          payload.status = "rascunho";
+        }
       }
 
       if (id) {
@@ -339,13 +352,25 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                     <SelectContent>{COBRANCAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={plano.status} onValueChange={(v) => setField("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{STATUS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                {medicoMode ? (
+                  <div>
+                    <Label>Status</Label>
+                    <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm bg-muted/30">
+                      <span>{STATUS.find(([v]) => v === plano.status)?.[1] ?? plano.status}</span>
+                    </div>
+                    {!plano.aprovado_admin && (
+                      <p className="text-xs text-muted-foreground mt-1">O Admin precisa aprovar para ativar o plano.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={plano.status} onValueChange={(v) => setField("status", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{STATUS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
