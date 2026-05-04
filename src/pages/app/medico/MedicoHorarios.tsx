@@ -932,6 +932,34 @@ export default function MedicoHorarios() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog excluir todos */}
+      <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir todos os horários?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Serão removidos <b>{slots.filter((s) => s.status === "disponivel").length}</b> horário(s) disponível(is).
+              Horários reservados ou bloqueados não serão afetados. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmDeleteAll(false);
+                const res = await excluirTodosSlots();
+                if (!res.ok) { toast.error(res.error ?? "Não foi possível excluir."); return; }
+                toast.success(`${res.removidos} horário(s) removido(s).`);
+                refresh();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir todos
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
