@@ -211,11 +211,18 @@ const App = () => (
               />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
+              {/* Rota legada → redirect para rota unificada */}
               <Route
                 path="paciente/agendar/confirmar/:slotId"
+                element={<AgendamentoRedirect />}
+              />
+
+              {/* Rota unificada de agendamento */}
+              <Route
+                path="agendamento/confirmar/:slotId"
                 element={
                   <PacienteParamGuard param="slotId" pattern={UUID_RE}>
-                    <PacienteAgendarConfirmar />
+                    <AgendamentoConfirmar />
                   </PacienteParamGuard>
                 }
               />
