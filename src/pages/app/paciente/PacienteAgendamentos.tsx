@@ -18,7 +18,7 @@ import {
   updateConsultaStatus, listRetornosDisponiveis,
   type ConsultaDetalhada, type RetornoComContexto,
 } from "@/lib/clinico";
-import { proximasConsultasPaciente, type Status } from "@/lib/mock";
+import { LogIn } from "lucide-react";
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
