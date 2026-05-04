@@ -3335,6 +3335,44 @@ export type Database = {
           },
         ]
       }
+      medico_formacoes: {
+        Row: {
+          created_at: string
+          id: string
+          instituicao: string
+          medico_id: string
+          ordem: number
+          status: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instituicao: string
+          medico_id: string
+          ordem?: number
+          status?: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instituicao?: string
+          medico_id?: string
+          ordem?: number
+          status?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_formacoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_google_tokens: {
         Row: {
           access_token: string
