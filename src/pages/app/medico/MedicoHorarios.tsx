@@ -41,6 +41,7 @@ import {
   criarSlotsEmLote,
   excluirSlot,
   excluirSlotsDoDia,
+  excluirTodosSlots,
   getDuracaoSlotMedico,
   getMedicoAtual,
   type AgendaSlot,
@@ -108,6 +109,7 @@ export default function MedicoHorarios() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
   const [confirmDeleteDia, setConfirmDeleteDia] = useState<{ dia: string; disponiveis: number } | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
@@ -746,7 +748,19 @@ export default function MedicoHorarios() {
       {/* Lista de horários cadastrados */}
       <div>
         <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-sm font-semibold">Horários cadastrados</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-semibold">Horários cadastrados</h2>
+            {slots.filter((s) => s.status === "disponivel").length > 0 && (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-7 text-xs"
+                onClick={() => setConfirmDeleteAll(true)}
+              >
+                <Trash2 className="mr-1 h-3 w-3" /> Excluir todos
+              </Button>
+            )}
+          </div>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
             {([
               { key: "todos", label: "Todos", count: slots.length },
@@ -914,6 +928,34 @@ export default function MedicoHorarios() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Excluir dia
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog excluir todos */}
+      <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir todos os horários?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Serão removidos <b>{slots.filter((s) => s.status === "disponivel").length}</b> horário(s) disponível(is).
+              Horários reservados ou bloqueados não serão afetados. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmDeleteAll(false);
+                const res = await excluirTodosSlots();
+                if (!res.ok) { toast.error(res.error ?? "Não foi possível excluir."); return; }
+                toast.success(`${res.removidos} horário(s) removido(s).`);
+                refresh();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir todos
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
