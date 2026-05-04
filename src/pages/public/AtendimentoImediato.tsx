@@ -160,7 +160,7 @@ export default function AtendimentoImediato() {
       medico_nome: res.medico_nome,
       inicio: res.inicio,
       fim: res.fim,
-      expiresAt: Date.now() + TTL_MS,
+      expiresAt: res.reserva_expira_em ? new Date(res.reserva_expira_em).getTime() : Date.now() + TTL_MS,
     });
     setDestacar(res.inicio);
     setTimeout(() => setDestacar(null), 3000);

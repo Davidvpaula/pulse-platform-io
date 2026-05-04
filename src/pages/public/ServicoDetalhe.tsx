@@ -22,7 +22,7 @@ type Servico = {
   valor_paciente_centavos: number;
 };
 
-const TTL_MS = 90_000;
+const TTL_MS_DEFAULT = 10 * 60 * 1000; // 10 min (alinhado com reserva_expira_em da RPC)
 
 function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -201,7 +201,7 @@ export default function ServicoDetalhe() {
       medico_nome: res.medico_nome,
       inicio: res.inicio,
       fim: res.fim,
-      expiresAt: Date.now() + TTL_MS,
+      expiresAt: res.reserva_expira_em ? new Date(res.reserva_expira_em).getTime() : Date.now() + TTL_MS_DEFAULT,
     });
     setDestacar(res.inicio);
     setTimeout(() => setDestacar(null), 3000);
@@ -213,7 +213,7 @@ export default function ServicoDetalhe() {
       });
     } else {
       toast.success(`Reservado ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}`, {
-        description: "Você tem 1m30s para confirmar.",
+        description: "Você tem 10 minutos para confirmar.",
       });
     }
   }
