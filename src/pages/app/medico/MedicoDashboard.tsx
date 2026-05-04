@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
   AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope, Trophy,
-  Star, Award, Crown, CreditCard, ShieldCheck, User,
+  Star, Award, Crown, CreditCard, ShieldCheck, User, Briefcase,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -25,9 +25,7 @@ import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 import { checkTreinamentoObrigatorio } from "@/lib/treinamentos";
 
-function formatBRL(centavos: number) {
-  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+import { formatBRL } from "@/lib/format";
 function formatHora(iso: string) {
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
@@ -71,6 +69,7 @@ export default function MedicoDashboard() {
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
+  const [propostasPendentes, setPropostasPendentes] = useState(0);
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
   const [stats, setStats] = useState({
     hoje: 0,
@@ -134,8 +133,16 @@ export default function MedicoDashboard() {
       treinamentoFeito: treinCheck.concluidasObrigatorias,
       perfilIncompleto,
       semDadosBancarios: (dadosBanc ?? 0) === 0,
-      semTermos: false, // handled by TermsAcceptanceDialog
+      semTermos: termsContrato.needsAcceptance,
     });
+
+    // Propostas pendentes
+    const { count: propPend } = await supabase
+      .from("propostas_empresa_medico")
+      .select("id", { count: "exact", head: true })
+      .eq("medico_id", session.user.id)
+      .eq("status", "enviada_medico");
+    setPropostasPendentes(propPend ?? 0);
 
     // Janelas de tempo
     const agora = new Date();
@@ -328,6 +335,15 @@ export default function MedicoDashboard() {
         : "Dados bancários configurados.",
       link: onb.semDadosBancarios ? "/app/medico/financeiro" : null,
       icon: CreditCard,
+    },
+    {
+      ok: !onb.semTermos,
+      titulo: "Termos de contrato aceitos",
+      desc: onb.semTermos
+        ? "Aceite os termos do contrato médico para operar na plataforma."
+        : "Termos de contrato aceitos.",
+      link: null, // handled by TermsAcceptanceDialog
+      icon: ShieldCheck,
     },
   ];
   const pendencias = checklistItems.filter((i) => !i.ok).length;
@@ -550,12 +566,12 @@ export default function MedicoDashboard() {
               Consultas com seu preço próprio (sem serviço da plataforma)
             </p>
           </div>
-          <div className="card-elevated p-5 border-l-4 border-l-emerald-500">
+          <div className="card-elevated p-5 border-l-4 border-l-success">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Receita serviços plataforma (mês)
               </p>
-              <Stethoscope className="h-4 w-4 text-emerald-600" />
+              <Stethoscope className="h-4 w-4 text-success" />
             </div>
             <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaServicosMes)}</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -669,13 +685,15 @@ export default function MedicoDashboard() {
             </Link>
           )}
 
-          {isMedico && (
-            <Link to="/app/medico/gamificacao" className="card-elevated block p-5 transition hover:border-primary/40">
+          {isMedico && propostasPendentes > 0 && (
+            <Link to="/app/medico/propostas" className="card-elevated block p-5 transition hover:border-warning/40 border-l-4 border-l-warning">
               <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-warning" />
-                <p className="font-semibold">Gamificação & Ranking</p>
+                <Briefcase className="h-4 w-4 text-warning" />
+                <p className="font-semibold">Propostas pendentes</p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Performance, avaliações e posição</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {propostasPendentes} proposta{propostasPendentes > 1 ? "s" : ""} aguardando sua resposta
+              </p>
             </Link>
           )}
 
