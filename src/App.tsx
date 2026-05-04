@@ -333,6 +333,7 @@ const App = () => (
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="admin/faq" element={<AdminFaq />} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
               <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />
