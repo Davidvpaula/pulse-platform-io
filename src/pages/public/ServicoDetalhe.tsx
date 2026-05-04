@@ -265,7 +265,8 @@ export default function ServicoDetalhe() {
   }
 
   function irParaFormulario() {
-    setStep("formulario");
+    if (!reserva || !servico) return;
+    navigate(`/app/agendamento/confirmar/${reserva.slot_id}?tipo=servico&ref=${servico.id}`);
   }
 
   async function confirmarEPagar() {
