@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { SessionProvider } from "@/lib/session";
 import { ImpersonationProvider } from "@/lib/impersonation";
 import Auth from "@/pages/auth/Auth";
