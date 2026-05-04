@@ -55,7 +55,7 @@ export default function MedicoPerfil() {
       if (m) {
         setMedico(m);
         setNome(m.nome ?? "");
-        setTelefone(m.telefone ?? "");
+        // telefone is managed in Dados Pessoais
         setBio(m.bio ?? "");
         setFotoUrl((m as any).foto_url ?? null);
         loadFormacoes(m.id);
