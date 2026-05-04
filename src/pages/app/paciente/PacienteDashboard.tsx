@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck, Download,
-  ChevronRight, Building2, User, MessageCircle, RefreshCw, Bell,
-  CheckCircle2, Repeat, Stethoscope, Loader2,
+  Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck,
+  ChevronRight, Building2, User, MessageCircle, Repeat, Stethoscope, Loader2, Bell,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -11,27 +10,41 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import AvaliacaoPendenteBanner from "@/components/paciente/AvaliacaoPendenteBanner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
+import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import type { Status } from "@/lib/mock";
+
+/** Status type used by StatusBadge */
+type BadgeStatus =
+  | "paciente_criado" | "feegow_enviado" | "feegow_sincronizado"
+  | "agendamento_criado" | "confirmado" | "aguardando"
+  | "em_andamento" | "concluido" | "cancelado" | "no_show";
 
 type ConsultaItem = {
   id: string; medico: string; esp: string; data: string; hora: string;
-  modalidade: string; status: Status; linkSala?: string | null;
+  modalidade: string; status: BadgeStatus; linkSala?: string | null;
+  inicio: string; // ISO original for filtering
 };
 
 export default function PacienteDashboard() {
-  const { user, patientLink, setPatientLink } = useAuth();
+  const { user } = useAuth();
   const { session } = useSession();
-  const empresarial = patientLink.tipo === "empresarial";
 
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<ConsultaItem[]>([]);
   const [statsConsultas, setStatsConsultas] = useState(0);
   const [statsDocs, setStatsDocs] = useState(0);
+
+  // Real stats
+  const [planoNome, setPlanoNome] = useState<string | null>(null);
+  const [pendenciasFinanceiras, setPendenciasFinanceiras] = useState(0);
+
+  // Real empresa link
+  const [empresaLink, setEmpresaLink] = useState<{ empresa: string; status: string } | null>(null);
 
   useEffect(() => {
     if (!session) { setLoading(false); return; }
@@ -40,7 +53,7 @@ export default function PacienteDashboard() {
       setLoading(true);
       try {
         const rows = await listConsultasDoPaciente();
-        setConsultas(rows.map((c) => ({
+        const mapped = rows.map((c) => ({
           id: c.id,
           medico: c.medico_nome ?? "Médico",
           esp: c.especialidade_nome ?? "—",
@@ -49,7 +62,9 @@ export default function PacienteDashboard() {
           modalidade: c.modalidade,
           status: toStatusBadge(c.status),
           linkSala: c.link_sala,
-        })));
+          inicio: c.inicio,
+        }));
+        setConsultas(mapped);
 
         // Stats: consultas neste mês
         const now = new Date();
@@ -64,7 +79,9 @@ export default function PacienteDashboard() {
           .select("id")
           .eq("user_id", uid)
           .maybeSingle();
+
         if (paciente) {
+          // Documentos count
           const consIds = rows.map(c => c.id);
           if (consIds.length > 0) {
             const { count } = await supabase
@@ -72,6 +89,43 @@ export default function PacienteDashboard() {
               .select("id", { count: "exact", head: true })
               .in("consulta_id", consIds);
             setStatsDocs(count ?? 0);
+          }
+
+          // Real: plano ativo
+          const { data: assinatura } = await supabase
+            .from("assinaturas")
+            .select("plano_id, status, planos(nome)")
+            .eq("paciente_id", paciente.id)
+            .in("status", ["ativa", "trial"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (assinatura) {
+            const nome = (assinatura as any).planos?.nome;
+            setPlanoNome(nome ?? "Plano ativo");
+          }
+
+          // Real: pendências financeiras
+          const { count: pendCount } = await supabase
+            .from("pagamentos")
+            .select("id", { count: "exact", head: true })
+            .eq("paciente_id", paciente.id)
+            .in("status", ["pendente", "processando"]);
+          setPendenciasFinanceiras(pendCount ?? 0);
+
+          // Real: vínculo empresarial
+          const { data: funcRow } = await supabase
+            .from("empresas_funcionarios")
+            .select("empresa_id, status, empresas(nome_fantasia)")
+            .eq("paciente_id", paciente.id)
+            .eq("status", "ativo")
+            .limit(1)
+            .maybeSingle();
+          if (funcRow) {
+            setEmpresaLink({
+              empresa: (funcRow as any).empresas?.nome_fantasia ?? "Empresa",
+              status: funcRow.status,
+            });
           }
         }
       } catch (e) {
@@ -83,9 +137,20 @@ export default function PacienteDashboard() {
     load();
   }, [session]);
 
-  const proxima = consultas[0] ?? null;
+  // Only future consultations for hero and list
+  const now = new Date();
+  const futuras = useMemo(() =>
+    consultas.filter(c => {
+      const d = new Date(c.inicio);
+      return d >= now && !["cancelado", "concluido", "no_show"].includes(c.status);
+    }),
+    [consultas]
+  );
+
+  const proxima = futuras[0] ?? null;
   const msgConsulta = `Olá, preciso de ajuda com minha consulta ${proxima?.id ?? ""}`.trim();
   const firstName = user.name.split(" ")[0] || "Paciente";
+  const empresarial = !!empresaLink;
 
   if (loading) {
     return (
@@ -109,7 +174,7 @@ export default function PacienteDashboard() {
 
       {session && <AvaliacaoPendenteBanner />}
 
-      {/* Vínculo do paciente */}
+      {/* Vínculo do paciente — real, read-only */}
       <div className="card-elevated flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3">
           <span className={cn("grid h-10 w-10 place-items-center rounded-xl", empresarial ? "bg-accent/15 text-accent" : "bg-primary-soft text-primary")}>
@@ -119,22 +184,20 @@ export default function PacienteDashboard() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo de vínculo</p>
             <p className="font-semibold">
               {empresarial ? "Empresarial" : "Particular"}
-              {empresarial && patientLink.empresa && (
+              {empresarial && empresaLink && (
                 <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  · {patientLink.empresa}{patientLink.plano && <> · plano {patientLink.plano}</>}
+                  · {empresaLink.empresa}
                 </span>
               )}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant={empresarial ? "outline" : "default"} size="sm"
-            className={!empresarial ? "bg-gradient-primary hover:opacity-90" : ""}
-            onClick={() => setPatientLink({ tipo: "particular" })}>Particular</Button>
-          <Button variant={empresarial ? "default" : "outline"} size="sm"
-            className={empresarial ? "bg-gradient-primary hover:opacity-90" : ""}
-            onClick={() => setPatientLink({ tipo: "empresarial", empresa: "Construtora Horizonte", plano: "Saúde Empresa" })}>Empresarial</Button>
-        </div>
+        <span className={cn(
+          "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
+          empresarial ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"
+        )}>
+          {empresarial ? "Empresarial" : "Particular"}
+        </span>
       </div>
 
       {/* Próxima consulta */}
@@ -174,9 +237,16 @@ export default function PacienteDashboard() {
                 </Button>
               )}
               <div className="flex gap-2 w-full md:w-auto">
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Repeat className="mr-2 h-3.5 w-3.5" /> Remarcar
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="flex-1">
+                      <Button variant="outline" size="sm" disabled className="w-full opacity-60">
+                        <Repeat className="mr-2 h-3.5 w-3.5" /> Remarcar
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Em breve — remarcação online</TooltipContent>
+                </Tooltip>
                 <Button asChild variant="outline" size="sm" className="flex-1">
                   <a href={whatsappUrl(msgConsulta)} target="_blank" rel="noreferrer noopener">
                     <MessageCircle className="mr-2 h-3.5 w-3.5 text-success" /> WhatsApp
@@ -191,20 +261,25 @@ export default function PacienteDashboard() {
       {/* Resumo real */}
       <div className="grid gap-4 md:grid-cols-4">
         <Link to="/app/paciente/agendamentos" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Consultas no mês" value={String(statsConsultas)} icon={Calendar} hint={`${consultas.filter(c => ["agendada","confirmada"].includes(c.status as string)).length} agendada(s)`} />
+          <StatCard label="Consultas no mês" value={String(statsConsultas)} icon={Calendar} hint={`${futuras.length} agendada(s)`} />
         </Link>
         <Link to="/app/paciente/documentos" className="block transition hover:-translate-y-0.5">
           <StatCard label="Documentos" value={String(statsDocs)} icon={FileText} hint="Receitas e atestados" />
         </Link>
         <Link to="/app/paciente/plano" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Plano" value="—" icon={BadgeCheck} hint="Nenhum plano ativo" />
+          <StatCard label="Plano" value={planoNome ?? "—"} icon={BadgeCheck} hint={planoNome ? "Plano ativo" : "Nenhum plano ativo"} />
         </Link>
         <Link to="/app/paciente/financeiro" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Financeiro" value="—" icon={Wallet} hint="Sem pendências" />
+          <StatCard
+            label="Financeiro"
+            value={pendenciasFinanceiras > 0 ? String(pendenciasFinanceiras) : "✓"}
+            icon={Wallet}
+            hint={pendenciasFinanceiras > 0 ? `${pendenciasFinanceiras} pendência(s)` : "Sem pendências"}
+          />
         </Link>
       </div>
 
-      {/* Próximos agendamentos */}
+      {/* Próximos agendamentos — apenas futuras */}
       <div className="card-elevated p-6">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-lg font-semibold">Próximos agendamentos</h3>
@@ -212,11 +287,11 @@ export default function PacienteDashboard() {
             <Link to="/app/paciente/agendamentos">Ver todos <ChevronRight className="ml-1 h-4 w-4" /></Link>
           </Button>
         </div>
-        {consultas.length === 0 ? (
+        {futuras.length === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">Nenhuma consulta agendada. Agende sua primeira consulta!</p>
         ) : (
           <div className="mt-4 divide-y divide-border">
-            {consultas.slice(0, 5).map(c => (
+            {futuras.slice(0, 5).map(c => (
               <div key={c.id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
                   <Stethoscope className="h-5 w-5" />
@@ -238,9 +313,16 @@ export default function PacienteDashboard() {
                       <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
                     </Button>
                   )}
-                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
-                    <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex-1 sm:flex-none">
+                        <Button size="sm" variant="outline" disabled className="w-full opacity-60">
+                          <Repeat className="mr-1.5 h-3.5 w-3.5" /> Remarcar
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Em breve</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             ))}
