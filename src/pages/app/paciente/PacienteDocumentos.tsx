@@ -29,6 +29,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import UploadDialogContent from "@/components/paciente/UploadDocumentoDialog";
+import DocStatusChip from "@/components/paciente/DocStatusChip";
 
 const TIPO_LABEL: Record<DocumentoPacienteTipo, string> = {
   exame: "Exames", laudo: "Laudos", receita: "Receitas",
