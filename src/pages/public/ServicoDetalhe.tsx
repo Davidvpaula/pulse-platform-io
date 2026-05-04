@@ -271,7 +271,6 @@ export default function ServicoDetalhe() {
   async function confirmarEPagar() {
     if (!reserva || !servico) return;
 
-    // Validate form
     const erros: string[] = [];
     if (!nome.trim() || nome.trim().split(/\s+/).length < 2) erros.push("Nome completo (nome e sobrenome)");
     if (onlyDigits(cpf).length !== 11) erros.push("CPF válido");
@@ -286,52 +285,49 @@ export default function ServicoDetalhe() {
 
     setSubmitting(true);
     try {
-      // Update patient data
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("pacientes")
-          .update({
-            nome_completo: nome.trim(),
-            cpf: onlyDigits(cpf),
-            telefone: onlyDigits(telefone),
-            data_nascimento: dataNasc,
-            sexo: sexo as any,
-            cep: onlyDigits(cep),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
-      }
-
-      // Confirm reservation (creates consulta)
-      const { data, error } = await supabase.rpc("fn_servico_confirmar_reserva" as any, {
+      // Usa fluxo unificado: reserva slot com dados do paciente (sem criar consulta)
+      const { data: resData, error: resErr } = await supabase.rpc("reservar_slot_unificado" as any, {
         _slot_id: reserva.slot_id,
-        _servico_id: servico.id,
+        _tipo: "servico",
+        _referencia_id: servico.id,
+        _motivo: motivo.trim() || null,
+        _nome_completo: nome.trim(),
+        _cpf: onlyDigits(cpf),
+        _telefone: onlyDigits(telefone),
+        _data_nascimento: dataNasc,
+        _sexo: sexo,
+        _cep: onlyDigits(cep),
       });
 
-      if (error || !(data as any)?.ok) {
-        toast.error((data as any)?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
+      if (resErr) {
+        toast.error("Erro ao reservar.", { description: resErr.message });
         setReserva(null);
         setStep("slots");
         carregarSlots();
         return;
       }
 
-      const res = data as any;
-
-      // Update motivo on consulta if provided
-      if (motivo.trim() && res.consulta_id) {
-        await supabase
-          .from("consultas")
-          .update({ motivo: motivo.trim() })
-          .eq("id", res.consulta_id);
+      const res = resData as any;
+      if (!res?.ok) {
+        toast.error(res?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
+        setReserva(null);
+        setStep("slots");
+        carregarSlots();
+        return;
       }
 
-      // Create checkout session
+      // Cria checkout SEM consulta_id (consulta criada pós-pagamento)
       const checkoutSession = await criarCheckoutSession({
-        consultaId: res.consulta_id,
         valorCentavos: res.valor_centavos,
         descricao: `${servico.nome} · Dr(a). ${reserva.medico_nome}`,
+        reserva: {
+          slot_id: res.slot_id,
+          tipo: res.tipo,
+          referencia_id: res.referencia_id,
+          motivo: res.motivo,
+          paciente_id: res.paciente_id,
+          medico_id: res.medico_id,
+        },
       });
 
       toast.success("Reserva confirmada!", {
