@@ -360,9 +360,18 @@ export default function MedicoHorarios() {
   }
 
   const devMode = !session;
-  const grouped = groupByDay(slots);
 
+  // Filter slots by calendar type
+  const filteredSlots = useMemo(() => {
+    if (filtroCalendario === "particular") return slots.filter((s) => !s.servico_id);
+    if (filtroCalendario === "servico") return slots.filter((s) => !!s.servico_id);
+    return slots;
+  }, [slots, filtroCalendario]);
 
+  const grouped = groupByDay(filteredSlots);
+
+  const countParticular = slots.filter((s) => !s.servico_id).length;
+  const countServico = slots.filter((s) => !!s.servico_id).length;
   return (
     <div className="space-y-6">
       <PageHeader
