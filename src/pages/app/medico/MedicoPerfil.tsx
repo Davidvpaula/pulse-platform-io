@@ -112,7 +112,6 @@ export default function MedicoPerfil() {
     if (fotoFile) newFotoUrl = await uploadFoto();
     const res = await updateMedicoPerfil({
       nome: nome.trim(),
-      telefone: telefone.trim() || null,
       bio: bio.trim() || null,
       foto_url: newFotoUrl,
     } as any);
