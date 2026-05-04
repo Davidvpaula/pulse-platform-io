@@ -69,6 +69,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
+  const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
   const [stats, setStats] = useState({
@@ -92,7 +93,8 @@ export default function MedicoDashboard() {
     setLoading(true);
 
     const medico = await getMedicoAtual();
-    if (!medico) { setLoading(false); return; }
+    if (!medico) { setMedicoNaoExiste(true); setLoading(false); return; }
+    setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
 
     // Gamificação: ranking + saldo (em paralelo com o resto)
@@ -242,6 +244,34 @@ export default function MedicoDashboard() {
     return (
       <div className="flex items-center justify-center p-20 text-muted-foreground">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando seu painel...
+      </div>
+    );
+  }
+
+  if (medicoNaoExiste && isMedico) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Cadastro não iniciado"
+          description="Seu perfil médico ainda não foi criado na plataforma."
+        />
+        <div className="card-elevated border-l-4 border-l-warning p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="font-semibold">Nenhum registro de médico encontrado</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Sua conta possui o papel de médico, mas o cadastro profissional ainda não foi preenchido.
+                Complete o cadastro para começar a receber pacientes.
+              </p>
+              <Button asChild className="mt-4 bg-gradient-primary hover:opacity-90">
+                <Link to="/app/medico/perfil">
+                  <User className="mr-2 h-4 w-4" /> Completar cadastro
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

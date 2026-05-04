@@ -5,8 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { AuthProvider } from "@/lib/auth";
-import { SessionProvider } from "@/lib/session";
+import { AuthProvider, useAuth } from "@/lib/auth";
+import { SessionProvider, useSession } from "@/lib/session";
 import { ImpersonationProvider } from "@/lib/impersonation";
 import Auth from "@/pages/auth/Auth";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -143,6 +143,13 @@ import { RequireRoutePermission as G } from "@/components/permissions/RequireRou
 
 const queryClient = new QueryClient();
 
+function SmartRedirect() {
+  const { profileKey } = useAuth();
+  const { loading } = useSession();
+  if (loading) return null;
+  return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -178,7 +185,7 @@ const App = () => (
 
             {/* APP */}
             <Route path="/app" element={<AppLayout />}>
-              <Route index element={<Navigate to="/app/admin/dashboard" replace />} />
+              <Route index element={<SmartRedirect />} />
 
               {/* Paciente */}
               <Route path="paciente/dashboard" element={<PacienteDashboard />} />
