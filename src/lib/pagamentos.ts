@@ -151,7 +151,7 @@ const mockProvider = {
     const { error } = await supabase
       .from("pagamentos")
       .update({
-        status: "cancelado",
+        status: "cancelado" as const,
         cancelled_at: new Date().toISOString(),
       })
       .eq("id", pagamentoId);
@@ -160,10 +160,11 @@ const mockProvider = {
     // Libera consulta e slot ao cancelar pagamento
     const { data: pag } = await supabase
       .from("pagamentos")
-      .select("consulta_id")
+      .select("consulta_id, metadata")
       .eq("id", pagamentoId)
       .maybeSingle();
 
+    // Se tem consulta vinculada (fluxo legado), cancela
     if (pag?.consulta_id) {
       const { data: consulta } = await supabase
         .from("consultas")
@@ -174,14 +175,14 @@ const mockProvider = {
       if (consulta?.status === "aguardando_pagamento") {
         await supabase
           .from("consultas")
-          .update({ status: "cancelada", updated_at: new Date().toISOString() })
+          .update({ status: "cancelada" as const, updated_at: new Date().toISOString() })
           .eq("id", pag.consulta_id);
 
         if (consulta.slot_id) {
           await supabase
             .from("agenda_slots")
             .update({
-              status: "disponivel",
+              status: "disponivel" as const,
               reservado_por: null,
               reserva_expira_em: null,
               updated_at: new Date().toISOString(),
@@ -189,6 +190,21 @@ const mockProvider = {
             .eq("id", consulta.slot_id);
         }
       }
+    }
+
+    // Se não tem consulta mas tem slot_id na metadata (fluxo unificado), libera slot
+    const meta = (pag?.metadata as any) ?? {};
+    if (!pag?.consulta_id && meta.slot_id) {
+      await supabase
+        .from("agenda_slots")
+        .update({
+          status: "disponivel" as const,
+          reservado_por: null,
+          reserva_expira_em: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", meta.slot_id)
+        .eq("status", "reservado");
     }
   },
 };
