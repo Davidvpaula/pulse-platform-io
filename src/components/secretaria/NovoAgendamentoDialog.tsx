@@ -130,9 +130,9 @@ export default function NovoAgendamentoDialog({ open, onOpenChange, onCriado }: 
 
       const { error: errSlot } = await supabase
         .from("agenda_slots")
-        .update({ status: "reservado" })
+        .update({ status: "reservado" as const })
         .eq("id", slotId)
-        .eq("status", "disponivel");
+        .eq("status", "disponivel" as const);
 
       if (errSlot) throw errSlot;
 
@@ -143,10 +143,10 @@ export default function NovoAgendamentoDialog({ open, onOpenChange, onCriado }: 
         especialidade_id: medEsp?.especialidade_id ?? null,
         inicio: slot.inicio,
         fim: slot.fim,
-        modalidade: slot.modalidade,
-        status: "agendada",
+        modalidade: slot.modalidade as "online",
+        status: "agendada" as const,
         motivo: motivo.trim() || null,
-        canal_origem: "manual_secretaria",
+        canal_origem: "manual_secretaria" as const,
       });
 
       if (errConsulta) throw errConsulta;
