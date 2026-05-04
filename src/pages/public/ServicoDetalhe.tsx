@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { brl, fmtHora } from "@/lib/format";
+import { brl, fmtHora, dataLabel } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import PageShell from "@/components/PageShell";
@@ -28,17 +28,7 @@ function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function dataLabel(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
-  const hoje = new Date();
-  const amanha = new Date();
-  amanha.setDate(hoje.getDate() + 1);
-  const eq = (a: Date, b: Date) =>
-    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
-  if (eq(d, hoje)) return "Hoje";
-  if (eq(d, amanha)) return "Amanhã";
-  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
-}
+
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();

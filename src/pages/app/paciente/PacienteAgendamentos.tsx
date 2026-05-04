@@ -328,20 +328,32 @@ export default function PacienteAgendamentos() {
 
 function EmptyState({ filtro }: { filtro: Filtro }) {
   const msg: Record<Filtro, string> = {
-    futuras: "Você não tem consultas futuras.",
+    futuras: "Você não tem consultas futuras agendadas.",
     passadas: "Nenhuma consulta passada encontrada.",
     canceladas: "Nenhuma consulta cancelada.",
     todas: "Você ainda não realizou nenhum agendamento.",
   };
+  const isFuturas = filtro === "futuras" || filtro === "todas";
   return (
-    <div className="flex flex-col items-center gap-3 py-12 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-full bg-muted text-muted-foreground">
-        <Calendar className="h-6 w-6" />
+    <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
+        <Calendar className="h-8 w-8" />
       </div>
-      <p className="text-sm text-muted-foreground">{msg[filtro]}</p>
-      <Button asChild className="bg-gradient-primary hover:opacity-90">
-        <Link to="/agendar">Agendar agora</Link>
-      </Button>
+      <div>
+        <p className="text-base font-semibold">{msg[filtro]}</p>
+        {isFuturas && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Agende sua consulta online agora — rápido, seguro e sem sair de casa.
+          </p>
+        )}
+      </div>
+      {isFuturas && (
+        <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 mt-2">
+          <Link to="/agendar">
+            <Calendar className="mr-2 h-4 w-4" /> Agendar nova consulta
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

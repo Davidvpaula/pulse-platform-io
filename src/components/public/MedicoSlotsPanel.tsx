@@ -4,6 +4,7 @@ import { Calendar, Clock, Loader2, Video, ChevronLeft, ChevronRight } from "luci
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
+import { fmtHora, dataLabel } from "@/lib/format";
 
 type Slot = {
   id: string;
@@ -17,21 +18,7 @@ type Props = {
   medicoNome: string;
 };
 
-function formatHora(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
 
-function dataLabel(iso: string): string {
-  const d = new Date(iso);
-  const hoje = new Date();
-  const amanha = new Date();
-  amanha.setDate(hoje.getDate() + 1);
-  const eq = (a: Date, b: Date) =>
-    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
-  if (eq(d, hoje)) return "Hoje";
-  if (eq(d, amanha)) return "Amanhã";
-  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
-}
 
 function groupByDate(slots: Slot[]): Map<string, Slot[]> {
   const map = new Map<string, Slot[]>();
@@ -147,7 +134,7 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center transition hover:border-primary hover:bg-primary/5 hover:shadow-sm group"
                 >
                   <p className="font-mono text-sm font-bold group-hover:text-primary transition-colors">
-                    {formatHora(s.inicio)}
+                    {fmtHora(s.inicio)}
                   </p>
                   <div className="flex items-center justify-center gap-1 mt-0.5">
                     <Video className="h-2.5 w-2.5 text-primary" />

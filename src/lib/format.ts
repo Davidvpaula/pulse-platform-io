@@ -26,3 +26,19 @@ export function fmtHora(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
+
+/**
+ * Retorna label amigável para uma data ISO (yyyy-MM-dd ou ISO completo).
+ * Ex.: "Hoje", "Amanhã", "seg., 12 de mai."
+ */
+export function dataLabel(iso: string): string {
+  const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso);
+  const hoje = new Date();
+  const amanha = new Date();
+  amanha.setDate(hoje.getDate() + 1);
+  const eq = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+  if (eq(d, hoje)) return "Hoje";
+  if (eq(d, amanha)) return "Amanhã";
+  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+}
