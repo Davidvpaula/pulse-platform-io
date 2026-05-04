@@ -120,7 +120,6 @@ export default function ServicoDetalhe() {
           toast.message("Reserva expirou", {
             description: `O horário ${fmtHora(prev.inicio)} foi liberado.`,
           });
-          setStep("slots");
           carregarSlots();
           return null;
         }
