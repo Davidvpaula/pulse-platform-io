@@ -4,6 +4,7 @@ import {
   Loader2, Search, Play, User, Stethoscope, History, Building2,
 } from "lucide-react";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
+import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,11 @@ import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
 
 type Filtro = "todas" | "hoje" | "futuras" | "passadas" | "canceladas";
 
+function formatBRL(centavos: number | null | undefined) {
+  if (!centavos) return "—";
+  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function MedicoConsultas() {
   const { session } = useSession();
   const [loading, setLoading] = useState(false);
@@ -33,6 +39,7 @@ export default function MedicoConsultas() {
   const [acaoId, setAcaoId] = useState<string | null>(null);
   const [retornoCtx, setRetornoCtx] = useState<{ id: string; nome?: string | null } | null>(null);
   const [historicoCtx, setHistoricoCtx] = useState<{ id: string; resumo?: string } | null>(null);
+  const [finalizarConsulta, setFinalizarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); return; }
@@ -67,7 +74,6 @@ export default function MedicoConsultas() {
           (c.motivo ?? "").toLowerCase().includes(q),
       );
     }
-    // ordena: futuras asc, passadas desc
     arr = [...arr].sort((a, b) => {
       const da = +new Date(a.inicio); const db = +new Date(b.inicio);
       return filtro === "passadas" ? db - da : da - db;
@@ -89,7 +95,11 @@ export default function MedicoConsultas() {
   };
 
   const iniciar = async (c: ConsultaDetalhada) => {
-    // Marca como em_andamento e abre a sala
+    // Se já está em_andamento, apenas abre a sala sem update desnecessário
+    if (c.status === "em_andamento") {
+      if (c.link_sala) window.open(c.link_sala, "_blank", "noopener,noreferrer");
+      return;
+    }
     setAcaoId(c.id);
     const ok = await updateConsultaStatus(c.id, "em_andamento");
     setAcaoId(null);
@@ -102,15 +112,6 @@ export default function MedicoConsultas() {
     } else {
       toast.error("Não foi possível iniciar");
     }
-  };
-
-  const concluir = async (c: ConsultaDetalhada) => {
-    setAcaoId(c.id);
-    const ok = await updateConsultaStatus(c.id, "concluida");
-    setAcaoId(null);
-    if (!ok) { toast.error("Erro ao concluir"); return; }
-    // Abre modal de retorno gratuito
-    setRetornoCtx({ id: c.id, nome: c.paciente_nome });
   };
 
   if (!session) {
@@ -181,9 +182,10 @@ export default function MedicoConsultas() {
           const podeIniciar =
             c.status !== "cancelada" &&
             c.status !== "concluida" &&
-            ini.getTime() - Date.now() < 30 * 60_000; // 30min antes
-          const podeConcluir = c.status === "em_andamento" || c.status === "agendada";
+            ini.getTime() - Date.now() < 30 * 60_000;
+          const podeConcluir = c.status === "em_andamento";
           const podeCancelar = c.status !== "cancelada" && c.status !== "concluida";
+          const valor = (c as any).valor_snapshot_centavos ?? (c as any).valor_centavos;
 
           return (
             <div key={c.id} className="card-elevated p-4">
@@ -214,10 +216,16 @@ export default function MedicoConsultas() {
                     {c.especialidade_nome ?? "—"}
                     <span className="mx-1">·</span>
                     <Video className="h-3.5 w-3.5" /> Telemedicina
+                    {valor ? (
+                      <>
+                        <span className="mx-1">·</span>
+                        <span className="font-medium text-foreground">{formatBRL(valor)}</span>
+                      </>
+                    ) : null}
                   </p>
                   {c.motivo && (
                     <p className="mt-1 text-xs text-muted-foreground italic line-clamp-1">
-                      “{c.motivo}”
+                      "{c.motivo}"
                     </p>
                   )}
                 </div>
@@ -243,10 +251,10 @@ export default function MedicoConsultas() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => concluir(c)}
+                      onClick={() => setFinalizarConsulta(c)}
                       disabled={acaoId === c.id}
                     >
-                      Concluir
+                      Finalizar
                     </Button>
                   )}
                   <Button
@@ -303,6 +311,17 @@ export default function MedicoConsultas() {
           );
         })}
       </div>
+
+      <FinalizarAtendimentoDialog
+        consulta={finalizarConsulta}
+        open={!!finalizarConsulta}
+        onOpenChange={(v) => { if (!v) setFinalizarConsulta(null); }}
+        onFinalizado={() => {
+          setFinalizarConsulta(null);
+          setRetornoCtx(finalizarConsulta ? { id: finalizarConsulta.id, nome: finalizarConsulta.paciente_nome } : null);
+          void carregar();
+        }}
+      />
 
       <RetornoGratuitoDialog
         open={!!retornoCtx}
