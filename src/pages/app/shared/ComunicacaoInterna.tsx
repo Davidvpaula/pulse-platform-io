@@ -69,16 +69,6 @@ const prioridadeTone: Record<Prioridade, string> = {
   baixa: "bg-muted/60 text-muted-foreground",
 };
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return "agora";
-  if (min < 60) return `há ${min} min`;
-  const hrs = Math.floor(min / 60);
-  if (hrs < 24) return `há ${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  return `há ${days}d`;
-}
 
 const ORIGENS: Origem[] = [
   "Secretaria ↔ Médico",
