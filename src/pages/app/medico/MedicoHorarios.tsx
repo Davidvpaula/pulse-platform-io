@@ -748,7 +748,19 @@ export default function MedicoHorarios() {
       {/* Lista de horários cadastrados */}
       <div>
         <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-sm font-semibold">Horários cadastrados</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-semibold">Horários cadastrados</h2>
+            {slots.filter((s) => s.status === "disponivel").length > 0 && (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-7 text-xs"
+                onClick={() => setConfirmDeleteAll(true)}
+              >
+                <Trash2 className="mr-1 h-3 w-3" /> Excluir todos
+              </Button>
+            )}
+          </div>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
             {([
               { key: "todos", label: "Todos", count: slots.length },
