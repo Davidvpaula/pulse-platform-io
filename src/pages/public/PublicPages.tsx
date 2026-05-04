@@ -531,11 +531,9 @@ export const Agendar = () => {
 
   const espAtual = especialidades.find((e) => e.id === espId);
 
-  // Tags
-  const isNovo = (m: MedicoComSlot) => {
-    const dias = (Date.now() - new Date(m.created_at).getTime()) / 86400000;
-    return dias < 30;
-  };
+  // Format price
+  const fmtPreco = (centavos: number) =>
+    (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o profissional.">
