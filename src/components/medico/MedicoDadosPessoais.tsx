@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { Save } from "lucide-react";
+import { Save, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { MedicoRow } from "@/lib/clinico";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Endereco = {
   id?: string;
@@ -14,6 +19,15 @@ type Endereco = {
   bairro: string; cidade: string; estado: string;
 };
 const EMPTY_END: Endereco = { cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "" };
+
+/** Formata CPF visualmente: 000.000.000-00 */
+function formatCpf(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
 
 function EnderecoForm({ label, value, onChange, disabled }: {
   label: string; value: Endereco; onChange: (v: Endereco) => void; disabled?: boolean;
@@ -36,14 +50,20 @@ function EnderecoForm({ label, value, onChange, disabled }: {
 }
 
 export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
-  const [cpf, setCpf] = useState(medico.cpf ?? "");
+  const [nome, setNome] = useState(medico.nome ?? "");
   const [dataNasc, setDataNasc] = useState(medico.data_nascimento ?? "");
   const [telefone, setTelefone] = useState(medico.telefone ?? "");
   const [rqe, setRqe] = useState(medico.rqe ?? "");
+  const [sexo, setSexo] = useState((medico as any).sexo ?? "");
   const [endRes, setEndRes] = useState<Endereco>(EMPTY_END);
   const [endCom, setEndCom] = useState<Endereco>(EMPTY_END);
   const [usarComercial, setUsarComercial] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Troca de email
+  const [novoEmail, setNovoEmail] = useState("");
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [trocandoEmail, setTrocandoEmail] = useState(false);
 
   useEffect(() => {
     loadEnderecos();
@@ -68,16 +88,15 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
 
   async function salvar() {
     setSaving(true);
-    // Update medico fields
     const { error: medErr } = await supabase.from("medicos").update({
-      cpf: cpf.trim() || null,
+      nome: nome.trim() || medico.nome,
       data_nascimento: dataNasc || null,
       telefone: telefone.trim() || null,
       rqe: rqe.trim() || null,
-    }).eq("id", medico.id);
+      sexo: sexo || null,
+    } as any).eq("id", medico.id);
     if (medErr) { toast.error(medErr.message); setSaving(false); return; }
 
-    // Upsert endereço residencial
     await upsertEndereco(medico.id, "residencial", endRes);
     if (usarComercial) {
       await upsertEndereco(medico.id, "comercial", endCom);
@@ -106,17 +125,59 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
     }
   }
 
+  async function trocarEmail() {
+    const email = novoEmail.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Informe um email válido.");
+      return;
+    }
+    setTrocandoEmail(true);
+    const { error } = await supabase.auth.updateUser({ email });
+    setTrocandoEmail(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Email de confirmação enviado para o novo endereço. Verifique sua caixa de entrada.");
+    setEmailDialogOpen(false);
+    setNovoEmail("");
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
-        <div><Label>Nome completo</Label><Input value={medico.nome} disabled /></div>
-        <div><Label>E-mail</Label><Input value={medico.email} disabled /></div>
-        <div><Label>CPF</Label><Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" /></div>
+        <div><Label>Nome completo</Label><Input value={nome} onChange={e => setNome(e.target.value)} /></div>
+        <div>
+          <Label>E-mail</Label>
+          <div className="flex gap-2">
+            <Input value={medico.email} disabled className="flex-1" />
+            <Button variant="outline" size="sm" onClick={() => setEmailDialogOpen(true)} className="shrink-0">
+              <Mail className="mr-1.5 h-3.5 w-3.5" /> Alterar
+            </Button>
+          </div>
+        </div>
+        <div>
+          <Label>CPF</Label>
+          <Input value={formatCpf(medico.cpf ?? "")} disabled className="bg-muted/50" />
+          <p className="mt-1 text-[11px] text-muted-foreground">CPF não pode ser alterado após o cadastro.</p>
+        </div>
         <div><Label>Data de nascimento</Label><Input type="date" value={dataNasc} onChange={e => setDataNasc(e.target.value)} /></div>
         <div><Label>Telefone</Label><Input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(00) 00000-0000" /></div>
         <div><Label>CRM</Label><Input value={`${medico.crm} / ${medico.crm_estado}`} disabled /></div>
         <div><Label>Especialidade</Label><Input value={medico.especialidade} disabled /></div>
         <div><Label>RQE</Label><Input value={rqe} onChange={e => setRqe(e.target.value)} placeholder="Opcional" /></div>
+        <div>
+          <Label>Sexo</Label>
+          <Select value={sexo} onValueChange={setSexo}>
+            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="masculino">Masculino</SelectItem>
+              <SelectItem value="feminino">Feminino</SelectItem>
+              <SelectItem value="outro">Outro</SelectItem>
+              <SelectItem value="prefiro_nao_informar">Prefiro não informar</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div><Label>Status do cadastro</Label><Input value={medico.status} disabled className="capitalize" /></div>
       </div>
 
@@ -138,6 +199,33 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
       <Button onClick={salvar} disabled={saving} className="bg-gradient-primary hover:opacity-90">
         <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar dados pessoais"}
       </Button>
+
+      {/* Dialog troca de email */}
+      <AlertDialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar e-mail</AlertDialogTitle>
+            <AlertDialogDescription>
+              Um e-mail de confirmação será enviado para o novo endereço. O e-mail atual continuará funcionando até a confirmação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Novo e-mail</Label>
+            <Input
+              type="email"
+              value={novoEmail}
+              onChange={e => setNovoEmail(e.target.value)}
+              placeholder="novo@email.com"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={trocarEmail} disabled={trocandoEmail}>
+              {trocandoEmail ? "Enviando…" : "Enviar confirmação"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

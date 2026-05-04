@@ -12,9 +12,16 @@ type Nfe = {
   id: string;
   saque_id: string | null;
   arquivo_url: string;
-  numero_nfe: string | null;
+  numero_nota: string | null;
   valor_centavos: number | null;
+  status: string;
   created_at: string;
+};
+
+const STATUS_MAP: Record<string, { label: string; variant: "default" | "outline" | "secondary" | "destructive" }> = {
+  pendente: { label: "Pendente", variant: "secondary" },
+  aprovada: { label: "Aprovada", variant: "default" },
+  rejeitada: { label: "Rejeitada", variant: "destructive" },
 };
 
 export function MedicoDocumentosFiscais({ medicoId }: { medicoId: string }) {
@@ -94,32 +101,39 @@ export function MedicoDocumentosFiscais({ medicoId }: { medicoId: string }) {
               <tr>
                 <th className="px-4 py-2 text-left">Data</th>
                 <th className="px-4 py-2 text-left">Vinculado a saque</th>
-                <th className="px-4 py-2 text-left">Nº NFe</th>
+                <th className="px-4 py-2 text-left">Nº Nota</th>
+                <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-left">Ação</th>
               </tr>
             </thead>
             <tbody>
-              {nfes.map(nfe => (
-                <tr key={nfe.id} className="border-t border-border hover:bg-muted/30">
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                    {new Date(nfe.created_at).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    {nfe.saque_id ? (
-                      <Badge variant="outline" className="border-info/40 text-info text-[10px]">Sim</Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-muted text-muted-foreground text-[10px]">Avulso</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-xs">{nfe.numero_nfe ?? "—"}</td>
-                  <td className="px-4 py-2.5">
-                    <a href={nfe.arquivo_url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                      <Download className="h-3 w-3" /> Baixar
-                    </a>
-                  </td>
-                </tr>
-              ))}
+              {nfes.map(nfe => {
+                const st = STATUS_MAP[nfe.status] ?? { label: nfe.status, variant: "outline" as const };
+                return (
+                  <tr key={nfe.id} className="border-t border-border hover:bg-muted/30">
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                      {new Date(nfe.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {nfe.saque_id ? (
+                        <Badge variant="outline" className="border-info/40 text-info text-[10px]">Sim</Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-muted text-muted-foreground text-[10px]">Avulso</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs">{nfe.numero_nota ?? "—"}</td>
+                    <td className="px-4 py-2.5">
+                      <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <a href={nfe.arquivo_url} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                        <Download className="h-3 w-3" /> Baixar
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
