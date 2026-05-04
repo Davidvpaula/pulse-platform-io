@@ -72,12 +72,25 @@ export default function PacienteCheckout() {
     }
 
     if (p) {
-      const { data: c } = await supabase
-        .from("consultas")
-        .select("paciente_id, medico_id, especialidade_id")
-        .eq("id", p.consulta_id)
-        .maybeSingle();
-      if (c) setConsultaCtx(c as ConsultaCtx);
+      // Fluxo unificado: consulta_id pode ser null — contexto vem do metadata
+      if (p.consulta_id) {
+        const { data: c } = await supabase
+          .from("consultas")
+          .select("paciente_id, medico_id, especialidade_id")
+          .eq("id", p.consulta_id)
+          .maybeSingle();
+        if (c) setConsultaCtx(c as ConsultaCtx);
+      } else {
+        // Contexto da reserva unificada (pré-consulta)
+        const meta = (p.metadata as any) ?? {};
+        if (meta.paciente_id && meta.medico_id) {
+          setConsultaCtx({
+            paciente_id: meta.paciente_id,
+            medico_id: meta.medico_id,
+            especialidade_id: meta.referencia_id ?? null,
+          });
+        }
+      }
     }
 
     setLoading(false);
