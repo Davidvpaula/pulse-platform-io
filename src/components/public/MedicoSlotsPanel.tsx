@@ -19,19 +19,7 @@ type Props = {
 };
 
 function formatHora(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
-
-function dataLabel(iso: string): string {
-  const d = new Date(iso);
-  const hoje = new Date();
-  const amanha = new Date();
-  amanha.setDate(hoje.getDate() + 1);
-  const eq = (a: Date, b: Date) =>
-    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
-  if (eq(d, hoje)) return "Hoje";
-  if (eq(d, amanha)) return "Amanhã";
-  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+  return fmtHora(iso);
 }
 
 function groupByDate(slots: Slot[]): Map<string, Slot[]> {
