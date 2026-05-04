@@ -6,18 +6,20 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 import {
-  listarMeusAceites, TERMO_TIPO_LABELS, type TermoRow,
+  listarMeusAceites, TERMO_TIPO_LABELS,
 } from "@/lib/termos";
 
 type AceiteComTermo = Awaited<ReturnType<typeof listarMeusAceites>>[number];
 
 function downloadHtml(titulo: string, versao: number, conteudo: string) {
+  const sanitized = DOMPurify.sanitize(conteudo);
   const html = `<!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>${titulo} — v${versao}</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>${DOMPurify.sanitize(titulo)} — v${versao}</title>
 <style>body{font-family:system-ui,sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6}
 h1{font-size:1.4rem;border-bottom:1px solid #ccc;padding-bottom:.5rem}</style></head>
-<body><h1>${titulo} <small>(v${versao})</small></h1>${conteudo}</body></html>`;
+<body><h1>${DOMPurify.sanitize(titulo)} <small>(v${versao})</small></h1>${sanitized}</body></html>`;
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -118,7 +120,7 @@ export default function MeusAceites() {
           </p>
           <div
             className="prose prose-sm dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: preview?.termos_condicoes?.conteudo ?? "" }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview?.termos_condicoes?.conteudo ?? "") }}
           />
           <div className="flex justify-end mt-4">
             <Button variant="outline" size="sm"

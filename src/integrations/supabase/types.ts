@@ -3672,12 +3672,14 @@ export type Database = {
           feegow_payload: Json | null
           feegow_professional_id: string | null
           feegow_status: Database["public"]["Enums"]["feegow_status"]
+          foto_url: string | null
           id: string
           link_sala_padrao: string | null
           motivo_reprovacao: string | null
           nome: string
           prioridade_atendimento: number
           rqe: string | null
+          sexo: string | null
           sexo_biologico: string | null
           status: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em: string | null
@@ -3714,12 +3716,14 @@ export type Database = {
           feegow_payload?: Json | null
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome: string
           prioridade_atendimento?: number
           rqe?: string | null
+          sexo?: string | null
           sexo_biologico?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null
@@ -3756,12 +3760,14 @@ export type Database = {
           feegow_payload?: Json | null
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null
           motivo_reprovacao?: string | null
           nome?: string
           prioridade_atendimento?: number
           rqe?: string | null
+          sexo?: string | null
           sexo_biologico?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null

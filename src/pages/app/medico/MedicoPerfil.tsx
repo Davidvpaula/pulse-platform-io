@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { User, Save, Star, MapPin, Stethoscope, Video, AlertTriangle, CheckCircle2, ExternalLink, Landmark, FileText, Receipt } from "lucide-react";
+import { User, Save, Star, MapPin, Stethoscope, Video, AlertTriangle, CheckCircle2, ExternalLink, Landmark, FileText, Receipt, Upload, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { getMedicoAtual, updateMedicoPerfil, type MedicoRow } from "@/lib/clinico";
+import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
 import { MedicoDadosBancarios } from "@/components/medico/MedicoDadosBancarios";
@@ -52,6 +53,9 @@ export default function MedicoPerfil() {
   const [bio, setBio] = useState("");
   const [linkSala, setLinkSala] = useState("");
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
 
   useEffect(() => {
     if (!session) {
@@ -67,6 +71,7 @@ export default function MedicoPerfil() {
         setTelefone(m.telefone ?? "");
         setBio(m.bio ?? "");
         setLinkSala(m.link_sala_padrao ?? "");
+        setFotoUrl((m as any).foto_url ?? null);
       }
       setLoading(false);
     })();
@@ -82,18 +87,56 @@ export default function MedicoPerfil() {
     return /^https:\/\/.+/i.test(linkSala.trim());
   }, [linkSala]);
 
+  const displayFoto = fotoPreview ?? fotoUrl;
+
+  function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) {
+      toast.error("A foto deve ter no máximo 2MB.");
+      return;
+    }
+    setFotoFile(f);
+    setFotoPreview(URL.createObjectURL(f));
+  }
+
+  async function uploadFoto(): Promise<string | null> {
+    if (!fotoFile || !session) return fotoUrl;
+    setUploadingFoto(true);
+    const ext = fotoFile.name.split(".").pop() ?? "jpg";
+    const path = `${session.user.id}/avatar_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("medico-avatars").upload(path, fotoFile, { upsert: true });
+    setUploadingFoto(false);
+    if (error) {
+      toast.error("Erro ao enviar foto: " + error.message);
+      return fotoUrl;
+    }
+    const { data: urlData } = supabase.storage.from("medico-avatars").getPublicUrl(path);
+    return urlData.publicUrl;
+  }
+
   async function salvarPerfilPublico() {
     if (!session) { toast.error("Sessão expirada. Faça login novamente."); return; }
     if (linkSala.trim() && linkValido === false) { toast.error("O link da sala precisa começar com https://"); return; }
     setSaving(true);
+
+    let newFotoUrl = fotoUrl;
+    if (fotoFile) {
+      newFotoUrl = await uploadFoto();
+    }
+
     const res = await updateMedicoPerfil({
       nome: nome.trim(),
       telefone: telefone.trim() || null,
       bio: bio.trim() || null,
       link_sala_padrao: linkSala.trim() || null,
-    });
+      foto_url: newFotoUrl,
+    } as any);
     setSaving(false);
     if (!res.ok) { toast.error(res.error ?? "Erro ao salvar"); return; }
+    setFotoUrl(newFotoUrl);
+    setFotoFile(null);
+    setFotoPreview(null);
     toast.success("Perfil atualizado");
   }
 
@@ -115,7 +158,7 @@ export default function MedicoPerfil() {
         {/* ── PERFIL PÚBLICO ── */}
         <TabsContent value="publico" className="space-y-6">
           <div className="flex justify-end">
-            <Button className="bg-gradient-primary hover:opacity-90" onClick={salvarPerfilPublico} disabled={saving || loading}>
+            <Button className="bg-gradient-primary hover:opacity-90" onClick={salvarPerfilPublico} disabled={saving || loading || uploadingFoto}>
               <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar perfil"}
             </Button>
           </div>
@@ -163,11 +206,17 @@ export default function MedicoPerfil() {
                 <Field label="Telefone"><InputField value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(00) 00000-0000" /></Field>
                 <Field label="CRM"><InputField value={medico ? `${medico.crm} / ${medico.crm_estado}` : ""} disabled /></Field>
                 <Field label="Especialidade principal"><InputField value={medico?.especialidade ?? ""} disabled /></Field>
-                <Field label="Foto de perfil" hint="Recomendado: 400×400px.">
-                  <InputField type="file" accept="image/*" onChange={(e: any) => {
-                    const f = e.target.files?.[0];
-                    setFotoUrl(f ? URL.createObjectURL(f) : null);
-                  }} />
+                <Field label="Foto de perfil" hint="Recomendado: 400×400px. Máx 2MB.">
+                  <div className="flex items-center gap-3">
+                    {displayFoto && (
+                      <img src={displayFoto} alt="Foto" className="h-12 w-12 rounded-full object-cover border border-border" />
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted/50 transition-colors">
+                      <Upload className="h-3.5 w-3.5" />
+                      {displayFoto ? "Trocar foto" : "Enviar foto"}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFotoChange} />
+                    </label>
+                  </div>
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="Bio">
@@ -190,16 +239,16 @@ export default function MedicoPerfil() {
                   <div className="px-5 pb-5">
                     <div className="-mt-10 mb-3 flex items-end gap-3">
                       <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-card bg-muted shadow-sm">
-                        {fotoUrl ? (
-                          <img src={fotoUrl} alt={nome} className="h-full w-full object-cover" />
+                        {displayFoto ? (
+                          <img src={displayFoto} alt={nome} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gradient-primary text-lg font-semibold text-primary-foreground">{iniciais}</div>
                         )}
                       </div>
                       <div className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                        <span className="font-medium text-foreground">4.9</span>
-                        <span>· 128 avaliações</span>
+                        <span className="font-medium text-foreground">—</span>
+                        <span>· sem avaliações</span>
                       </div>
                     </div>
                     <h5 className="font-display text-base font-semibold leading-tight">{nome || "Nome do médico"}</h5>
