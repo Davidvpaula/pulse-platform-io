@@ -745,17 +745,41 @@ export default function MedicoHorarios() {
 
       {/* Lista de horários cadastrados */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold">Horários cadastrados</h2>
+        <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-sm font-semibold">Horários cadastrados</h2>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
+            {([
+              { key: "todos", label: "Todos", count: slots.length },
+              { key: "particular", label: "Particular", count: countParticular },
+              { key: "servico", label: "Serviço", count: countServico },
+            ] as const).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFiltroCalendario(tab.key)}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition",
+                  filtroCalendario === tab.key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="card-elevated overflow-hidden">
           {loading && (
             <p className="p-10 text-center text-sm text-muted-foreground">Carregando…</p>
           )}
-          {!loading && slots.length === 0 && (
+          {!loading && filteredSlots.length === 0 && (
             <div className="p-10 text-center">
               <CalendarIcon className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
-              <p className="text-sm font-medium">Nenhum horário cadastrado</p>
+              <p className="text-sm font-medium">
+                {slots.length === 0 ? "Nenhum horário cadastrado" : "Nenhum horário nesta categoria"}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Use as abas acima para gerar sua disponibilidade.
+                {slots.length === 0 ? "Use as abas acima para gerar sua disponibilidade." : "Troque o filtro acima para ver outros horários."}
               </p>
             </div>
           )}
@@ -785,16 +809,30 @@ export default function MedicoHorarios() {
                   <div className="flex flex-wrap gap-2">
                     {items.map((s) => {
                       const st = statusLabel(s.status);
+                      const srvNome = s.servico_id ? servicoNomes[s.servico_id] : null;
                       return (
                         <div
                           key={s.id}
-                          className="group relative flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs"
+                          className={cn(
+                            "group relative flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-xs",
+                            s.servico_id ? "border-primary/30" : "border-border"
+                          )}
                         >
                           <Video className="h-3 w-3 text-primary" />
                           <span className="font-medium">
                             {format(new Date(s.inicio), "HH:mm")}–
                             {format(new Date(s.fim), "HH:mm")}
                           </span>
+                          {srvNome && (
+                            <span className="rounded-full bg-primary/10 text-primary px-1.5 py-0.5 text-[9px] font-medium max-w-[100px] truncate" title={srvNome}>
+                              {srvNome}
+                            </span>
+                          )}
+                          {!s.servico_id && filtroCalendario === "todos" && (
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                              Particular
+                            </span>
+                          )}
                           <span
                             className={cn(
                               "rounded-full px-1.5 py-0.5 text-[10px] font-medium",
