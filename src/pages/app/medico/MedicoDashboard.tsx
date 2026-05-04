@@ -248,6 +248,34 @@ export default function MedicoDashboard() {
     );
   }
 
+  if (medicoNaoExiste && isMedico) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Cadastro não iniciado"
+          description="Seu perfil médico ainda não foi criado na plataforma."
+        />
+        <div className="card-elevated border-l-4 border-l-warning p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="font-semibold">Nenhum registro de médico encontrado</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Sua conta possui o papel de médico, mas o cadastro profissional ainda não foi preenchido.
+                Complete o cadastro para começar a receber pacientes.
+              </p>
+              <Button asChild className="mt-4 bg-gradient-primary hover:opacity-90">
+                <Link to="/app/medico/perfil">
+                  <User className="mr-2 h-4 w-4" /> Completar cadastro
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const checklistItems = [
     {
       ok: !onb.pendente,
