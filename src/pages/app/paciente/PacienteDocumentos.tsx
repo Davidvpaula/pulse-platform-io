@@ -510,9 +510,9 @@ export default function PacienteDocumentos() {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 text-[11px]">
-                      <Chip ok={temProntuario} label="Prontuário" />
-                      <Chip ok={presc.length > 0} label={`Prescrição${presc.length > 1 ? `s (${presc.length})` : ""}`} />
-                      <Chip ok={anex.length > 0} label={`Anexos${anex.length > 0 ? ` (${anex.length})` : ""}`} />
+                      <DocStatusChip ok={temProntuario} label="Prontuário" />
+                      <DocStatusChip ok={presc.length > 0} label={`Prescrição${presc.length > 1 ? `s (${presc.length})` : ""}`} />
+                      <DocStatusChip ok={anex.length > 0} label={`Anexos${anex.length > 0 ? ` (${anex.length})` : ""}`} />
                     </div>
 
                     {anex.length > 0 && (
