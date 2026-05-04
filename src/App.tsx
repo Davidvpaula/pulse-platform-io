@@ -155,6 +155,13 @@ function SmartRedirect() {
   return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
 }
 
+function AgendamentoRedirect() {
+  const { slotId } = useParams();
+  const [sp] = useSearchParams();
+  const qs = sp.toString();
+  return <Navigate to={`/app/agendamento/confirmar/${slotId}${qs ? `?${qs}` : "?tipo=especialidade"}`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
