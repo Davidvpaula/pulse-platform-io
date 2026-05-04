@@ -72,12 +72,25 @@ export default function PacienteCheckout() {
     }
 
     if (p) {
-      const { data: c } = await supabase
-        .from("consultas")
-        .select("paciente_id, medico_id, especialidade_id")
-        .eq("id", p.consulta_id)
-        .maybeSingle();
-      if (c) setConsultaCtx(c as ConsultaCtx);
+      // Fluxo unificado: consulta_id pode ser null — contexto vem do metadata
+      if (p.consulta_id) {
+        const { data: c } = await supabase
+          .from("consultas")
+          .select("paciente_id, medico_id, especialidade_id")
+          .eq("id", p.consulta_id)
+          .maybeSingle();
+        if (c) setConsultaCtx(c as ConsultaCtx);
+      } else {
+        // Contexto da reserva unificada (pré-consulta)
+        const meta = (p.metadata as any) ?? {};
+        if (meta.paciente_id && meta.medico_id) {
+          setConsultaCtx({
+            paciente_id: meta.paciente_id,
+            medico_id: meta.medico_id,
+            especialidade_id: meta.referencia_id ?? null,
+          });
+        }
+      }
     }
 
     setLoading(false);
@@ -176,7 +189,7 @@ export default function PacienteCheckout() {
       if (cupomAplicado && consultaCtx) {
         const reg = await registrarUsoCupom({
           cupomId: cupomAplicado.cupom_id,
-          consultaId: pagamento.consulta_id,
+          consultaId: pagamento.consulta_id ?? pagamento.id,
           pacienteId: consultaCtx.paciente_id,
           medicoId: consultaCtx.medico_id,
           codigoSnapshot: cupomAplicado.codigo,
@@ -196,7 +209,7 @@ export default function PacienteCheckout() {
         await trackConversion({
           tipo: "pagamento",
           valor: (pagamento.valor_centavos ?? 0) / 100,
-          consulta_id: pagamento.consulta_id,
+          consulta_id: pagamento.consulta_id ?? undefined,
           pagamento_id: pagamento.id,
           servico: "consulta",
         });
@@ -361,8 +374,12 @@ export default function PacienteCheckout() {
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Resumo</p>
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Consulta</span>
-                <span className="font-mono text-xs">{pagamento.consulta_id.slice(0, 8)}…</span>
+                <span className="text-muted-foreground">{pagamento.consulta_id ? "Consulta" : "Reserva"}</span>
+                <span className="font-mono text-xs">
+                  {pagamento.consulta_id
+                    ? `${pagamento.consulta_id.slice(0, 8)}…`
+                    : ((pagamento.metadata as any)?.descricao ?? pagamento.id.slice(0, 8) + "…")}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>

@@ -701,7 +701,7 @@ export const Agendar = () => {
                   {/* Accordion – slots (desktop) */}
                   {!isMobile && expandedId === m.id && (
                     <div className="card-elevated rounded-t-none border-t border-dashed border-border p-5 bg-muted/20 animate-accordion-down">
-                      <MedicoSlotsPanel medicoId={m.id} medicoNome={m.nome} />
+                      <MedicoSlotsPanel medicoId={m.id} medicoNome={m.nome} especialidadeId={espId || undefined} />
                     </div>
                   )}
                 </div>
@@ -719,7 +719,7 @@ export const Agendar = () => {
           </SheetHeader>
           <div className="mt-4">
             {sheetMedico && (
-              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} />
+              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} especialidadeId={espId || undefined} />
             )}
           </div>
         </SheetContent>

@@ -16,6 +16,7 @@ type Slot = {
 type Props = {
   medicoId: string;
   medicoNome: string;
+  especialidadeId?: string;
 };
 
 
@@ -30,7 +31,7 @@ function groupByDate(slots: Slot[]): Map<string, Slot[]> {
   return map;
 }
 
-export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
+export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId }: Props) {
   const navigate = useNavigate();
   const { session } = useSession();
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -57,11 +58,15 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
   }, [medicoId]);
 
   const escolher = (slotId: string) => {
+    const qs = especialidadeId
+      ? `?tipo=especialidade&ref=${especialidadeId}`
+      : "?tipo=especialidade";
+    const url = `/app/agendamento/confirmar/${slotId}${qs}`;
     if (!session) {
-      navigate(`/auth?redirect=/app/paciente/agendar/confirmar/${slotId}`);
+      navigate(`/auth?redirect=${encodeURIComponent(url)}`);
       return;
     }
-    navigate(`/app/paciente/agendar/confirmar/${slotId}`);
+    navigate(url);
   };
 
   if (loading) {

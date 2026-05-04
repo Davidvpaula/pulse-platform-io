@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { AnalyticsTracker } from "@/lib/analytics/AnalyticsTracker";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,6 +32,7 @@ import PacienteCheckout from "@/pages/app/paciente/PacienteCheckout";
 import PacientePagamentoSucesso from "@/pages/app/paciente/PacientePagamentoSucesso";
 import PacientePagamentoCancelado from "@/pages/app/paciente/PacientePagamentoCancelado";
 import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfirmar";
+import AgendamentoConfirmar from "@/pages/app/agendamento/AgendamentoConfirmar";
 import PacienteAgendamentos from "@/pages/app/paciente/PacienteAgendamentos";
 import PacientePerfilPage from "@/pages/app/paciente/PacientePerfilPage";
 import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
@@ -154,6 +155,13 @@ function SmartRedirect() {
   return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
 }
 
+function AgendamentoRedirect() {
+  const { slotId } = useParams();
+  const [sp] = useSearchParams();
+  const qs = sp.toString();
+  return <Navigate to={`/app/agendamento/confirmar/${slotId}${qs ? `?${qs}` : "?tipo=especialidade"}`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -210,11 +218,18 @@ const App = () => (
               />
               <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
               <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
+              {/* Rota legada → redirect para rota unificada */}
               <Route
                 path="paciente/agendar/confirmar/:slotId"
+                element={<AgendamentoRedirect />}
+              />
+
+              {/* Rota unificada de agendamento */}
+              <Route
+                path="agendamento/confirmar/:slotId"
                 element={
                   <PacienteParamGuard param="slotId" pattern={UUID_RE}>
-                    <PacienteAgendarConfirmar />
+                    <AgendamentoConfirmar />
                   </PacienteParamGuard>
                 }
               />
