@@ -557,12 +557,12 @@ export default function MedicoDashboard() {
               Consultas com seu preço próprio (sem serviço da plataforma)
             </p>
           </div>
-          <div className="card-elevated p-5 border-l-4 border-l-emerald-500">
+          <div className="card-elevated p-5 border-l-4 border-l-success">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Receita serviços plataforma (mês)
               </p>
-              <Stethoscope className="h-4 w-4 text-emerald-600" />
+              <Stethoscope className="h-4 w-4 text-success" />
             </div>
             <p className="mt-2 text-2xl font-bold">{formatBRL(stats.receitaServicosMes)}</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -676,13 +676,15 @@ export default function MedicoDashboard() {
             </Link>
           )}
 
-          {isMedico && (
-            <Link to="/app/medico/gamificacao" className="card-elevated block p-5 transition hover:border-primary/40">
+          {isMedico && propostasPendentes > 0 && (
+            <Link to="/app/medico/propostas" className="card-elevated block p-5 transition hover:border-warning/40 border-l-4 border-l-warning">
               <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-warning" />
-                <p className="font-semibold">Gamificação & Ranking</p>
+                <Briefcase className="h-4 w-4 text-warning" />
+                <p className="font-semibold">Propostas pendentes</p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Performance, avaliações e posição</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {propostasPendentes} proposta{propostasPendentes > 1 ? "s" : ""} aguardando sua resposta
+              </p>
             </Link>
           )}
 
