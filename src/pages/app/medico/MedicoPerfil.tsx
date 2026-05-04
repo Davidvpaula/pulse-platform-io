@@ -36,7 +36,7 @@ export default function MedicoPerfil() {
   const [saving, setSaving] = useState(false);
   const [medico, setMedico] = useState<MedicoRow | null>(null);
   const [nome, setNome] = useState("");
-  const [telefone] = useState(""); // kept for internal reference only
+  
   const [bio, setBio] = useState("");
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
