@@ -265,7 +265,7 @@ export default function MedicoDashboard() {
                 Complete o cadastro para começar a receber pacientes.
               </p>
               <Button asChild className="mt-4 bg-gradient-primary hover:opacity-90">
-                <Link to="/app/medico/perfil">
+                <Link to="/cadastro/medico">
                   <User className="mr-2 h-4 w-4" /> Completar cadastro
                 </Link>
               </Button>

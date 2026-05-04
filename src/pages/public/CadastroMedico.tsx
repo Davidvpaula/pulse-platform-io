@@ -1,55 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { z } from "zod";
 import { CheckCircle2, UploadCloud, X, ShieldCheck, Loader2 } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ESPECIALIDADES, ESTADOS_BR, DOC_LABEL,
-  createMedico, uploadDocumento,
+  ESTADOS_BR, DOC_LABEL,
+  uploadDocumento,
   type DocKind, type DocumentoMedico,
 } from "@/lib/medicoRegistro";
-import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
-
-const schema = z.object({
-  nome: z.string().trim().min(3, "Informe seu nome completo").max(120),
-  cpf: cpfSchema(),
-  dataNascimento: z.string().refine(
-    v => !!v && !Number.isNaN(Date.parse(v + "T00:00:00")),
-    "Data de nascimento inválida",
-  ),
-  crm: z.string().trim().min(3, "CRM inválido").max(20),
-  ufCrm: z.string().refine(v => ESTADOS_BR.includes(v), "Selecione o estado"),
-  especialidade: z.string().min(1, "Selecione a especialidade"),
-  telefone: z.string().trim().min(10, "Telefone inválido").max(20),
-  email: z.string().trim().email("E-mail inválido").max(255),
-});
-type FormData = z.infer<typeof schema>;
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const REQUIRED_DOCS: DocKind[] = ["crm", "documento_pessoal"];
 
 type LocalDoc = DocumentoMedico & { _file?: File };
-type FieldErrors = Partial<Record<keyof FormData | "documentos", string>>;
 
 export default function CadastroMedico() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [form, setForm] = useState({
-    nome: "", cpf: "", dataNascimento: "", crm: "", ufCrm: "", especialidade: "",
-    telefone: "", email: "",
-  });
+  const [medicoId, setMedicoId] = useState<string | null>(null);
+  const [medicoNome, setMedicoNome] = useState("");
+  const [medicoCrm, setMedicoCrm] = useState("");
+  const [medicoCrmEstado, setMedicoCrmEstado] = useState("");
+  const [needsCrmEstado, setNeedsCrmEstado] = useState(false);
   const [docs, setDocs] = useState<Record<DocKind, LocalDoc | undefined>>({
     crm: undefined, rqe: undefined, documento_pessoal: undefined, selfie: undefined,
   });
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const [docError, setDocError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // só pode cadastrar se estiver logado como médico
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
@@ -59,33 +42,40 @@ export default function CadastroMedico() {
       }
       const uid = data.session.user.id;
       setUserId(uid);
-      setUserEmail(data.session.user.email ?? "");
 
-      // pré-preenche com profile
-      const { data: prof } = await supabase.from("profiles").select("nome, telefone, email").eq("id", uid).maybeSingle();
-      setForm(p => ({
-        ...p,
-        nome: prof?.nome || p.nome,
-        telefone: prof?.telefone || p.telefone,
-        email: prof?.email || data.session?.user.email || p.email,
-      }));
+      // Busca registro do médico (criado automaticamente no signup)
+      const { data: med } = await supabase
+        .from("medicos")
+        .select("id, nome, crm, crm_estado, documentos, status")
+        .eq("user_id", uid)
+        .maybeSingle();
 
-      // se já tem cadastro, manda pra tela de status
-      const { data: existing } = await supabase.from("medicos").select("id, status").eq("user_id", uid).maybeSingle();
-      if (existing) {
-        navigate("/app/medico/aguardando-aprovacao", { replace: true });
+      if (!med) {
+        toast({ title: "Cadastro médico não encontrado", description: "Crie sua conta como médico primeiro.", variant: "destructive" });
+        navigate("/auth?modo=cadastro", { replace: true });
+        return;
       }
+
+      // Já enviou documentos? Redireciona para status
+      if (med.documentos && Array.isArray(med.documentos) && med.documentos.length > 0) {
+        navigate("/app/medico/aguardando-aprovacao", { replace: true });
+        return;
+      }
+
+      setMedicoId(med.id);
+      setMedicoNome(med.nome);
+      setMedicoCrm(med.crm);
+      setMedicoCrmEstado(med.crm_estado || "");
+      setNeedsCrmEstado(!med.crm_estado);
     });
   }, [navigate]);
 
   const completude = useMemo(() => {
-    const fields = Object.values(form).filter(Boolean).length;
     const docsOk = REQUIRED_DOCS.filter(k => docs[k]).length;
-    const total = Object.keys(form).length + REQUIRED_DOCS.length;
-    return Math.round(((fields + docsOk) / total) * 100);
-  }, [form, docs]);
-
-  const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
+    const crmEstadoOk = medicoCrmEstado ? 1 : 0;
+    const total = REQUIRED_DOCS.length + (needsCrmEstado ? 1 : 0);
+    return Math.round(((docsOk + (needsCrmEstado ? crmEstadoOk : 0)) / total) * 100);
+  }, [docs, medicoCrmEstado, needsCrmEstado]);
 
   function handleFile(kind: DocKind, file: File | null) {
     if (!file) { setDocs(p => ({ ...p, [kind]: undefined })); return; }
@@ -109,24 +99,23 @@ export default function CadastroMedico() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId) return;
-    setErrors({});
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      const fe: FieldErrors = {};
-      for (const issue of parsed.error.issues) fe[issue.path[0] as keyof FieldErrors] = issue.message;
-      setErrors(fe);
-      return;
-    }
+    if (!userId || !medicoId) return;
+    setDocError("");
+
     const faltando = REQUIRED_DOCS.filter(k => !docs[k]);
     if (faltando.length) {
-      setErrors({ documentos: `Envie: ${faltando.map(k => DOC_LABEL[k]).join(", ")}` });
+      setDocError(`Envie: ${faltando.map(k => DOC_LABEL[k]).join(", ")}`);
+      return;
+    }
+
+    if (needsCrmEstado && !medicoCrmEstado) {
+      setDocError("Selecione o estado do CRM.");
       return;
     }
 
     setSubmitting(true);
     try {
-      // 1) upload de cada doc para Storage
+      // Upload docs
       const uploaded: DocumentoMedico[] = [];
       for (const d of Object.values(docs)) {
         if (!d || !d._file) continue;
@@ -134,23 +123,21 @@ export default function CadastroMedico() {
         uploaded.push(meta);
       }
 
-      // 2) inserir registro do médico
-      const data = parsed.data;
-      await createMedico({
-        user_id: userId,
-        nome: data.nome,
-        email: data.email || userEmail,
-        telefone: data.telefone,
-        crm: data.crm,
-        crm_estado: data.ufCrm,
-        especialidade: data.especialidade,
-        cpf: data.cpf,
-        data_nascimento: data.dataNascimento,
-        documentos: uploaded,
-      });
+      // Atualiza registro do médico com documentos e crm_estado se necessário
+      const updatePayload: { documentos: DocumentoMedico[]; crm_estado?: string } = { documentos: uploaded };
+      if (needsCrmEstado && medicoCrmEstado) {
+        updatePayload.crm_estado = medicoCrmEstado;
+      }
+
+      const { error } = await supabase
+        .from("medicos")
+        .update(updatePayload as any)
+        .eq("id", medicoId);
+
+      if (error) throw error;
 
       toast({
-        title: "Cadastro enviado!",
+        title: "Documentos enviados!",
         description: "Aguarde a aprovação da equipe Lasmar. Você receberá um aviso por e-mail.",
       });
       navigate("/app/medico/aguardando-aprovacao", { replace: true });
@@ -167,59 +154,26 @@ export default function CadastroMedico() {
 
   return (
     <PageShell
-      title="Cadastro médico"
-      subtitle="Complete seus dados profissionais e envie seus documentos para análise da equipe Lasmar."
+      title="Envio de documentos"
+      subtitle={medicoNome ? `${medicoNome} · CRM ${medicoCrm}` : "Complete seu cadastro profissional enviando seus documentos para análise."}
     >
       <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
-          <section className="card-elevated p-6">
-            <h2 className="font-semibold">Dados profissionais</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Validamos esses dados antes de liberar o acesso.</p>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <Field label="Nome completo" error={errors.nome}>
-                <input className="input" value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Dr. João da Silva" />
-              </Field>
-              <Field label="CPF" error={errors.cpf}>
-                <input
-                  className="input"
-                  value={form.cpf}
-                  onChange={e => set("cpf", maskCpf(e.target.value))}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                />
-              </Field>
-              <Field label="Data de nascimento" error={errors.dataNascimento}>
-                <input
-                  type="date"
-                  className="input"
-                  value={form.dataNascimento}
-                  onChange={e => set("dataNascimento", e.target.value)}
-                />
-              </Field>
-              <Field label="Especialidade" error={errors.especialidade}>
-                <select className="input" value={form.especialidade} onChange={e => set("especialidade", e.target.value)}>
-                  <option value="">Selecione...</option>
-                  {ESPECIALIDADES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </Field>
-              <Field label="CRM" error={errors.crm}>
-                <input className="input" value={form.crm} onChange={e => set("crm", e.target.value)} placeholder="123456" />
-              </Field>
-              <Field label="Estado do CRM" error={errors.ufCrm}>
-                <select className="input" value={form.ufCrm} onChange={e => set("ufCrm", e.target.value)}>
-                  <option value="">UF</option>
-                  {ESTADOS_BR.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-                </select>
-              </Field>
-              <Field label="Telefone" error={errors.telefone}>
-                <input className="input" value={form.telefone} onChange={e => set("telefone", e.target.value)} placeholder="(11) 90000-0000" />
-              </Field>
-              <Field label="E-mail" error={errors.email}>
-                <input type="email" className="input" value={form.email} onChange={e => set("email", e.target.value)} placeholder="voce@email.com" />
-              </Field>
-            </div>
-          </section>
+          {needsCrmEstado && (
+            <section className="card-elevated p-6">
+              <h2 className="font-semibold">Estado do CRM</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Informe o estado de registro do seu CRM.</p>
+              <div className="mt-4 max-w-xs">
+                <Label htmlFor="crm-estado">UF do CRM <span className="text-destructive">*</span></Label>
+                <Select value={medicoCrmEstado} onValueChange={setMedicoCrmEstado}>
+                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
+                  <SelectContent>
+                    {ESTADOS_BR.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </section>
+          )}
 
           <section className="card-elevated p-6">
             <h2 className="font-semibold">Documentos</h2>
@@ -230,7 +184,7 @@ export default function CadastroMedico() {
               <DocUpload kind="rqe" doc={docs.rqe} onFile={f => handleFile("rqe", f)} />
               <DocUpload kind="selfie" doc={docs.selfie} onFile={f => handleFile("selfie", f)} />
             </div>
-            {errors.documentos && <p className="mt-3 text-sm text-destructive">{errors.documentos}</p>}
+            {docError && <p className="mt-3 text-sm text-destructive">{docError}</p>}
           </section>
         </div>
 
@@ -243,9 +197,9 @@ export default function CadastroMedico() {
             <p className="mt-2 text-2xl font-bold">{completude}%</p>
             <ul className="mt-4 space-y-2 text-sm">
               {[
-                ["Dados profissionais", Object.values(form).every(Boolean)],
                 ["Documento CRM", !!docs.crm],
                 ["Documento pessoal", !!docs.documento_pessoal],
+                ...(needsCrmEstado ? [["Estado do CRM", !!medicoCrmEstado] as [string, boolean]] : []),
               ].map(([l, ok]) => (
                 <li key={String(l)} className="flex items-center gap-2">
                   <CheckCircle2 className={`h-4 w-4 ${ok ? "text-success" : "text-muted-foreground/40"}`} />
@@ -274,18 +228,6 @@ export default function CadastroMedico() {
 
       <style>{`.input{width:100%;border:1px solid hsl(var(--input));background:hsl(var(--background));border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem}.input:focus{outline:none;border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring)/0.2)}`}</style>
     </PageShell>
-  );
-}
-
-function Field({ label, error, children, className }: {
-  label: string; error?: string; children: React.ReactNode; className?: string;
-}) {
-  return (
-    <label className={`block ${className ?? ""}`}>
-      <span className="text-sm font-medium">{label}</span>
-      <div className="mt-1.5">{children}</div>
-      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </label>
   );
 }
 
