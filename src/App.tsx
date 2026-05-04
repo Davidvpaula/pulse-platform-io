@@ -32,6 +32,7 @@ import PacienteCheckout from "@/pages/app/paciente/PacienteCheckout";
 import PacientePagamentoSucesso from "@/pages/app/paciente/PacientePagamentoSucesso";
 import PacientePagamentoCancelado from "@/pages/app/paciente/PacientePagamentoCancelado";
 import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfirmar";
+import AgendamentoConfirmar from "@/pages/app/agendamento/AgendamentoConfirmar";
 import PacienteAgendamentos from "@/pages/app/paciente/PacienteAgendamentos";
 import PacientePerfilPage from "@/pages/app/paciente/PacientePerfilPage";
 import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
