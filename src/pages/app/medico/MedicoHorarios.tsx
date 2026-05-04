@@ -404,7 +404,26 @@ export default function MedicoHorarios() {
       <div className="card-elevated flex items-center gap-3 p-4">
         <Clock className="h-5 w-5 text-primary" />
         <div className="flex-1 text-sm">
-          {duracao ? (
+          {tipoSlot === "servico" ? (
+            servicosSel.length > 0 ? (
+              <>
+                Duração definida pelo(s) serviço(s) selecionado(s):{" "}
+                <span className="font-semibold">
+                  {servicosSel
+                    .map((id) => {
+                      const s = servicosDisp.find((x) => x.id === id);
+                      return s ? `${s.nome} (${s.duracao_min}min)` : null;
+                    })
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                Selecione um serviço para ver a duração dos slots.
+              </span>
+            )
+          ) : duracao ? (
             <>
               Duração de cada consulta:{" "}
               <span className="font-semibold">{duracao} minutos</span>
