@@ -6664,15 +6664,11 @@ export type Database = {
         }[]
       }
       fn_servico_confirmar_reserva: {
-        Args: { _paciente_id?: string; _servico_id: string; _slot_id: string }
+        Args: { _servico_id: string; _slot_id: string }
         Returns: Json
       }
       fn_servico_reservar_slot: {
-        Args: {
-          _paciente_id?: string
-          _servico_id: string
-          _slot_inicio: string
-        }
+        Args: { _servico_id: string; _slot_inicio: string }
         Returns: Json
       }
       fn_servico_slots_disponiveis: {

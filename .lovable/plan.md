@@ -1,53 +1,53 @@
 
-# Problema: Slots da agenda nao aparecem no site publico
+# Plano de Execucao — Todas as Etapas do Checkup
 
-Dois problemas encontrados:
+Baseado no diagnostico aprovado, executarei as 4 etapas em sequencia.
 
-## 1. Slots Particulares -- RLS bloqueia usuarios nao logados
+---
 
-A policy RLS da tabela `agenda_slots` para SELECT so permite `authenticated`:
+## Etapa 1 — Migration: RLS + RPCs (Bug critico + Seguranca)
 
-```
-"Slots disponiveis publicos a autenticados" -- roles: {authenticated}
-```
+Uma unica migration SQL que faz:
 
-O componente `MedicoSlotsPanel` (usado na pagina "Agendar consulta") faz query direta na tabela `agenda_slots`. Visitantes nao logados (como mostrado no screenshot com "Entrar" no menu) nao veem nenhum slot.
+1. **RLS `agenda_slots`**: Drop policy `"Slots disponíveis públicos a autenticados"` (authenticated only) e criar `"Slots disponíveis visíveis publicamente"` com `TO authenticated, anon` e `USING (status = 'disponivel')`. Isso corrige a invisibilidade de slots particulares para visitantes nao-logados no perfil do medico.
 
-**Solucao**: Alterar a policy RLS para incluir o role `anon`, permitindo que visitantes nao logados vejam slots disponiveis:
+2. **RPC `fn_servico_reservar_slot`**: Recriar com 2 parametros (`_slot_inicio`, `_servico_id`) em vez de 3. O `_paciente_id` sera derivado internamente via `auth.uid()` + lookup em `pacientes`. Adiciona guard `auth.uid() IS NOT NULL`. Isso corrige o mismatch de parametros com o frontend e impede impersonacao.
 
-```sql
-DROP POLICY "Slots disponíveis públicos a autenticados" ON agenda_slots;
-CREATE POLICY "Slots disponíveis visíveis publicamente"
-  ON agenda_slots FOR SELECT
-  TO authenticated, anon
-  USING (status = 'disponivel');
-```
+3. **RPC `fn_servico_confirmar_reserva`**: Idem — recriar com 2 parametros (`_slot_id`, `_servico_id`). Adiciona verificacao de que o slot foi reservado pelo mesmo paciente. Revoga `EXECUTE` de `anon` em ambas as RPCs.
 
-## 2. Servicos da Plataforma -- funcao SQL filtra apenas o dia atual
+---
 
-A funcao `fn_servico_slots_disponiveis` recebe `_data` (uma data) e filtra `s.inicio::date = _data`. O front-end passa `new Date().toISOString().slice(0, 10)` (hoje). Se os slots foram criados para dias futuros (ex: 8 de maio), nao aparecem.
+## Etapa 2 — Limpeza de codigo
 
-**Solucao**: Modificar a funcao para mostrar slots de hoje em diante (ou os proximos N dias), em vez de filtrar por um unico dia. Tambem adicionar um seletor de data no front-end (`ServicoDetalhe.tsx`), similar ao que o `MedicoSlotsPanel` ja faz com paginacao por dia.
+1. **`src/lib/format.ts`**: Adicionar funcao `dataLabel(iso: string): string` centralizada (Hoje/Amanha/data formatada).
 
-### Alteracoes:
+2. **`src/components/public/MedicoSlotsPanel.tsx`**: Remover `formatHora` e `dataLabel` locais, importar `fmtHora` e `dataLabel` de `@/lib/format`.
 
-**Migration SQL:**
-- Atualizar RLS policy para incluir `anon`
-- Recriar `fn_servico_slots_disponiveis` para aceitar intervalo de datas (ou remover filtro de dia unico, retornando proximos 7-14 dias)
+3. **`src/pages/public/ServicoDetalhe.tsx`**: Remover `dataLabel` local, importar de `@/lib/format`.
 
-**Front-end (`ServicoDetalhe.tsx`):**
-- Remover filtro de dia unico na chamada RPC, ou passar intervalo
-- Adicionar navegacao por dia (similar ao calendario do `MedicoSlotsPanel`) para que o paciente possa ver slots futuros
-- Agrupar slots por data e exibir com paginacao
+---
 
-**Front-end (`MedicoSlotsPanel.tsx`):**
-- Nenhuma alteracao necessaria (ja funciona com slots futuros), so depende da RLS corrigida
+## Etapa 3 — (incluida na Etapa 1)
 
-## Resumo das mudancas
+A seguranca das RPCs ja esta coberta na migration da Etapa 1.
 
-| Arquivo | Alteracao |
-|---------|-----------|
-| Migration SQL | RLS: adicionar `anon` ao SELECT; recriar `fn_servico_slots_disponiveis` sem filtro de dia unico |
-| `src/pages/public/ServicoDetalhe.tsx` | Passar intervalo de datas na RPC; adicionar navegacao por dia/semana |
+---
 
-Nenhuma alteracao em `MedicoSlotsPanel.tsx` -- so a RLS resolve.
+## Etapa 4 — Melhorias UX
+
+1. **`MedicoHorarios.tsx`**: Na info-bar de duracao, quando `tipoSlot === "servico"`, mostrar a duracao do(s) servico(s) selecionado(s) em vez da duracao da especialidade.
+
+2. **`PacienteAgendamentos.tsx`**: Melhorar o empty state de "futuras" com card mais destacado e CTA maior.
+
+---
+
+## Arquivos modificados
+
+| Arquivo | Tipo |
+|---------|------|
+| Migration SQL (novo) | DB schema |
+| `src/lib/format.ts` | Adicionar `dataLabel` |
+| `src/components/public/MedicoSlotsPanel.tsx` | Remover helpers locais, usar centralizados |
+| `src/pages/public/ServicoDetalhe.tsx` | Remover `dataLabel` local, importar |
+| `src/pages/app/medico/MedicoHorarios.tsx` | Fix info-bar duracao |
+| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Melhorar empty state |
