@@ -69,6 +69,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
+  const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
   const [stats, setStats] = useState({
@@ -92,7 +93,8 @@ export default function MedicoDashboard() {
     setLoading(true);
 
     const medico = await getMedicoAtual();
-    if (!medico) { setLoading(false); return; }
+    if (!medico) { setMedicoNaoExiste(true); setLoading(false); return; }
+    setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
 
     // Gamificação: ranking + saldo (em paralelo com o resto)
