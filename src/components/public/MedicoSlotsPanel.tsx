@@ -31,7 +31,7 @@ function groupByDate(slots: Slot[]): Map<string, Slot[]> {
   return map;
 }
 
-export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
+export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId }: Props) {
   const navigate = useNavigate();
   const { session } = useSession();
   const [slots, setSlots] = useState<Slot[]>([]);
