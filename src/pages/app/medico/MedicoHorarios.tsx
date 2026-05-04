@@ -95,17 +95,25 @@ type ServicoOpc = {
   valor_paciente_centavos: number;
 };
 
+type EspecialidadeInfo = {
+  nome: string;
+  duracao_minutos: number;
+  preco_centavos: number | null;
+};
+
 export default function MedicoHorarios() {
   const { session } = useSession();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
+  const [confirmDeleteDia, setConfirmDeleteDia] = useState<{ dia: string; disponiveis: number } | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
   const [tipoSlot, setTipoSlot] = useState<"particular" | "servico">("particular");
-  const [servicoSel, setServicoSel] = useState<string | null>(null);
+  const [servicosSel, setServicosSel] = useState<string[]>([]);
   const [servicosDisp, setServicosDisp] = useState<ServicoOpc[]>([]);
+  const [espInfo, setEspInfo] = useState<EspecialidadeInfo | null>(null);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
