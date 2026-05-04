@@ -144,13 +144,19 @@ export default function MedicoHorarios() {
     if (med?.id) {
       const { data: espRows } = await supabase
         .from("medico_especialidades")
-        .select("especialidade, duracao_minutos, preco_centavos, rqe, ativo")
+        .select("especialidade_id, duracao_minutos, preco_centavos, rqe, ativo")
         .eq("medico_id", med.id)
         .eq("ativo", true)
         .limit(1);
       if (espRows && espRows.length > 0) {
+        // Buscar nome da especialidade
+        const { data: espNome } = await supabase
+          .from("especialidades")
+          .select("nome")
+          .eq("id", espRows[0].especialidade_id)
+          .maybeSingle();
         setEspInfo({
-          nome: espRows[0].especialidade,
+          nome: espNome?.nome ?? "Especialidade",
           duracao_minutos: espRows[0].duracao_minutos || 30,
           preco_centavos: espRows[0].preco_centavos,
         });
