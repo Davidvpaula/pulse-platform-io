@@ -27,16 +27,6 @@ function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-const onlyDigits = (s: string) => s.replace(/\D/g, "");
-const maskFone = (v: string) => {
-  const d = onlyDigits(v).slice(0, 11);
-  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").trim();
-  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").trim();
-};
-const maskCEP = (v: string) =>
-  onlyDigits(v).slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
-
-type Step = "slots" | "formulario";
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
