@@ -115,6 +115,8 @@ export default function MedicoHorarios() {
   const [servicosSel, setServicosSel] = useState<string[]>([]);
   const [servicosDisp, setServicosDisp] = useState<ServicoOpc[]>([]);
   const [espInfo, setEspInfo] = useState<EspecialidadeInfo | null>(null);
+  const [filtroCalendario, setFiltroCalendario] = useState<"todos" | "particular" | "servico">("todos");
+  const [servicoNomes, setServicoNomes] = useState<Record<string, string>>({});
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
