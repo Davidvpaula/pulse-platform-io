@@ -21,10 +21,20 @@ export type PagamentoMetodo = Database["public"]["Enums"]["pagamento_metodo"];
 export type PagamentoProvider = Database["public"]["Enums"]["pagamento_provider"];
 
 export interface CriarCheckoutInput {
-  consultaId: string;
+  /** Se houver consulta pré-existente (fluxo legado), informar aqui */
+  consultaId?: string;
   valorCentavos: number;
   metodo?: PagamentoMetodo;
   descricao?: string;
+  /** Metadata da reserva unificada — usada para criar consulta pós-pagamento */
+  reserva?: {
+    slot_id: string;
+    tipo: string;
+    referencia_id: string;
+    motivo?: string | null;
+    paciente_id: string;
+    medico_id: string;
+  };
 }
 
 export interface CheckoutSession {
