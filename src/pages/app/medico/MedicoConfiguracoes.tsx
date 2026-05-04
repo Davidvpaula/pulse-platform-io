@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { User, Stethoscope, Video, Bell, Save, Zap, Loader2, Link2, Unlink, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Stethoscope, Video, Bell, Save, Zap, Loader2, Link2, Unlink, ExternalLink, CheckCircle2, Eye } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 import {
   listEspecialidades,
   listVinculosDoMedico,
@@ -14,8 +15,6 @@ import {
   type Especialidade,
   type MedicoEspecialidade,
 } from "@/lib/clinico";
-
-
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -29,7 +28,7 @@ const Input = (p: React.InputHTMLAttributes<HTMLInputElement>) => (
   <input {...p} className={cn("w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary", p.className)} />
 );
 
-const Section = ({ icon: Icon, title, children, action }: { icon: typeof User; title: string; children: React.ReactNode; action?: React.ReactNode }) => (
+const Section = ({ icon: Icon, title, children, action }: { icon: typeof Video; title: string; children: React.ReactNode; action?: React.ReactNode }) => (
   <section className="card-elevated p-6">
     <div className="mb-4 flex items-center justify-between gap-2 border-b border-border pb-3">
       <div className="flex items-center gap-2">
@@ -60,29 +59,50 @@ const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
 };
 
 export default function MedicoConfiguracoes() {
-  const [notif, setNotif] = useState({ lembretes: true, alertas: true, resumoDiario: false });
-
-  // Google OAuth state
+  // ── Google Meet & Calendar ──
   const [googleStatus, setGoogleStatus] = useState<{
     connected: boolean;
     google_email: string | null;
-    tipo_sala: string;
-    link_sala_padrao: string | null;
     connected_at: string | null;
-  }>({ connected: false, google_email: null, tipo_sala: "fixo", link_sala_padrao: null, connected_at: null });
+  }>({ connected: false, google_email: null, connected_at: null });
   const [googleLoading, setGoogleLoading] = useState(true);
   const [googleActionLoading, setGoogleActionLoading] = useState(false);
+  const [tipoSala, setTipoSala] = useState<"fixo" | "dinamico">("fixo");
   const [linkSala, setLinkSala] = useState("");
+  const [savingMeet, setSavingMeet] = useState(false);
+  const [meetDirty, setMeetDirty] = useState(false);
+  const [medicoIdRef, setMedicoIdRef] = useState<string | null>(null);
 
-  const fetchGoogleStatus = useCallback(async () => {
+  // Load medico config + Google status
+  const fetchConfig = useCallback(async () => {
     setGoogleLoading(true);
+    const mid = await getMedicoAtualId();
+    setMedicoIdRef(mid);
+
+    if (mid) {
+      // Load tipo_sala and link from medicos table directly
+      const { data: medico } = await supabase
+        .from("medicos")
+        .select("tipo_sala, link_sala_padrao")
+        .eq("id", mid)
+        .maybeSingle();
+      if (medico) {
+        setTipoSala((medico.tipo_sala as "fixo" | "dinamico") || "fixo");
+        setLinkSala(medico.link_sala_padrao || "");
+      }
+    }
+
+    // Check Google OAuth connection via edge function
     try {
       const { data, error } = await supabase.functions.invoke("google-oauth", {
         body: { action: "status" },
       });
       if (!error && data && !data.error) {
-        setGoogleStatus(data);
-        setLinkSala(data.link_sala_padrao || "");
+        setGoogleStatus({
+          connected: data.connected,
+          google_email: data.google_email,
+          connected_at: data.connected_at,
+        });
       }
     } catch {
       // silently fail — secrets may not be configured yet
@@ -90,7 +110,7 @@ export default function MedicoConfiguracoes() {
     setGoogleLoading(false);
   }, []);
 
-  useEffect(() => { fetchGoogleStatus(); }, [fetchGoogleStatus]);
+  useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
   const handleGoogleConnect = async () => {
     setGoogleActionLoading(true);
@@ -125,7 +145,12 @@ export default function MedicoConfiguracoes() {
         toast.error("Erro ao desconectar.");
       } else {
         toast.success("Google Calendar desconectado.");
-        setGoogleStatus({ connected: false, google_email: null, tipo_sala: "fixo", link_sala_padrao: googleStatus.link_sala_padrao, connected_at: null });
+        setGoogleStatus({ connected: false, google_email: null, connected_at: null });
+        // If was dynamic, revert to fixo since no longer connected
+        if (tipoSala === "dinamico") {
+          setTipoSala("fixo");
+          setMeetDirty(true);
+        }
       }
     } catch {
       toast.error("Erro ao desconectar.");
@@ -133,7 +158,45 @@ export default function MedicoConfiguracoes() {
     setGoogleActionLoading(false);
   };
 
-  // Atendimento dinâmico
+  const salvarMeet = async () => {
+    if (!medicoIdRef) {
+      toast.error("Cadastro médico não encontrado.");
+      return;
+    }
+    // Validation
+    if (tipoSala === "fixo") {
+      if (!linkSala.trim()) {
+        toast.error("Informe o link fixo do Google Meet.");
+        return;
+      }
+      try {
+        new URL(linkSala.trim());
+      } catch {
+        toast.error("O link informado não é uma URL válida.");
+        return;
+      }
+    }
+    if (tipoSala === "dinamico" && !googleStatus.connected) {
+      toast.error("Conecte o Google Calendar antes de usar o modo dinâmico.");
+      return;
+    }
+
+    setSavingMeet(true);
+    const { error } = await supabase.from("medicos").update({
+      tipo_sala: tipoSala,
+      link_sala_padrao: tipoSala === "fixo" ? linkSala.trim() : null,
+    }).eq("id", medicoIdRef);
+
+    setSavingMeet(false);
+    if (error) {
+      toast.error("Erro ao salvar: " + error.message);
+    } else {
+      toast.success("Configurações de vídeo salvas com sucesso.");
+      setMeetDirty(false);
+    }
+  };
+
+  // ── Atendimento ──
   const [loadingAt, setLoadingAt] = useState(true);
   const [savingAt, setSavingAt] = useState(false);
   const [especialidades, setEspecialidades] = useState<Especialidade[]>([]);
@@ -153,7 +216,6 @@ export default function MedicoConfiguracoes() {
       setPaDuracao(paDur);
 
       if (!medicoId) {
-        // Modo dev/visualização — pré-popula linhas vazias
         setDevMode(true);
         const mapa: Record<string, LinhaEsp> = {};
         for (const e of esps) {
@@ -213,7 +275,6 @@ export default function MedicoConfiguracoes() {
       toast("Nenhuma alteração para salvar.");
       return;
     }
-    // Validação CFM: especialidades marcadas como "especialista" precisam de RQE
     const espMap = new Map(especialidades.map((e) => [e.id, e]));
     for (const l of dirties) {
       const esp = espMap.get(l.especialidade_id);
@@ -255,19 +316,91 @@ export default function MedicoConfiguracoes() {
     }
   };
 
+  // ── Notificações ──
+  const [notif, setNotif] = useState({ lembretes: true, alertas: true, resumoDiario: false });
+  const [notifLoading, setNotifLoading] = useState(true);
+  const [savingNotif, setSavingNotif] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const mid = await getMedicoAtualId();
+      if (!mid) { setNotifLoading(false); return; }
+      const { data } = await supabase
+        .from("medico_notificacao_prefs" as any)
+        .select("*")
+        .eq("medico_id", mid)
+        .maybeSingle();
+      if (data) {
+        setNotif({
+          lembretes: (data as any).lembretes_consulta ?? true,
+          alertas: (data as any).alertas_operacionais ?? true,
+          resumoDiario: (data as any).resumo_diario_email ?? false,
+        });
+      }
+      setNotifLoading(false);
+    })();
+  }, []);
+
+  const salvarNotificacoes = async () => {
+    const mid = await getMedicoAtualId();
+    if (!mid) { toast.error("Cadastro médico não encontrado."); return; }
+    setSavingNotif(true);
+    const { error } = await supabase.from("medico_notificacao_prefs" as any).upsert({
+      medico_id: mid,
+      lembretes_consulta: notif.lembretes,
+      alertas_operacionais: notif.alertas,
+      resumo_diario_email: notif.resumoDiario,
+      updated_at: new Date().toISOString(),
+    } as any, { onConflict: "medico_id" });
+    setSavingNotif(false);
+    if (error) {
+      toast.error("Erro ao salvar notificações.");
+    } else {
+      toast.success("Preferências de notificação salvas.");
+    }
+  };
+
+  // ── Prévia dinâmica ──
+  const ativas = useMemo(() => {
+    return especialidades
+      .filter((e) => linhas[e.id]?.ativo)
+      .map((e) => {
+        const l = linhas[e.id];
+        const cg = isClinicaGeral(e);
+        return {
+          nome: e.nome,
+          duracao: l.duracao_minutos,
+          preco: l.preco_centavos,
+          especialista: cg ? null : l.especialista,
+          rqe: l.rqe,
+          cg,
+        };
+      });
+  }, [especialidades, linhas]);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Configurações"
         description="Google Meet, atendimento e notificações."
-        actions={
-          <Button className="bg-gradient-primary hover:opacity-90" onClick={() => toast("Configurações salvas")}>
-            <Save className="mr-2 h-4 w-4" /> Salvar alterações
-          </Button>
-        }
       />
 
-      <Section icon={Video} title="Google Meet & Calendar">
+      {/* ═══ Google Meet & Calendar ═══ */}
+      <Section
+        icon={Video}
+        title="Google Meet & Calendar"
+        action={
+          <Button
+            size="sm"
+            onClick={salvarMeet}
+            disabled={savingMeet || googleLoading}
+            className="bg-gradient-primary hover:opacity-90"
+          >
+            {savingMeet ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
+            Salvar vídeo
+          </Button>
+        }
+      >
         {googleLoading ? (
           <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando conexão Google…
@@ -331,7 +464,7 @@ export default function MedicoConfiguracoes() {
                 <div className="flex gap-3">
                   <label className={cn(
                     "flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition",
-                    googleStatus.tipo_sala === "fixo"
+                    tipoSala === "fixo"
                       ? "border-primary bg-primary/5 font-medium"
                       : "border-border hover:border-primary/40"
                   )}>
@@ -339,14 +472,14 @@ export default function MedicoConfiguracoes() {
                       type="radio"
                       name="tipo_sala"
                       className="accent-primary"
-                      checked={googleStatus.tipo_sala === "fixo"}
-                      onChange={() => setGoogleStatus(prev => ({ ...prev, tipo_sala: "fixo" }))}
+                      checked={tipoSala === "fixo"}
+                      onChange={() => { setTipoSala("fixo"); setMeetDirty(true); }}
                     />
                     Fixo
                   </label>
                   <label className={cn(
                     "flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition",
-                    googleStatus.tipo_sala === "dinamico"
+                    tipoSala === "dinamico"
                       ? "border-primary bg-primary/5 font-medium"
                       : "border-border hover:border-primary/40",
                     !googleStatus.connected && "opacity-50 cursor-not-allowed"
@@ -355,26 +488,26 @@ export default function MedicoConfiguracoes() {
                       type="radio"
                       name="tipo_sala"
                       className="accent-primary"
-                      checked={googleStatus.tipo_sala === "dinamico"}
+                      checked={tipoSala === "dinamico"}
                       disabled={!googleStatus.connected}
-                      onChange={() => setGoogleStatus(prev => ({ ...prev, tipo_sala: "dinamico" }))}
+                      onChange={() => { setTipoSala("dinamico"); setMeetDirty(true); }}
                     />
                     Dinâmico (Google Meet)
                   </label>
                 </div>
               </Field>
 
-              {googleStatus.tipo_sala === "fixo" && (
+              {tipoSala === "fixo" && (
                 <Field label="Link fixo de atendimento" hint="Cole seu link permanente do Google Meet.">
                   <Input
                     value={linkSala}
-                    onChange={(e) => setLinkSala(e.target.value)}
+                    onChange={(e) => { setLinkSala(e.target.value); setMeetDirty(true); }}
                     placeholder="https://meet.google.com/xxx-xxx-xxx"
                   />
                 </Field>
               )}
 
-              {googleStatus.tipo_sala === "dinamico" && (
+              {tipoSala === "dinamico" && (
                 <Field label="Como funciona">
                   <div className="rounded-lg border border-primary/20 bg-primary-soft/30 p-3 text-xs text-muted-foreground">
                     <p className="font-medium text-foreground">Link gerado automaticamente</p>
@@ -390,6 +523,7 @@ export default function MedicoConfiguracoes() {
         )}
       </Section>
 
+      {/* ═══ Atendimento ═══ */}
       <Section
         icon={Stethoscope}
         title="Atendimento"
@@ -464,14 +598,11 @@ export default function MedicoConfiguracoes() {
                     if (!l) return null;
                     const cg = isClinicaGeral(e);
                     return (
-                      <div key={e.id} className={cn(
-                        "px-3 py-2.5 text-sm",
-                        !l.ativo && "opacity-60"
-                      )}>
+                      <div key={e.id} className={cn("px-3 py-2.5 text-sm", !l.ativo && "opacity-60")}>
                         <div className="grid grid-cols-12 items-center gap-2">
                           <div className="col-span-5">
                             <p className="font-medium">{e.nome}</p>
-                            {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
+                            {(e as any).descricao && <p className="text-[11px] text-muted-foreground">{(e as any).descricao}</p>}
                             {cg && (
                               <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                 CFM: não exige RQE
@@ -573,74 +704,73 @@ export default function MedicoConfiguracoes() {
             )}
           </div>
 
-          {/* Prévia: como fica quando preenchido */}
-          <div className="rounded-xl border border-primary/20 bg-primary-soft/30 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
-                Exemplo
-              </span>
-              <h4 className="text-sm font-semibold">Prévia: como sua consulta particular vai aparecer</h4>
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
-              <div className="grid grid-cols-12 gap-2 bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <div className="col-span-5">Especialidade</div>
-                <div className="col-span-3">Duração</div>
-                <div className="col-span-3">Preço</div>
-                <div className="col-span-1 text-right">Status</div>
+          {/* ── Prévia dinâmica (aparece somente com especialidades ativas) ── */}
+          {ativas.length > 0 && (
+            <div className="rounded-xl border border-primary/20 bg-primary-soft/30 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-semibold">Prévia: como sua consulta particular vai aparecer</h4>
               </div>
-              <div className="divide-y divide-border">
-                {[
-                  { nome: "Clínica Geral", duracao: 30, preco: 180, especialista: null as null | boolean, rqe: "" },
-                  { nome: "Psiquiatria", duracao: 50, preco: 350, especialista: true, rqe: "12345" },
-                  { nome: "Pediatria", duracao: 30, preco: 220, especialista: false, rqe: "" },
-                ].map((ex) => (
-                  <div key={ex.nome} className="grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm">
-                    <div className="col-span-5">
-                      <p className="font-medium">{ex.nome}</p>
-                      {ex.especialista === null ? null : ex.especialista ? (
-                        <span className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
-                          Especialista · RQE {ex.rqe}
-                        </span>
-                      ) : (
-                        <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                          Não especialista
-                        </span>
-                      )}
+
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="grid grid-cols-12 gap-2 bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="col-span-5">Especialidade</div>
+                  <div className="col-span-3">Duração</div>
+                  <div className="col-span-3">Preço</div>
+                  <div className="col-span-1 text-right">Status</div>
+                </div>
+                <div className="divide-y divide-border">
+                  {ativas.map((ex) => (
+                    <div key={ex.nome} className="grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm">
+                      <div className="col-span-5">
+                        <p className="font-medium">{ex.nome}</p>
+                        {ex.especialista === null ? null : ex.especialista ? (
+                          <span className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                            Especialista · RQE {ex.rqe}
+                          </span>
+                        ) : (
+                          <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            Não especialista
+                          </span>
+                        )}
+                      </div>
+                      <div className="col-span-3 text-muted-foreground">{ex.duracao} min</div>
+                      <div className="col-span-3 text-muted-foreground">
+                        R$ {(ex.preco / 100).toFixed(2).replace(".", ",")}
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">Ativo</span>
+                      </div>
                     </div>
-                    <div className="col-span-3 text-muted-foreground">{ex.duracao} min</div>
-                    <div className="col-span-3 text-muted-foreground">R$ {ex.preco.toFixed(2).replace(".", ",")}</div>
-                    <div className="col-span-1 flex justify-end">
-                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">Ativo</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cards preview */}
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {ativas.slice(0, 3).map((c) => (
+                  <div key={c.nome} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{c.nome}</p>
+                    <div className="mt-1.5 flex items-baseline justify-between">
+                      <span className="font-display text-lg font-semibold">
+                        R$ {(c.preco / 100).toFixed(2).replace(".", ",")}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{c.duracao} min</span>
                     </div>
+                    {c.especialista !== null && (
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {c.especialista ? `Especialista · RQE ${c.rqe}` : "Não especialista"}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              {[
-                { label: "Clínica Geral", duracao: "30 min", preco: "R$ 180,00", tag: null as null | string },
-                { label: "Psiquiatria", duracao: "50 min", preco: "R$ 350,00", tag: "Especialista · RQE 12345" },
-                { label: "Pediatria", duracao: "30 min", preco: "R$ 220,00", tag: "Não especialista" },
-              ].map((c) => (
-                <div key={c.label} className="rounded-lg border border-border bg-card p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{c.label}</p>
-                  <div className="mt-1.5 flex items-baseline justify-between">
-                    <span className="font-display text-lg font-semibold">{c.preco}</span>
-                    <span className="text-[11px] text-muted-foreground">{c.duracao}</span>
-                  </div>
-                  {c.tag && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">{c.tag}</p>
-                  )}
-                </div>
-              ))}
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                ↑ Prévia com seus dados reais conforme regra do <strong>CFM</strong>: Clínica Geral nunca exige RQE; demais especialidades mostram <em>"Especialista · RQE"</em> ou <em>"Não especialista"</em> no perfil público.
+              </p>
             </div>
-
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              ↑ Exemplos visuais conforme regra do <strong>CFM</strong>: Clínica Geral nunca exige RQE; demais especialidades mostram <em>"Especialista · RQE"</em> ou <em>"Não especialista"</em> no perfil público.
-            </p>
-          </div>
+          )}
 
           {/* Modo Pronto Atendimento */}
           <div>
@@ -711,28 +841,60 @@ export default function MedicoConfiguracoes() {
                 )}
               </div>
             )}
+
+            {/* Link para Serviços da Plataforma */}
+            <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/20 p-3">
+              <p className="text-xs text-muted-foreground">
+                Além das especialidades particulares, você também pode aderir aos{" "}
+                <Link to="/app/medico/servicos" className="font-semibold text-primary hover:underline">
+                  Serviços da Plataforma
+                </Link>{" "}
+                gerenciados pelo Admin, com comissões e regras específicas.
+              </p>
+            </div>
           </div>
         </div>
       </Section>
 
-      <Section icon={Bell} title="Notificações">
-        <div className="grid gap-4 md:grid-cols-2">
-          {Object.entries({
-            lembretes: "Lembretes de consulta (10 min antes)",
-            alertas: "Alertas operacionais (pagamentos, agenda)",
-            resumoDiario: "Resumo diário por e-mail",
-          }).map(([key, label]) => (
-            <label key={key} className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
-              <span className="text-sm">{label}</span>
-              <input
-                type="checkbox"
-                checked={(notif as any)[key]}
-                onChange={e => setNotif({ ...notif, [key]: e.target.checked })}
-                className="h-4 w-4 accent-primary"
-              />
-            </label>
-          ))}
-        </div>
+      {/* ═══ Notificações ═══ */}
+      <Section
+        icon={Bell}
+        title="Notificações"
+        action={
+          <Button
+            size="sm"
+            onClick={salvarNotificacoes}
+            disabled={savingNotif || notifLoading}
+            className="bg-gradient-primary hover:opacity-90"
+          >
+            {savingNotif ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
+            Salvar notificações
+          </Button>
+        }
+      >
+        {notifLoading ? (
+          <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando preferências…
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {([
+              ["lembretes", "Lembretes de consulta (10 min antes)"],
+              ["alertas", "Alertas operacionais (pagamentos, agenda)"],
+              ["resumoDiario", "Resumo diário por e-mail"],
+            ] as const).map(([key, label]) => (
+              <label key={key} className="flex items-center justify-between rounded-lg border border-border p-3 cursor-pointer">
+                <span className="text-sm">{label}</span>
+                <input
+                  type="checkbox"
+                  checked={notif[key]}
+                  onChange={(e) => setNotif({ ...notif, [key]: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+            ))}
+          </div>
+        )}
       </Section>
     </div>
   );
