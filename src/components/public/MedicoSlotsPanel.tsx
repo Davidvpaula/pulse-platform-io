@@ -134,7 +134,7 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center transition hover:border-primary hover:bg-primary/5 hover:shadow-sm group"
                 >
                   <p className="font-mono text-sm font-bold group-hover:text-primary transition-colors">
-                    {formatHora(s.inicio)}
+                    {fmtHora(s.inicio)}
                   </p>
                   <div className="flex items-center justify-center gap-1 mt-0.5">
                     <Video className="h-2.5 w-2.5 text-primary" />
