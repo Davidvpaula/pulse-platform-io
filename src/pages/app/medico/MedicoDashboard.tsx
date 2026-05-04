@@ -336,6 +336,15 @@ export default function MedicoDashboard() {
       link: onb.semDadosBancarios ? "/app/medico/financeiro" : null,
       icon: CreditCard,
     },
+    {
+      ok: !onb.semTermos,
+      titulo: "Termos de contrato aceitos",
+      desc: onb.semTermos
+        ? "Aceite os termos do contrato médico para operar na plataforma."
+        : "Termos de contrato aceitos.",
+      link: null, // handled by TermsAcceptanceDialog
+      icon: ShieldCheck,
+    },
   ];
   const pendencias = checklistItems.filter((i) => !i.ok).length;
   const concluidos = checklistItems.length - pendencias;
