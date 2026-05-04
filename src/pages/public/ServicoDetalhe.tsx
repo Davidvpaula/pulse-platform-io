@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { brl, fmtHora } from "@/lib/format";
+import { brl, fmtHora, dataLabel } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import PageShell from "@/components/PageShell";
