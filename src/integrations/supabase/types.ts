@@ -66,6 +66,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agenda_slots_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agenda_slots_servico_id_fkey"
             columns: ["servico_id"]
             isOneToOne: false
@@ -877,6 +884,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "avaliacoes_medicas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "avaliacoes_medicas_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -1359,6 +1373,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "consultas_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -1793,6 +1814,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cupons_uso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cupons_uso_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -1914,6 +1942,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -2726,6 +2761,13 @@ export type Database = {
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "impulsionamento_campanhas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       impulsionamento_cliques: {
@@ -2818,6 +2860,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3309,6 +3358,13 @@ export type Database = {
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_dados_bancarios_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       medico_enderecos: {
@@ -3360,6 +3416,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_enderecos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3422,6 +3485,13 @@ export type Database = {
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_especialidades_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       medico_formacoes: {
@@ -3458,6 +3528,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_formacoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3502,6 +3579,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: true
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_google_tokens_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3552,6 +3636,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medico_nfes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "medico_nfes_saque_id_fkey"
             columns: ["saque_id"]
             isOneToOne: false
@@ -3591,6 +3682,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: true
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_notificacao_prefs_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3638,6 +3736,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: true
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_premium_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3696,6 +3801,13 @@ export type Database = {
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_ranking_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       medico_saldo_crescimento: {
@@ -3735,6 +3847,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_saldo_crescimento_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3953,6 +4072,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicos_auditoria_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -4763,6 +4889,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -5580,6 +5713,13 @@ export type Database = {
             referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "saques_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       security_alerts: {
@@ -6046,6 +6186,21 @@ export type Database = {
           risco: string | null
           valor_anterior: string | null
           valor_novo: string | null
+        }
+        Relationships: []
+      }
+      medicos_publicos: {
+        Row: {
+          avaliacao_media: number | null
+          created_at: string | null
+          crm: string | null
+          especialidade: string | null
+          id: string | null
+          link_sala_padrao: string | null
+          nome: string | null
+          online: boolean | null
+          ranking_score: number | null
+          total_avaliacoes: number | null
         }
         Relationships: []
       }

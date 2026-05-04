@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock } from "lucide-react";
+import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock, Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,42 +76,162 @@ export const Especialidades = () => {
 
 /* ── Médicos ── */
 
+type SortOption = "ranking" | "avaliacao" | "nome";
+
 export const Medicos = () => {
-  const { medicos, loading } = useMedicosDestaque(20);
+  const { medicos, loading } = useMedicosDestaque(100);
+  const { especialidades } = useEspecialidadesPublicas();
+  const [busca, setBusca] = useState("");
+  const [espFiltro, setEspFiltro] = useState("todas");
+  const [sort, setSort] = useState<SortOption>("ranking");
+
+  // Buscar especialidades dos médicos via medico_especialidades
+  const [medicoEsps, setMedicoEsps] = useState<Map<string, string[]>>(new Map());
+  useEffect(() => {
+    if (!medicos.length) return;
+    (async () => {
+      const { data } = await supabase
+        .from("medico_especialidades")
+        .select("medico_id, especialidades!inner(id, nome)")
+        .eq("ativo", true)
+        .in("medico_id", medicos.map(m => m.id));
+      const map = new Map<string, string[]>();
+      for (const row of (data ?? []) as any[]) {
+        const mid = row.medico_id;
+        const espNome = row.especialidades?.nome;
+        const espId = row.especialidades?.id;
+        if (!map.has(mid)) map.set(mid, []);
+        if (espNome) map.get(mid)!.push(espId);
+      }
+      setMedicoEsps(map);
+    })();
+  }, [medicos]);
+
+  const filtrados = useMemo(() => {
+    let list = [...medicos];
+
+    // Filtro busca
+    if (busca.trim()) {
+      const q = busca.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      list = list.filter(m =>
+        m.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q) ||
+        (m.especialidade ?? "").toLowerCase().includes(q) ||
+        m.crm.includes(q)
+      );
+    }
+
+    // Filtro especialidade
+    if (espFiltro !== "todas") {
+      list = list.filter(m => medicoEsps.get(m.id)?.includes(espFiltro));
+    }
+
+    // Ordenação
+    list.sort((a, b) => {
+      // Online sempre primeiro
+      if (a.online !== b.online) return a.online ? -1 : 1;
+      switch (sort) {
+        case "avaliacao":
+          return (b.avaliacao_media - a.avaliacao_media) || (b.total_avaliacoes - a.total_avaliacoes);
+        case "nome":
+          return a.nome.localeCompare(b.nome);
+        case "ranking":
+        default:
+          return (b.ranking_score - a.ranking_score);
+      }
+    });
+
+    return list;
+  }, [medicos, busca, espFiltro, sort, medicoEsps]);
 
   return (
     <PageShell title="Nossos médicos" subtitle="Todos com CRM ativo e perfil verificado.">
+      {/* Barra de busca e filtros */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, especialidade ou CRM…"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Select value={espFiltro} onValueChange={setEspFiltro}>
+            <SelectTrigger className="w-[180px]">
+              <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Especialidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas especialidades</SelectItem>
+              {especialidades.map(e => (
+                <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+            <SelectTrigger className="w-[160px]">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ranking">Mais relevantes</SelectItem>
+              <SelectItem value="avaliacao">Mais avaliados</SelectItem>
+              <SelectItem value="nome">Nome A-Z</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Resultado */}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
         </div>
-      ) : medicos.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-12">Nenhum médico disponível no momento.</p>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {medicos.map((m) => (
-            <div key={m.id} className="card-elevated p-6">
-              <div className="flex items-start gap-4">
-                <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold">
-                  {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold">{m.nome}</p>
-                  <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-warning">
-                    <Star className="h-3.5 w-3.5 fill-current" /> {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "Novo"}
-                  </p>
-                </div>
-                {m.online && <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Online</span>}
-              </div>
-              <div className="mt-5 flex items-center justify-end">
-                <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
-                  <Link to="/agendar">Agendar</Link>
-                </Button>
-              </div>
-            </div>
-          ))}
+      ) : filtrados.length === 0 ? (
+        <div className="card-elevated p-10 text-center">
+          <Stethoscope className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+          <p className="font-semibold">Nenhum médico encontrado</p>
+          <p className="text-sm text-muted-foreground mt-1">Tente ajustar os filtros ou a busca.</p>
         </div>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground mb-3">{filtrados.length} {filtrados.length === 1 ? "médico encontrado" : "médicos encontrados"}</p>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {filtrados.map((m) => (
+              <div key={m.id} className="card-elevated p-6 transition hover:-translate-y-0.5 hover:shadow-elegant">
+                <div className="flex items-start gap-4">
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold shrink-0">
+                    {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{m.nome}</p>
+                    <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-xs text-warning">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "Novo"}
+                      </span>
+                      {m.total_avaliacoes > 0 && (
+                        <span className="text-[10px] text-muted-foreground">({m.total_avaliacoes})</span>
+                      )}
+                    </div>
+                  </div>
+                  {m.online ? (
+                    <Badge className="bg-success/10 text-success border-success/20 text-[10px] shrink-0">Disponível</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">Sem horário</Badge>
+                  )}
+                </div>
+                <div className="mt-5 flex items-center justify-end">
+                  <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+                    <Link to="/agendar">Agendar</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </PageShell>
   );
