@@ -241,6 +241,16 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       if (medicoMode) {
         payload.nivel = "medico";
         payload.termos_aceitos = true;
+        payload.medico_id = uid;
+        payload.created_by = uid;
+        // Médico não pode se auto-aprovar — sempre rascunho na criação
+        if (!planoId) {
+          payload.status = "rascunho";
+        }
+        // Impede médico de mudar para ativo sem aprovação admin
+        if (planoId && !plano.aprovado_admin && payload.status === "ativo") {
+          payload.status = "rascunho";
+        }
       }
 
       if (id) {
