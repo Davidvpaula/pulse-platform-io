@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock } from "lucide-react";
+import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock, Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
