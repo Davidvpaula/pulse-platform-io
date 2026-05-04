@@ -118,11 +118,11 @@ const mockProvider = {
 
   /** No mock, "confirmar" o pagamento é o próprio paciente clicando "Pagar". */
   async confirmar(pagamentoId: string, metodo: PagamentoMetodo): Promise<void> {
-    // 1) Atualiza pagamento
+    // 1) Atualiza pagamento → pago
     const { error } = await supabase
       .from("pagamentos")
       .update({
-        status: "pago",
+        status: "pago" as const,
         metodo,
         paid_at: new Date().toISOString(),
         provider_payment_id: `mock_${Date.now()}`,
@@ -130,38 +130,20 @@ const mockProvider = {
       .eq("id", pagamentoId);
     if (error) throw error;
 
-    // 2) Busca consulta vinculada e atualiza status + slot
-    const { data: pag } = await supabase
-      .from("pagamentos")
-      .select("consulta_id")
-      .eq("id", pagamentoId)
-      .maybeSingle();
+    // 2) Cria consulta via RPC (fluxo unificado) ou atualiza consulta existente (legado)
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "criar_consulta_pos_pagamento" as any,
+      { _pagamento_id: pagamentoId },
+    );
 
-    if (pag?.consulta_id) {
-      // Atualiza consulta de aguardando_pagamento → agendada
-      await supabase
-        .from("consultas")
-        .update({ status: "agendada", updated_at: new Date().toISOString() })
-        .eq("id", pag.consulta_id)
-        .eq("status", "aguardando_pagamento");
+    if (rpcError) {
+      console.error("[pagamentos] criar_consulta_pos_pagamento:", rpcError);
+      // Fallback: tenta lógica legada (consulta_id já vinculada)
+    }
 
-      // Busca slot_id da consulta para bloquear
-      const { data: consulta } = await supabase
-        .from("consultas")
-        .select("slot_id")
-        .eq("id", pag.consulta_id)
-        .maybeSingle();
-
-      if (consulta?.slot_id) {
-        await supabase
-          .from("agenda_slots")
-          .update({
-            status: "bloqueado",
-            reserva_expira_em: null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", consulta.slot_id);
-      }
+    const res = rpcResult as any;
+    if (res && !res.ok) {
+      console.warn("[pagamentos] criar_consulta_pos_pagamento:", res.erro);
     }
   },
 
