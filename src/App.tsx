@@ -143,6 +143,11 @@ import { RequireRoutePermission as G } from "@/components/permissions/RequireRou
 
 const queryClient = new QueryClient();
 
+function SmartRedirect() {
+  const { profileKey } = useAuth();
+  return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
