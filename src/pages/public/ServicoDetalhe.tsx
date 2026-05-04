@@ -22,7 +22,7 @@ type Servico = {
   valor_paciente_centavos: number;
 };
 
-const TTL_MS = 90_000;
+const TTL_MS_DEFAULT = 10 * 60 * 1000; // 10 min (alinhado com reserva_expira_em da RPC)
 
 function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
