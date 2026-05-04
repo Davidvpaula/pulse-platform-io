@@ -745,13 +745,27 @@ export default function MedicoHorarios() {
           )}
           {!loading && grouped.length > 0 && (
             <div className="divide-y divide-border">
-              {grouped.map(([dia, items]) => (
+              {grouped.map(([dia, items]) => {
+                const disponiveis = items.filter((s) => s.status === "disponivel").length;
+                return (
                 <div key={dia} className="p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {format(new Date(dia + "T00:00:00"), "EEEE, dd 'de' MMMM", {
-                      locale: ptBR,
-                    })}
-                  </p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {format(new Date(dia + "T00:00:00"), "EEEE, dd 'de' MMMM", {
+                        locale: ptBR,
+                      })}
+                    </p>
+                    {disponiveis > 0 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
+                        onClick={() => setConfirmDeleteDia({ dia, disponiveis })}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" /> Excluir dia ({disponiveis})
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {items.map((s) => {
                       const st = statusLabel(s.status);
@@ -786,12 +800,14 @@ export default function MedicoHorarios() {
                     })}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
+      {/* Dialog excluir slot individual */}
       <AlertDialog
         open={!!confirmDelete}
         onOpenChange={(o) => !o && setConfirmDelete(null)}
@@ -808,6 +824,43 @@ export default function MedicoHorarios() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog excluir dia inteiro */}
+      <AlertDialog
+        open={!!confirmDeleteDia}
+        onOpenChange={(o) => !o && setConfirmDeleteDia(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir todos os horários do dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDeleteDia && (
+                <>
+                  Serão removidos <b>{confirmDeleteDia.disponiveis}</b> horário(s) disponível(is) de{" "}
+                  {format(new Date(confirmDeleteDia.dia + "T00:00:00"), "EEEE, dd 'de' MMMM", { locale: ptBR })}.
+                  Horários reservados ou bloqueados não serão afetados.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!confirmDeleteDia) return;
+                const res = await excluirSlotsDoDia(confirmDeleteDia.dia);
+                setConfirmDeleteDia(null);
+                if (!res.ok) { toast.error(res.error ?? "Não foi possível excluir."); return; }
+                toast.success(`${res.removidos} horário(s) removido(s).`);
+                refresh();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir dia
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
