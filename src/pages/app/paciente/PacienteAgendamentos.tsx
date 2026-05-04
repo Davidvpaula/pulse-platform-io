@@ -304,7 +304,21 @@ export default function PacienteAgendamentos() {
                         <Star className="mr-1 h-3 w-3 fill-warning text-warning" /> Avaliado
                       </Badge>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExpandedPag(expandedPag === c.id ? null : c.id)}
+                    >
+                      <Receipt className="mr-1.5 h-3.5 w-3.5" />
+                      Pagamentos
+                      <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform", expandedPag === c.id && "rotate-180")} />
+                    </Button>
                   </div>
+                  {expandedPag === c.id && (
+                    <div className="w-full px-4 pb-3">
+                      <ConsultaPagamentos consultaId={c.id} />
+                    </div>
+                  )}
                 </li>
               );
             })}
