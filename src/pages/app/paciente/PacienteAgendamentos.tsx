@@ -90,12 +90,19 @@ export default function PacienteAgendamentos() {
   const cancelar = async (id: string) => {
     if (!confirm("Cancelar esta consulta? Essa ação não pode ser desfeita.")) return;
     setCancelando(id);
-    const ok = await updateConsultaStatus(id, "cancelada");
+    const result = await updateConsultaStatus(id, "cancelada");
     setCancelando(null);
-    if (!ok) {
-      toast.error("Não foi possível cancelar.");
+    if (!result.ok) {
+      const msg = result.error?.includes("4 horas")
+        ? "Não é possível cancelar com menos de 4h de antecedência. Entre em contato via WhatsApp."
+        : "Não foi possível cancelar.";
+      toast.error(msg);
       return;
     }
+    // Audit log
+    supabase.functions.invoke("audit-log", {
+      body: { action: "consulta.cancelada", entity_type: "consulta", entity_id: id },
+    }).catch(() => {});
     toast.success("Consulta cancelada.");
     void carregar();
   };
