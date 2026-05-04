@@ -3623,6 +3623,7 @@ export type Database = {
           bloqueio_aplicado_por: string | null
           bloqueio_motivo: string | null
           bloqueio_observacao: string | null
+          cep: string | null
           cpf: string | null
           created_at: string
           crm: string
@@ -3642,6 +3643,7 @@ export type Database = {
           nome: string
           prioridade_atendimento: number
           rqe: string | null
+          sexo_biologico: string | null
           status: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em: string | null
           suspensao_aplicada_por: string | null
@@ -3663,6 +3665,7 @@ export type Database = {
           bloqueio_aplicado_por?: string | null
           bloqueio_motivo?: string | null
           bloqueio_observacao?: string | null
+          cep?: string | null
           cpf?: string | null
           created_at?: string
           crm: string
@@ -3682,6 +3685,7 @@ export type Database = {
           nome: string
           prioridade_atendimento?: number
           rqe?: string | null
+          sexo_biologico?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null
           suspensao_aplicada_por?: string | null
@@ -3703,6 +3707,7 @@ export type Database = {
           bloqueio_aplicado_por?: string | null
           bloqueio_motivo?: string | null
           bloqueio_observacao?: string | null
+          cep?: string | null
           cpf?: string | null
           created_at?: string
           crm?: string
@@ -3722,6 +3727,7 @@ export type Database = {
           nome?: string
           prioridade_atendimento?: number
           rqe?: string | null
+          sexo_biologico?: string | null
           status?: Database["public"]["Enums"]["medico_status"]
           suspensao_aplicada_em?: string | null
           suspensao_aplicada_por?: string | null
@@ -4862,31 +4868,37 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cep: string | null
           cpf: string | null
           created_at: string
           email: string | null
           id: string
           nome: string
+          sexo_biologico: string | null
           telefone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cep?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id: string
           nome?: string
+          sexo_biologico?: string | null
           telefone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cep?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           nome?: string
+          sexo_biologico?: string | null
           telefone?: string | null
           updated_at?: string
         }
