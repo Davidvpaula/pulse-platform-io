@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { formatTempoRelativo } from "@/lib/pacienteConversas";
 
 /* ── Types ── */
 type Origem = "Secretaria ↔ Médico" | "Secretaria ↔ Admin" | "Empresa ↔ Secretaria" | "Médico ↔ Admin";
