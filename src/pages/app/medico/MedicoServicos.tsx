@@ -34,7 +34,7 @@ type Adesao = {
   ativo: boolean;
 };
 
-const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 
 export default function MedicoServicos() {
   const { user } = useSession();
