@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope, Clock, Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import {
+  Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
+  Clock, Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, ChevronDown, ChevronUp, User,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -8,19 +11,53 @@ import {
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  listSlotsDisponiveisPorEspecialidade,
-  formatDataBR,
-  formatHora,
-  type SlotDisponivel,
-  type Especialidade,
-} from "@/lib/clinico";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
-import { useMedicosDestaque } from "@/hooks/useMedicosDestaque";
+import { useMedicosDestaque, type MedicoDestaque } from "@/hooks/useMedicosDestaque";
+import { useIsMobile } from "@/hooks/use-mobile";
 import EmBreveDialog from "@/components/EmBreveDialog";
+import MedicoSlotsPanel from "@/components/public/MedicoSlotsPanel";
+
+/* ── helpers ── */
+
+function medicoSlug(nome: string) {
+  return nome
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function proxHorarioLabel(iso: string | null): string {
+  if (!iso) return "Sem horários";
+  const d = new Date(iso);
+  const hoje = new Date();
+  const amanha = new Date();
+  amanha.setDate(hoje.getDate() + 1);
+  const eq = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (eq(d, hoje)) return `Hoje às ${hora}`;
+  if (eq(d, amanha)) return `Amanhã às ${hora}`;
+  return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} às ${hora}`;
+}
+
+function truncateBio(bio: string | null, max = 120): string {
+  if (!bio) return "";
+  if (bio.length <= max) return bio;
+  return bio.slice(0, max).trimEnd() + "…";
+}
+
+function iniciais(nome: string) {
+  return nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("").toUpperCase();
+}
 
 /* ── Especialidades ── */
 
@@ -85,7 +122,6 @@ export const Medicos = () => {
   const [espFiltro, setEspFiltro] = useState("todas");
   const [sort, setSort] = useState<SortOption>("ranking");
 
-  // Buscar especialidades dos médicos via medico_especialidades
   const [medicoEsps, setMedicoEsps] = useState<Map<string, string[]>>(new Map());
   useEffect(() => {
     if (!medicos.length) return;
@@ -98,10 +134,9 @@ export const Medicos = () => {
       const map = new Map<string, string[]>();
       for (const row of (data ?? []) as any[]) {
         const mid = row.medico_id;
-        const espNome = row.especialidades?.nome;
         const espId = row.especialidades?.id;
         if (!map.has(mid)) map.set(mid, []);
-        if (espNome) map.get(mid)!.push(espId);
+        if (espId) map.get(mid)!.push(espId);
       }
       setMedicoEsps(map);
     })();
@@ -109,8 +144,6 @@ export const Medicos = () => {
 
   const filtrados = useMemo(() => {
     let list = [...medicos];
-
-    // Filtro busca
     if (busca.trim()) {
       const q = busca.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       list = list.filter(m =>
@@ -119,15 +152,10 @@ export const Medicos = () => {
         m.crm.includes(q)
       );
     }
-
-    // Filtro especialidade
     if (espFiltro !== "todas") {
       list = list.filter(m => medicoEsps.get(m.id)?.includes(espFiltro));
     }
-
-    // Ordenação
     list.sort((a, b) => {
-      // Online sempre primeiro
       if (a.online !== b.online) return a.online ? -1 : 1;
       switch (sort) {
         case "avaliacao":
@@ -139,22 +167,15 @@ export const Medicos = () => {
           return (b.ranking_score - a.ranking_score);
       }
     });
-
     return list;
   }, [medicos, busca, espFiltro, sort, medicoEsps]);
 
   return (
     <PageShell title="Nossos médicos" subtitle="Todos com CRM ativo e perfil verificado.">
-      {/* Barra de busca e filtros */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, especialidade ou CRM…"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar por nome, especialidade ou CRM…" value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2">
           <Select value={espFiltro} onValueChange={setEspFiltro}>
@@ -164,9 +185,7 @@ export const Medicos = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">Todas especialidades</SelectItem>
-              {especialidades.map(e => (
-                <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
-              ))}
+              {especialidades.map(e => (<SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
@@ -183,7 +202,6 @@ export const Medicos = () => {
         </div>
       </div>
 
-      {/* Resultado */}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
@@ -199,11 +217,15 @@ export const Medicos = () => {
           <p className="text-xs text-muted-foreground mb-3">{filtrados.length} {filtrados.length === 1 ? "médico encontrado" : "médicos encontrados"}</p>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {filtrados.map((m) => (
-              <div key={m.id} className="card-elevated p-6 transition hover:-translate-y-0.5 hover:shadow-elegant">
+              <Link key={m.id} to={`/medicos/${medicoSlug(m.nome)}`} className="card-elevated p-6 transition hover:-translate-y-0.5 hover:shadow-elegant">
                 <div className="flex items-start gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold shrink-0">
-                    {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
-                  </div>
+                  {m.foto_url ? (
+                    <img src={m.foto_url} alt={m.nome} className="h-14 w-14 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold shrink-0">
+                      {iniciais(m.nome)}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{m.nome}</p>
                     <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
@@ -212,9 +234,6 @@ export const Medicos = () => {
                         <Star className="h-3.5 w-3.5 fill-current" />
                         {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "Novo"}
                       </span>
-                      {m.total_avaliacoes > 0 && (
-                        <span className="text-[10px] text-muted-foreground">({m.total_avaliacoes})</span>
-                      )}
                     </div>
                   </div>
                   {m.online ? (
@@ -224,11 +243,9 @@ export const Medicos = () => {
                   )}
                 </div>
                 <div className="mt-5 flex items-center justify-end">
-                  <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
-                    <Link to="/agendar">Agendar</Link>
-                  </Button>
+                  <Button size="sm" className="bg-gradient-primary hover:opacity-90">Agendar</Button>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </>
@@ -242,28 +259,37 @@ export const Medicos = () => {
 export const MedicoDetalhe = () => {
   const { slug } = useParams();
   const [medico, setMedico] = useState<any>(null);
+  const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      // Try finding by slug-like name match
-      const { data } = await supabase
-        .from("medicos")
-        .select("id, nome, especialidade, crm, link_sala_padrao")
-        .eq("status", "aprovado")
-        .limit(20);
+      // Find medico by slug
+      const { data } = await (supabase as any)
+        .from("medicos_publicos")
+        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, created_at");
 
-      const found = (data ?? []).find((m) => {
-        const mSlug = m.nome
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
-        return mSlug === slug;
-      });
+      const found = (data ?? []).find((m: any) => medicoSlug(m.nome) === slug);
+      const med = found ?? null;
+      setMedico(med);
 
-      setMedico(found ?? (data?.[0] ?? null));
+      if (med) {
+        // Load specialization details
+        const { data: esps } = await supabase
+          .from("medico_especialidades")
+          .select("especialidades!inner(nome), especialista, rqe")
+          .eq("medico_id", med.id)
+          .eq("ativo", true);
+
+        setEspInfo(
+          (esps ?? []).map((e: any) => ({
+            nome: e.especialidades?.nome ?? "",
+            especialista: e.especialista ?? false,
+            rqe: e.rqe ?? null,
+          }))
+        );
+      }
+
       setLoading(false);
     })();
   }, [slug]);
@@ -287,70 +313,203 @@ export const MedicoDetalhe = () => {
   }
 
   return (
-    <PageShell title={medico.nome} subtitle={`${medico.especialidade ?? "Clínica"} · ${medico.crm}`}>
+    <PageShell title={medico.nome} subtitle="">
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <div className="card-elevated p-6 space-y-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <GraduationCap className="h-4 w-4 text-primary" /> Médico verificado na plataforma
+        {/* Main info */}
+        <div className="space-y-6">
+          {/* Hero card */}
+          <div className="card-elevated p-6">
+            <div className="flex items-start gap-5">
+              {medico.foto_url ? (
+                <img src={medico.foto_url} alt={medico.nome} className="h-20 w-20 rounded-2xl object-cover shrink-0" />
+              ) : (
+                <div className="grid h-20 w-20 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground text-2xl font-bold shrink-0">
+                  {iniciais(medico.nome)}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl font-bold">{medico.nome}</h2>
+                <p className="text-sm text-muted-foreground">{medico.especialidade ?? "Clínica Geral"} · CRM {medico.crm}</p>
+
+                {espInfo.map((e, i) => (
+                  <p key={i} className="text-xs text-muted-foreground mt-1">
+                    {e.nome}: {e.especialista ? `Especialista (RQE: ${e.rqe ?? "—"})` : "Clínico geral"}
+                  </p>
+                ))}
+
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="inline-flex items-center gap-1 text-sm text-warning">
+                    <Star className="h-4 w-4 fill-current" />
+                    {medico.avaliacao_media > 0 ? medico.avaliacao_media.toFixed(1) : "5.0"}
+                  </span>
+                  {medico.online && (
+                    <Badge className="bg-success/10 text-success border-success/20 text-[10px]">Disponível agora</Badge>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="text-[10px]"><Video className="mr-1 h-3 w-3" /> Telemedicina</Badge>
+                  <Badge variant="outline" className="text-[10px]"><ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado</Badge>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-foreground/90">
-            Profissional com CRM ativo, atendendo por telemedicina com consultas integradas à plataforma.
-          </p>
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            <div><p className="text-muted-foreground">Especialidade</p><p className="font-semibold">{medico.especialidade ?? "Clínica"}</p></div>
-            <div><p className="text-muted-foreground">Modalidade</p><p className="font-semibold">Online</p></div>
-            <div><p className="text-muted-foreground">CRM</p><p className="font-semibold">{medico.crm}</p></div>
+
+          {/* Bio */}
+          {medico.bio && (
+            <div className="card-elevated p-6">
+              <h3 className="text-sm font-semibold mb-2">Sobre o profissional</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{medico.bio}</p>
+            </div>
+          )}
+
+          {/* Info grid */}
+          <div className="card-elevated p-6">
+            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
+              <div>
+                <p className="text-muted-foreground text-xs">Modalidade</p>
+                <p className="font-semibold">Online (Telemedicina)</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">CRM</p>
+                <p className="font-semibold">{medico.crm}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Atendimento</p>
+                <p className="font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Todo Brasil</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="card-elevated p-6 h-fit">
-          <p className="text-sm text-muted-foreground">Agendar consulta</p>
-          <Button asChild className="mt-4 w-full bg-gradient-primary hover:opacity-90">
-            <Link to="/agendar"><Video className="mr-2 h-4 w-4" /> Agendar telemedicina</Link>
-          </Button>
-          <Button asChild variant="outline" className="mt-2 w-full">
-            <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" /> Ver horários</Link>
-          </Button>
-          <p className="mt-4 inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" /> Atende em todo Brasil
-          </p>
+
+        {/* Sidebar – agenda */}
+        <div className="space-y-4">
+          <div className="card-elevated p-6 h-fit">
+            <p className="text-sm font-semibold mb-4">Agendar consulta</p>
+            <MedicoSlotsPanel medicoId={medico.id} medicoNome={medico.nome} />
+          </div>
         </div>
       </div>
     </PageShell>
   );
 };
 
-/* ── Agendar ── */
+/* ── Agendar (novo fluxo: esp → médicos → slots) ── */
+
+type MedicoComSlot = MedicoDestaque & {
+  especialista: boolean;
+  rqe: string | null;
+  preco_centavos: number;
+  proximo_slot: string | null;
+  esp_nome: string;
+};
 
 export const Agendar = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { session } = useSession();
   const { especialidades, loading: loadingEspHook } = useEspecialidadesPublicas();
   const [espId, setEspId] = useState<string>("");
-  const [slots, setSlots] = useState<SlotDisponivel[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [medicosEsp, setMedicosEsp] = useState<MedicoComSlot[]>([]);
+  const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sheetMedico, setSheetMedico] = useState<MedicoComSlot | null>(null);
+  const isMobile = useIsMobile();
 
-  // Set initial esp from URL or first available
+  // Set initial esp from URL
   useEffect(() => {
     if (loadingEspHook || !especialidades.length) return;
     const urlEsp = searchParams.get("esp");
     if (urlEsp && especialidades.find((e) => e.id === urlEsp)) {
       setEspId(urlEsp);
     } else {
-      // Pick first with medicos, or first overall
       const comMedicos = especialidades.find((e) => e.total_medicos > 0);
       setEspId(comMedicos?.id ?? especialidades[0].id);
     }
   }, [loadingEspHook, especialidades, searchParams]);
 
-  // Load slots when espId changes
+  // Load doctors for selected specialty
   useEffect(() => {
     if (!espId) return;
-    setLoadingSlots(true);
-    listSlotsDisponiveisPorEspecialidade(espId)
-      .then(setSlots)
-      .finally(() => setLoadingSlots(false));
+    (async () => {
+      setLoadingMedicos(true);
+      setExpandedId(null);
+
+      // 1. Vinculos médico-especialidade
+      const { data: vinculos } = await supabase
+        .from("medico_especialidades")
+        .select("medico_id, preco_centavos, especialista, rqe, especialidades!inner(nome)")
+        .eq("especialidade_id", espId)
+        .eq("ativo", true);
+
+      if (!vinculos?.length) { setMedicosEsp([]); setLoadingMedicos(false); return; }
+
+      const medicoIds = [...new Set(vinculos.map((v) => v.medico_id))];
+
+      // 2. Dados públicos dos médicos
+      const { data: meds } = await (supabase as any)
+        .from("medicos_publicos")
+        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
+        .in("id", medicoIds);
+
+      // 3. Próximo slot por médico (uma única query)
+      const { data: proximosSlots } = await supabase
+        .from("agenda_slots")
+        .select("medico_id, inicio")
+        .in("medico_id", medicoIds)
+        .eq("status", "disponivel")
+        .gte("inicio", new Date().toISOString())
+        .order("inicio", { ascending: true })
+        .limit(200);
+
+      // Pegar o primeiro slot de cada médico
+      const proxSlotMap = new Map<string, string>();
+      for (const s of proximosSlots ?? []) {
+        if (!proxSlotMap.has(s.medico_id)) {
+          proxSlotMap.set(s.medico_id, s.inicio);
+        }
+      }
+
+      // Build vinculo map
+      const vincMap = new Map<string, any>();
+      for (const v of vinculos as any[]) {
+        vincMap.set(v.medico_id, v);
+      }
+
+      // Merge
+      const merged: MedicoComSlot[] = ((meds ?? []) as MedicoDestaque[]).map((m) => {
+        const v = vincMap.get(m.id);
+        return {
+          ...m,
+          especialista: v?.especialista ?? false,
+          rqe: v?.rqe ?? null,
+          preco_centavos: v?.preco_centavos ?? 0,
+          proximo_slot: proxSlotMap.get(m.id) ?? null,
+          esp_nome: v?.especialidades?.nome ?? "",
+        };
+      });
+
+      // Sort: avaliação → disponibilidade → taxa_no_show → premium
+      merged.sort((a, b) => {
+        // Com slot antes de sem slot
+        const aHas = a.proximo_slot ? 1 : 0;
+        const bHas = b.proximo_slot ? 1 : 0;
+        if (aHas !== bHas) return bHas - aHas;
+        // Melhor avaliação
+        if (a.avaliacao_media !== b.avaliacao_media) return b.avaliacao_media - a.avaliacao_media;
+        // Disponibilidade mais próxima
+        if (a.proximo_slot && b.proximo_slot) {
+          const diff = new Date(a.proximo_slot).getTime() - new Date(b.proximo_slot).getTime();
+          if (diff !== 0) return diff;
+        }
+        // Menor taxa no_show
+        if (a.taxa_no_show !== b.taxa_no_show) return a.taxa_no_show - b.taxa_no_show;
+        // Premium
+        return b.fator_premium - a.fator_premium;
+      });
+
+      setMedicosEsp(merged);
+      setLoadingMedicos(false);
+    })();
   }, [espId]);
 
   const handleEspChange = (newEspId: string) => {
@@ -362,18 +521,25 @@ export const Agendar = () => {
     setEspId(newEspId);
   };
 
-  const escolher = (slotId: string) => {
-    if (!session) {
-      navigate(`/auth?redirect=/app/paciente/agendar/confirmar/${slotId}`);
-      return;
+  const toggleExpand = (m: MedicoComSlot) => {
+    if (isMobile) {
+      setSheetMedico(m);
+    } else {
+      setExpandedId(expandedId === m.id ? null : m.id);
     }
-    navigate(`/app/paciente/agendar/confirmar/${slotId}`);
   };
 
   const espAtual = especialidades.find((e) => e.id === espId);
 
+  // Tags
+  const isNovo = (m: MedicoComSlot) => {
+    const dias = (Date.now() - new Date(m.created_at).getTime()) / 86400000;
+    return dias < 30;
+  };
+
   return (
-    <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o horário disponível.">
+    <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o profissional.">
+      {/* Selector de especialidade */}
       <div className="card-elevated p-6">
         <label className="flex flex-col gap-1.5 max-w-md">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Especialidade</span>
@@ -393,10 +559,23 @@ export const Agendar = () => {
         </label>
       </div>
 
+      {/* Lista de médicos */}
       <div className="mt-6">
-        {loadingSlots ? (
-          <div className="flex h-32 items-center justify-center text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando horários…
+        {loadingMedicos ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="card-elevated p-6 space-y-3">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-14 w-14 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
           </div>
         ) : espAtual && espAtual.total_medicos === 0 ? (
           <div className="card-elevated p-8 text-center">
@@ -404,42 +583,155 @@ export const Agendar = () => {
             <p className="font-semibold text-lg">Em breve!</p>
             <p className="text-sm text-muted-foreground mt-1">
               A especialidade <strong>{espAtual.nome}</strong> ainda não possui médicos disponíveis.
-              Novos profissionais estão sendo cadastrados constantemente.
             </p>
           </div>
-        ) : slots.length === 0 ? (
+        ) : medicosEsp.length === 0 ? (
           <div className="card-elevated p-8 text-center text-sm text-muted-foreground">
-            Nenhum horário disponível nesta especialidade no momento.
+            <Stethoscope className="mx-auto h-8 w-8 mb-2 opacity-50" />
+            Nenhum médico encontrado para esta especialidade.
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {slots.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => escolher(s.id)}
-                className="card-elevated p-4 text-left transition hover:-translate-y-0.5 hover:shadow-elegant"
-              >
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Stethoscope className="h-4 w-4 text-primary" /> {s.medico_nome}
+          <>
+            <p className="text-xs text-muted-foreground mb-4">
+              {medicosEsp.length} {medicosEsp.length === 1 ? "médico disponível" : "médicos disponíveis"}
+            </p>
+            <div className="space-y-4">
+              {medicosEsp.map((m) => (
+                <div key={m.id} className="space-y-0">
+                  {/* Card do médico */}
+                  <div className={`card-elevated p-5 transition ${expandedId === m.id ? "rounded-b-none border-b-0" : ""}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      {/* Avatar */}
+                      {m.foto_url ? (
+                        <img src={m.foto_url} alt={m.nome} className="h-16 w-16 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-primary text-primary-foreground text-lg font-bold shrink-0">
+                          {iniciais(m.nome)}
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-base">{m.nome}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {m.esp_nome}
+                              {m.especialista ? ` · Especialista (RQE: ${m.rqe ?? "—"})` : " · Clínico geral"}
+                            </p>
+                          </div>
+                          {m.proximo_slot ? (
+                            <Badge className="bg-success/10 text-success border-success/20 text-[10px] shrink-0 whitespace-nowrap">
+                              Disponível
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
+                              Sem horário
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Rating */}
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-xs text-warning">
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "5.0"}
+                          </span>
+                          {/* total_avaliacoes oculto conforme regra */}
+                        </div>
+
+                        {/* Tags */}
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {isNovo(m) && (
+                            <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px]">
+                              <Star className="mr-0.5 h-3 w-3" /> Novo
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-[10px]">
+                            <Video className="mr-1 h-3 w-3" /> Telemedicina
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            <ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado
+                          </Badge>
+                        </div>
+
+                        {/* Bio */}
+                        {m.bio && (
+                          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                            {truncateBio(m.bio)}
+                          </p>
+                        )}
+
+                        {/* Próx. horário + preço */}
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            {proxHorarioLabel(m.proximo_slot)}
+                          </span>
+                          {m.preco_centavos > 0 && (
+                            <span className="font-bold text-foreground">
+                              {(m.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ações */}
+                    <div className="mt-4 flex items-center gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                      >
+                        <Link to={`/medicos/${medicoSlug(m.nome)}`}>
+                          <User className="mr-1.5 h-3.5 w-3.5" /> Ver perfil
+                        </Link>
+                      </Button>
+                      {m.proximo_slot && (
+                        <Button
+                          size="sm"
+                          className="bg-gradient-primary hover:opacity-90"
+                          onClick={() => toggleExpand(m)}
+                        >
+                          <Calendar className="mr-1.5 h-3.5 w-3.5" />
+                          Agendar
+                          {!isMobile && (
+                            expandedId === m.id
+                              ? <ChevronUp className="ml-1 h-3 w-3" />
+                              : <ChevronDown className="ml-1 h-3 w-3" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Accordion – slots (desktop) */}
+                  {!isMobile && expandedId === m.id && (
+                    <div className="card-elevated rounded-t-none border-t border-dashed border-border p-5 bg-muted/20">
+                      <MedicoSlotsPanel medicoId={m.id} medicoNome={m.nome} />
+                    </div>
+                  )}
                 </div>
-                <div className="mt-2 flex items-center gap-1.5 text-sm">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> {formatDataBR(s.inicio)}
-                  <span className="mx-1 text-muted-foreground">·</span>
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" /> {formatHora(s.inicio)}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                    Telemedicina
-                  </span>
-                  <span className="text-sm font-bold">
-                    {(s.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
+
+      {/* Sheet (mobile) */}
+      <Sheet open={!!sheetMedico} onOpenChange={(o) => { if (!o) setSheetMedico(null); }}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{sheetMedico?.nome ?? "Horários"}</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            {sheetMedico && (
+              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <EmBreveDialog
         open={!!emBreveNome}
