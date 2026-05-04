@@ -190,6 +190,8 @@ export default function PacientePerfil() {
 
   const voltarTo = location.pathname.startsWith("/app/admin")
     ? "/app/admin/pacientes"
+    : location.pathname.startsWith("/app/medico")
+    ? "/app/medico/pacientes"
     : location.pathname.startsWith("/app/colaborador")
     ? "/app/colaborador/pacientes"
     : "/app/secretaria/pacientes";
