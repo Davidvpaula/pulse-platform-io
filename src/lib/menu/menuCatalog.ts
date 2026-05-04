@@ -125,6 +125,11 @@ export const colaboradorMenu: MenuNode[] = [
     icon: Eye,
     key: "auditoria.ver",
   },
+  {
+    label: "Perfil",
+    to: "/app/colaborador/perfil",
+    icon: User,
+  },
 ];
 
 /** Coleta todas as permission keys referenciadas no catálogo (sem duplicatas). */
