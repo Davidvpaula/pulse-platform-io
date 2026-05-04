@@ -128,6 +128,8 @@ const toReais = (c: number) => ((c || 0) / 100).toString().replace(".", ",");
 const toCentavos = (s: string) => Math.round(Number(String(s).replace(/\./g, "").replace(",", ".") || 0) * 100);
 
 export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = false }: Props) {
+  const { session } = useSession();
+  const uid = session?.user?.id;
   const [plano, setPlano] = useState<Plano>(emptyPlano());
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(false);
