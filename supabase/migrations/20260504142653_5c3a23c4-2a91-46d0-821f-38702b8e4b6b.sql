@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_empresa_id_do_usuario(uuid) FROM anon;

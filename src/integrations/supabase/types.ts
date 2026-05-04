@@ -6423,6 +6423,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_empresa_id_do_usuario: { Args: { _user_id: string }; Returns: string }
       has_permission: {
         Args: { _key: string; _user_id: string }
         Returns: boolean
