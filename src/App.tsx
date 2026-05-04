@@ -145,6 +145,8 @@ const queryClient = new QueryClient();
 
 function SmartRedirect() {
   const { profileKey } = useAuth();
+  const { loading } = useSession();
+  if (loading) return null;
   return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
 }
 
