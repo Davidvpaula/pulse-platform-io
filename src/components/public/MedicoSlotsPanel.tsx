@@ -16,6 +16,7 @@ type Slot = {
 type Props = {
   medicoId: string;
   medicoNome: string;
+  especialidadeId?: string;
 };
 
 
