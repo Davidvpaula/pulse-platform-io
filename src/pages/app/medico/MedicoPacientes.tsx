@@ -61,26 +61,6 @@ export default function MedicoPacientes() {
     });
   }, [session, reais, q, filtro]);
 
-  // Modo demo (sem sessão) — mock antigo
-  const listaDemo = useMemo(() => {
-    if (session) return [];
-    const term = q.trim().toLowerCase();
-    return pacientesMock
-      .map((p) => {
-        const ags = agendamentos.filter((a) => a.pacienteId === p.id);
-        const ultimo = ags.find((a) => a.status === "concluido");
-        return { ...p, totalConsultas: ags.length, ultimo: ultimo?.data ?? p.ultimaConsulta ?? "—" };
-      })
-      .filter((p) => {
-        if (!term) return true;
-        return (
-          p.nome.toLowerCase().includes(term) ||
-          p.id.toLowerCase().includes(term) ||
-          (p.empresa ?? "").toLowerCase().includes(term)
-        );
-      });
-  }, [session, q]);
-
   const contadores = useMemo(() => {
     const base = reais ?? [];
     return {
