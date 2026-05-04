@@ -910,13 +910,16 @@ export async function excluirTodosSlots(): Promise<{ ok: boolean; removidos: num
 export async function updateConsultaStatus(
   consultaId: string,
   status: ConsultaStatus
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase
     .from("consultas")
     .update({ status })
     .eq("id", consultaId);
-  if (error) console.error("[clinico] updateConsultaStatus:", error);
-  return !error;
+  if (error) {
+    console.error("[clinico] updateConsultaStatus:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

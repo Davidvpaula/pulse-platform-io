@@ -84,13 +84,13 @@ export default function MedicoConsultas() {
   const cancelar = async (id: string) => {
     if (!confirm("Cancelar esta consulta? O paciente será notificado.")) return;
     setAcaoId(id);
-    const ok = await updateConsultaStatus(id, "cancelada");
+    const result = await updateConsultaStatus(id, "cancelada");
     setAcaoId(null);
-    if (ok) {
+    if (result.ok) {
       toast.success("Consulta cancelada");
       void carregar();
     } else {
-      toast.error("Não foi possível cancelar");
+      toast.error(result.error ?? "Não foi possível cancelar");
     }
   };
 
@@ -101,12 +101,12 @@ export default function MedicoConsultas() {
       return;
     }
     setAcaoId(c.id);
-    const ok = await updateConsultaStatus(c.id, "em_andamento");
+    const result = await updateConsultaStatus(c.id, "em_andamento");
     setAcaoId(null);
-    if (ok && c.link_sala) {
+    if (result.ok && c.link_sala) {
       window.open(c.link_sala, "_blank", "noopener,noreferrer");
       void carregar();
-    } else if (ok) {
+    } else if (result.ok) {
       toast.success("Consulta iniciada");
       void carregar();
     } else {
