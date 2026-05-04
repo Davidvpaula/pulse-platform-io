@@ -12,19 +12,38 @@ import { z } from "zod";
 import { Loader2, Stethoscope } from "lucide-react";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
-
-const signupSchema = z.object({
-  nome: z.string().trim().min(2, "Nome muito curto").max(120),
-  email: z.string().trim().email("E-mail inválido").max(255),
-  telefone: z.string().trim().max(20).optional(),
-  senha: z.string().min(8, "Mínimo 8 caracteres").max(72),
-  role: z.enum(["paciente", "medico"]),
-});
+import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
+import { ESPECIALIDADES } from "@/lib/medicoRegistro";
 
 const loginSchema = z.object({
   email: z.string().trim().email("E-mail inválido"),
   senha: z.string().min(1, "Informe a senha"),
 });
+
+const baseCadastro = {
+  nome: z.string().trim().min(2, "Nome muito curto").max(120),
+  email: z.string().trim().email("E-mail inválido").max(255),
+  senha: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  confirmarSenha: z.string(),
+  telefone: z.string().trim().min(10, "Telefone inválido").max(20),
+  cpf: cpfSchema(),
+  sexo_biologico: z.enum(["feminino", "masculino", "nao_especificar"]).optional(),
+  cep: z.string().trim().max(9).optional(),
+};
+
+const pacienteSchema = z.object({
+  ...baseCadastro,
+  role: z.literal("paciente"),
+}).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
+
+const medicoSchema = z.object({
+  ...baseCadastro,
+  role: z.literal("medico"),
+  crm: z.string().trim().min(3, "CRM inválido").max(20),
+  cep: z.string().trim().min(8, "CEP inválido").max(9),
+  rqe: z.string().trim().max(20).optional(),
+  especialidade: z.string().optional(),
+}).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -34,11 +53,14 @@ export default function Auth() {
     (params.get("modo") as "login" | "cadastro") ?? "login",
   );
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<"paciente" | "medico">("paciente");
   const [signupPassword, setSignupPassword] = useState("");
+  const [cpfValue, setCpfValue] = useState("");
+
   // já logado? manda pro destino padrão
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/app/paciente/dashboard", { replace: true });
+      if (data.session) navigate("/app", { replace: true });
     });
   }, [navigate]);
 
@@ -55,7 +77,7 @@ export default function Auth() {
     }
     setLoading(true);
 
-    // Anti brute-force: checa bloqueio antes de tentar
+    // Anti brute-force
     const { data: chk } = await supabase.rpc("login_attempt_check", {
       _email: parsed.data.email, _ip: null,
     });
@@ -75,7 +97,6 @@ export default function Auth() {
       email: parsed.data.email,
       password: parsed.data.senha,
     });
-    // Registra a tentativa (sucesso ou falha)
     await supabase.rpc("login_attempt_record", {
       _email: parsed.data.email,
       _success: !error,
@@ -88,27 +109,40 @@ export default function Auth() {
       return;
     }
     toast({ title: "Bem-vindo!" });
-    navigate("/app/paciente/dashboard");
+    navigate("/app");
   }
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const parsed = signupSchema.safeParse({
+
+    const raw: Record<string, unknown> = {
       nome: fd.get("nome"),
       email: fd.get("email"),
-      telefone: fd.get("telefone") || undefined,
       senha: fd.get("senha"),
-      role: fd.get("role"),
-    });
+      confirmarSenha: fd.get("confirmarSenha"),
+      telefone: fd.get("telefone"),
+      cpf: cpfValue,
+      sexo_biologico: (fd.get("sexo_biologico") as string) || undefined,
+      cep: (fd.get("cep") as string)?.trim() || undefined,
+      role,
+    };
+
+    if (role === "medico") {
+      raw.crm = fd.get("crm");
+      raw.rqe = (fd.get("rqe") as string)?.trim() || undefined;
+      raw.especialidade = (fd.get("especialidade") as string) || undefined;
+    }
+
+    const schema = role === "medico" ? medicoSchema : pacienteSchema;
+    const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       toast({ title: "Verifique os dados", description: parsed.error.errors[0].message, variant: "destructive" });
       return;
     }
-    // Valida contra password_policy do admin
+
     const validation = await validatePassword(parsed.data.senha);
     if (!validation.valid) {
-      setLoading(false);
       toast({
         title: "Senha não atende aos requisitos",
         description: validation.errors.join(", "),
@@ -116,17 +150,33 @@ export default function Auth() {
       });
       return;
     }
+
     setLoading(true);
+
+    const metadata: Record<string, string> = {
+      nome: parsed.data.nome,
+      telefone: parsed.data.telefone,
+      cpf: parsed.data.cpf,
+      role: parsed.data.role,
+    };
+    if (parsed.data.sexo_biologico) metadata.sexo_biologico = parsed.data.sexo_biologico;
+    if (parsed.data.cep) metadata.cep = parsed.data.cep;
+
+    if (role === "medico") {
+      const md = parsed.data as z.infer<typeof medicoSchema>;
+      metadata.crm = md.crm;
+      if (md.rqe) metadata.rqe = md.rqe;
+      if (md.especialidade) metadata.especialidade = md.especialidade;
+      // CRM estado: extraímos do CEP ou default vazio — será preenchido no cadastro completo
+      metadata.crm_estado = "";
+    }
+
     const { error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.senha,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          nome: parsed.data.nome,
-          telefone: parsed.data.telefone,
-          role: parsed.data.role,
-        },
+        data: metadata,
       },
     });
     setLoading(false);
@@ -134,18 +184,17 @@ export default function Auth() {
       toast({ title: "Não foi possível cadastrar", description: error.message, variant: "destructive" });
       return;
     }
-    // marca senha como recém-trocada (best-effort)
     supabase.rpc("password_mark_changed").then(() => {}, () => {});
     toast({
       title: "Conta criada com sucesso!",
-      description: parsed.data.role === "medico"
-        ? "Agora complete seu cadastro profissional para análise."
+      description: role === "medico"
+        ? "Agora envie seus documentos profissionais para análise."
         : "Você já pode acessar a plataforma.",
     });
-    if (parsed.data.role === "medico") {
+    if (role === "medico") {
       navigate("/cadastro/medico");
     } else {
-      navigate("/app/paciente/dashboard");
+      navigate("/app");
     }
   }
 
@@ -160,7 +209,7 @@ export default function Auth() {
       return;
     }
     if (result.redirected) return;
-    navigate("/app/paciente/dashboard");
+    navigate("/app");
   }
 
   return (
@@ -201,9 +250,10 @@ export default function Auth() {
 
             <TabsContent value="cadastro" className="mt-6 space-y-4">
               <form onSubmit={handleSignup} className="space-y-4">
+                {/* Role selector */}
                 <div className="space-y-2">
-                  <Label htmlFor="role">Eu sou</Label>
-                  <Select name="role" defaultValue="paciente">
+                  <Label>Eu sou</Label>
+                  <Select value={role} onValueChange={(v) => setRole(v as "paciente" | "medico")}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="paciente">Paciente</SelectItem>
@@ -211,26 +261,100 @@ export default function Auth() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Campos obrigatórios comuns */}
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome completo</Label>
+                  <Label htmlFor="nome">Nome completo <span className="text-destructive">*</span></Label>
                   <Input id="nome" name="nome" required maxLength={120} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email-s">E-mail</Label>
+                  <Label htmlFor="email-s">E-mail <span className="text-destructive">*</span></Label>
                   <Input id="email-s" name="email" type="email" autoComplete="email" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
-                  <Input id="telefone" name="telefone" type="tel" maxLength={20} placeholder="(opcional)" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senha-s">Senha</Label>
+                  <Label htmlFor="senha-s">Senha <span className="text-destructive">*</span></Label>
                   <Input
                     id="senha-s" name="senha" type="password" autoComplete="new-password" minLength={8} required
                     value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)}
                   />
                   <PasswordStrengthIndicator password={signupPassword} />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmar-senha">Confirmar senha <span className="text-destructive">*</span></Label>
+                  <Input id="confirmar-senha" name="confirmarSenha" type="password" autoComplete="new-password" minLength={8} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Telefone <span className="text-destructive">*</span></Label>
+                  <Input id="telefone" name="telefone" type="tel" maxLength={20} required placeholder="(11) 90000-0000" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="cpf" name="cpf" inputMode="numeric" maxLength={14} required
+                    value={cpfValue} onChange={(e) => setCpfValue(maskCpf(e.target.value))}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+
+                {/* Campos obrigatórios exclusivos médico */}
+                {role === "medico" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="crm">CRM <span className="text-destructive">*</span></Label>
+                      <Input id="crm" name="crm" required maxLength={20} placeholder="123456" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cep-m">CEP <span className="text-destructive">*</span></Label>
+                      <Input id="cep-m" name="cep" required maxLength={9} placeholder="00000-000" />
+                    </div>
+                  </>
+                )}
+
+                {/* Campos opcionais */}
+                <div className="border-t border-border pt-4 mt-2">
+                  <p className="text-xs text-muted-foreground mb-3">Opcionais</p>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Sexo biológico</Label>
+                      <Select name="sexo_biologico">
+                        <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="feminino">Feminino</SelectItem>
+                          <SelectItem value="masculino">Masculino</SelectItem>
+                          <SelectItem value="nao_especificar">Prefiro não especificar</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {role === "paciente" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="cep-p">CEP</Label>
+                        <Input id="cep-p" name="cep" maxLength={9} placeholder="00000-000" />
+                      </div>
+                    )}
+
+                    {role === "medico" && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="rqe">RQE</Label>
+                          <Input id="rqe" name="rqe" maxLength={20} placeholder="Registro (opcional)" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Especialidade inicial</Label>
+                          <Select name="especialidade">
+                            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                            <SelectContent>
+                              {ESPECIALIDADES.map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
                 </Button>
