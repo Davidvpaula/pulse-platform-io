@@ -819,6 +819,40 @@ export async function excluirSlot(slotId: string): Promise<{ ok: boolean; error?
   return { ok: true };
 }
 
+/**
+ * Exclui todos os slots disponíveis de um dia específico para o médico logado.
+ */
+export async function excluirSlotsDoDia(dataISO: string): Promise<{ ok: boolean; removidos: number; error?: string }> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return { ok: false, removidos: 0, error: "Médico não encontrado." };
+
+  // Calcula início e fim do dia
+  const dia = new Date(dataISO + "T00:00:00");
+  const iniciodia = dia.toISOString();
+  const fimDia = new Date(dia.getTime() + 86400000).toISOString();
+
+  // Busca IDs dos slots disponíveis naquele dia
+  const { data: slotsDisponiveis } = await supabase
+    .from("agenda_slots")
+    .select("id")
+    .eq("medico_id", medicoId)
+    .eq("status", "disponivel")
+    .gte("inicio", iniciodia)
+    .lt("inicio", fimDia);
+
+  if (!slotsDisponiveis || slotsDisponiveis.length === 0) {
+    return { ok: false, removidos: 0, error: "Nenhum slot disponível para excluir neste dia." };
+  }
+
+  const ids = slotsDisponiveis.map((s) => s.id);
+  const { error } = await supabase.from("agenda_slots").delete().in("id", ids);
+  if (error) {
+    console.error("[clinico] excluirSlotsDoDia:", error);
+    return { ok: false, removidos: 0, error: error.message };
+  }
+  return { ok: true, removidos: ids.length };
+}
+
 export async function updateConsultaStatus(
   consultaId: string,
   status: ConsultaStatus
