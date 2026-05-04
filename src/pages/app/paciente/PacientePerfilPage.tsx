@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   User, Save, Loader2, Database as DbIcon, ShieldCheck, Heart,
-  MapPin, KeyRound, Mail, FileText,
+  MapPin, FileText,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
