@@ -6561,6 +6561,10 @@ export type Database = {
             }
             Returns: Json
           }
+      criar_consulta_pos_pagamento: {
+        Args: { _pagamento_id: string }
+        Returns: Json
+      }
       empresa_toggle_modulo: {
         Args: { _ativo: boolean; _empresa_id: string; _modulo_key: string }
         Returns: Json
@@ -7062,6 +7066,21 @@ export type Database = {
       }
       remover_cupom_pagamento: {
         Args: { _pagamento_id: string }
+        Returns: Json
+      }
+      reservar_slot_unificado: {
+        Args: {
+          _cep?: string
+          _cpf?: string
+          _data_nascimento?: string
+          _motivo?: string
+          _nome_completo?: string
+          _referencia_id: string
+          _sexo?: string
+          _slot_id: string
+          _telefone?: string
+          _tipo: string
+        }
         Returns: Json
       }
       security_generate_alerts: { Args: never; Returns: Json }
