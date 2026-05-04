@@ -79,10 +79,7 @@ export default function MedicoFinanceiro() {
       .select(`
         id, consulta_id, data_consulta, servico_nome_snapshot, modelo_aplicado,
         comissao_pct_aplicada, valor_bruto_centavos, valor_medico_centavos,
-        valor_plataforma_centavos, status, empresa_id,
-        consultas:consulta_id (
-          pacientes:paciente_id ( user_id )
-        )
+        valor_plataforma_centavos, status, empresa_id, paciente_id
       `)
       .eq("medico_id", mid)
       .order("data_consulta", { ascending: false })
@@ -98,13 +95,23 @@ export default function MedicoFinanceiro() {
       return;
     }
 
-    const userIds = Array.from(new Set(
-      (data ?? []).map((r: any) => r.consultas?.pacientes?.user_id).filter(Boolean) as string[]
+    // Buscar nomes dos pacientes via paciente_id → profiles (user_id do paciente)
+    const pacienteIds = Array.from(new Set(
+      (data ?? []).map((r: any) => r.paciente_id).filter(Boolean) as string[]
     ));
     let nomes: Record<string, string> = {};
-    if (userIds.length) {
-      const { data: profs } = await supabase.from("profiles").select("id,nome").in("id", userIds);
-      nomes = Object.fromEntries((profs ?? []).map(p => [p.id, p.nome]));
+    if (pacienteIds.length) {
+      const { data: pacs } = await supabase.from("pacientes").select("id, user_id").in("id", pacienteIds);
+      const userIds = (pacs ?? []).map(p => p.user_id).filter(Boolean) as string[];
+      if (userIds.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, nome").in("id", userIds);
+        const nomeMap = Object.fromEntries((profs ?? []).map(p => [p.id, p.nome]));
+        for (const pac of pacs ?? []) {
+          if (pac.user_id && nomeMap[pac.user_id]) {
+            nomes[pac.id] = nomeMap[pac.user_id];
+          }
+        }
+      }
     }
 
     setRows((data ?? []).map((r: any) => ({
@@ -118,7 +125,7 @@ export default function MedicoFinanceiro() {
       valor_medico_centavos: r.valor_medico_centavos,
       valor_plataforma_centavos: r.valor_plataforma_centavos,
       status: r.status,
-      paciente_nome: r.consultas?.pacientes?.user_id ? nomes[r.consultas.pacientes.user_id] ?? null : null,
+      paciente_nome: r.paciente_id ? nomes[r.paciente_id] ?? null : null,
       empresa_id: r.empresa_id ?? null,
     })));
     setLoading(false);
