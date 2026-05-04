@@ -379,41 +379,24 @@ export default function MedicoDashboard() {
         </div>
       )}
 
-      {/* Onboarding checklist */}
-      {isMedico && (
-        <div className={cn(
-          "card-elevated border-l-4 p-5",
-          todoConcluido ? "border-l-success" : "border-l-warning",
-        )}>
+      {/* Onboarding checklist — só aparece se há pendências */}
+      {isMedico && pendencias > 0 && (
+        <div className="card-elevated border-l-4 border-l-warning p-5">
           <div className="flex items-start gap-3">
-            <span className={cn(
-              "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
-              todoConcluido ? "bg-success/10 text-success" : "bg-warning/10 text-warning",
-            )}>
-              {todoConcluido ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-warning/10 text-warning">
+              <AlertTriangle className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
-              {todoConcluido ? (
-                <>
-                  <p className="font-semibold text-success">✓ Perfil pronto para receber pacientes</p>
-                  <p className="text-xs text-muted-foreground">
-                    Todas as etapas de ativação estão concluídas. Você está visível na busca.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold">Finalize sua configuração ({pendencias} pendência{pendencias > 1 ? "s" : ""})</p>
-                  <p className="text-xs text-muted-foreground">
-                    Conclua os passos abaixo para começar a receber agendamentos.
-                  </p>
-                </>
-              )}
+              <p className="font-semibold">Finalize sua configuração ({pendencias} pendência{pendencias > 1 ? "s" : ""})</p>
+              <p className="text-xs text-muted-foreground">
+                Conclua os passos abaixo para começar a receber agendamentos.
+              </p>
 
               {/* Progress bar */}
               <div className="mt-3 flex items-center gap-3">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn("h-full transition-all", todoConcluido ? "bg-success" : "bg-gradient-primary")}
+                    className="h-full transition-all bg-gradient-primary"
                     style={{ width: `${progressoPct}%` }}
                   />
                 </div>
@@ -421,15 +404,11 @@ export default function MedicoDashboard() {
               </div>
 
               <ul className="mt-3 space-y-2">
-                {checklistItems.map((it, i) => (
+                {checklistItems.filter(it => !it.ok).map((it, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    {it.ok ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                    ) : (
-                      <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-warning text-[10px] font-bold text-warning">!</span>
-                    )}
+                    <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-warning text-[10px] font-bold text-warning">!</span>
                     <span className="flex-1">
-                      <span className={cn("font-medium", !it.ok && "text-foreground")}>{it.titulo}</span>
+                      <span className="font-medium text-foreground">{it.titulo}</span>
                       <span className="block text-xs text-muted-foreground">{it.desc}</span>
                     </span>
                     {it.link && (
@@ -444,7 +423,6 @@ export default function MedicoDashboard() {
           </div>
         </div>
       )}
-
       {/* Próximo atendimento */}
       <div className="card-elevated overflow-hidden">
         <div className="gradient-soft p-6">
