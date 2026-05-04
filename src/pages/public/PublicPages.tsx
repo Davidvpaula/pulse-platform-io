@@ -531,11 +531,9 @@ export const Agendar = () => {
 
   const espAtual = especialidades.find((e) => e.id === espId);
 
-  // Tags
-  const isNovo = (m: MedicoComSlot) => {
-    const dias = (Date.now() - new Date(m.created_at).getTime()) / 86400000;
-    return dias < 30;
-  };
+  // Format price
+  const fmtPreco = (centavos: number) =>
+    (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o profissional.">
@@ -615,9 +613,11 @@ export const Agendar = () => {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="font-semibold text-base">{m.nome}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Especialidade: {m.especialista ? `RQE ${m.rqe ?? "—"}` : "Não especialista"}
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              {m.esp_nome}
-                              {m.especialista ? ` · Especialista (RQE: ${m.rqe ?? "—"})` : " · Clínico geral"}
+                              CRM: {m.crm}
                             </p>
                           </div>
                           {m.proximo_slot ? (
@@ -637,16 +637,10 @@ export const Agendar = () => {
                             <Star className="h-3.5 w-3.5 fill-current" />
                             {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "5.0"}
                           </span>
-                          {/* total_avaliacoes oculto conforme regra */}
                         </div>
 
                         {/* Tags */}
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          {isNovo(m) && (
-                            <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px]">
-                              <Star className="mr-0.5 h-3 w-3" /> Novo
-                            </Badge>
-                          )}
                           <Badge variant="outline" className="text-[10px]">
                             <Video className="mr-1 h-3 w-3" /> Telemedicina
                           </Badge>
@@ -663,14 +657,14 @@ export const Agendar = () => {
                         )}
 
                         {/* Próx. horário + preço */}
-                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                             <Clock className="h-3.5 w-3.5" />
                             {proxHorarioLabel(m.proximo_slot)}
                           </span>
                           {m.preco_centavos > 0 && (
-                            <span className="font-bold text-foreground">
-                              {(m.preco_centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            <span className="text-lg font-bold text-primary">
+                              {fmtPreco(m.preco_centavos)}
                             </span>
                           )}
                         </div>
@@ -688,27 +682,25 @@ export const Agendar = () => {
                           <User className="mr-1.5 h-3.5 w-3.5" /> Ver perfil
                         </Link>
                       </Button>
-                      {m.proximo_slot && (
-                        <Button
-                          size="sm"
-                          className="bg-gradient-primary hover:opacity-90"
-                          onClick={() => toggleExpand(m)}
-                        >
-                          <Calendar className="mr-1.5 h-3.5 w-3.5" />
-                          Agendar
-                          {!isMobile && (
-                            expandedId === m.id
-                              ? <ChevronUp className="ml-1 h-3 w-3" />
-                              : <ChevronDown className="ml-1 h-3 w-3" />
-                          )}
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                        onClick={() => toggleExpand(m)}
+                      >
+                        <Calendar className="mr-1.5 h-3.5 w-3.5" />
+                        Agendar
+                        {!isMobile && (
+                          expandedId === m.id
+                            ? <ChevronUp className="ml-1 h-3 w-3" />
+                            : <ChevronDown className="ml-1 h-3 w-3" />
+                        )}
+                      </Button>
                     </div>
                   </div>
 
                   {/* Accordion – slots (desktop) */}
                   {!isMobile && expandedId === m.id && (
-                    <div className="card-elevated rounded-t-none border-t border-dashed border-border p-5 bg-muted/20">
+                    <div className="card-elevated rounded-t-none border-t border-dashed border-border p-5 bg-muted/20 animate-accordion-down">
                       <MedicoSlotsPanel medicoId={m.id} medicoNome={m.nome} />
                     </div>
                   )}
