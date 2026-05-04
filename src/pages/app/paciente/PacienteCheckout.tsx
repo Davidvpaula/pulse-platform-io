@@ -209,7 +209,7 @@ export default function PacienteCheckout() {
         await trackConversion({
           tipo: "pagamento",
           valor: (pagamento.valor_centavos ?? 0) / 100,
-          consulta_id: pagamento.consulta_id,
+          consulta_id: pagamento.consulta_id ?? undefined,
           pagamento_id: pagamento.id,
           servico: "consulta",
         });
