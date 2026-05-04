@@ -28,7 +28,7 @@ const baseCadastro = {
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   cpf: cpfSchema(),
   sexo_biologico: z.enum(["feminino", "masculino", "nao_especificar"]).optional(),
-  cep: z.string().trim().max(9).optional(),
+  cep: z.string().trim().min(8, "CEP inválido").max(9),
 };
 
 const pacienteSchema = z.object({
@@ -40,9 +40,8 @@ const medicoSchema = z.object({
   ...baseCadastro,
   role: z.literal("medico"),
   crm: z.string().trim().min(3, "CRM inválido").max(20),
-  cep: z.string().trim().min(8, "CEP inválido").max(9),
-  rqe: z.string().trim().max(20).optional(),
-  especialidade: z.string().optional(),
+  rqe: z.string().trim().min(1, "Informe o RQE").max(20),
+  especialidade: z.string().min(1, "Selecione a especialidade"),
 }).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
@@ -165,9 +164,8 @@ export default function Auth() {
     if (role === "medico") {
       const md = parsed.data as z.infer<typeof medicoSchema>;
       metadata.crm = md.crm;
-      if (md.rqe) metadata.rqe = md.rqe;
-      if (md.especialidade) metadata.especialidade = md.especialidade;
-      // CRM estado: extraímos do CEP ou default vazio — será preenchido no cadastro completo
+      metadata.rqe = md.rqe;
+      metadata.especialidade = md.especialidade;
       metadata.crm_estado = "";
     }
 
@@ -296,6 +294,12 @@ export default function Auth() {
                   />
                 </div>
 
+                {/* CEP — obrigatório para ambos */}
+                <div className="space-y-2">
+                  <Label htmlFor="cep">CEP <span className="text-destructive">*</span></Label>
+                  <Input id="cep" name="cep" required maxLength={9} placeholder="00000-000" />
+                </div>
+
                 {/* Campos obrigatórios exclusivos médico */}
                 {role === "medico" && (
                   <>
@@ -304,15 +308,26 @@ export default function Auth() {
                       <Input id="crm" name="crm" required maxLength={20} placeholder="123456" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cep-m">CEP <span className="text-destructive">*</span></Label>
-                      <Input id="cep-m" name="cep" required maxLength={9} placeholder="00000-000" />
+                      <Label htmlFor="rqe">RQE <span className="text-destructive">*</span></Label>
+                      <Input id="rqe" name="rqe" required maxLength={20} placeholder="Registro de qualificação" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Especialidade <span className="text-destructive">*</span></Label>
+                      <Select name="especialidade" required>
+                        <SelectTrigger><SelectValue placeholder="Selecione a especialidade" /></SelectTrigger>
+                        <SelectContent>
+                          {ESPECIALIDADES.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}
 
                 {/* Campos opcionais */}
                 <div className="border-t border-border pt-4 mt-2">
-                  <p className="text-xs text-muted-foreground mb-3">Opcionais</p>
+                  <p className="text-xs text-muted-foreground mb-3">Opcional</p>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Sexo biológico</Label>
@@ -325,33 +340,6 @@ export default function Auth() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {role === "paciente" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="cep-p">CEP</Label>
-                        <Input id="cep-p" name="cep" maxLength={9} placeholder="00000-000" />
-                      </div>
-                    )}
-
-                    {role === "medico" && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="rqe">RQE</Label>
-                          <Input id="rqe" name="rqe" maxLength={20} placeholder="Registro (opcional)" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Especialidade inicial</Label>
-                          <Select name="especialidade">
-                            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
-                            <SelectContent>
-                              {ESPECIALIDADES.map(s => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
 
