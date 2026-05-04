@@ -356,7 +356,7 @@ export default function ComunicacaoInterna() {
                           <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", prioridadeTone[t.prioridade])}>
                             {t.prioridade}
                           </span>
-                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(t.updated_at)}</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{formatTempoRelativo(t.updated_at)}</span>
                         </div>
                       </button>
                     </li>
@@ -409,7 +409,7 @@ export default function ComunicacaoInterna() {
                             {m.content}
                           </div>
                           <p className="mt-1 px-1 text-[10px] text-muted-foreground">
-                            {profiles[m.author_id] ?? "…"} · {timeAgo(m.created_at)}
+                            {profiles[m.author_id] ?? "…"} · {formatTempoRelativo(m.created_at)}
                           </p>
                         </div>
                       );
@@ -512,7 +512,7 @@ export default function ComunicacaoInterna() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Info</p>
                   <p className="text-xs text-muted-foreground">Canal: {sel.origem}</p>
-                  <p className="text-xs text-muted-foreground">Criada: {timeAgo(sel.created_at)}</p>
+                  <p className="text-xs text-muted-foreground">Criada: {formatTempoRelativo(sel.created_at)}</p>
                 </div>
               </>
             ) : (
