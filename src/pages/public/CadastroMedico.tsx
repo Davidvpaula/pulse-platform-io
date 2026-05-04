@@ -124,14 +124,14 @@ export default function CadastroMedico() {
       }
 
       // Atualiza registro do médico com documentos e crm_estado se necessário
-      const updatePayload: Record<string, unknown> = { documentos: uploaded };
+      const updatePayload: { documentos: DocumentoMedico[]; crm_estado?: string } = { documentos: uploaded };
       if (needsCrmEstado && medicoCrmEstado) {
         updatePayload.crm_estado = medicoCrmEstado;
       }
 
       const { error } = await supabase
         .from("medicos")
-        .update(updatePayload)
+        .update(updatePayload as any)
         .eq("id", medicoId);
 
       if (error) throw error;
