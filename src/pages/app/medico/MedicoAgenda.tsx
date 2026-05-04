@@ -108,6 +108,7 @@ export default function MedicoAgenda() {
     return {
       total: base.length,
       agendada: base.filter((c) => c.status === "agendada").length,
+      aguardando_pagamento: base.filter((c) => c.status === "aguardando_pagamento").length,
       confirmada: base.filter((c) => c.status === "confirmada").length,
       em_andamento: base.filter((c) => c.status === "em_andamento").length,
       concluida: base.filter((c) => c.status === "concluida").length,
