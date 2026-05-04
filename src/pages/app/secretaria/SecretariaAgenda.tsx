@@ -16,6 +16,7 @@ import {
   type ConsultaDetalhada,
 } from "@/lib/clinico";
 import TrocarMedicoDialog from "@/components/secretaria/TrocarMedicoDialog";
+import NovoAgendamentoDialog from "@/components/secretaria/NovoAgendamentoDialog";
 
 const dias = ["Hoje", "Amanhã", "Depois"];
 
