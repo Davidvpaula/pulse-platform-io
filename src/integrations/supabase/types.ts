@@ -3017,6 +3017,38 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_messages: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "internal_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_notes: {
         Row: {
           conversation_id: string
@@ -3045,6 +3077,63 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_threads: {
+        Row: {
+          agendamento_id: string | null
+          assunto: string
+          created_at: string
+          created_by: string
+          id: string
+          origem: Database["public"]["Enums"]["internal_thread_origem"]
+          paciente_id: string | null
+          participantes: string[]
+          prioridade: Database["public"]["Enums"]["internal_thread_prioridade"]
+          status: Database["public"]["Enums"]["internal_thread_status"]
+          updated_at: string
+        }
+        Insert: {
+          agendamento_id?: string | null
+          assunto: string
+          created_at?: string
+          created_by: string
+          id?: string
+          origem: Database["public"]["Enums"]["internal_thread_origem"]
+          paciente_id?: string | null
+          participantes?: string[]
+          prioridade?: Database["public"]["Enums"]["internal_thread_prioridade"]
+          status?: Database["public"]["Enums"]["internal_thread_status"]
+          updated_at?: string
+        }
+        Update: {
+          agendamento_id?: string | null
+          assunto?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          origem?: Database["public"]["Enums"]["internal_thread_origem"]
+          paciente_id?: string | null
+          participantes?: string[]
+          prioridade?: Database["public"]["Enums"]["internal_thread_prioridade"]
+          status?: Database["public"]["Enums"]["internal_thread_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_threads_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_threads_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
             referencedColumns: ["id"]
           },
         ]
@@ -6474,6 +6563,10 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: boolean
       }
+      is_thread_participant: {
+        Args: { _thread_id: string; _user_id: string }
+        Returns: boolean
+      }
       liberar_reservas_expiradas: { Args: never; Returns: number }
       login_attempt_check: {
         Args: { _email: string; _ip?: string }
@@ -6942,6 +7035,13 @@ export type Database = {
         | "ia_provider"
         | "assinatura_digital"
         | "eventos_sistema"
+      internal_thread_origem:
+        | "Secretaria ↔ Médico"
+        | "Secretaria ↔ Admin"
+        | "Empresa ↔ Secretaria"
+        | "Médico ↔ Admin"
+      internal_thread_prioridade: "baixa" | "normal" | "alta"
+      internal_thread_status: "aberta" | "respondida" | "resolvida"
       medico_servico_status: "ativo" | "pendente" | "recusado" | "desativado"
       medico_status:
         | "pendente"
@@ -7428,6 +7528,14 @@ export const Constants = {
         "assinatura_digital",
         "eventos_sistema",
       ],
+      internal_thread_origem: [
+        "Secretaria ↔ Médico",
+        "Secretaria ↔ Admin",
+        "Empresa ↔ Secretaria",
+        "Médico ↔ Admin",
+      ],
+      internal_thread_prioridade: ["baixa", "normal", "alta"],
+      internal_thread_status: ["aberta", "respondida", "resolvida"],
       medico_servico_status: ["ativo", "pendente", "recusado", "desativado"],
       medico_status: [
         "pendente",
