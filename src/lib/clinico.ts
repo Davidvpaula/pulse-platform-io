@@ -853,6 +853,30 @@ export async function excluirSlotsDoDia(dataISO: string): Promise<{ ok: boolean;
   return { ok: true, removidos: ids.length };
 }
 
+/** Exclui TODOS os slots disponíveis do médico logado. */
+export async function excluirTodosSlots(): Promise<{ ok: boolean; removidos: number; error?: string }> {
+  const medicoId = await getMedicoAtualId();
+  if (!medicoId) return { ok: false, removidos: 0, error: "Médico não encontrado." };
+
+  const { data: slotsDisponiveis } = await supabase
+    .from("agenda_slots")
+    .select("id")
+    .eq("medico_id", medicoId)
+    .eq("status", "disponivel");
+
+  if (!slotsDisponiveis || slotsDisponiveis.length === 0) {
+    return { ok: false, removidos: 0, error: "Nenhum slot disponível para excluir." };
+  }
+
+  const ids = slotsDisponiveis.map((s) => s.id);
+  const { error } = await supabase.from("agenda_slots").delete().in("id", ids);
+  if (error) {
+    console.error("[clinico] excluirTodosSlots:", error);
+    return { ok: false, removidos: 0, error: error.message };
+  }
+  return { ok: true, removidos: ids.length };
+
+
 export async function updateConsultaStatus(
   consultaId: string,
   status: ConsultaStatus
