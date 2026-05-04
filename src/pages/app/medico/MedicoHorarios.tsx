@@ -40,6 +40,7 @@ import {
   listSlotsDoMedico,
   criarSlotsEmLote,
   excluirSlot,
+  excluirSlotsDoDia,
   getDuracaoSlotMedico,
   getMedicoAtual,
   type AgendaSlot,
@@ -47,6 +48,7 @@ import {
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -94,17 +96,25 @@ type ServicoOpc = {
   valor_paciente_centavos: number;
 };
 
+type EspecialidadeInfo = {
+  nome: string;
+  duracao_minutos: number;
+  preco_centavos: number | null;
+};
+
 export default function MedicoHorarios() {
   const { session } = useSession();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
+  const [confirmDeleteDia, setConfirmDeleteDia] = useState<{ dia: string; disponiveis: number } | null>(null);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
   const [tipoSlot, setTipoSlot] = useState<"particular" | "servico">("particular");
-  const [servicoSel, setServicoSel] = useState<string | null>(null);
+  const [servicosSel, setServicosSel] = useState<string[]>([]);
   const [servicosDisp, setServicosDisp] = useState<ServicoOpc[]>([]);
+  const [espInfo, setEspInfo] = useState<EspecialidadeInfo | null>(null);
 
   // ── Aba semanal
   const [diasSel, setDiasSel] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -131,8 +141,30 @@ export default function MedicoHorarios() {
     setSlots(list);
     setDuracao(dur);
     setLinkSala(med?.link_sala_padrao ?? null);
-    // Serviços aderidos pelo médico (status ativo)
+    // Especialidade do médico
     if (med?.id) {
+      const { data: espRows } = await supabase
+        .from("medico_especialidades")
+        .select("especialidade_id, duracao_minutos, preco_centavos, rqe, ativo")
+        .eq("medico_id", med.id)
+        .eq("ativo", true)
+        .limit(1);
+      if (espRows && espRows.length > 0) {
+        // Buscar nome da especialidade
+        const { data: espNome } = await supabase
+          .from("especialidades")
+          .select("nome")
+          .eq("id", espRows[0].especialidade_id)
+          .maybeSingle();
+        setEspInfo({
+          nome: espNome?.nome ?? "Especialidade",
+          duracao_minutos: espRows[0].duracao_minutos || 30,
+          preco_centavos: espRows[0].preco_centavos,
+        });
+      } else {
+        setEspInfo(null);
+      }
+      // Serviços aderidos pelo médico (status ativo)
       const { data: vinc } = await supabase
         .from("medico_servicos")
         .select("servico_id")
@@ -154,9 +186,8 @@ export default function MedicoHorarios() {
     setLoading(false);
   }
 
-  // Duração efetiva: se for serviço, usa do serviço; se particular, usa da especialidade
-  const servicoAtual = servicosDisp.find((s) => s.id === servicoSel);
-  const duracaoEfetiva = tipoSlot === "servico" ? (servicoAtual?.duracao_min ?? null) : duracao;
+  // Duração efetiva para modo particular
+  const duracaoEfetiva = tipoSlot === "particular" ? duracao : null;
 
   useEffect(() => {
     if (!session) {
@@ -200,14 +231,12 @@ export default function MedicoHorarios() {
   }, [diasSel, semanas]);
 
   async function gerarSemanal() {
-    if (!duracaoEfetiva) {
-      toast.error(tipoSlot === "servico"
-        ? "Selecione um serviço antes de gerar horários."
-        : "Configure uma especialidade com duração antes de gerar horários.");
+    if (tipoSlot === "particular" && !duracaoEfetiva) {
+      toast.error("Configure uma especialidade com duração antes de gerar horários.");
       return;
     }
-    if (tipoSlot === "servico" && !servicoSel) {
-      toast.error("Escolha o serviço da plataforma.");
+    if (tipoSlot === "servico" && servicosSel.length === 0) {
+      toast.error("Selecione ao menos um serviço da plataforma.");
       return;
     }
     if (diasSel.length === 0) {
@@ -219,34 +248,49 @@ export default function MedicoHorarios() {
       return;
     }
     setSavingSemana(true);
-    const res = await criarSlotsEmLote({
-      datas: datasSemana,
-      faixas: faixasSemana,
-      duracaoMin: duracaoEfetiva,
-      modalidade,
-      servicoId: tipoSlot === "servico" ? servicoSel : null,
-    });
-    setSavingSemana(false);
-    if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível gerar.");
-      return;
+    let totalCriados = 0;
+    let totalPulados = 0;
+    if (tipoSlot === "servico") {
+      for (const srvId of servicosSel) {
+        const srv = servicosDisp.find((s) => s.id === srvId);
+        if (!srv) continue;
+        const res = await criarSlotsEmLote({
+          datas: datasSemana,
+          faixas: faixasSemana,
+          duracaoMin: srv.duracao_min,
+          modalidade,
+          servicoId: srvId,
+        });
+        if (res.ok) { totalCriados += res.criados; totalPulados += res.pulados; }
+        else { toast.error(`Erro em ${srv.nome}: ${res.error}`); }
+      }
+    } else {
+      const res = await criarSlotsEmLote({
+        datas: datasSemana,
+        faixas: faixasSemana,
+        duracaoMin: duracaoEfetiva!,
+        modalidade,
+        servicoId: null,
+      });
+      if (!res.ok) { setSavingSemana(false); toast.error(res.error ?? "Não foi possível gerar."); return; }
+      totalCriados = res.criados;
+      totalPulados = res.pulados;
     }
+    setSavingSemana(false);
     toast.success(
-      `${res.criados} horário(s) criado(s)` +
-        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+      `${totalCriados} horário(s) criado(s)` +
+        (totalPulados > 0 ? ` · ${totalPulados} pulado(s) por conflito` : "")
     );
     refresh();
   }
 
   async function gerarDia() {
-    if (!duracaoEfetiva) {
-      toast.error(tipoSlot === "servico"
-        ? "Selecione um serviço antes de gerar horários."
-        : "Configure uma especialidade com duração antes de gerar horários.");
+    if (tipoSlot === "particular" && !duracaoEfetiva) {
+      toast.error("Configure uma especialidade com duração antes de gerar horários.");
       return;
     }
-    if (tipoSlot === "servico" && !servicoSel) {
-      toast.error("Escolha o serviço da plataforma.");
+    if (tipoSlot === "servico" && servicosSel.length === 0) {
+      toast.error("Selecione ao menos um serviço da plataforma.");
       return;
     }
     if (!dataSel) {
@@ -258,21 +302,38 @@ export default function MedicoHorarios() {
       return;
     }
     setSavingDia(true);
-    const res = await criarSlotsEmLote({
-      datas: [dataSel],
-      faixas: faixasDia,
-      duracaoMin: duracaoEfetiva,
-      modalidade,
-      servicoId: tipoSlot === "servico" ? servicoSel : null,
-    });
-    setSavingDia(false);
-    if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível gerar.");
-      return;
+    let totalCriados = 0;
+    let totalPulados = 0;
+    if (tipoSlot === "servico") {
+      for (const srvId of servicosSel) {
+        const srv = servicosDisp.find((s) => s.id === srvId);
+        if (!srv) continue;
+        const res = await criarSlotsEmLote({
+          datas: [dataSel],
+          faixas: faixasDia,
+          duracaoMin: srv.duracao_min,
+          modalidade,
+          servicoId: srvId,
+        });
+        if (res.ok) { totalCriados += res.criados; totalPulados += res.pulados; }
+        else { toast.error(`Erro em ${srv.nome}: ${res.error}`); }
+      }
+    } else {
+      const res = await criarSlotsEmLote({
+        datas: [dataSel],
+        faixas: faixasDia,
+        duracaoMin: duracaoEfetiva!,
+        modalidade,
+        servicoId: null,
+      });
+      if (!res.ok) { setSavingDia(false); toast.error(res.error ?? "Não foi possível gerar."); return; }
+      totalCriados = res.criados;
+      totalPulados = res.pulados;
     }
+    setSavingDia(false);
     toast.success(
-      `${res.criados} horário(s) criado(s)` +
-        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+      `${totalCriados} horário(s) criado(s)` +
+        (totalPulados > 0 ? ` · ${totalPulados} pulado(s) por conflito` : "")
     );
     refresh();
   }
@@ -353,7 +414,7 @@ export default function MedicoHorarios() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Tipo de horário a gerar
         </p>
-        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicoSel(null); }} className="flex flex-wrap gap-4">
+        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicosSel([]); }} className="flex flex-wrap gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <RadioGroupItem value="particular" id="t-part" />
             <span className="text-sm">Particular (preço/duração da sua especialidade)</span>
@@ -366,23 +427,40 @@ export default function MedicoHorarios() {
           </label>
         </RadioGroup>
         {tipoSlot === "servico" && (
-          <Select value={servicoSel ?? ""} onValueChange={(v) => setServicoSel(v)}>
-            <SelectTrigger className="w-full md:w-96">
-              <SelectValue placeholder="Escolha o serviço" />
-            </SelectTrigger>
-            <SelectContent>
-              {servicosDisp.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.nome} · {s.duracao_min}min · R$ {(s.valor_paciente_centavos / 100).toFixed(2)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Selecione um ou mais serviços:</p>
+            {servicosDisp.map((s) => (
+              <label key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:border-primary/40 transition">
+                <Checkbox
+                  checked={servicosSel.includes(s.id)}
+                  onCheckedChange={(checked) => {
+                    setServicosSel((prev) =>
+                      checked ? [...prev, s.id] : prev.filter((id) => id !== s.id)
+                    );
+                  }}
+                />
+                <span className="text-sm flex-1">
+                  {s.nome} · <span className="text-muted-foreground">{s.duracao_min}min</span> · <span className="font-semibold">R$ {(s.valor_paciente_centavos / 100).toFixed(2)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
         )}
-        {tipoSlot === "servico" && servicoAtual && (
+        {tipoSlot === "servico" && servicosSel.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Duração fixa de <b>{servicoAtual.duracao_min} min</b> definida pelo serviço (não editável).
+            {servicosSel.length} serviço(s) selecionado(s). Slots serão criados para cada serviço com sua duração específica.
           </p>
+        )}
+        {tipoSlot === "particular" && espInfo && (
+          <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Especialidade: <b className="text-foreground">{espInfo.nome}</b> · Duração: <b>{espInfo.duracao_minutos}min</b>
+            {espInfo.preco_centavos != null && <> · Valor: <b>R$ {(espInfo.preco_centavos / 100).toFixed(2)}</b></>}
+          </div>
+        )}
+        {tipoSlot === "particular" && !espInfo && !loading && (
+          <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning-foreground">
+            Nenhuma especialidade ativa configurada. <Link to="/app/medico/configuracoes" className="font-semibold text-primary hover:underline">Configurar agora →</Link>
+          </div>
         )}
       </div>
 
@@ -537,7 +615,7 @@ export default function MedicoHorarios() {
             <div className="flex justify-end">
               <Button
                 onClick={gerarSemanal}
-                disabled={savingSemana || !duracao || devMode || (modalidade === "online" && !linkSala && !!session)}
+                disabled={savingSemana || (tipoSlot === "particular" && !duracao) || (tipoSlot === "servico" && servicosSel.length === 0) || devMode || (modalidade === "online" && !linkSala && !!session)}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 {savingSemana ? "Gerando…" : "Gerar horários"}
@@ -638,7 +716,7 @@ export default function MedicoHorarios() {
               <div className="flex justify-end">
                 <Button
                   onClick={gerarDia}
-                  disabled={savingDia || !duracao || !dataSel || devMode || (modalidade === "online" && !linkSala && !!session)}
+                  disabled={savingDia || (tipoSlot === "particular" && !duracao) || (tipoSlot === "servico" && servicosSel.length === 0) || !dataSel || devMode || (modalidade === "online" && !linkSala && !!session)}
                   className="bg-gradient-primary hover:opacity-90"
                 >
                   {savingDia ? "Gerando…" : "Adicionar ao dia"}
@@ -667,13 +745,27 @@ export default function MedicoHorarios() {
           )}
           {!loading && grouped.length > 0 && (
             <div className="divide-y divide-border">
-              {grouped.map(([dia, items]) => (
+              {grouped.map(([dia, items]) => {
+                const disponiveis = items.filter((s) => s.status === "disponivel").length;
+                return (
                 <div key={dia} className="p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {format(new Date(dia + "T00:00:00"), "EEEE, dd 'de' MMMM", {
-                      locale: ptBR,
-                    })}
-                  </p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {format(new Date(dia + "T00:00:00"), "EEEE, dd 'de' MMMM", {
+                        locale: ptBR,
+                      })}
+                    </p>
+                    {disponiveis > 0 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
+                        onClick={() => setConfirmDeleteDia({ dia, disponiveis })}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" /> Excluir dia ({disponiveis})
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {items.map((s) => {
                       const st = statusLabel(s.status);
@@ -708,12 +800,14 @@ export default function MedicoHorarios() {
                     })}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
+      {/* Dialog excluir slot individual */}
       <AlertDialog
         open={!!confirmDelete}
         onOpenChange={(o) => !o && setConfirmDelete(null)}
@@ -730,6 +824,43 @@ export default function MedicoHorarios() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog excluir dia inteiro */}
+      <AlertDialog
+        open={!!confirmDeleteDia}
+        onOpenChange={(o) => !o && setConfirmDeleteDia(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir todos os horários do dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDeleteDia && (
+                <>
+                  Serão removidos <b>{confirmDeleteDia.disponiveis}</b> horário(s) disponível(is) de{" "}
+                  {format(new Date(confirmDeleteDia.dia + "T00:00:00"), "EEEE, dd 'de' MMMM", { locale: ptBR })}.
+                  Horários reservados ou bloqueados não serão afetados.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!confirmDeleteDia) return;
+                const res = await excluirSlotsDoDia(confirmDeleteDia.dia);
+                setConfirmDeleteDia(null);
+                if (!res.ok) { toast.error(res.error ?? "Não foi possível excluir."); return; }
+                toast.success(`${res.removidos} horário(s) removido(s).`);
+                refresh();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir dia
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
