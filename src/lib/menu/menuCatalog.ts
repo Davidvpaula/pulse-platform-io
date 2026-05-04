@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Calendar, Users, Wallet, MessageCircle, MessageSquare,
   ClipboardList, ListTodo, BadgeCheck, Activity, FileBarChart, Eye,
-  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp, Trophy,
+  AlertTriangle, Plug, Tag, Stethoscope, Settings, ShieldCheck, TrendingUp, Trophy, User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -124,6 +124,11 @@ export const colaboradorMenu: MenuNode[] = [
     to: "/app/colaborador/auditoria",
     icon: Eye,
     key: "auditoria.ver",
+  },
+  {
+    label: "Perfil",
+    to: "/app/colaborador/perfil",
+    icon: User,
   },
 ];
 

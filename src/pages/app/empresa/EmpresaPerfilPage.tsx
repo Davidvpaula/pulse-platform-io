@@ -1,87 +1,256 @@
-import { useState } from "react";
-import { Building2, Save, Lock } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Building2, Save, Lock, Loader2, RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { getPerfil, savePerfil, getKpis, brl, type EmpresaPerfil } from "@/lib/empresa";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { brl } from "@/lib/relatorios/utils";
+import ContaSeguranca from "@/components/shared/ContaSeguranca";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+type EmpresaRow = {
+  id: string;
+  razao_social: string;
+  nome_fantasia: string | null;
+  cnpj: string | null;
+  responsavel_nome: string | null;
+  responsavel_email: string | null;
+  responsavel_telefone: string | null;
+  valor_colaborador_centavos: number;
+  dia_fechamento: number;
+  contrato_status: string;
+  segmento: string | null;
+};
 
 export default function EmpresaPerfilPage() {
-  const [perfil, setPerfil] = useState<EmpresaPerfil>(() => getPerfil());
-  const kpis = getKpis();
-  const set = (k: keyof EmpresaPerfil, v: string | number) => setPerfil(p => ({ ...p, [k]: v }));
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [empresa, setEmpresa] = useState<EmpresaRow | null>(null);
+  const [email, setEmail] = useState("");
+  const [totalFuncionarios, setTotalFuncionarios] = useState(0);
 
-  function submit(e: React.FormEvent) {
+  // Form fields
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [nomeFantasia, setNomeFantasia] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [responsavelNome, setResponsavelNome] = useState("");
+  const [responsavelEmail, setResponsavelEmail] = useState("");
+  const [responsavelTelefone, setResponsavelTelefone] = useState("");
+  const [segmento, setSegmento] = useState("");
+
+  const carregar = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      setEmail(u.user.email ?? "");
+
+      // Find empresa via pacientes or empresas_funcionarios
+      let eid: string | null = null;
+      const { data: pac } = await supabase
+        .from("pacientes")
+        .select("empresa_id")
+        .eq("user_id", u.user.id)
+        .maybeSingle();
+      eid = pac?.empresa_id ?? null;
+
+      if (!eid) {
+        const { data: ef } = await supabase
+          .from("empresas_funcionarios")
+          .select("empresa_id")
+          .eq("paciente_id", u.user.id)
+          .limit(1)
+          .maybeSingle();
+        eid = ef?.empresa_id ?? null;
+      }
+
+      if (!eid) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: emp, error } = await supabase
+        .from("empresas")
+        .select("id, razao_social, nome_fantasia, cnpj, responsavel_nome, responsavel_email, responsavel_telefone, valor_colaborador_centavos, dia_fechamento, contrato_status, segmento")
+        .eq("id", eid)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!emp) { setLoading(false); return; }
+
+      setEmpresa(emp as EmpresaRow);
+      setRazaoSocial(emp.razao_social ?? "");
+      setNomeFantasia(emp.nome_fantasia ?? "");
+      setCnpj(emp.cnpj ?? "");
+      setResponsavelNome(emp.responsavel_nome ?? "");
+      setResponsavelEmail(emp.responsavel_email ?? "");
+      setResponsavelTelefone(emp.responsavel_telefone ?? "");
+      setSegmento(emp.segmento ?? "");
+
+      // Count employees
+      const { count } = await supabase
+        .from("empresas_funcionarios")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", eid);
+      setTotalFuncionarios(count ?? 0);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao carregar perfil da empresa");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
-    savePerfil(perfil);
-    toast({ title: "Perfil atualizado" });
+    if (!empresa) return;
+    if (!razaoSocial.trim()) { toast.error("Razão social é obrigatória."); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from("empresas")
+      .update({
+        razao_social: razaoSocial.trim(),
+        nome_fantasia: nomeFantasia.trim() || null,
+        cnpj: cnpj.trim() || null,
+        responsavel_nome: responsavelNome.trim() || null,
+        responsavel_email: responsavelEmail.trim() || null,
+        responsavel_telefone: responsavelTelefone.trim() || null,
+        segmento: segmento.trim() || null,
+      })
+      .eq("id", empresa.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Perfil atualizado com sucesso.");
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Perfil corporativo" description="Dados cadastrais e plano contratado" />
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
+          </div>
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!empresa) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Perfil corporativo" description="Dados cadastrais e plano contratado" />
+        <div className="card-elevated p-12 text-center text-muted-foreground">
+          Nenhuma empresa vinculada ao seu cadastro.
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Empresa</p>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2"><Building2 className="h-5 w-5" /> Perfil corporativo</h1>
-        <p className="text-sm text-muted-foreground">Dados cadastrais e plano contratado</p>
-      </header>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <form onSubmit={submit} className="card-elevated space-y-5 p-6">
-          <section>
-            <h2 className="font-semibold">Dados da empresa</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label="Razão social"><input className="input" value={perfil.razaoSocial} onChange={e => set("razaoSocial", e.target.value)} /></Field>
-              <Field label="Nome fantasia"><input className="input" value={perfil.nomeFantasia} onChange={e => set("nomeFantasia", e.target.value)} /></Field>
-              <Field label="CNPJ"><input className="input" value={perfil.cnpj} onChange={e => set("cnpj", e.target.value)} /></Field>
-              <Field label="Plano contratado"><input className="input" value={perfil.plano} onChange={e => set("plano", e.target.value)} /></Field>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-semibold">Responsável (RH)</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label="Nome"><input className="input" value={perfil.responsavel} onChange={e => set("responsavel", e.target.value)} /></Field>
-              <Field label="E-mail"><input type="email" className="input" value={perfil.responsavelEmail} onChange={e => set("responsavelEmail", e.target.value)} /></Field>
-              <Field label="Telefone"><input className="input" value={perfil.responsavelTelefone} onChange={e => set("responsavelTelefone", e.target.value)} /></Field>
-              <Field label="Dia de fechamento (ciclo)"><input type="number" min={1} max={28} className="input" value={perfil.cicloFechamento} onChange={e => set("cicloFechamento", Number(e.target.value))} /></Field>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-semibold">Contrato</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label="Vidas contratadas"><input type="number" min={1} className="input" value={perfil.vidasContratadas} onChange={e => set("vidasContratadas", Number(e.target.value))} /></Field>
-              <Field label="Preço por vida (R$)"><input type="number" min={0} className="input" value={perfil.precoPorVida} onChange={e => set("precoPorVida", Number(e.target.value))} /></Field>
-            </div>
-          </section>
-
-          <div className="flex justify-end">
-            <Button type="submit" className="bg-gradient-primary hover:opacity-90"><Save className="mr-2 h-4 w-4" /> Salvar alterações</Button>
-          </div>
-          <style>{`.input{width:100%;border:1px solid hsl(var(--input));background:hsl(var(--background));border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem}`}</style>
-        </form>
-
-        <aside className="space-y-4">
-          <div className="card-elevated p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plano contratado</p>
-            <p className="mt-2 text-lg font-bold">{perfil.plano}</p>
-            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-              <li>{perfil.vidasContratadas} vidas contratadas</li>
-              <li>{kpis.ativos} colaboradores ativos</li>
-              <li>{brl(perfil.precoPorVida)} por vida/mês</li>
-              <li>Faturamento dia {perfil.cicloFechamento}</li>
-            </ul>
-          </div>
-          <div className="card-elevated border-warning/30 bg-warning/5 p-5">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Lock className="h-4 w-4 text-warning" /> Privacidade contratual</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              A empresa não tem acesso ao prontuário, exames ou diagnósticos dos colaboradores. Apenas relatórios agregados são compartilhados com o RH.
-            </p>
-          </div>
-        </aside>
+      <div className="flex items-center justify-between">
+        <PageHeader title="Perfil corporativo" description="Dados cadastrais e plano contratado" />
+        <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
+        </Button>
       </div>
+
+      <Tabs defaultValue="dados" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="dados"><Building2 className="mr-1.5 h-3.5 w-3.5" />Dados</TabsTrigger>
+          <TabsTrigger value="conta">Conta & senha</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dados">
+          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+            <form onSubmit={salvar} className="card-elevated space-y-5 p-6">
+              <section>
+                <h2 className="font-semibold">Dados da empresa</h2>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Field label="Razão social *">
+                    <Input required value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)} />
+                  </Field>
+                  <Field label="Nome fantasia">
+                    <Input value={nomeFantasia} onChange={e => setNomeFantasia(e.target.value)} />
+                  </Field>
+                  <Field label="CNPJ">
+                    <Input value={cnpj} onChange={e => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
+                  </Field>
+                  <Field label="Segmento">
+                    <Input value={segmento} onChange={e => setSegmento(e.target.value)} placeholder="Ex: Construção civil" />
+                  </Field>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="font-semibold">Responsável (RH)</h2>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Field label="Nome">
+                    <Input value={responsavelNome} onChange={e => setResponsavelNome(e.target.value)} />
+                  </Field>
+                  <Field label="E-mail">
+                    <Input type="email" value={responsavelEmail} onChange={e => setResponsavelEmail(e.target.value)} />
+                  </Field>
+                  <Field label="Telefone">
+                    <Input value={responsavelTelefone} onChange={e => setResponsavelTelefone(e.target.value)} />
+                  </Field>
+                  <Field label="Dia de fechamento (ciclo)">
+                    <Input type="number" min={1} max={28} value={empresa.dia_fechamento} disabled className="bg-muted/40" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Gerenciado pelo administrador</p>
+                  </Field>
+                </div>
+              </section>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving} className="bg-gradient-primary hover:opacity-90">
+                  {saving
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando…</>
+                    : <><Save className="mr-2 h-4 w-4" /> Salvar alterações</>}
+                </Button>
+              </div>
+            </form>
+
+            <aside className="space-y-4">
+              <div className="card-elevated p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contrato</p>
+                <p className="mt-2 text-lg font-bold capitalize">{empresa.contrato_status.replace(/_/g, " ")}</p>
+                <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  <li>{totalFuncionarios} colaboradores ativos</li>
+                  <li>{brl(empresa.valor_colaborador_centavos)} por vida/mês</li>
+                  <li>Faturamento dia {empresa.dia_fechamento}</li>
+                </ul>
+              </div>
+              <div className="card-elevated border-warning/30 bg-warning/5 p-5">
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <Lock className="h-4 w-4 text-warning" /> Privacidade contratual
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  A empresa não tem acesso ao prontuário, exames ou diagnósticos dos colaboradores. Apenas relatórios agregados são compartilhados com o RH.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="conta" className="space-y-6">
+          <ContaSeguranca emailAtual={email} onEmailChange={setEmail} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="text-xs font-medium">{label}</span><div className="mt-1">{children}</div></label>;
+  return (
+    <label className="block">
+      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
 }

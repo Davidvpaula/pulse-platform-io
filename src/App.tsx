@@ -140,6 +140,9 @@ import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
 import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
 import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
 import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
+import AdminPerfil from "@/pages/app/admin/AdminPerfil";
+import SecretariaPerfil from "@/pages/app/secretaria/SecretariaPerfil";
+import ColaboradorPerfil from "@/pages/app/colaborador/ColaboradorPerfil";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
@@ -256,6 +259,7 @@ const App = () => (
               <Route path="secretaria/relatorios" element={<SecretariaRelatorios />} />
               <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
               <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
+              <Route path="secretaria/perfil" element={<SecretariaPerfil />} />
 
               {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
               <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
@@ -274,6 +278,7 @@ const App = () => (
               <Route path="colaborador/relatorios" element={<G perm="relatorios.ver_operacional"><SecretariaRelatorios /></G>} />
               <Route path="colaborador/produtividade" element={<Navigate to="/app/colaborador/equipe" replace />} />
               <Route path="colaborador/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="colaborador/perfil" element={<ColaboradorPerfil />} />
               <Route path="colaborador/pendencias-integracao" element={<G perm="supervisor.pendencias_feegow"><PendenciasIntegracao /></G>} />
               <Route path="colaborador/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="colaborador/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
@@ -310,6 +315,7 @@ const App = () => (
               <Route path="admin/integracoes" element={<G perm="integracoes.ver"><AdminIntegracoes /></G>} />
               
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
+              <Route path="admin/perfil" element={<AdminPerfil />} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
