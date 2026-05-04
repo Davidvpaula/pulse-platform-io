@@ -808,21 +808,36 @@ export const ParaMedicos = () => (
 /* ── FAQ ── */
 
 export const Faq = () => {
-  const itens = [
-    { q: "Como funciona a telemedicina?", a: "Você agenda, recebe um link de vídeo seguro e atende pelo navegador ou app." },
-    { q: "As receitas têm validade legal?", a: "Sim, com assinatura digital ICP-Brasil válida em todo território nacional." },
-    { q: "Empresas têm acesso ao prontuário?", a: "Não. Empresas só visualizam relatórios e documentos liberados pelo paciente." },
-    { q: "Posso cancelar uma consulta?", a: "Sim, com até 4h de antecedência sem custo." },
-  ];
+  const [itens, setItens] = React.useState<{ q: string; a: string }[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    supabase
+      .from("faqs")
+      .select("pergunta, resposta")
+      .eq("ativo", true)
+      .order("ordem", { ascending: true })
+      .then(({ data }) => {
+        setItens((data ?? []).map((d: any) => ({ q: d.pergunta, a: d.resposta })));
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <PageShell title="Perguntas frequentes">
       <div className="space-y-3 max-w-3xl">
-        {itens.map(i => (
-          <details key={i.q} className="card-elevated p-5">
-            <summary className="cursor-pointer font-semibold">{i.q}</summary>
-            <p className="mt-2 text-sm text-muted-foreground">{i.a}</p>
-          </details>
-        ))}
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Carregando…</p>
+        ) : itens.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma pergunta frequente cadastrada ainda.</p>
+        ) : (
+          itens.map(i => (
+            <details key={i.q} className="card-elevated p-5">
+              <summary className="cursor-pointer font-semibold">{i.q}</summary>
+              <p className="mt-2 text-sm text-muted-foreground">{i.a}</p>
+            </details>
+          ))
+        )}
       </div>
     </PageShell>
   );
