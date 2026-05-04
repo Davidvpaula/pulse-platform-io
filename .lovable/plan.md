@@ -1,125 +1,110 @@
 
-# Reformulação dos Formulários de Cadastro
+# Refatorar Fluxo de Agendamento
 
-## Visão geral
+## Problema atual
+Na página `/agendar`, ao selecionar uma especialidade, os slots de horário são exibidos diretamente. Isso polui a tela e não valoriza o profissional.
 
-Unificar o cadastro em um formulário completo na página `/auth` (aba "Criar conta"), com campos diferentes dependendo do perfil selecionado (Paciente ou Médico). Para médico, após criar a conta, redirecionar para `/cadastro/medico` apenas para upload de documentos (CRM, RQE, etc.), já que os dados profissionais serão coletados no signup.
+## Novo fluxo
+Especialidade → Cards de médicos → Agenda individual (accordion no desktop / modal no mobile)
 
 ---
 
-## 1. Migração de banco de dados
+## 1. Migration: Atualizar view `medicos_publicos`
 
-Adicionar colunas faltantes em `profiles` e `medicos`:
+Adicionar campos necessários para os cards enriquecidos:
+- `bio`, `foto_url`, `rqe` (da tabela `medicos`)
+- Manter `GRANT EXECUTE ON FUNCTION public.has_role(...) TO anon` (pendente da correção anterior)
 
+SQL da migration:
 ```sql
--- profiles: novos campos para paciente
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS cep text;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS sexo_biologico text; -- 'feminino','masculino', NULL
+-- Grant pendente
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO anon;
 
--- medicos: novos campos
-ALTER TABLE public.medicos ADD COLUMN IF NOT EXISTS cep text;
-ALTER TABLE public.medicos ADD COLUMN IF NOT EXISTS sexo_biologico text;
+-- Recriar view com campos adicionais
+DROP VIEW IF EXISTS public.medicos_publicos;
+CREATE VIEW public.medicos_publicos
+WITH (security_invoker = on) AS
+SELECT
+  m.id, m.nome, m.especialidade, m.crm, m.bio, m.foto_url,
+  m.link_sala_padrao, m.created_at,
+  COALESCE(r.avaliacao_media, 5.0) AS avaliacao_media,
+  COALESCE(r.total_avaliacoes, 0) AS total_avaliacoes,
+  COALESCE(r.ranking_score, 0) AS ranking_score,
+  COALESCE(r.taxa_no_show, 0) AS taxa_no_show,
+  COALESCE(r.fator_premium, 0) AS fator_premium,
+  (m.link_sala_padrao IS NOT NULL) AS online
+FROM public.medicos m
+LEFT JOIN public.medico_ranking r ON r.medico_id = m.id
+WHERE m.status = 'aprovado';
 ```
 
-## 2. Formulário de cadastro PACIENTE (`Auth.tsx`)
+## 2. Refatorar componente `Agendar` (PublicPages.tsx)
 
-Campos obrigatórios:
+### Etapa intermediária: lista de médicos por especialidade
+Após selecionar especialidade, em vez de chamar `listSlotsDisponiveisPorEspecialidade`, buscar:
+1. Médicos vinculados via `medico_especialidades` (filtro `especialidade_id` + `ativo`)
+2. Dados públicos via `medicos_publicos`
+3. Próximo slot disponível por médico (1 query com `agenda_slots` agrupado)
+4. Dados de especialização (RQE, especialista) via `medico_especialidades`
+
+### Card de médico -- conteúdo
+- Foto ou iniciais (avatar)
 - Nome completo
-- E-mail
-- Senha
-- Confirmar senha (validação client-side, senhas precisam bater)
-- Telefone (obrigatório agora)
-- CPF (com máscara e validação)
+- Especialidade + "Especialista (RQE: XXXX)" ou "Clínico geral"
+- Avaliacao: estrela + nota (padrão 5.0); contador oculto
+- Tags: "Novo" (< 30 dias), "Mais agendado" (top ranking), "Alta satisfação" (< 5% no_show)
+- Bio resumida (120 chars + "...")
+- Próximo horário: "Hoje às 14:30" ou "Amanhã às 09:00" ou "Sem horários"
+- Preço (do `medico_especialidades.preco_centavos`)
+- Badges: "Telemedicina", "CRM verificado"
 
-Campos opcionais:
-- Sexo biológico (Feminino / Masculino / Prefiro nao especificar)
-- CEP
+### Ordenação dos cards
+1. Melhor avaliação
+2. Disponibilidade mais próxima (quem tem slot mais cedo primeiro)
+3. Menor taxa de no_show
+4. Premium (fator_premium)
 
-Os dados extras (cpf, telefone, cep, sexo_biologico) serão salvos em `user_metadata` no signup e o trigger `handle_new_user` os persiste na tabela `profiles`.
+### Ações do card
+- **Agendar**: desktop = accordion expansível abaixo do card com slots do médico; mobile = modal/drawer
+- **Ver perfil**: navega para `/medicos/:slug`
 
-## 3. Formulário de cadastro MEDICO (`Auth.tsx`)
+### Performance
+- Buscar próximo slot por médico com 1 query (não carregar agenda completa)
+- Slots completos carregados on-demand ao expandir accordion
 
-Campos obrigatórios:
-- Nome completo
-- E-mail
-- Senha
-- Confirmar senha
-- Telefone
-- CPF
-- CRM (número)
-- CEP
+## 3. Novo componente `MedicoAgendaAccordion`
 
-Campos opcionais:
-- Sexo biológico
-- RQE
-- Especialidade inicial (pode alterar depois)
+Componente reutilizável que:
+- Recebe `medicoId` e `especialidadeId`
+- Carrega slots via `listSlotsDisponiveisPorEspecialidade` filtrado por médico (ou nova fn `listSlotsByMedico`)
+- Grid de slots clicáveis
+- No mobile: renderizado dentro de um Drawer/Sheet
 
-Após criar conta, redireciona para `/cadastro/medico` que agora serve apenas para upload de documentos obrigatórios (CRM, doc pessoal). Os dados profissionais (CRM, especialidade, CPF, telefone) já são pré-preenchidos vindos do signup.
+## 4. Refatorar `MedicoDetalhe` (página `/medicos/:slug`)
 
-## 4. Atualizar `CadastroMedico.tsx`
+Expandir para página de perfil completa:
+- Seção hero: foto, nome, especialidade + RQE, avaliação
+- Bio completa
+- Formação acadêmica (campo `bio` por enquanto; futuramente campo dedicado)
+- Badges: Telemedicina, CRM verificado
+- Avaliações de pacientes (se >= 3 avaliações, consultar `avaliacoes_medicos`)
+- Agenda completa embarcada (reutilizar `MedicoAgendaAccordion` sempre aberto)
 
-- Pré-preencher todos os campos que vieram do signup (nome, cpf, crm, telefone, email, especialidade, cep)
-- Campos já preenchidos ficam readonly (editáveis no perfil depois)
-- Foco fica nos uploads de documentos
+## 5. UX/UI
 
-## 5. Atualizar trigger `handle_new_user`
+- Grid responsivo: 1 col mobile, 2 cols tablet, 3 cols desktop
+- Skeleton loading com `Skeleton` component existente
+- Hierarquia visual clara: nome > especialidade > bio > ações
+- Espaçamento e cards com `card-elevated` existente
 
-- Salvar `cpf`, `cep`, `sexo_biologico` em `profiles` quando vierem no `raw_user_meta_data`
-- Para role `medico`: criar registro em `medicos` automaticamente com os dados do signup (nome, email, telefone, cpf, crm, crm_estado, especialidade, cep, rqe, sexo_biologico, documentos: '[]')
+## 6. Atualizar hook `useMedicosDestaque`
 
-## 6. Corrigir redirects
+Ajustar para consumir os novos campos da view (`bio`, `foto_url`, `taxa_no_show`, `fator_premium`).
 
-- `Auth.tsx` linha 41 e 91: trocar `/app/paciente/dashboard` por `/app` (SmartRedirect)
-- `Auth.tsx` linha 163: trocar `/app/paciente/dashboard` por `/app`
-- `MedicoDashboard.tsx` linha 268: trocar `/app/medico/perfil` por `/cadastro/medico`
-- `MedicoPerfil.tsx` linhas 58-63: remover mock "Dr. Rafael Lasmar"
+---
 
-## 7. Schema de validação
-
-Paciente:
-```typescript
-const pacienteSchema = z.object({
-  nome: z.string().trim().min(2).max(120),
-  email: z.string().trim().email().max(255),
-  senha: z.string().min(8).max(72),
-  confirmarSenha: z.string(),
-  telefone: z.string().trim().min(10).max(20),
-  cpf: cpfSchema(),
-  sexo_biologico: z.enum(["feminino","masculino","nao_especificar"]).optional(),
-  cep: z.string().trim().max(9).optional(),
-}).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
-```
-
-Medico:
-```typescript
-const medicoSchema = z.object({
-  nome: z.string().trim().min(2).max(120),
-  email: z.string().trim().email().max(255),
-  senha: z.string().min(8).max(72),
-  confirmarSenha: z.string(),
-  telefone: z.string().trim().min(10).max(20),
-  cpf: cpfSchema(),
-  crm: z.string().trim().min(3).max(20),
-  cep: z.string().trim().min(8).max(9),
-  sexo_biologico: z.enum(["feminino","masculino","nao_especificar"]).optional(),
-  rqe: z.string().trim().max(20).optional(),
-  especialidade: z.string().optional(),
-}).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
-```
-
-## Impactos em outros módulos
-
-- **Trigger `handle_new_user`**: precisa ser atualizado para salvar campos extras e criar registro `medicos` automaticamente
-- **`CadastroMedico.tsx`**: simplifica para foco em documentos
-- **Admin/médicos**: sem impacto -- o registro aparecerá automaticamente na lista de aprovação
-- **Financeiro/Planos/Empresa**: sem impacto
-
-## Arquivos alterados
-
-| Arquivo | Alteração |
-|---------|-----------|
-| Migration SQL | +colunas profiles/medicos, atualizar trigger |
-| `src/pages/auth/Auth.tsx` | Reformular form cadastro, campos dinâmicos por role |
-| `src/pages/public/CadastroMedico.tsx` | Simplificar para upload-only |
-| `src/pages/app/medico/MedicoDashboard.tsx` | Fix link cadastro |
-| `src/pages/app/medico/MedicoPerfil.tsx` | Remover mock |
+## Impactos
+- **Ranking/Gamificação**: sem impacto, apenas leitura dos dados existentes
+- **Financeiro**: sem impacto, preços lidos de `medico_especialidades`
+- **Rotas**: nenhuma rota nova; `/medicos/:slug` já existe, apenas enriquecida
+- **Arquivos modificados**: `PublicPages.tsx`, `useMedicosDestaque.ts`, `src/lib/clinico.ts` (nova fn auxiliar), migration SQL, novo componente `MedicoAgendaAccordion`
