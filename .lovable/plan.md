@@ -1,26 +1,42 @@
 
-# Menu Lateral — Accordion (1 grupo aberto por vez)
+## Limpeza de cadastros fake
 
-## O que muda
+### O que será removido
 
-Apenas o componente `SidebarBody` em `src/layouts/AppLayout.tsx`, na seção que renderiza os `Collapsible` groups (linhas ~318-351).
+**Usuário 1 — srsoulouco@gmail.com** (auth id: `b49b9c42-...`)
+- Registro em `pacientes` (1 registro, sem dados preenchidos)
+- Registro em `user_roles` (1)
+- Auth user
 
-### Alteração única
+**Usuário 2 — nagilalasmar@gmail.com** (auth id: `f5c534ef-...`)
+- Médico vinculado (`08434d53-...`) + dados dependentes:
+  - `medico_especialidades` (1)
+  - `agenda_slots` (96)
+  - `medico_ranking` (1)
+  - `medicos_auditoria` (registros vinculados)
+- Registro em `user_roles` (1)
+- Auth user
 
-1. Adicionar um `useState<string | null>` chamado `openGroup` no `SidebarBody`
-2. Inicializar com o label do grupo cuja sub-rota está ativa (derivado do `pathname`)
-3. Trocar cada `<Collapsible defaultOpen={open}>` por `<Collapsible open={openGroup === item.label} onOpenChange={(val) => setOpenGroup(val ? item.label : null)}>`
-4. Manter a animação nativa do Radix Collapsible (já tem transição suave)
+**Preservado:** `davidvpaula01@gmail.com` + médico `80de3629-...` vinculado (será mantido como admin, mas o registro de médico dele **também será removido** já que não é médico real — ou prefere manter?)
 
-### O que NÃO muda
-- Nenhuma rota alterada
-- Nenhum componente novo criado
-- Nenhuma permissão afetada
-- `lib/profiles.ts` e `lib/menu/menuCatalog.ts` intactos
-- Links simples (sem filhos) continuam iguais
+### Observação importante
 
-### Comportamento resultante
-- Clicar num grupo com subitens: abre ele, fecha os demais
-- Clicar de novo no mesmo: fecha ele
-- Navegar para uma sub-rota: grupo correspondente abre automaticamente
-- Navegar dentro do mesmo grupo: mantém aberto
+O médico `80de3629-...` está vinculado ao `davidvpaula01@gmail.com`. Ele tem:
+- 1 especialidade
+- 1 ranking
+- ~96 agenda_slots (se compartilhados)
+- auditoria
+
+Se `davidvpaula01` é **apenas admin**, faz sentido remover o registro de médico dele também e manter só o auth user + role admin.
+
+### Execução técnica
+
+Uma migration com DELETE em cascata, na ordem correta para respeitar foreign keys:
+
+1. DELETE dependências dos médicos (agenda_slots, medico_especialidades, medico_ranking, medicos_auditoria)
+2. DELETE pacientes dos user_ids fake
+3. DELETE médicos fake
+4. DELETE user_roles dos user_ids fake
+5. DELETE auth.users dos 2 user_ids fake (via `auth.users`)
+
+Tudo em uma única migration transacional.
