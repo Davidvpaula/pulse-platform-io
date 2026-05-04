@@ -352,13 +352,25 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                     <SelectContent>{COBRANCAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={plano.status} onValueChange={(v) => setField("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{STATUS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                {medicoMode ? (
+                  <div>
+                    <Label>Status</Label>
+                    <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm bg-muted/30">
+                      <span>{STATUS.find(([v]) => v === plano.status)?.[1] ?? plano.status}</span>
+                    </div>
+                    {!plano.aprovado_admin && (
+                      <p className="text-xs text-muted-foreground mt-1">O Admin precisa aprovar para ativar o plano.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={plano.status} onValueChange={(v) => setField("status", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{STATUS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
