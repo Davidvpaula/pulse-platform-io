@@ -845,12 +845,19 @@ export async function excluirSlotsDoDia(dataISO: string): Promise<{ ok: boolean;
   }
 
   const ids = slotsDisponiveis.map((s) => s.id);
-  const { error } = await supabase.from("agenda_slots").delete().in("id", ids);
-  if (error) {
-    console.error("[clinico] excluirSlotsDoDia:", error);
-    return { ok: false, removidos: 0, error: error.message };
+  // Deleta em lotes de 100 para não estourar tamanho da URL
+  const BATCH = 100;
+  let removed = 0;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const batch = ids.slice(i, i + BATCH);
+    const { error } = await supabase.from("agenda_slots").delete().in("id", batch);
+    if (error) {
+      console.error("[clinico] excluirSlotsDoDia batch:", error);
+      return { ok: false, removidos: removed, error: error.message };
+    }
+    removed += batch.length;
   }
-  return { ok: true, removidos: ids.length };
+  return { ok: true, removidos: removed };
 }
 
 /** Exclui TODOS os slots disponíveis do médico logado (em lotes para evitar Bad Request). */
