@@ -92,6 +92,7 @@ const mockProvider = {
 
   /** No mock, "confirmar" o pagamento é o próprio paciente clicando "Pagar". */
   async confirmar(pagamentoId: string, metodo: PagamentoMetodo): Promise<void> {
+    // 1) Atualiza pagamento
     const { error } = await supabase
       .from("pagamentos")
       .update({
@@ -102,6 +103,40 @@ const mockProvider = {
       })
       .eq("id", pagamentoId);
     if (error) throw error;
+
+    // 2) Busca consulta vinculada e atualiza status + slot
+    const { data: pag } = await supabase
+      .from("pagamentos")
+      .select("consulta_id")
+      .eq("id", pagamentoId)
+      .maybeSingle();
+
+    if (pag?.consulta_id) {
+      // Atualiza consulta de aguardando_pagamento → agendada
+      await supabase
+        .from("consultas")
+        .update({ status: "agendada", updated_at: new Date().toISOString() })
+        .eq("id", pag.consulta_id)
+        .eq("status", "aguardando_pagamento");
+
+      // Busca slot_id da consulta para bloquear
+      const { data: consulta } = await supabase
+        .from("consultas")
+        .select("slot_id")
+        .eq("id", pag.consulta_id)
+        .maybeSingle();
+
+      if (consulta?.slot_id) {
+        await supabase
+          .from("agenda_slots")
+          .update({
+            status: "bloqueado",
+            reserva_expira_em: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", consulta.slot_id);
+      }
+    }
   },
 
   async cancelar(pagamentoId: string): Promise<void> {
@@ -113,6 +148,40 @@ const mockProvider = {
       })
       .eq("id", pagamentoId);
     if (error) throw error;
+
+    // Libera consulta e slot ao cancelar pagamento
+    const { data: pag } = await supabase
+      .from("pagamentos")
+      .select("consulta_id")
+      .eq("id", pagamentoId)
+      .maybeSingle();
+
+    if (pag?.consulta_id) {
+      const { data: consulta } = await supabase
+        .from("consultas")
+        .select("slot_id, status")
+        .eq("id", pag.consulta_id)
+        .maybeSingle();
+
+      if (consulta?.status === "aguardando_pagamento") {
+        await supabase
+          .from("consultas")
+          .update({ status: "cancelada", updated_at: new Date().toISOString() })
+          .eq("id", pag.consulta_id);
+
+        if (consulta.slot_id) {
+          await supabase
+            .from("agenda_slots")
+            .update({
+              status: "disponivel",
+              reservado_por: null,
+              reserva_expira_em: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", consulta.slot_id);
+        }
+      }
+    }
   },
 };
 

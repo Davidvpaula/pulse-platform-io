@@ -6816,7 +6816,7 @@ export type Database = {
         Returns: undefined
       }
       marcar_pagamento_falho: {
-        Args: { _motivo: string; _provider_session_id: string }
+        Args: { _motivo?: string; _provider_session_id: string }
         Returns: undefined
       }
       marcar_pagamento_processando: {
@@ -7277,6 +7277,7 @@ export type Database = {
         | "Secretaria ↔ Admin"
         | "Empresa ↔ Secretaria"
         | "Médico ↔ Admin"
+        | "sistema"
       internal_thread_prioridade: "baixa" | "normal" | "alta"
       internal_thread_status: "aberta" | "respondida" | "resolvida"
       medico_servico_status: "ativo" | "pendente" | "recusado" | "desativado"
@@ -7772,6 +7773,7 @@ export const Constants = {
         "Secretaria ↔ Admin",
         "Empresa ↔ Secretaria",
         "Médico ↔ Admin",
+        "sistema",
       ],
       internal_thread_prioridade: ["baixa", "normal", "alta"],
       internal_thread_status: ["aberta", "respondida", "resolvida"],
