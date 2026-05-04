@@ -117,6 +117,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Relatórios operacionais", to: "/app/secretaria/relatorios" },
         ],
       },
+      { label: "Perfil", to: "/app/secretaria/perfil", icon: User },
     ],
   },
   admin: {
