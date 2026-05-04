@@ -39,17 +39,6 @@ export default function ServicoDetalhe() {
   const [agora, setAgora] = useState(() => Date.now());
   const [destacar, setDestacar] = useState<string | null>(null);
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
-  const [step, setStep] = useState<Step>("slots");
-  const [submitting, setSubmitting] = useState(false);
-
-  // Patient form fields
-  const [nome, setNome] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [dataNasc, setDataNasc] = useState("");
-  const [sexo, setSexo] = useState("nao_informado");
-  const [cep, setCep] = useState("");
-  const [motivo, setMotivo] = useState("");
 
   // Load service
   useEffect(() => {
