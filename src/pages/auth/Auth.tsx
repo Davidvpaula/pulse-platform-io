@@ -28,7 +28,7 @@ const baseCadastro = {
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   cpf: cpfSchema(),
   sexo_biologico: z.enum(["feminino", "masculino", "nao_especificar"]).optional(),
-  cep: z.string().trim().max(9).optional(),
+  cep: z.string().trim().min(8, "CEP inválido").max(9),
 };
 
 const pacienteSchema = z.object({
@@ -40,9 +40,8 @@ const medicoSchema = z.object({
   ...baseCadastro,
   role: z.literal("medico"),
   crm: z.string().trim().min(3, "CRM inválido").max(20),
-  cep: z.string().trim().min(8, "CEP inválido").max(9),
-  rqe: z.string().trim().max(20).optional(),
-  especialidade: z.string().optional(),
+  rqe: z.string().trim().min(1, "Informe o RQE").max(20),
+  especialidade: z.string().min(1, "Selecione a especialidade"),
 }).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
