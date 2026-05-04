@@ -140,6 +140,9 @@ import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
 import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
 import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
 import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
+import AdminPerfil from "@/pages/app/admin/AdminPerfil";
+import SecretariaPerfil from "@/pages/app/secretaria/SecretariaPerfil";
+import ColaboradorPerfil from "@/pages/app/colaborador/ColaboradorPerfil";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
