@@ -414,7 +414,7 @@ export default function MedicoHorarios() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Tipo de horário a gerar
         </p>
-        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicoSel(null); }} className="flex flex-wrap gap-4">
+        <RadioGroup value={tipoSlot} onValueChange={(v) => { setTipoSlot(v as any); if (v === "particular") setServicosSel([]); }} className="flex flex-wrap gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <RadioGroupItem value="particular" id="t-part" />
             <span className="text-sm">Particular (preço/duração da sua especialidade)</span>
@@ -427,23 +427,40 @@ export default function MedicoHorarios() {
           </label>
         </RadioGroup>
         {tipoSlot === "servico" && (
-          <Select value={servicoSel ?? ""} onValueChange={(v) => setServicoSel(v)}>
-            <SelectTrigger className="w-full md:w-96">
-              <SelectValue placeholder="Escolha o serviço" />
-            </SelectTrigger>
-            <SelectContent>
-              {servicosDisp.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.nome} · {s.duracao_min}min · R$ {(s.valor_paciente_centavos / 100).toFixed(2)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Selecione um ou mais serviços:</p>
+            {servicosDisp.map((s) => (
+              <label key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:border-primary/40 transition">
+                <Checkbox
+                  checked={servicosSel.includes(s.id)}
+                  onCheckedChange={(checked) => {
+                    setServicosSel((prev) =>
+                      checked ? [...prev, s.id] : prev.filter((id) => id !== s.id)
+                    );
+                  }}
+                />
+                <span className="text-sm flex-1">
+                  {s.nome} · <span className="text-muted-foreground">{s.duracao_min}min</span> · <span className="font-semibold">R$ {(s.valor_paciente_centavos / 100).toFixed(2)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
         )}
-        {tipoSlot === "servico" && servicoAtual && (
+        {tipoSlot === "servico" && servicosSel.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Duração fixa de <b>{servicoAtual.duracao_min} min</b> definida pelo serviço (não editável).
+            {servicosSel.length} serviço(s) selecionado(s). Slots serão criados para cada serviço com sua duração específica.
           </p>
+        )}
+        {tipoSlot === "particular" && espInfo && (
+          <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Especialidade: <b className="text-foreground">{espInfo.nome}</b> · Duração: <b>{espInfo.duracao_minutos}min</b>
+            {espInfo.preco_centavos != null && <> · Valor: <b>R$ {(espInfo.preco_centavos / 100).toFixed(2)}</b></>}
+          </div>
+        )}
+        {tipoSlot === "particular" && !espInfo && !loading && (
+          <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning-foreground">
+            Nenhuma especialidade ativa configurada. <Link to="/app/medico/configuracoes" className="font-semibold text-primary hover:underline">Configurar agora →</Link>
+          </div>
         )}
       </div>
 
