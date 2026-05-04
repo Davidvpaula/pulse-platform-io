@@ -4439,7 +4439,7 @@ export type Database = {
           cancelled_at: string | null
           checkout_url: string | null
           comprovante_url: string | null
-          consulta_id: string
+          consulta_id: string | null
           created_at: string
           created_by: string | null
           data_pagamento: string | null
@@ -4478,7 +4478,7 @@ export type Database = {
           cancelled_at?: string | null
           checkout_url?: string | null
           comprovante_url?: string | null
-          consulta_id: string
+          consulta_id?: string | null
           created_at?: string
           created_by?: string | null
           data_pagamento?: string | null
@@ -4517,7 +4517,7 @@ export type Database = {
           cancelled_at?: string | null
           checkout_url?: string | null
           comprovante_url?: string | null
-          consulta_id?: string
+          consulta_id?: string | null
           created_at?: string
           created_by?: string | null
           data_pagamento?: string | null
