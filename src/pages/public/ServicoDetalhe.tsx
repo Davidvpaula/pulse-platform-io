@@ -1,16 +1,18 @@
-import { useEffect, useState } from "react";
-import { brl } from "@/lib/format";
-import { Link, useParams } from "react-router-dom";
-import { Loader2, Clock, Stethoscope, ArrowRight, Star, Crown, Megaphone } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { brl, fmtHora } from "@/lib/format";
+import { useNavigate, useParams } from "react-router-dom";
+import { Loader2, Clock, Users, Info, Activity } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
-import { registrarClique } from "@/lib/gamificacao";
+import { useSession } from "@/lib/session";
+import CalendarioFila from "@/components/atendimento-imediato/CalendarioFila";
+import RodapeReserva from "@/components/atendimento-imediato/RodapeReserva";
+import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
+import type { PASlot, PAReserva } from "@/lib/pa-types";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type Servico = {
   id: string;
@@ -20,29 +22,20 @@ type Servico = {
   valor_paciente_centavos: number;
 };
 
-type MedicoItem = {
-  medico_id: string;
-  nome: string;
-  especialidade: string | null;
-  proximo_slot_id: string | null;
-  proximo_slot_iso: string | null;
-  avaliacao_media?: number;
-  total_avaliacoes?: number;
-  is_premium?: boolean;
-  is_patrocinado?: boolean;
-  campanha_id?: string;
-  ranking_score?: number;
-};
-
-
+const TTL_MS = 90_000;
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { session } = useSession();
   const [loading, setLoading] = useState(true);
   const [servico, setServico] = useState<Servico | null>(null);
-  const [medicos, setMedicos] = useState<MedicoItem[]>([]);
-  const [ordenacao, setOrdenacao] = useState<"ranking" | "avaliacao" | "preco">("ranking");
+  const [slots, setSlots] = useState<PASlot[]>([]);
+  const [reserva, setReserva] = useState<PAReserva | null>(null);
+  const [agora, setAgora] = useState(() => Date.now());
+  const [destacar, setDestacar] = useState<string | null>(null);
 
+  // Load service
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -55,85 +48,171 @@ export default function ServicoDetalhe() {
         setLoading(false);
         return;
       }
-      setServico(s as Servico);
 
-      // Médicos com adesão ativa
-      let ids: string[] = [];
-      try {
-        const { data: rk } = await supabase.rpc("fn_ranking_medico_servico" as any, {
-          _servico_id: s.id,
-          _modalidade: "online",
-          _limit: 50,
-        });
-        ids = (rk ?? []).map((r: any) => r.medico_id);
-      } catch {
-        const { data: vinc } = await supabase
-          .from("medico_servicos")
-          .select("medico_id")
-          .eq("servico_id", s.id)
-          .eq("status", "ativo")
-          .eq("ativo", true);
-        ids = (vinc ?? []).map((v: any) => v.medico_id);
-      }
-      if (ids.length === 0) {
-        setMedicos([]);
-        setLoading(false);
+      // Check if this is the PA service — redirect to dedicated page
+      const { data: paCfg } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "atendimento_imediato.servico_id")
+        .maybeSingle();
+      const paId = (paCfg?.value as string | null) ?? null;
+      if (paId === s.id) {
+        navigate("/atendimento-imediato", { replace: true });
         return;
       }
 
-      // Fetch médicos, ranking, premium, campanhas e próximos slots em paralelo (batch)
-      const [medsRes, rankingRes, premiumRes, campanhasRes, slotsRes] = await Promise.all([
-        supabase.from("medicos").select("id,nome,especialidade").in("id", ids),
-        supabase.from("medico_ranking" as any).select("medico_id,avaliacao_media,total_avaliacoes,ranking_score").in("medico_id", ids),
-        supabase.from("medico_premium" as any).select("medico_id,ativo").in("medico_id", ids),
-        supabase.from("impulsionamento_campanhas" as any).select("id,medico_id").eq("status", "ativa").in("medico_id", ids),
-        // Batch: buscar próximos slots de todos os médicos de uma vez
-        supabase
-          .from("agenda_slots")
-          .select("id,inicio,medico_id")
-          .in("medico_id", ids)
-          .eq("servico_id", s.id)
-          .eq("status", "disponivel")
-          .gte("inicio", new Date().toISOString())
-          .order("inicio", { ascending: true }),
-      ]);
-
-      const rankMap = new Map(((rankingRes.data ?? []) as any[]).map((r) => [r.medico_id, r]));
-      const premMap = new Map(((premiumRes.data ?? []) as any[]).map((p) => [p.medico_id, p.ativo]));
-      const adsMap = new Map(((campanhasRes.data ?? []) as any[]).map((c) => [c.medico_id, c.id]));
-
-      // Primeiro slot disponível por médico
-      const slotMap = new Map<string, { id: string; inicio: string }>();
-      for (const sl of (slotsRes.data ?? []) as any[]) {
-        if (!slotMap.has(sl.medico_id)) {
-          slotMap.set(sl.medico_id, { id: sl.id, inicio: sl.inicio });
-        }
-      }
-
-      const cards: MedicoItem[] = [];
-      for (const id of ids) {
-        const m = (medsRes.data ?? []).find((x: any) => x.id === id);
-        if (!m) continue;
-        const rk = rankMap.get(id);
-        const nextSlot = slotMap.get(id);
-        cards.push({
-          medico_id: id,
-          nome: (m as any).nome,
-          especialidade: (m as any).especialidade ?? null,
-          proximo_slot_id: nextSlot?.id ?? null,
-          proximo_slot_iso: nextSlot?.inicio ?? null,
-          avaliacao_media: rk?.avaliacao_media ?? 0,
-          total_avaliacoes: rk?.total_avaliacoes ?? 0,
-          ranking_score: rk?.ranking_score ?? 0,
-          is_premium: premMap.get(id) ?? false,
-          is_patrocinado: adsMap.has(id),
-          campanha_id: adsMap.get(id) ?? undefined,
-        });
-      }
-      setMedicos(cards);
+      setServico(s as Servico);
       setLoading(false);
     })();
-  }, [slug]);
+  }, [slug, navigate]);
+
+  // Load slots when service is loaded
+  async function carregarSlots() {
+    if (!servico) return;
+    const { data, error } = await supabase.rpc("fn_servico_slots_disponiveis" as any, {
+      _servico_id: servico.id,
+      _data: new Date().toISOString().slice(0, 10),
+    });
+    if (error) {
+      console.error("Erro ao carregar slots:", error);
+      setSlots([]);
+    } else {
+      const agrupado = new Map<string, PASlot>();
+      for (const row of (data ?? []) as any[]) {
+        const key = row.inicio;
+        if (!agrupado.has(key)) {
+          agrupado.set(key, {
+            key,
+            slot_id: row.slot_id,
+            inicio: new Date(row.inicio),
+            fim: new Date(row.fim),
+            medico_id: row.medico_id,
+            total_vagas: Number(row.total_vagas),
+          });
+        }
+      }
+      setSlots(Array.from(agrupado.values()).sort((a, b) => a.inicio.getTime() - b.inicio.getTime()));
+    }
+  }
+
+  useEffect(() => {
+    if (!servico) return;
+    carregarSlots();
+    const interval = setInterval(carregarSlots, 15_000);
+    return () => clearInterval(interval);
+  }, [servico]);
+
+  // Expiration tick
+  useEffect(() => {
+    const t = setInterval(() => {
+      setAgora(Date.now());
+      setReserva((prev) => {
+        if (prev && prev.expiresAt <= Date.now()) {
+          toast.message("Reserva expirou", {
+            description: `O horário ${fmtHora(prev.inicio)} foi liberado.`,
+          });
+          carregarSlots();
+          return null;
+        }
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Slot visual state
+  const estadoPorSlot = useMemo(() => {
+    const map = new Map<string, { estado: SlotEstado; vagas: number; capacidade: number }>();
+    for (const s of slots) {
+      const fimMs = s.fim.getTime();
+      const inicioMs = s.inicio.getTime();
+      const minhaAqui = reserva?.slot_key === s.key && reserva.expiresAt > agora;
+
+      let estado: SlotEstado;
+      if (fimMs < agora) estado = "passado";
+      else if ((s.total_vagas ?? 0) === 0) estado = "lotado";
+      else if (minhaAqui) estado = "reservado_por_mim";
+      else if (inicioMs <= agora && agora < fimMs) estado = "em_atendimento";
+      else estado = "livre";
+
+      map.set(s.key, { estado, vagas: s.total_vagas ?? 0, capacidade: s.total_vagas ?? 0 });
+    }
+    return map;
+  }, [slots, reserva, agora]);
+
+  async function reservar(slot: PASlot) {
+    if (!session) {
+      toast.error("Faça login para reservar um horário.");
+      navigate("/auth");
+      return;
+    }
+    if (!servico) return;
+
+    const { data, error } = await supabase.rpc("fn_servico_reservar_slot" as any, {
+      _slot_inicio: slot.key,
+      _servico_id: servico.id,
+    });
+
+    if (error || !(data as any)?.ok) {
+      toast.error((data as any)?.erro || "Erro ao reservar. Tente novamente.");
+      carregarSlots();
+      return;
+    }
+
+    const res = data as any;
+    setReserva({
+      slot_id: res.slot_id,
+      slot_key: res.inicio,
+      medico_id: res.medico_id,
+      medico_nome: res.medico_nome,
+      inicio: res.inicio,
+      fim: res.fim,
+      expiresAt: Date.now() + TTL_MS,
+    });
+    setDestacar(res.inicio);
+    setTimeout(() => setDestacar(null), 3000);
+    carregarSlots();
+
+    if (res.transferido) {
+      toast.warning("Horário trocado automaticamente", {
+        description: `O horário pedido foi ocupado. Alocamos ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}.`,
+      });
+    } else {
+      toast.success(`Reservado ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}`, {
+        description: "Você tem 1m30s para confirmar.",
+      });
+    }
+  }
+
+  function cancelar() {
+    setReserva(null);
+    carregarSlots();
+    toast.message("Reserva liberada");
+  }
+
+  async function confirmar() {
+    if (!reserva || !servico) return;
+
+    const { data, error } = await supabase.rpc("fn_servico_confirmar_reserva" as any, {
+      _slot_id: reserva.slot_id,
+      _servico_id: servico.id,
+    });
+
+    if (error || !(data as any)?.ok) {
+      toast.error((data as any)?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
+      setReserva(null);
+      carregarSlots();
+      return;
+    }
+
+    toast.success("Confirmado!", {
+      description: `Atendimento agendado com Dr(a). ${reserva.medico_nome}. Redirecionando…`,
+    });
+    setReserva(null);
+    navigate(`/app/paciente/consultas`);
+  }
+
+  const totalLivres = Array.from(estadoPorSlot.values()).filter((v) => v.estado === "livre").length;
 
   if (loading) {
     return (
@@ -157,119 +236,82 @@ export default function ServicoDetalhe() {
     );
   }
 
-  // Sort: patrocinados always first, then by selected criteria
-  const sortedMedicos = [...medicos].sort((a, b) => {
-    if (a.is_patrocinado && !b.is_patrocinado) return -1;
-    if (!a.is_patrocinado && b.is_patrocinado) return 1;
-    if (ordenacao === "avaliacao") return (b.avaliacao_media ?? 0) - (a.avaliacao_media ?? 0);
-    if (ordenacao === "preco") return 0; // same price for the service
-    return (b.ranking_score ?? 0) - (a.ranking_score ?? 0);
-  });
-
   return (
     <PageShell
       title={servico.nome}
-      subtitle={servico.descricao_publica ?? "Escolha um profissional para agendar."}
+      subtitle="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."
     >
       <div className="space-y-6">
-        <div className="card-elevated p-6 flex flex-wrap items-center gap-6">
-          <div>
-            <p className="text-xs text-muted-foreground">Valor</p>
-            <p className="text-2xl font-bold">{brl(servico.valor_paciente_centavos)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Duração</p>
-            <p className="font-semibold inline-flex items-center gap-1">
-              <Clock className="h-4 w-4" /> {servico.duracao_min} min
-            </p>
+        {/* Header */}
+        <div className="card-elevated overflow-hidden">
+          <div className="gradient-soft flex flex-wrap items-center justify-between gap-4 p-6">
+            <div>
+              <Badge className="mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                <Activity className="mr-1 h-3 w-3" /> Serviço da Plataforma
+              </Badge>
+              {servico.descricao_publica && (
+                <p className="text-sm text-muted-foreground mb-2">{servico.descricao_publica}</p>
+              )}
+              <p className="text-sm font-medium">
+                Valor: <span className="tabular-nums">{brl(servico.valor_paciente_centavos)}</span>{" "}
+                · Duração: <span className="tabular-nums">{servico.duracao_min} min</span>
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                <Users className="mr-1 inline h-3.5 w-3.5" />
+                <strong>{totalLivres}</strong> horários livres hoje
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Legenda cor="bg-card border border-primary/30" texto="Livre" />
+              <Legenda cor="bg-accent ring-2 ring-primary" texto="Você reservou" />
+              <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
+            </div>
           </div>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Profissionais disponíveis</h2>
-            <Select value={ordenacao} onValueChange={(v) => setOrdenacao(v as any)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ranking">Melhor ranking</SelectItem>
-                <SelectItem value="avaliacao">Mais bem avaliados</SelectItem>
-                <SelectItem value="preco">Menor preço</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {sortedMedicos.length === 0 ? (
-            <div className="card-elevated p-8 text-center text-muted-foreground">
-              Nenhum profissional vinculado a este serviço no momento.
-            </div>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {/* Patrocinados primeiro */}
-              {sortedMedicos.map((m) => (
-                <div key={m.medico_id} className={cn(
-                  "card-elevated p-4 flex items-center gap-3 relative",
-                  m.is_patrocinado && "border border-primary/20",
-                )}>
-                  {m.is_patrocinado && (
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-primary/10 text-primary text-[10px] gap-1">
-                        <Megaphone className="h-3 w-3" /> Patrocinado
-                      </Badge>
-                    </div>
-                  )}
-                  <div className={cn(
-                    "grid h-12 w-12 place-items-center rounded-full font-bold text-primary-foreground shrink-0",
-                    m.is_premium ? "bg-gradient-to-br from-amber-500 to-yellow-400" : "bg-gradient-primary",
-                  )}>
-                    {m.nome.split(" ").map((s) => s[0]).slice(0, 2).join("")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-medium truncate">Dr(a). {m.nome}</p>
-                      {m.is_premium && (
-                        <span title="Premium"><Crown className="h-4 w-4 text-amber-500 shrink-0" /></span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      <Stethoscope className="h-3 w-3 inline mr-1" />
-                      {m.especialidade ?? "Clínica"}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      {(m.total_avaliacoes ?? 0) > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs">
-                          <Star className="h-3 w-3 fill-warning text-warning" />
-                          {(m.avaliacao_media ?? 0).toFixed(1)}
-                          <span className="text-muted-foreground">({m.total_avaliacoes})</span>
-                        </span>
-                      )}
-                      {m.proximo_slot_iso && (
-                        <p className="text-xs text-emerald-600">
-                          Próximo: {new Date(m.proximo_slot_iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {m.proximo_slot_id ? (
-                    <Button size="sm" asChild onClick={() => {
-                      if (m.is_patrocinado && m.campanha_id) {
-                        registrarClique(m.campanha_id, undefined, "busca").catch(() => {});
-                      }
-                    }}>
-                      <Link to={`/app/paciente/agendar/confirmar/${m.proximo_slot_id}?servico=${servico.id}${m.campanha_id ? `&campanha=${m.campanha_id}` : ''}`}>
-                        Agendar <ArrowRight className="h-3 w-3 ml-1" />
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Badge variant="outline">Sem horários</Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Aviso */}
+        <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>
+            Se outro paciente reservar o mesmo horário antes de você, o sistema move você
+            automaticamente para o horário <strong>mais próximo</strong> com vaga e atribui
+            o melhor profissional disponível pelo <strong>ranking</strong>.
+          </span>
         </div>
+
+        {slots.length === 0 ? (
+          <div className="card-elevated p-10 text-center text-muted-foreground">
+            Nenhum horário disponível no momento. Tente novamente mais tarde.
+          </div>
+        ) : (
+          <CalendarioFila
+            slots={slots}
+            estadoPorSlot={estadoPorSlot}
+            destacar={destacar}
+            onPick={reservar}
+          />
+        )}
+
+        {reserva && (
+          <RodapeReserva
+            medicoNome={reserva.medico_nome}
+            inicio={reserva.inicio}
+            msRestantes={reserva.expiresAt - agora}
+            precoCentavos={servico.valor_paciente_centavos}
+            onCancelar={cancelar}
+            onConfirmar={confirmar}
+          />
+        )}
       </div>
     </PageShell>
+  );
+}
+
+function Legenda({ cor, texto }: { cor: string; texto: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+      <span className={`inline-block h-3 w-3 rounded ${cor}`} />
+      {texto}
+    </span>
   );
 }

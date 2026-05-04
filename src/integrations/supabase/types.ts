@@ -6663,6 +6663,29 @@ export type Database = {
           valor_plataforma_centavos: number
         }[]
       }
+      fn_servico_confirmar_reserva: {
+        Args: { _paciente_id?: string; _servico_id: string; _slot_id: string }
+        Returns: Json
+      }
+      fn_servico_reservar_slot: {
+        Args: {
+          _paciente_id?: string
+          _servico_id: string
+          _slot_inicio: string
+        }
+        Returns: Json
+      }
+      fn_servico_slots_disponiveis: {
+        Args: { _data?: string; _servico_id: string }
+        Returns: {
+          fim: string
+          inicio: string
+          medico_id: string
+          modalidade: string
+          slot_id: string
+          total_vagas: number
+        }[]
+      }
       forcar_status_consulta: {
         Args: {
           _consulta_id: string
