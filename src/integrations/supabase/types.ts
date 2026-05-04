@@ -3433,6 +3433,41 @@ export type Database = {
           },
         ]
       }
+      medico_notificacao_prefs: {
+        Row: {
+          alertas_operacionais: boolean
+          id: string
+          lembretes_consulta: boolean
+          medico_id: string
+          resumo_diario_email: boolean
+          updated_at: string
+        }
+        Insert: {
+          alertas_operacionais?: boolean
+          id?: string
+          lembretes_consulta?: boolean
+          medico_id: string
+          resumo_diario_email?: boolean
+          updated_at?: string
+        }
+        Update: {
+          alertas_operacionais?: boolean
+          id?: string
+          lembretes_consulta?: boolean
+          medico_id?: string
+          resumo_diario_email?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_notificacao_prefs_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_premium: {
         Row: {
           ativo: boolean
