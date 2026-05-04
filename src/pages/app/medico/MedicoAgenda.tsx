@@ -145,19 +145,20 @@ export default function MedicoAgenda() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Agenda"
-        description="Sua agenda com filtros por período, status e ações rápidas."
-        actions={
-          session ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-              <Database className="h-3 w-3" /> Dados em tempo real
-            </span>
-          ) : undefined
-        }
-      />
+  if (!session) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Agenda" description="Faça login como médico para acessar sua agenda." />
+        <div className="card-elevated flex flex-col items-center gap-4 py-16">
+          <LogIn className="h-10 w-10 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">Você precisa estar logado para ver sua agenda.</p>
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/auth">Fazer login</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
       {/* Contadores */}
       {session && (
