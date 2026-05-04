@@ -140,8 +140,24 @@ export default function MedicoHorarios() {
     setSlots(list);
     setDuracao(dur);
     setLinkSala(med?.link_sala_padrao ?? null);
-    // Serviços aderidos pelo médico (status ativo)
+    // Especialidade do médico
     if (med?.id) {
+      const { data: espRows } = await supabase
+        .from("medico_especialidades")
+        .select("especialidade, duracao_minutos, preco_centavos, rqe, ativo")
+        .eq("medico_id", med.id)
+        .eq("ativo", true)
+        .limit(1);
+      if (espRows && espRows.length > 0) {
+        setEspInfo({
+          nome: espRows[0].especialidade,
+          duracao_minutos: espRows[0].duracao_minutos || 30,
+          preco_centavos: espRows[0].preco_centavos,
+        });
+      } else {
+        setEspInfo(null);
+      }
+      // Serviços aderidos pelo médico (status ativo)
       const { data: vinc } = await supabase
         .from("medico_servicos")
         .select("servico_id")
@@ -163,9 +179,8 @@ export default function MedicoHorarios() {
     setLoading(false);
   }
 
-  // Duração efetiva: se for serviço, usa do serviço; se particular, usa da especialidade
-  const servicoAtual = servicosDisp.find((s) => s.id === servicoSel);
-  const duracaoEfetiva = tipoSlot === "servico" ? (servicoAtual?.duracao_min ?? null) : duracao;
+  // Duração efetiva para modo particular
+  const duracaoEfetiva = tipoSlot === "particular" ? duracao : null;
 
   useEffect(() => {
     if (!session) {
