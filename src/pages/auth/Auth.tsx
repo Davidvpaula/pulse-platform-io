@@ -295,6 +295,12 @@ export default function Auth() {
                   />
                 </div>
 
+                {/* CEP — obrigatório para ambos */}
+                <div className="space-y-2">
+                  <Label htmlFor="cep">CEP <span className="text-destructive">*</span></Label>
+                  <Input id="cep" name="cep" required maxLength={9} placeholder="00000-000" />
+                </div>
+
                 {/* Campos obrigatórios exclusivos médico */}
                 {role === "medico" && (
                   <>
@@ -303,15 +309,26 @@ export default function Auth() {
                       <Input id="crm" name="crm" required maxLength={20} placeholder="123456" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cep-m">CEP <span className="text-destructive">*</span></Label>
-                      <Input id="cep-m" name="cep" required maxLength={9} placeholder="00000-000" />
+                      <Label htmlFor="rqe">RQE <span className="text-destructive">*</span></Label>
+                      <Input id="rqe" name="rqe" required maxLength={20} placeholder="Registro de qualificação" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Especialidade <span className="text-destructive">*</span></Label>
+                      <Select name="especialidade" required>
+                        <SelectTrigger><SelectValue placeholder="Selecione a especialidade" /></SelectTrigger>
+                        <SelectContent>
+                          {ESPECIALIDADES.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}
 
                 {/* Campos opcionais */}
                 <div className="border-t border-border pt-4 mt-2">
-                  <p className="text-xs text-muted-foreground mb-3">Opcionais</p>
+                  <p className="text-xs text-muted-foreground mb-3">Opcional</p>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Sexo biológico</Label>
@@ -324,33 +341,6 @@ export default function Auth() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {role === "paciente" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="cep-p">CEP</Label>
-                        <Input id="cep-p" name="cep" maxLength={9} placeholder="00000-000" />
-                      </div>
-                    )}
-
-                    {role === "medico" && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="rqe">RQE</Label>
-                          <Input id="rqe" name="rqe" maxLength={20} placeholder="Registro (opcional)" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Especialidade inicial</Label>
-                          <Select name="especialidade">
-                            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
-                            <SelectContent>
-                              {ESPECIALIDADES.map(s => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
 
