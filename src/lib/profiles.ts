@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Calendar, FileText, CreditCard, User, MessageSquare, Wallet,
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
-  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy, Send,
+  Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy, Send, HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -262,6 +262,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         ],
       },
       { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
+      { label: "FAQ do Site", to: "/app/admin/faq", icon: HelpCircle },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
     ],
   },

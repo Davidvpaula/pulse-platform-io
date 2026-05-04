@@ -115,6 +115,7 @@ import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
 import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro";
 // AdminRelatorioAuditoria unificado com AdminAuditoria — rota redireciona via Navigate
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
+import AdminFaq from "@/pages/app/admin/AdminFaq";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
@@ -332,6 +333,7 @@ const App = () => (
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="admin/faq" element={<AdminFaq />} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
               <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />

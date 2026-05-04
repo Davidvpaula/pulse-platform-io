@@ -2486,6 +2486,39 @@ export type Database = {
         }
         Relationships: []
       }
+      faqs: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          id: string
+          ordem: number
+          pergunta: string
+          resposta: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta: string
+          resposta: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta?: string
+          resposta?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fechamentos_mensais: {
         Row: {
           bloqueado_em: string | null
