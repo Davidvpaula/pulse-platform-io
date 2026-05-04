@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Users, FileText, Wallet, Play, Calendar, Clock, BookOpen, Settings, Search,
   AlertTriangle, CheckCircle2, ArrowRight, Loader2, Video, ExternalLink, Lock, Eye, Stethoscope, Trophy,
-  Star, Award, Crown, CreditCard, ShieldCheck, User,
+  Star, Award, Crown, CreditCard, ShieldCheck, User, Briefcase,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -25,9 +25,7 @@ import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 import { checkTreinamentoObrigatorio } from "@/lib/treinamentos";
 
-function formatBRL(centavos: number) {
-  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+import { formatBRL } from "@/lib/format";
 function formatHora(iso: string) {
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
@@ -71,6 +69,7 @@ export default function MedicoDashboard() {
   const [medicoNome, setMedicoNome] = useState<string>("");
   const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
+  const [propostasPendentes, setPropostasPendentes] = useState(0);
   const [proximas, setProximas] = useState<ConsultaDetalhada[]>([]);
   const [stats, setStats] = useState({
     hoje: 0,
@@ -134,8 +133,16 @@ export default function MedicoDashboard() {
       treinamentoFeito: treinCheck.concluidasObrigatorias,
       perfilIncompleto,
       semDadosBancarios: (dadosBanc ?? 0) === 0,
-      semTermos: false, // handled by TermsAcceptanceDialog
+      semTermos: termsContrato.needsAcceptance,
     });
+
+    // Propostas pendentes
+    const { count: propPend } = await supabase
+      .from("propostas_empresa_medico")
+      .select("id", { count: "exact", head: true })
+      .eq("medico_id", session.user.id)
+      .eq("status", "enviada_medico");
+    setPropostasPendentes(propPend ?? 0);
 
     // Janelas de tempo
     const agora = new Date();
