@@ -21,8 +21,7 @@ import {
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { validatePassword } from "@/lib/passwordValidation";
-import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
+import ContaSeguranca from "@/components/shared/ContaSeguranca";
 
 const onlyDigits = (v: string) => v.replace(/\D/g, "");
 
