@@ -346,28 +346,3 @@ function EmptyState({ filtro }: { filtro: Filtro }) {
   );
 }
 
-function DemoLista() {
-  return (
-    <div className="space-y-2">
-      <div className="px-4 pt-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-        Modo demonstração — entre na sua conta para ver suas consultas reais.
-      </div>
-      <ul className="divide-y divide-border">
-        {proximasConsultasPaciente.map((c) => (
-          <li key={c.id} className="flex flex-wrap items-center gap-3 p-4">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-              <Stethoscope className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{c.medico}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {c.esp} · {c.data} {c.hora} · {c.modalidade}
-              </p>
-            </div>
-            <StatusBadge status={c.status as Status} />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
