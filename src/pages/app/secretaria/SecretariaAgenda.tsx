@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2, History,
+  Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2, History, LogIn,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
-import { agendamentos, medicos as medicosCat } from "@/lib/mock";
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -17,7 +17,6 @@ import {
 } from "@/lib/clinico";
 import TrocarMedicoDialog from "@/components/secretaria/TrocarMedicoDialog";
 
-const horarios = ["08:00","09:00","10:00","11:00","13:00","14:00","15:00","16:00","17:00"];
 const dias = ["Hoje", "Amanhã", "Depois"];
 
 function offsetDate(label: string): { inicio: Date; fim: Date; titulo: string } {
