@@ -136,27 +136,14 @@ export default function MedicoAgenda() {
     }
   }
 
-  // Concluir abre o diálogo de finalização (prontuário/prescrição/pagamento)
-  function abrirFinalizar(c: ConsultaDetalhada) {
-    setFinalizar(c);
+  // Continuar: só abre a sala, sem update desnecessário
+  function continuarConsulta(c: ConsultaDetalhada) {
+    if (c.modalidade === "online" && c.link_sala) {
+      window.open(c.link_sala, "_blank", "noopener,noreferrer");
+    } else {
+      toast.info("Consulta em andamento.");
+    }
   }
-
-  // Modo demo (sem sessão) — mantém comportamento anterior com mock
-  const itensDemo = useMemo(() => {
-    if (session) return [];
-    return agendamentos
-      .filter((a) => a.medico === "Dr. Rafael Lasmar")
-      .map((a) => ({
-        id: String(a.id),
-        data: a.data,
-        hora: a.hora,
-        paciente: a.paciente,
-        esp: a.esp,
-        modalidade: a.modalidade,
-        canal: a.canal,
-        status: a.status as Status,
-      }));
-  }, [session]);
 
   return (
     <div className="space-y-6">
