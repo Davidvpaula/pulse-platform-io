@@ -29,6 +29,11 @@ function formatCpf(v: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+] as const;
+
 function EnderecoForm({ label, value, onChange, disabled }: {
   label: string; value: Endereco; onChange: (v: Endereco) => void; disabled?: boolean;
 }) {
@@ -55,6 +60,9 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
   const [telefone, setTelefone] = useState(medico.telefone ?? "");
   const [rqe, setRqe] = useState(medico.rqe ?? "");
   const [sexo, setSexo] = useState((medico as any).sexo ?? "");
+  const [crm, setCrm] = useState(medico.crm ?? "");
+  const [crmEstado, setCrmEstado] = useState(medico.crm_estado ?? "");
+  const [especialidade, setEspecialidade] = useState(medico.especialidade ?? "");
   const [endRes, setEndRes] = useState<Endereco>(EMPTY_END);
   const [endCom, setEndCom] = useState<Endereco>(EMPTY_END);
   const [usarComercial, setUsarComercial] = useState(false);
@@ -88,12 +96,18 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
 
   async function salvar() {
     setSaving(true);
+    if (!crm.trim()) { toast.error("CRM é obrigatório."); setSaving(false); return; }
+    if (!crmEstado) { toast.error("Selecione o estado do CRM."); setSaving(false); return; }
+    if (!especialidade.trim()) { toast.error("Especialidade é obrigatória."); setSaving(false); return; }
     const { error: medErr } = await supabase.from("medicos").update({
       nome: nome.trim() || medico.nome,
       data_nascimento: dataNasc || null,
       telefone: telefone.trim() || null,
       rqe: rqe.trim() || null,
       sexo: sexo || null,
+      crm: crm.trim(),
+      crm_estado: crmEstado,
+      especialidade: especialidade.trim(),
     } as any).eq("id", medico.id);
     if (medErr) { toast.error(medErr.message); setSaving(false); return; }
 
@@ -163,8 +177,21 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
         </div>
         <div><Label>Data de nascimento</Label><Input type="date" value={dataNasc} onChange={e => setDataNasc(e.target.value)} /></div>
         <div><Label>Telefone</Label><Input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(00) 00000-0000" /></div>
-        <div><Label>CRM</Label><Input value={`${medico.crm} / ${medico.crm_estado}`} disabled /></div>
-        <div><Label>Especialidade</Label><Input value={medico.especialidade} disabled /></div>
+        <div>
+          <Label>CRM</Label>
+          <div className="flex gap-2">
+            <Input value={crm} onChange={e => setCrm(e.target.value)} placeholder="123456" className="flex-1" />
+            <Select value={crmEstado} onValueChange={setCrmEstado}>
+              <SelectTrigger className="w-24"><SelectValue placeholder="UF" /></SelectTrigger>
+              <SelectContent>
+                {UF_LIST.map(uf => (
+                  <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div><Label>Especialidade</Label><Input value={especialidade} onChange={e => setEspecialidade(e.target.value)} placeholder="Ex: Cardiologia" /></div>
         <div><Label>RQE</Label><Input value={rqe} onChange={e => setRqe(e.target.value)} placeholder="Opcional" /></div>
         <div>
           <Label>Sexo</Label>
