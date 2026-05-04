@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { brl, fmtHora, dataLabel } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight, User, ShieldCheck, ArrowLeft } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -12,8 +12,14 @@ import RodapeReserva from "@/components/atendimento-imediato/RodapeReserva";
 import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
 import type { PASlot, PAReserva } from "@/lib/pa-types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { criarCheckoutSession, abrirCheckout } from "@/lib/pagamentos";
+import { getPacienteAtual } from "@/lib/clinico";
+import { maskCpf } from "@/lib/validation/cpf";
 
 type Servico = {
   id: string;
@@ -23,13 +29,22 @@ type Servico = {
   valor_paciente_centavos: number;
 };
 
-const TTL_MS_DEFAULT = 10 * 60 * 1000; // 10 min (alinhado com reserva_expira_em da RPC)
+const TTL_MS_DEFAULT = 10 * 60 * 1000;
 
 function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+const maskFone = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").trim();
+  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").trim();
+};
+const maskCEP = (v: string) =>
+  onlyDigits(v).slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
 
+type Step = "slots" | "formulario";
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
@@ -42,6 +57,17 @@ export default function ServicoDetalhe() {
   const [agora, setAgora] = useState(() => Date.now());
   const [destacar, setDestacar] = useState<string | null>(null);
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>("slots");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Patient form fields
+  const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [dataNasc, setDataNasc] = useState("");
+  const [sexo, setSexo] = useState("nao_informado");
+  const [cep, setCep] = useState("");
+  const [motivo, setMotivo] = useState("");
 
   // Load service
   useEffect(() => {
@@ -57,7 +83,6 @@ export default function ServicoDetalhe() {
         return;
       }
 
-      // Check if this is the PA service — redirect to dedicated page
       const { data: paCfg } = await supabase
         .from("app_settings")
         .select("value")
@@ -74,8 +99,23 @@ export default function ServicoDetalhe() {
     })();
   }, [slug, navigate]);
 
-  // Load slots when service is loaded
-  async function carregarSlots() {
+  // Pre-fill patient data
+  useEffect(() => {
+    if (!session) return;
+    getPacienteAtual().then((p) => {
+      if (p) {
+        setNome(p.nome_completo ?? "");
+        setCpf(p.cpf ? maskCpf(p.cpf) : "");
+        setTelefone(p.telefone ? maskFone(p.telefone) : "");
+        setDataNasc(p.data_nascimento ?? "");
+        setSexo(p.sexo ?? "nao_informado");
+        setCep(p.cep ? maskCEP(p.cep) : "");
+      }
+    });
+  }, [session]);
+
+  // Load slots
+  const carregarSlots = useCallback(async () => {
     if (!servico) return;
     const { data, error } = await supabase.rpc("fn_servico_slots_disponiveis" as any, {
       _servico_id: servico.id,
@@ -101,19 +141,18 @@ export default function ServicoDetalhe() {
       }
       const sorted = Array.from(agrupado.values()).sort((a, b) => a.inicio.getTime() - b.inicio.getTime());
       setSlots(sorted);
-      // Auto-select first day with slots
       if (sorted.length > 0 && !diaSelecionado) {
         setDiaSelecionado(dataKey(sorted[0].inicio));
       }
     }
-  }
+  }, [servico, diaSelecionado]);
 
   useEffect(() => {
     if (!servico) return;
     carregarSlots();
     const interval = setInterval(carregarSlots, 15_000);
     return () => clearInterval(interval);
-  }, [servico]);
+  }, [servico, carregarSlots]);
 
   // Expiration tick
   useEffect(() => {
@@ -124,6 +163,7 @@ export default function ServicoDetalhe() {
           toast.message("Reserva expirou", {
             description: `O horário ${fmtHora(prev.inicio)} foi liberado.`,
           });
+          setStep("slots");
           carregarSlots();
           return null;
         }
@@ -131,7 +171,7 @@ export default function ServicoDetalhe() {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [carregarSlots]);
 
   // Group slots by date
   const diasComSlots = useMemo(() => {
@@ -144,13 +184,11 @@ export default function ServicoDetalhe() {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [slots]);
 
-  // Slots for selected day
   const slotsNoDia = useMemo(() => {
     if (!diaSelecionado) return [];
     return slots.filter((s) => dataKey(s.inicio) === diaSelecionado);
   }, [slots, diaSelecionado]);
 
-  // Slot visual state
   const estadoPorSlot = useMemo(() => {
     const map = new Map<string, { estado: SlotEstado; vagas: number; capacidade: number }>();
     for (const s of slotsNoDia) {
@@ -221,28 +259,75 @@ export default function ServicoDetalhe() {
 
   function cancelar() {
     setReserva(null);
+    setStep("slots");
     carregarSlots();
     toast.message("Reserva liberada");
   }
 
-  async function confirmar() {
+  function irParaFormulario() {
+    setStep("formulario");
+  }
+
+  async function confirmarEPagar() {
     if (!reserva || !servico) return;
 
-    const { data, error } = await supabase.rpc("fn_servico_confirmar_reserva" as any, {
-      _slot_id: reserva.slot_id,
-      _servico_id: servico.id,
-    });
+    // Validate form
+    const erros: string[] = [];
+    if (!nome.trim() || nome.trim().split(/\s+/).length < 2) erros.push("Nome completo (nome e sobrenome)");
+    if (onlyDigits(cpf).length !== 11) erros.push("CPF válido");
+    if (onlyDigits(telefone).length < 10) erros.push("Telefone com DDD");
+    if (!dataNasc) erros.push("Data de nascimento");
+    if (onlyDigits(cep).length !== 8) erros.push("CEP válido");
 
-    if (error || !(data as any)?.ok) {
-      toast.error((data as any)?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
-      setReserva(null);
-      carregarSlots();
+    if (erros.length > 0) {
+      toast.error("Preencha os campos obrigatórios", { description: erros.join(", ") });
       return;
     }
 
-    const res = data as any;
-    // Cria sessão de pagamento e redireciona para checkout
+    setSubmitting(true);
     try {
+      // Update patient data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from("pacientes")
+          .update({
+            nome_completo: nome.trim(),
+            cpf: onlyDigits(cpf),
+            telefone: onlyDigits(telefone),
+            data_nascimento: dataNasc,
+            sexo: sexo as any,
+            cep: onlyDigits(cep),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id);
+      }
+
+      // Confirm reservation (creates consulta)
+      const { data, error } = await supabase.rpc("fn_servico_confirmar_reserva" as any, {
+        _slot_id: reserva.slot_id,
+        _servico_id: servico.id,
+      });
+
+      if (error || !(data as any)?.ok) {
+        toast.error((data as any)?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
+        setReserva(null);
+        setStep("slots");
+        carregarSlots();
+        return;
+      }
+
+      const res = data as any;
+
+      // Update motivo on consulta if provided
+      if (motivo.trim() && res.consulta_id) {
+        await supabase
+          .from("consultas")
+          .update({ motivo: motivo.trim() })
+          .eq("id", res.consulta_id);
+      }
+
+      // Create checkout session
       const checkoutSession = await criarCheckoutSession({
         consultaId: res.consulta_id,
         valorCentavos: res.valor_centavos,
@@ -250,12 +335,14 @@ export default function ServicoDetalhe() {
       });
 
       toast.success("Reserva confirmada!", {
-        description: `Redirecionando para pagamento…`,
+        description: "Redirecionando para pagamento…",
       });
       setReserva(null);
       abrirCheckout(checkoutSession, navigate);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao criar sessão de pagamento.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -285,6 +372,110 @@ export default function ServicoDetalhe() {
 
   const idxDia = diasComSlots.findIndex(([dk]) => dk === diaSelecionado);
 
+  // ─── Step: Patient Form ───
+  if (step === "formulario" && reserva) {
+    return (
+      <PageShell
+        title="Confirmar dados"
+        subtitle={`${servico.nome} · ${fmtHora(reserva.inicio)} com Dr(a). ${reserva.medico_nome}`}
+      >
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="card-elevated p-6 space-y-5">
+            <div className="flex items-center gap-2 border-b border-border pb-3">
+              <User className="h-4 w-4 text-primary" />
+              <h2 className="font-display text-lg font-semibold">Seus dados</h2>
+            </div>
+
+            <div>
+              <Label htmlFor="nome">Nome completo *</Label>
+              <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Como aparece nos documentos" maxLength={120} />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input id="cpf" value={cpf} onChange={(e) => setCpf(maskCpf(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
+              </div>
+              <div>
+                <Label htmlFor="tel">Telefone (com DDD) *</Label>
+                <Input id="tel" value={telefone} onChange={(e) => setTelefone(maskFone(e.target.value))} placeholder="(11) 91234-5678" inputMode="tel" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <Label htmlFor="nasc">Nascimento *</Label>
+                <Input id="nasc" type="date" value={dataNasc} onChange={(e) => setDataNasc(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+              </div>
+              <div>
+                <Label htmlFor="sexo">Sexo biológico *</Label>
+                <Select value={sexo} onValueChange={setSexo}>
+                  <SelectTrigger id="sexo"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="feminino">Feminino</SelectItem>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="intersexo">Intersexo</SelectItem>
+                    <SelectItem value="nao_informado">Prefiro não informar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="cep">CEP *</Label>
+                <Input id="cep" value={cep} onChange={(e) => setCep(maskCEP(e.target.value))} placeholder="00000-000" inputMode="numeric" />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="motivo">Motivo da consulta (opcional)</Label>
+              <Textarea id="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Conte resumidamente o que motiva a consulta." rows={3} maxLength={500} />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setStep("slots")}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar aos horários
+              </Button>
+              <Button onClick={confirmarEPagar} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+                {submitting ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processando…</>
+                ) : (
+                  <><ShieldCheck className="mr-2 h-4 w-4" /> Confirmar e ir para pagamento</>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Resumo lateral */}
+          <aside className="card-elevated h-fit p-5 space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Resumo</p>
+              <h3 className="mt-1 font-display text-lg font-semibold">{servico.nome}</h3>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span>{dataLabel(dataKey(new Date(reserva.inicio)))}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <span>{fmtHora(reserva.inicio)} · Dr(a). {reserva.medico_nome}</span>
+              </div>
+            </div>
+            <div className="border-t border-border pt-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Valor</span>
+                <span className="font-bold">{brl(servico.valor_paciente_centavos)}</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Sua reserva expira em <strong>{Math.max(0, Math.ceil((reserva.expiresAt - agora) / 60000))} min</strong>.
+            </p>
+          </aside>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ─── Step: Slot Selection ───
   return (
     <PageShell
       title={servico.nome}
@@ -402,7 +593,7 @@ export default function ServicoDetalhe() {
             msRestantes={reserva.expiresAt - agora}
             precoCentavos={servico.valor_paciente_centavos}
             onCancelar={cancelar}
-            onConfirmar={confirmar}
+            onConfirmar={irParaFormulario}
           />
         )}
       </div>
