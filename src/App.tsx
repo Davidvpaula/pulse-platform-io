@@ -154,7 +154,6 @@ const App = () => (
         <BrowserRouter>
           <AnalyticsTracker />
           <SecurityWatcher />
-          <SmartRedirect />
           <Routes>
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
