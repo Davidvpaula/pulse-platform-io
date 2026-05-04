@@ -182,7 +182,12 @@ export default function ServicoDetalhe() {
       _servico_id: servico.id,
     });
 
-    if (error || !(data as any)?.ok) {
+    if (error) {
+      toast.error("Erro de conexão ao reservar.", { description: error.message });
+      carregarSlots();
+      return;
+    }
+    if (!(data as any)?.ok) {
       toast.error((data as any)?.erro || "Erro ao reservar. Tente novamente.");
       carregarSlots();
       return;
