@@ -63,7 +63,7 @@ export default function MedicoTreinamento() {
       />
 
       {/* Aviso de treinamento obrigatório pendente */}
-      {obrigFaltando > 0 && (
+      {!loading && obrigFaltando > 0 && (
         <div className="card-elevated border-l-4 border-l-destructive p-4 flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
           <div>
@@ -76,7 +76,7 @@ export default function MedicoTreinamento() {
       )}
 
       {/* Progresso geral */}
-      <div className="card-elevated p-6">
+      {!loading && modulos.length > 0 && <div className="card-elevated p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary">
@@ -97,7 +97,7 @@ export default function MedicoTreinamento() {
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-gradient-primary transition-all" style={{ width: `${progresso}%` }} />
         </div>
-      </div>
+      </div>}
 
       {loading ? (
         <div className="card-elevated flex items-center justify-center p-12 text-muted-foreground">
