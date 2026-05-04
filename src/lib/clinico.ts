@@ -1247,14 +1247,12 @@ export type CriarConsultaResult = {
 };
 
 /**
- * Cria a consulta como aguardando_pagamento e reserva o slot por 15 minutos.
- * Atualiza os dados do paciente atomicamente. Em caso de slot indisponível,
- * lança erro com a mensagem do Postgres.
+ * @deprecated Use reservarSlotUnificado. Mantida apenas para compatibilidade.
  */
 export async function criarConsultaComReserva(
   input: CriarConsultaInput,
 ): Promise<CriarConsultaResult> {
-  const { data, error } = await supabase.rpc("criar_consulta_com_reserva", {
+  const { data, error } = await supabase.rpc("criar_consulta_com_reserva" as any, {
     _slot_id: input.slot_id,
     _especialidade_id: input.especialidade_id,
     _motivo: input.motivo ?? null,
@@ -1267,6 +1265,60 @@ export async function criarConsultaComReserva(
   });
   if (error) throw error;
   return data as unknown as CriarConsultaResult;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * RESERVA UNIFICADA (sem criação de consulta)
+ * ────────────────────────────────────────────────────────────────────── */
+
+export type ReservaUnificadaInput = DadosPaciente & {
+  slot_id: string;
+  tipo: "especialidade" | "servico";
+  referencia_id: string; // especialidade_id ou servico_id
+  motivo?: string;
+};
+
+export type ReservaUnificadaResult = {
+  ok: boolean;
+  erro?: string;
+  slot_id: string;
+  medico_id: string;
+  medico_nome: string;
+  inicio: string;
+  fim: string;
+  modalidade: string;
+  valor_centavos: number;
+  reserva_expira_em: string;
+  tipo: string;
+  referencia_id: string;
+  referencia_nome: string;
+  motivo: string | null;
+  paciente_id: string;
+};
+
+/**
+ * Reserva o slot sem criar consulta. A consulta será criada somente
+ * após confirmação do pagamento via `criar_consulta_pos_pagamento`.
+ */
+export async function reservarSlotUnificado(
+  input: ReservaUnificadaInput,
+): Promise<ReservaUnificadaResult> {
+  const { data, error } = await supabase.rpc("reservar_slot_unificado" as any, {
+    _slot_id: input.slot_id,
+    _tipo: input.tipo,
+    _referencia_id: input.referencia_id,
+    _motivo: input.motivo ?? null,
+    _nome_completo: input.nome_completo,
+    _cpf: input.cpf,
+    _telefone: input.telefone,
+    _data_nascimento: input.data_nascimento,
+    _sexo: input.sexo,
+    _cep: input.cep,
+  });
+  if (error) throw new Error(error.message);
+  const res = data as unknown as ReservaUnificadaResult;
+  if (!res.ok) throw new Error(res.erro ?? "Erro ao reservar horário");
+  return res;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

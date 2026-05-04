@@ -21,10 +21,20 @@ export type PagamentoMetodo = Database["public"]["Enums"]["pagamento_metodo"];
 export type PagamentoProvider = Database["public"]["Enums"]["pagamento_provider"];
 
 export interface CriarCheckoutInput {
-  consultaId: string;
+  /** Se houver consulta pré-existente (fluxo legado), informar aqui */
+  consultaId?: string;
   valorCentavos: number;
   metodo?: PagamentoMetodo;
   descricao?: string;
+  /** Metadata da reserva unificada — usada para criar consulta pós-pagamento */
+  reserva?: {
+    slot_id: string;
+    tipo: string;
+    referencia_id: string;
+    motivo?: string | null;
+    paciente_id: string;
+    medico_id: string;
+  };
 }
 
 export interface CheckoutSession {
@@ -62,16 +72,32 @@ export async function getProviderAtual(): Promise<PagamentoProvider> {
 
 const mockProvider = {
   async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
+    const metadata: Record<string, unknown> = {
+      descricao: input.descricao ?? null,
+      simulated: true,
+    };
+    // Armazena dados da reserva unificada para criação pós-pagamento
+    if (input.reserva) {
+      metadata.slot_id = input.reserva.slot_id;
+      metadata.tipo = input.reserva.tipo;
+      metadata.referencia_id = input.reserva.referencia_id;
+      metadata.motivo = input.reserva.motivo ?? null;
+      metadata.paciente_id = input.reserva.paciente_id;
+      metadata.medico_id = input.reserva.medico_id;
+    }
+
+    const insertObj: Record<string, unknown> = {
+      valor_centavos: input.valorCentavos,
+      metodo: input.metodo ?? "simulado",
+      provider: "mock" as const,
+      status: "pendente" as const,
+      metadata,
+    };
+    if (input.consultaId) insertObj.consulta_id = input.consultaId;
+
     const { data, error } = await supabase
       .from("pagamentos")
-      .insert({
-        consulta_id: input.consultaId,
-        valor_centavos: input.valorCentavos,
-        metodo: input.metodo ?? "simulado",
-        provider: "mock",
-        status: "pendente",
-        metadata: { descricao: input.descricao ?? null, simulated: true },
-      })
+      .insert(insertObj as any)
       .select("*")
       .single();
     if (error || !data) throw error ?? new Error("Falha ao criar pagamento");
@@ -92,11 +118,11 @@ const mockProvider = {
 
   /** No mock, "confirmar" o pagamento é o próprio paciente clicando "Pagar". */
   async confirmar(pagamentoId: string, metodo: PagamentoMetodo): Promise<void> {
-    // 1) Atualiza pagamento
+    // 1) Atualiza pagamento → pago
     const { error } = await supabase
       .from("pagamentos")
       .update({
-        status: "pago",
+        status: "pago" as const,
         metodo,
         paid_at: new Date().toISOString(),
         provider_payment_id: `mock_${Date.now()}`,
@@ -104,38 +130,20 @@ const mockProvider = {
       .eq("id", pagamentoId);
     if (error) throw error;
 
-    // 2) Busca consulta vinculada e atualiza status + slot
-    const { data: pag } = await supabase
-      .from("pagamentos")
-      .select("consulta_id")
-      .eq("id", pagamentoId)
-      .maybeSingle();
+    // 2) Cria consulta via RPC (fluxo unificado) ou atualiza consulta existente (legado)
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "criar_consulta_pos_pagamento" as any,
+      { _pagamento_id: pagamentoId },
+    );
 
-    if (pag?.consulta_id) {
-      // Atualiza consulta de aguardando_pagamento → agendada
-      await supabase
-        .from("consultas")
-        .update({ status: "agendada", updated_at: new Date().toISOString() })
-        .eq("id", pag.consulta_id)
-        .eq("status", "aguardando_pagamento");
+    if (rpcError) {
+      console.error("[pagamentos] criar_consulta_pos_pagamento:", rpcError);
+      // Fallback: tenta lógica legada (consulta_id já vinculada)
+    }
 
-      // Busca slot_id da consulta para bloquear
-      const { data: consulta } = await supabase
-        .from("consultas")
-        .select("slot_id")
-        .eq("id", pag.consulta_id)
-        .maybeSingle();
-
-      if (consulta?.slot_id) {
-        await supabase
-          .from("agenda_slots")
-          .update({
-            status: "bloqueado",
-            reserva_expira_em: null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", consulta.slot_id);
-      }
+    const res = rpcResult as any;
+    if (res && !res.ok) {
+      console.warn("[pagamentos] criar_consulta_pos_pagamento:", res.erro);
     }
   },
 
@@ -143,7 +151,7 @@ const mockProvider = {
     const { error } = await supabase
       .from("pagamentos")
       .update({
-        status: "cancelado",
+        status: "cancelado" as const,
         cancelled_at: new Date().toISOString(),
       })
       .eq("id", pagamentoId);
@@ -152,10 +160,11 @@ const mockProvider = {
     // Libera consulta e slot ao cancelar pagamento
     const { data: pag } = await supabase
       .from("pagamentos")
-      .select("consulta_id")
+      .select("consulta_id, metadata")
       .eq("id", pagamentoId)
       .maybeSingle();
 
+    // Se tem consulta vinculada (fluxo legado), cancela
     if (pag?.consulta_id) {
       const { data: consulta } = await supabase
         .from("consultas")
@@ -166,14 +175,14 @@ const mockProvider = {
       if (consulta?.status === "aguardando_pagamento") {
         await supabase
           .from("consultas")
-          .update({ status: "cancelada", updated_at: new Date().toISOString() })
+          .update({ status: "cancelada" as const, updated_at: new Date().toISOString() })
           .eq("id", pag.consulta_id);
 
         if (consulta.slot_id) {
           await supabase
             .from("agenda_slots")
             .update({
-              status: "disponivel",
+              status: "disponivel" as const,
               reservado_por: null,
               reserva_expira_em: null,
               updated_at: new Date().toISOString(),
@@ -181,6 +190,21 @@ const mockProvider = {
             .eq("id", consulta.slot_id);
         }
       }
+    }
+
+    // Se não tem consulta mas tem slot_id na metadata (fluxo unificado), libera slot
+    const meta = (pag?.metadata as any) ?? {};
+    if (!pag?.consulta_id && meta.slot_id) {
+      await supabase
+        .from("agenda_slots")
+        .update({
+          status: "disponivel" as const,
+          reservado_por: null,
+          reserva_expira_em: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", meta.slot_id)
+        .eq("status", "reservado");
     }
   },
 };
