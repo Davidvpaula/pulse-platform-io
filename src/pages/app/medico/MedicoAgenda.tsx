@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Play, Filter, Database, Loader2, Video, ExternalLink, CheckCircle2, History, Calendar,
+  Play, Filter, Database, Loader2, Video, ExternalLink, CheckCircle2, History, Calendar, LogIn,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { agendamentos } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,6 @@ import {
   type ConsultaDetalhada,
   type ConsultaStatus,
 } from "@/lib/clinico";
-import type { Status } from "@/lib/mock";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";
 
