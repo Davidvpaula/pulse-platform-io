@@ -22,6 +22,7 @@ import { LogIn } from "lucide-react";
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
 import { consultasAvaliadasIds } from "@/lib/gamificacao";
