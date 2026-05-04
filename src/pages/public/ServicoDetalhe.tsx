@@ -215,7 +215,6 @@ export default function ServicoDetalhe() {
 
   function cancelar() {
     setReserva(null);
-    setStep("slots");
     carregarSlots();
     toast.message("Reserva liberada");
   }
@@ -223,80 +222,6 @@ export default function ServicoDetalhe() {
   function irParaFormulario() {
     if (!reserva || !servico) return;
     navigate(`/app/agendamento/confirmar/${reserva.slot_id}?tipo=servico&ref=${servico.id}`);
-  }
-
-  async function confirmarEPagar() {
-    if (!reserva || !servico) return;
-
-    const erros: string[] = [];
-    if (!nome.trim() || nome.trim().split(/\s+/).length < 2) erros.push("Nome completo (nome e sobrenome)");
-    if (onlyDigits(cpf).length !== 11) erros.push("CPF válido");
-    if (onlyDigits(telefone).length < 10) erros.push("Telefone com DDD");
-    if (!dataNasc) erros.push("Data de nascimento");
-    if (onlyDigits(cep).length !== 8) erros.push("CEP válido");
-
-    if (erros.length > 0) {
-      toast.error("Preencha os campos obrigatórios", { description: erros.join(", ") });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Usa fluxo unificado: reserva slot com dados do paciente (sem criar consulta)
-      const { data: resData, error: resErr } = await supabase.rpc("reservar_slot_unificado" as any, {
-        _slot_id: reserva.slot_id,
-        _tipo: "servico",
-        _referencia_id: servico.id,
-        _motivo: motivo.trim() || null,
-        _nome_completo: nome.trim(),
-        _cpf: onlyDigits(cpf),
-        _telefone: onlyDigits(telefone),
-        _data_nascimento: dataNasc,
-        _sexo: sexo,
-        _cep: onlyDigits(cep),
-      });
-
-      if (resErr) {
-        toast.error("Erro ao reservar.", { description: resErr.message });
-        setReserva(null);
-        setStep("slots");
-        carregarSlots();
-        return;
-      }
-
-      const res = resData as any;
-      if (!res?.ok) {
-        toast.error(res?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
-        setReserva(null);
-        setStep("slots");
-        carregarSlots();
-        return;
-      }
-
-      // Cria checkout SEM consulta_id (consulta criada pós-pagamento)
-      const checkoutSession = await criarCheckoutSession({
-        valorCentavos: res.valor_centavos,
-        descricao: `${servico.nome} · Dr(a). ${reserva.medico_nome}`,
-        reserva: {
-          slot_id: res.slot_id,
-          tipo: res.tipo,
-          referencia_id: res.referencia_id,
-          motivo: res.motivo,
-          paciente_id: res.paciente_id,
-          medico_id: res.medico_id,
-        },
-      });
-
-      toast.success("Reserva confirmada!", {
-        description: "Redirecionando para pagamento…",
-      });
-      setReserva(null);
-      abrirCheckout(checkoutSession, navigate);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Erro ao criar sessão de pagamento.");
-    } finally {
-      setSubmitting(false);
-    }
   }
 
   const totalLivres = Array.from(estadoPorSlot.values()).filter((v) => v.estado === "livre").length;
