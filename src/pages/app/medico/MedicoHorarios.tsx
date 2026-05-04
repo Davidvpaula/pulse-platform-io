@@ -109,6 +109,7 @@ export default function MedicoHorarios() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
   const [confirmDeleteDia, setConfirmDeleteDia] = useState<{ dia: string; disponiveis: number } | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [duracao, setDuracao] = useState<number | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade>("online");
   const [linkSala, setLinkSala] = useState<string | null>(null);
