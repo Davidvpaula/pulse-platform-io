@@ -181,8 +181,13 @@ export default function MedicoHorarios() {
           .in("id", ids)
           .eq("ativo", true);
         setServicosDisp((srv ?? []) as ServicoOpc[]);
+        // Build name map for slot listing
+        const nomes: Record<string, string> = {};
+        (srv ?? []).forEach((s: any) => { nomes[s.id] = s.nome; });
+        setServicoNomes(nomes);
       } else {
         setServicosDisp([]);
+        setServicoNomes({});
       }
     }
     setLoading(false);
