@@ -55,10 +55,6 @@ export default function MedicoPerfil() {
 
   useEffect(() => {
     if (!session) {
-      setNome("Dr. Rafael Lasmar");
-      setTelefone("(31) 99999-0000");
-      setBio("Cardiologista com 12 anos de atuação clínica.");
-      setLinkSala("");
       setLoading(false);
       return;
     }
