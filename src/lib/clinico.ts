@@ -845,36 +845,58 @@ export async function excluirSlotsDoDia(dataISO: string): Promise<{ ok: boolean;
   }
 
   const ids = slotsDisponiveis.map((s) => s.id);
-  const { error } = await supabase.from("agenda_slots").delete().in("id", ids);
-  if (error) {
-    console.error("[clinico] excluirSlotsDoDia:", error);
-    return { ok: false, removidos: 0, error: error.message };
+  // Deleta em lotes de 100 para não estourar tamanho da URL
+  const BATCH = 100;
+  let removed = 0;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const batch = ids.slice(i, i + BATCH);
+    const { error } = await supabase.from("agenda_slots").delete().in("id", batch);
+    if (error) {
+      console.error("[clinico] excluirSlotsDoDia batch:", error);
+      return { ok: false, removidos: removed, error: error.message };
+    }
+    removed += batch.length;
   }
-  return { ok: true, removidos: ids.length };
+  return { ok: true, removidos: removed };
 }
 
-/** Exclui TODOS os slots disponíveis do médico logado. */
+/** Exclui TODOS os slots disponíveis do médico logado (em lotes para evitar Bad Request). */
 export async function excluirTodosSlots(): Promise<{ ok: boolean; removidos: number; error?: string }> {
   const medicoId = await getMedicoAtualId();
   if (!medicoId) return { ok: false, removidos: 0, error: "Médico não encontrado." };
 
-  const { data: slotsDisponiveis } = await supabase
-    .from("agenda_slots")
-    .select("id")
-    .eq("medico_id", medicoId)
-    .eq("status", "disponivel");
+  // Busca todos os IDs (pode ser >1000, paginar)
+  let allIds: string[] = [];
+  let from = 0;
+  const PAGE = 1000;
+  while (true) {
+    const { data } = await supabase
+      .from("agenda_slots")
+      .select("id")
+      .eq("medico_id", medicoId)
+      .eq("status", "disponivel")
+      .range(from, from + PAGE - 1);
+    if (!data || data.length === 0) break;
+    allIds = allIds.concat(data.map((s) => s.id));
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
 
-  if (!slotsDisponiveis || slotsDisponiveis.length === 0) {
+  if (allIds.length === 0) {
     return { ok: false, removidos: 0, error: "Nenhum slot disponível para excluir." };
   }
 
-  const ids = slotsDisponiveis.map((s) => s.id);
-  const { error } = await supabase.from("agenda_slots").delete().in("id", ids);
-  if (error) {
-    console.error("[clinico] excluirTodosSlots:", error);
-    return { ok: false, removidos: 0, error: error.message };
+  // Deleta em lotes de 100 para não estourar tamanho da URL
+  const BATCH = 100;
+  for (let i = 0; i < allIds.length; i += BATCH) {
+    const batch = allIds.slice(i, i + BATCH);
+    const { error } = await supabase.from("agenda_slots").delete().in("id", batch);
+    if (error) {
+      console.error("[clinico] excluirTodosSlots batch:", error);
+      return { ok: false, removidos: i, error: error.message };
+    }
   }
-  return { ok: true, removidos: ids.length };
+  return { ok: true, removidos: allIds.length };
 }
 
 export async function updateConsultaStatus(
