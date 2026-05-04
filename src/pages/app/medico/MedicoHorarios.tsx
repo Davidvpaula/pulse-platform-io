@@ -230,14 +230,12 @@ export default function MedicoHorarios() {
   }, [diasSel, semanas]);
 
   async function gerarSemanal() {
-    if (!duracaoEfetiva) {
-      toast.error(tipoSlot === "servico"
-        ? "Selecione um serviço antes de gerar horários."
-        : "Configure uma especialidade com duração antes de gerar horários.");
+    if (tipoSlot === "particular" && !duracaoEfetiva) {
+      toast.error("Configure uma especialidade com duração antes de gerar horários.");
       return;
     }
-    if (tipoSlot === "servico" && !servicoSel) {
-      toast.error("Escolha o serviço da plataforma.");
+    if (tipoSlot === "servico" && servicosSel.length === 0) {
+      toast.error("Selecione ao menos um serviço da plataforma.");
       return;
     }
     if (diasSel.length === 0) {
@@ -249,21 +247,38 @@ export default function MedicoHorarios() {
       return;
     }
     setSavingSemana(true);
-    const res = await criarSlotsEmLote({
-      datas: datasSemana,
-      faixas: faixasSemana,
-      duracaoMin: duracaoEfetiva,
-      modalidade,
-      servicoId: tipoSlot === "servico" ? servicoSel : null,
-    });
-    setSavingSemana(false);
-    if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível gerar.");
-      return;
+    let totalCriados = 0;
+    let totalPulados = 0;
+    if (tipoSlot === "servico") {
+      for (const srvId of servicosSel) {
+        const srv = servicosDisp.find((s) => s.id === srvId);
+        if (!srv) continue;
+        const res = await criarSlotsEmLote({
+          datas: datasSemana,
+          faixas: faixasSemana,
+          duracaoMin: srv.duracao_min,
+          modalidade,
+          servicoId: srvId,
+        });
+        if (res.ok) { totalCriados += res.criados; totalPulados += res.pulados; }
+        else { toast.error(`Erro em ${srv.nome}: ${res.error}`); }
+      }
+    } else {
+      const res = await criarSlotsEmLote({
+        datas: datasSemana,
+        faixas: faixasSemana,
+        duracaoMin: duracaoEfetiva!,
+        modalidade,
+        servicoId: null,
+      });
+      if (!res.ok) { setSavingSemana(false); toast.error(res.error ?? "Não foi possível gerar."); return; }
+      totalCriados = res.criados;
+      totalPulados = res.pulados;
     }
+    setSavingSemana(false);
     toast.success(
-      `${res.criados} horário(s) criado(s)` +
-        (res.pulados > 0 ? ` · ${res.pulados} pulado(s) por conflito` : "")
+      `${totalCriados} horário(s) criado(s)` +
+        (totalPulados > 0 ? ` · ${totalPulados} pulado(s) por conflito` : "")
     );
     refresh();
   }
