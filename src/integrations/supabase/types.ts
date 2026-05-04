@@ -6532,20 +6532,35 @@ export type Database = {
         }[]
       }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
-      criar_consulta_com_reserva: {
-        Args: {
-          _cep: string
-          _cpf: string
-          _data_nascimento: string
-          _especialidade_id: string
-          _motivo: string
-          _nome_completo: string
-          _sexo: Database["public"]["Enums"]["sexo_biologico"]
-          _slot_id: string
-          _telefone: string
-        }
-        Returns: Json
-      }
+      criar_consulta_com_reserva:
+        | {
+            Args: {
+              _cep?: string
+              _cpf?: string
+              _data_nascimento?: string
+              _especialidade_id: string
+              _motivo?: string
+              _nome_completo?: string
+              _sexo?: string
+              _slot_id: string
+              _telefone?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _cep: string
+              _cpf: string
+              _data_nascimento: string
+              _especialidade_id: string
+              _motivo: string
+              _nome_completo: string
+              _sexo: Database["public"]["Enums"]["sexo_biologico"]
+              _slot_id: string
+              _telefone: string
+            }
+            Returns: Json
+          }
       empresa_toggle_modulo: {
         Args: { _ativo: boolean; _empresa_id: string; _modulo_key: string }
         Returns: Json
