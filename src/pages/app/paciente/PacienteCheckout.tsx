@@ -374,8 +374,12 @@ export default function PacienteCheckout() {
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Resumo</p>
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Consulta</span>
-                <span className="font-mono text-xs">{pagamento.consulta_id.slice(0, 8)}…</span>
+                <span className="text-muted-foreground">{pagamento.consulta_id ? "Consulta" : "Reserva"}</span>
+                <span className="font-mono text-xs">
+                  {pagamento.consulta_id
+                    ? `${pagamento.consulta_id.slice(0, 8)}…`
+                    : ((pagamento.metadata as any)?.descricao ?? pagamento.id.slice(0, 8) + "…")}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
