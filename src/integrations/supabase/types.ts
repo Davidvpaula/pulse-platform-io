@@ -6676,7 +6676,7 @@ export type Database = {
         Returns: Json
       }
       fn_servico_slots_disponiveis: {
-        Args: { _data?: string; _servico_id: string }
+        Args: { _data: string; _servico_id: string }
         Returns: {
           fim: string
           inicio: string

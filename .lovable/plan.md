@@ -1,46 +1,53 @@
 
-## Problem
+# Problema: Slots da agenda nao aparecem no site publico
 
-When generating platform service slots, ALL are marked as "conflito" because the conflict check looks at every existing slot for the doctor, regardless of `servico_id`. This means:
-- Particular slots block service slot creation at the same times
-- When selecting multiple services, the first service's newly created slots block the second/third service
+Dois problemas encontrados:
 
-## Fix
+## 1. Slots Particulares -- RLS bloqueia usuarios nao logados
 
-**File: `src/lib/clinico.ts` — `criarSlotsEmLote` function (line ~776)**
+A policy RLS da tabela `agenda_slots` para SELECT so permite `authenticated`:
 
-Add a `servico_id` filter to the conflict query:
-- If `servicoId` is provided: only check conflicts against slots with the **same** `servico_id`
-- If `servicoId` is null (particular): only check conflicts against slots where `servico_id IS NULL`
-
-This allows a doctor to have overlapping time slots for different services and for particular appointments, since the shared calendar model assigns doctors dynamically at booking time.
-
-### Before
-```ts
-const { data: existentes } = await supabase
-  .from("agenda_slots")
-  .select("inicio, fim")
-  .eq("medico_id", medicoId)
-  .lt("inicio", maxFim)
-  .gt("fim", minIni);
+```
+"Slots disponiveis publicos a autenticados" -- roles: {authenticated}
 ```
 
-### After
-```ts
-let q = supabase
-  .from("agenda_slots")
-  .select("inicio, fim")
-  .eq("medico_id", medicoId)
-  .lt("inicio", maxFim)
-  .gt("fim", minIni);
+O componente `MedicoSlotsPanel` (usado na pagina "Agendar consulta") faz query direta na tabela `agenda_slots`. Visitantes nao logados (como mostrado no screenshot com "Entrar" no menu) nao veem nenhum slot.
 
-if (input.servicoId) {
-  q = q.eq("servico_id", input.servicoId);
-} else {
-  q = q.is("servico_id", null);
-}
+**Solucao**: Alterar a policy RLS para incluir o role `anon`, permitindo que visitantes nao logados vejam slots disponiveis:
 
-const { data: existentes } = await q;
+```sql
+DROP POLICY "Slots disponíveis públicos a autenticados" ON agenda_slots;
+CREATE POLICY "Slots disponíveis visíveis publicamente"
+  ON agenda_slots FOR SELECT
+  TO authenticated, anon
+  USING (status = 'disponivel');
 ```
 
-No migration needed. Single file change.
+## 2. Servicos da Plataforma -- funcao SQL filtra apenas o dia atual
+
+A funcao `fn_servico_slots_disponiveis` recebe `_data` (uma data) e filtra `s.inicio::date = _data`. O front-end passa `new Date().toISOString().slice(0, 10)` (hoje). Se os slots foram criados para dias futuros (ex: 8 de maio), nao aparecem.
+
+**Solucao**: Modificar a funcao para mostrar slots de hoje em diante (ou os proximos N dias), em vez de filtrar por um unico dia. Tambem adicionar um seletor de data no front-end (`ServicoDetalhe.tsx`), similar ao que o `MedicoSlotsPanel` ja faz com paginacao por dia.
+
+### Alteracoes:
+
+**Migration SQL:**
+- Atualizar RLS policy para incluir `anon`
+- Recriar `fn_servico_slots_disponiveis` para aceitar intervalo de datas (ou remover filtro de dia unico, retornando proximos 7-14 dias)
+
+**Front-end (`ServicoDetalhe.tsx`):**
+- Remover filtro de dia unico na chamada RPC, ou passar intervalo
+- Adicionar navegacao por dia (similar ao calendario do `MedicoSlotsPanel`) para que o paciente possa ver slots futuros
+- Agrupar slots por data e exibir com paginacao
+
+**Front-end (`MedicoSlotsPanel.tsx`):**
+- Nenhuma alteracao necessaria (ja funciona com slots futuros), so depende da RLS corrigida
+
+## Resumo das mudancas
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| Migration SQL | RLS: adicionar `anon` ao SELECT; recriar `fn_servico_slots_disponiveis` sem filtro de dia unico |
+| `src/pages/public/ServicoDetalhe.tsx` | Passar intervalo de datas na RPC; adicionar navegacao por dia/semana |
+
+Nenhuma alteracao em `MedicoSlotsPanel.tsx` -- so a RLS resolve.
