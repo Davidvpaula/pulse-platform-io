@@ -6650,12 +6650,7 @@ export type Database = {
         Args: { _paciente_id?: string; _slot_id: string }
         Returns: Json
       }
-      fn_pa_reservar_slot:
-        | { Args: { _slot_inicio: string }; Returns: Json }
-        | {
-            Args: { _paciente_id?: string; _slot_inicio: string }
-            Returns: Json
-          }
+      fn_pa_reservar_slot: { Args: { _slot_inicio: string }; Returns: Json }
       fn_pa_slots_disponiveis: {
         Args: { _data?: string }
         Returns: {
@@ -6702,9 +6697,10 @@ export type Database = {
         Args: { _servico_id: string; _slot_id: string }
         Returns: Json
       }
-      fn_servico_reservar_slot:
-        | { Args: { _servico_id: string; _slot_inicio: string }; Returns: Json }
-        | { Args: { _servico_id: string; _slot_inicio: string }; Returns: Json }
+      fn_servico_reservar_slot: {
+        Args: { _servico_id: string; _slot_inicio: string }
+        Returns: Json
+      }
       fn_servico_slots_disponiveis: {
         Args: { _data: string; _servico_id: string }
         Returns: {
