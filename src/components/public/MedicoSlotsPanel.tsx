@@ -4,6 +4,7 @@ import { Calendar, Clock, Loader2, Video, ChevronLeft, ChevronRight } from "luci
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
+import { fmtHora, dataLabel } from "@/lib/format";
 
 type Slot = {
   id: string;
