@@ -66,7 +66,7 @@ export default function SecretariaAgenda() {
           title="Agenda operacional"
           description="Visão por médico e por dia. Reatribua consultas quando um profissional faltar."
           actions={
-            <Button className="bg-gradient-primary hover:opacity-90">
+            <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setNovoOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo agendamento
             </Button>
           }
