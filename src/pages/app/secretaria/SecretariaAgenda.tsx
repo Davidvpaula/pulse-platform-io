@@ -187,6 +187,12 @@ export default function SecretariaAgenda() {
           consultaId={historicoCtx?.id ?? null}
           consultaResumo={historicoCtx?.resumo}
         />
+
+        <NovoAgendamentoDialog
+          open={novoOpen}
+          onOpenChange={setNovoOpen}
+          onCriado={() => void carregar()}
+        />
       </div>
     );
   }
