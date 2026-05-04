@@ -164,9 +164,8 @@ export default function Auth() {
     if (role === "medico") {
       const md = parsed.data as z.infer<typeof medicoSchema>;
       metadata.crm = md.crm;
-      if (md.rqe) metadata.rqe = md.rqe;
-      if (md.especialidade) metadata.especialidade = md.especialidade;
-      // CRM estado: extraímos do CEP ou default vazio — será preenchido no cadastro completo
+      metadata.rqe = md.rqe;
+      metadata.especialidade = md.especialidade;
       metadata.crm_estado = "";
     }
 
