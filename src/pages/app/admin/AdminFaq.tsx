@@ -114,7 +114,7 @@ export default function AdminFaq() {
 
   return (
     <div className="space-y-6">
-      <PageHeader heading="FAQ do Site" text="Gerencie as perguntas frequentes exibidas na página pública." />
+      <PageHeader title="FAQ do Site" description="Gerencie as perguntas frequentes exibidas na página pública." />
 
       <div className="flex justify-end">
         <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo FAQ</Button>
