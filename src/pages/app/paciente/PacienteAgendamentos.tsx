@@ -27,6 +27,7 @@ import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
 import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
+import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
@@ -40,6 +41,7 @@ export default function PacienteAgendamentos() {
   const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
   const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
+  const [expandedPag, setExpandedPag] = useState<string | null>(null);
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
