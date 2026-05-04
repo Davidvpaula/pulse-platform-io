@@ -773,12 +773,20 @@ export async function criarSlotsEmLote(input: {
   // Busca slots existentes no intervalo total para evitar conflito.
   const minIni = rows.reduce((m, r) => (r.inicio < m ? r.inicio : m), rows[0].inicio);
   const maxFim = rows.reduce((m, r) => (r.fim > m ? r.fim : m), rows[0].fim);
-  const { data: existentes } = await supabase
+  let q = supabase
     .from("agenda_slots")
     .select("inicio, fim")
     .eq("medico_id", medicoId)
     .lt("inicio", maxFim)
     .gt("fim", minIni);
+
+  if (input.servicoId) {
+    q = q.eq("servico_id", input.servicoId);
+  } else {
+    q = q.is("servico_id", null);
+  }
+
+  const { data: existentes } = await q;
 
   const conflita = (r: Row) =>
     (existentes ?? []).some((e) => e.inicio < r.fim && e.fim > r.inicio);
