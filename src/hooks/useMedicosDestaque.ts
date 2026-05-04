@@ -6,10 +6,15 @@ export type MedicoDestaque = {
   nome: string;
   especialidade: string | null;
   crm: string;
+  bio: string | null;
+  foto_url: string | null;
   avaliacao_media: number;
   total_avaliacoes: number;
   online: boolean;
   ranking_score: number;
+  taxa_no_show: number;
+  fator_premium: number;
+  created_at: string;
 };
 
 /**
@@ -24,7 +29,7 @@ export function useMedicosDestaque(limit = 6) {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, avaliacao_media, total_avaliacoes, online, ranking_score")
+        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
         .order("online", { ascending: false })
         .order("ranking_score", { ascending: false })
         .limit(limit);
