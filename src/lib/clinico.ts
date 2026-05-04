@@ -875,7 +875,7 @@ export async function excluirTodosSlots(): Promise<{ ok: boolean; removidos: num
     return { ok: false, removidos: 0, error: error.message };
   }
   return { ok: true, removidos: ids.length };
-
+}
 
 export async function updateConsultaStatus(
   consultaId: string,
