@@ -570,6 +570,7 @@ function NovaCampanhaDialog({ open, onOpenChange, medicoId, saldoAtual, cpcPadra
     if (!titulo.trim()) { toast.error("Informe um título"); return; }
     const cpcVal = Math.round(parseFloat(cpc) * 100);
     if (orc < 500) { toast.error("Orçamento mínimo R$ 5,00"); return; }
+    if (orc > saldoAtual) { toast.error("Saldo insuficiente para este orçamento"); return; }
     if (cpcVal < 10) { toast.error("CPC mínimo R$ 0,10"); return; }
     setCriando(true);
     try {
@@ -619,7 +620,7 @@ function NovaCampanhaDialog({ open, onOpenChange, medicoId, saldoAtual, cpcPadra
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleCriar} disabled={criando} className="bg-gradient-primary hover:opacity-90">
+          <Button onClick={handleCriar} disabled={criando || orc > saldoAtual} className="bg-gradient-primary hover:opacity-90">
             {criando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Megaphone className="mr-2 h-4 w-4" />}
             Criar campanha
           </Button>
