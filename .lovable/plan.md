@@ -1,59 +1,47 @@
 
-## Diagnóstico
+## Problema
 
-Foram identificadas **2 causas-raiz** para os erros:
+O erro **"FOR UPDATE cannot be applied to the nullable side of an outer join"** ocorre em ambas as funções `fn_pa_reservar_slot` e `fn_servico_reservar_slot`. 
 
-### Erro 1: "PA não configurado" (Atendimento Imediato)
+A causa: as queries fazem `LEFT JOIN public.medico_ranking mr ...` e depois usam `FOR UPDATE SKIP LOCKED`. O PostgreSQL proíbe `FOR UPDATE` em tabelas do lado "nullable" de um outer join. Como `medico_ranking` é LEFT JOIN (nullable side), o banco rejeita a query inteira.
 
-A RPC `fn_pa_reservar_slot` busca a configuração com:
-```sql
-SELECT (value->>'servico_id')::uuid FROM app_settings WHERE key = 'atendimento_imediato'
-```
-
-Mas a configuração real no banco usa:
-- **Chave:** `atendimento_imediato.servico_id`  
-- **Valor:** UUID direto (`a3fa895b-...`), não um JSON com campo `servico_id`
-
-Todas as outras funções (`fn_pa_slots_disponiveis`, frontend, admin) usam a chave correta. Apenas `fn_pa_reservar_slot` está errada.
-
-### Erro 2: "Erro ao reservar" (Serviço da Plataforma)
-
-A RPC `fn_servico_reservar_slot` funciona corretamente em termos de lógica, mas:
-- Se o usuário logado **não tem perfil de paciente**, retorna "Perfil de paciente não encontrado" que é engolido pelo frontend genérico "Erro ao reservar"
-- O frontend não exibe a mensagem de erro específica da RPC corretamente em todos os cenários
+Por isso o agendamento nunca chega ao formulário -- o RPC retorna erro antes de reservar qualquer slot.
 
 ---
 
-## Plano de ação
+## Sobre "pacientes" (sua dúvida)
 
-### Etapa 1: Migration - Corrigir `fn_pa_reservar_slot`
+A tabela `pacientes` guarda o perfil de paciente vinculado ao `auth.uid()`. Se um usuário se cadastra mas nunca completa o perfil de paciente (ou se o registro não foi criado automaticamente), a função retorna "Perfil de paciente não encontrado". Isso é uma segunda barreira, mas no seu caso o erro que aparece é o do `FOR UPDATE`, que acontece antes dessa verificação chegar a importar.
 
-Atualizar a RPC para usar a chave correta:
+---
 
+## Plano de correção
+
+### 1. Migration SQL -- corrigir ambas as funções
+
+Trocar `FOR UPDATE SKIP LOCKED` por `FOR UPDATE OF s SKIP LOCKED` em todas as 4 queries (2 em cada função). Isso diz ao PostgreSQL para travar apenas a tabela `agenda_slots` (alias `s`), ignorando o LEFT JOIN com `medico_ranking`.
+
+Funções afetadas:
+- `fn_pa_reservar_slot` (2 queries com FOR UPDATE)
+- `fn_servico_reservar_slot` (2 queries com FOR UPDATE)
+
+Nenhuma outra mudança na lógica -- apenas adicionar `OF s` ao lock.
+
+### 2. Nenhuma mudança no frontend
+
+O frontend já está tratando erros corretamente. Uma vez que o RPC funcione, o fluxo normal prossegue: reserva o slot e redireciona para confirmação/formulário.
+
+---
+
+## Detalhes técnicos
+
+Mudança em cada query:
 ```sql
--- DE (errado):
-SELECT (value->>'servico_id')::uuid FROM app_settings WHERE key = 'atendimento_imediato';
+-- Antes:
+FOR UPDATE SKIP LOCKED;
 
--- PARA (correto, igual fn_pa_slots_disponiveis):
-SELECT (value #>> '{}')::uuid FROM app_settings WHERE key = 'atendimento_imediato.servico_id';
+-- Depois:
+FOR UPDATE OF s SKIP LOCKED;
 ```
 
-Também adicionar:
-- Filtro `s.servico_id = _pa_servico_id` nos SELECTs (consistência com `fn_pa_slots_disponiveis`)
-- Validação de perfil paciente + `reservado_por`
-- Mensagens de erro específicas
-
-### Etapa 2: Melhorar tratamento de erro no frontend
-
-Nos dois componentes (`AtendimentoImediato.tsx` e `ServicoDetalhe.tsx`), melhorar o toast de erro para exibir a mensagem real da RPC ao invés de mensagem genérica. Atualmente o código já faz `(data as any)?.erro || "Erro ao reservar..."` mas quando a RPC retorna um `error` de rede (não um `data.erro`), a mensagem se perde.
-
-### Arquivos alterados
-
-| Arquivo | Tipo | O que muda |
-|---------|------|------------|
-| Migration SQL | DB | Corrige `fn_pa_reservar_slot` |
-| `src/pages/public/AtendimentoImediato.tsx` | Frontend | Melhor exibicao de erro |
-| `src/pages/public/ServicoDetalhe.tsx` | Frontend | Melhor exibicao de erro |
-
-### Impacto em outros módulos
-Nenhum. As RPCs e componentes alterados são auto-contidos.
+Isso é a correção padrão do PostgreSQL para locking seletivo em queries com outer joins.
