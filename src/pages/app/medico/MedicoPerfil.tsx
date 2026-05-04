@@ -206,21 +206,19 @@ export default function MedicoPerfil() {
                   <h3 className="font-display text-lg font-semibold">Perfil profissional</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
+                  <div className="md:col-span-2">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nome completo</Label>
                     <Input value={nome} onChange={e => setNome(e.target.value)} className="mt-1.5" />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Telefone</Label>
-                    <Input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(00) 00000-0000" className="mt-1.5" />
-                  </div>
-                  <div>
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CRM</Label>
-                    <Input value={medico ? `${medico.crm} / ${medico.crm_estado}` : ""} disabled className="mt-1.5" />
+                    <Input value={medico ? `${medico.crm} / ${medico.crm_estado ?? ""}` : ""} disabled className="mt-1.5 bg-muted/40" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Editável em Dados Pessoais</p>
                   </div>
                   <div>
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Especialidade principal</Label>
-                    <Input value={medico?.especialidade ?? ""} disabled className="mt-1.5" />
+                    <Input value={medico?.especialidade ?? ""} disabled className="mt-1.5 bg-muted/40" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Editável em Dados Pessoais</p>
                   </div>
                   <div>
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Foto de perfil</Label>
@@ -325,9 +323,9 @@ export default function MedicoPerfil() {
                   <h4 className="text-sm font-semibold">Como você aparecerá no site</h4>
                 </div>
 
-                <div className="overflow-hidden">
+                <div className="overflow-hidden rounded-b-xl">
                   {/* Cover gradient */}
-                  <div className="relative h-20 bg-gradient-primary" />
+                  <div className="relative h-20 bg-gradient-to-br from-primary/80 to-primary" />
                   <div className="px-5 pb-5">
                     {/* Avatar + rating */}
                     <div className="-mt-10 mb-3 flex items-end gap-3">
