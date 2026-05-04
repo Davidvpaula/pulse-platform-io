@@ -86,16 +86,18 @@ const mockProvider = {
       metadata.medico_id = input.reserva.medico_id;
     }
 
+    const insertObj: Record<string, unknown> = {
+      valor_centavos: input.valorCentavos,
+      metodo: input.metodo ?? "simulado",
+      provider: "mock" as const,
+      status: "pendente" as const,
+      metadata,
+    };
+    if (input.consultaId) insertObj.consulta_id = input.consultaId;
+
     const { data, error } = await supabase
       .from("pagamentos")
-      .insert({
-        consulta_id: input.consultaId ?? null,
-        valor_centavos: input.valorCentavos,
-        metodo: input.metodo ?? "simulado",
-        provider: "mock",
-        status: "pendente",
-        metadata,
-      })
+      .insert(insertObj as any)
       .select("*")
       .single();
     if (error || !data) throw error ?? new Error("Falha ao criar pagamento");
