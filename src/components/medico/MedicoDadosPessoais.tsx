@@ -60,6 +60,9 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
   const [telefone, setTelefone] = useState(medico.telefone ?? "");
   const [rqe, setRqe] = useState(medico.rqe ?? "");
   const [sexo, setSexo] = useState((medico as any).sexo ?? "");
+  const [crm, setCrm] = useState(medico.crm ?? "");
+  const [crmEstado, setCrmEstado] = useState(medico.crm_estado ?? "");
+  const [especialidade, setEspecialidade] = useState(medico.especialidade ?? "");
   const [endRes, setEndRes] = useState<Endereco>(EMPTY_END);
   const [endCom, setEndCom] = useState<Endereco>(EMPTY_END);
   const [usarComercial, setUsarComercial] = useState(false);
