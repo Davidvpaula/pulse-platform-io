@@ -13,6 +13,7 @@ import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
 import type { PASlot, PAReserva } from "@/lib/pa-types";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { criarCheckoutSession, abrirCheckout } from "@/lib/pagamentos";
 
 type Servico = {
   id: string;
