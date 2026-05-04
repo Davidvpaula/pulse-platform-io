@@ -72,15 +72,29 @@ export async function getProviderAtual(): Promise<PagamentoProvider> {
 
 const mockProvider = {
   async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
+    const metadata: Record<string, unknown> = {
+      descricao: input.descricao ?? null,
+      simulated: true,
+    };
+    // Armazena dados da reserva unificada para criação pós-pagamento
+    if (input.reserva) {
+      metadata.slot_id = input.reserva.slot_id;
+      metadata.tipo = input.reserva.tipo;
+      metadata.referencia_id = input.reserva.referencia_id;
+      metadata.motivo = input.reserva.motivo ?? null;
+      metadata.paciente_id = input.reserva.paciente_id;
+      metadata.medico_id = input.reserva.medico_id;
+    }
+
     const { data, error } = await supabase
       .from("pagamentos")
       .insert({
-        consulta_id: input.consultaId,
+        consulta_id: input.consultaId ?? null,
         valor_centavos: input.valorCentavos,
         metodo: input.metodo ?? "simulado",
         provider: "mock",
         status: "pendente",
-        metadata: { descricao: input.descricao ?? null, simulated: true },
+        metadata,
       })
       .select("*")
       .single();
