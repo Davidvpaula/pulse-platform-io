@@ -6192,14 +6192,18 @@ export type Database = {
       medicos_publicos: {
         Row: {
           avaliacao_media: number | null
+          bio: string | null
           created_at: string | null
           crm: string | null
           especialidade: string | null
+          fator_premium: number | null
+          foto_url: string | null
           id: string | null
           link_sala_padrao: string | null
           nome: string | null
           online: boolean | null
           ranking_score: number | null
+          taxa_no_show: number | null
           total_avaliacoes: number | null
         }
         Relationships: []
