@@ -59,6 +59,7 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome }: Props) {
         .from("agenda_slots")
         .select("id, inicio, fim, modalidade")
         .eq("medico_id", medicoId)
+        .is("servico_id", null)
         .eq("status", "disponivel")
         .gte("inicio", new Date().toISOString())
         .order("inicio", { ascending: true })

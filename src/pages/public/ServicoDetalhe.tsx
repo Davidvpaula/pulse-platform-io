@@ -92,6 +92,7 @@ export default function ServicoDetalhe() {
           .from("agenda_slots")
           .select("id,inicio,medico_id")
           .in("medico_id", ids)
+          .eq("servico_id", s.id)
           .eq("status", "disponivel")
           .gte("inicio", new Date().toISOString())
           .order("inicio", { ascending: true }),
