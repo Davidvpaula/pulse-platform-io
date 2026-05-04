@@ -177,8 +177,21 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
         </div>
         <div><Label>Data de nascimento</Label><Input type="date" value={dataNasc} onChange={e => setDataNasc(e.target.value)} /></div>
         <div><Label>Telefone</Label><Input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(00) 00000-0000" /></div>
-        <div><Label>CRM</Label><Input value={`${medico.crm} / ${medico.crm_estado}`} disabled /></div>
-        <div><Label>Especialidade</Label><Input value={medico.especialidade} disabled /></div>
+        <div>
+          <Label>CRM</Label>
+          <div className="flex gap-2">
+            <Input value={crm} onChange={e => setCrm(e.target.value)} placeholder="123456" className="flex-1" />
+            <Select value={crmEstado} onValueChange={setCrmEstado}>
+              <SelectTrigger className="w-24"><SelectValue placeholder="UF" /></SelectTrigger>
+              <SelectContent>
+                {UF_LIST.map(uf => (
+                  <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div><Label>Especialidade</Label><Input value={especialidade} onChange={e => setEspecialidade(e.target.value)} placeholder="Ex: Cardiologia" /></div>
         <div><Label>RQE</Label><Input value={rqe} onChange={e => setRqe(e.target.value)} placeholder="Opcional" /></div>
         <div>
           <Label>Sexo</Label>
