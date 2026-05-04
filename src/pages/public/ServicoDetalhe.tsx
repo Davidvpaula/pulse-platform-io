@@ -240,11 +240,23 @@ export default function ServicoDetalhe() {
       return;
     }
 
-    toast.success("Confirmado!", {
-      description: `Atendimento agendado com Dr(a). ${reserva.medico_nome}. Redirecionando…`,
-    });
-    setReserva(null);
-    navigate(`/app/paciente/consultas`);
+    const res = data as any;
+    // Cria sessão de pagamento e redireciona para checkout
+    try {
+      const checkoutSession = await criarCheckoutSession({
+        consultaId: res.consulta_id,
+        valorCentavos: res.valor_centavos,
+        descricao: `${servico.nome} · Dr(a). ${reserva.medico_nome}`,
+      });
+
+      toast.success("Reserva confirmada!", {
+        description: `Redirecionando para pagamento…`,
+      });
+      setReserva(null);
+      abrirCheckout(checkoutSession, navigate);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao criar sessão de pagamento.");
+    }
   }
 
   const totalLivres = Array.from(estadoPorSlot.values()).filter((v) => v.estado === "livre").length;
