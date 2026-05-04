@@ -278,6 +278,7 @@ const App = () => (
               <Route path="colaborador/relatorios" element={<G perm="relatorios.ver_operacional"><SecretariaRelatorios /></G>} />
               <Route path="colaborador/produtividade" element={<Navigate to="/app/colaborador/equipe" replace />} />
               <Route path="colaborador/comunicacao-interna" element={<ComunicacaoInterna />} />
+              <Route path="colaborador/perfil" element={<ColaboradorPerfil />} />
               <Route path="colaborador/pendencias-integracao" element={<G perm="supervisor.pendencias_feegow"><PendenciasIntegracao /></G>} />
               <Route path="colaborador/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="colaborador/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
