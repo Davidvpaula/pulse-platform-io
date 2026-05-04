@@ -24,6 +24,7 @@ export type Database = {
           modalidade: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes: string | null
           reserva_expira_em: string | null
+          reservado_por: string | null
           reservado_por_consulta_id: string | null
           servico_id: string | null
           status: Database["public"]["Enums"]["slot_status"]
@@ -38,6 +39,7 @@ export type Database = {
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes?: string | null
           reserva_expira_em?: string | null
+          reservado_por?: string | null
           reservado_por_consulta_id?: string | null
           servico_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
@@ -52,6 +54,7 @@ export type Database = {
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           observacoes?: string | null
           reserva_expira_em?: string | null
+          reservado_por?: string | null
           reservado_por_consulta_id?: string | null
           servico_id?: string | null
           status?: Database["public"]["Enums"]["slot_status"]
@@ -70,6 +73,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_slots_reservado_por_fkey"
+            columns: ["reservado_por"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
             referencedColumns: ["id"]
           },
           {
@@ -6646,10 +6656,7 @@ export type Database = {
         }
         Returns: string
       }
-      fn_pa_confirmar_reserva: {
-        Args: { _paciente_id?: string; _slot_id: string }
-        Returns: Json
-      }
+      fn_pa_confirmar_reserva: { Args: { _slot_id: string }; Returns: Json }
       fn_pa_reservar_slot: { Args: { _slot_inicio: string }; Returns: Json }
       fn_pa_slots_disponiveis: {
         Args: { _data?: string }
