@@ -6855,6 +6855,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      medico_tem_consulta_com_paciente: {
+        Args: { _medico_user_id: string; _paciente_id: string }
+        Returns: boolean
+      }
       password_mark_changed: { Args: never; Returns: undefined }
       password_status: {
         Args: never
@@ -7152,6 +7156,8 @@ export type Database = {
         | "manual_secretaria"
         | "retorno"
         | "api"
+        | "pa_publico"
+        | "servico_plataforma"
       consulta_financeiro_status:
         | "valido"
         | "invalidado"
@@ -7631,6 +7637,8 @@ export const Constants = {
         "manual_secretaria",
         "retorno",
         "api",
+        "pa_publico",
+        "servico_plataforma",
       ],
       consulta_financeiro_status: [
         "valido",
