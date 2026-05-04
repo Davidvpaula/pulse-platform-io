@@ -141,9 +141,11 @@ export default function PacienteAgendarConfirmar() {
     if (!slot) return;
     setSubmitting(true);
     try {
-      const res = await criarConsultaComReserva({
+      // 1) Reserva o slot SEM criar consulta
+      const reserva = await reservarSlotUnificado({
         slot_id: slot.id,
-        especialidade_id: slot.especialidade_id,
+        tipo: "especialidade",
+        referencia_id: slot.especialidade_id,
         motivo: values.motivo,
         nome_completo: values.nome_completo,
         cpf: values.cpf,
@@ -153,17 +155,24 @@ export default function PacienteAgendarConfirmar() {
         cep: values.cep,
       });
 
+      // 2) Cria checkout (sem consulta_id — consulta será criada pós-pagamento)
       const session = await criarCheckoutSession({
-        consultaId: res.consulta_id,
-        valorCentavos: res.valor_centavos,
+        valorCentavos: reserva.valor_centavos,
         descricao: `${slot.especialidade_nome} · ${slot.medico_nome}`,
+        reserva: {
+          slot_id: reserva.slot_id,
+          tipo: reserva.tipo,
+          referencia_id: reserva.referencia_id,
+          motivo: reserva.motivo,
+          paciente_id: reserva.paciente_id,
+          medico_id: reserva.medico_id,
+        },
       });
 
-      // Analytics: agendamento concluído (consulta criada + checkout aberto)
+      // Analytics
       trackConversion({
         tipo: "agendamento",
-        valor: res.valor_centavos / 100,
-        consulta_id: res.consulta_id,
+        valor: reserva.valor_centavos / 100,
         servico: slot.especialidade_nome,
         medico_id: slot.medico_id,
       }).catch(() => {});
