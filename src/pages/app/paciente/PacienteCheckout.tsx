@@ -189,7 +189,7 @@ export default function PacienteCheckout() {
       if (cupomAplicado && consultaCtx) {
         const reg = await registrarUsoCupom({
           cupomId: cupomAplicado.cupom_id,
-          consultaId: pagamento.consulta_id,
+          consultaId: pagamento.consulta_id ?? pagamento.id,
           pacienteId: consultaCtx.paciente_id,
           medicoId: consultaCtx.medico_id,
           codigoSnapshot: cupomAplicado.codigo,
