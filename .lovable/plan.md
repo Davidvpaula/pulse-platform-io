@@ -1,53 +1,59 @@
 
-# Plano de Execucao — Todas as Etapas do Checkup
+## Diagnóstico
 
-Baseado no diagnostico aprovado, executarei as 4 etapas em sequencia.
+Foram identificadas **2 causas-raiz** para os erros:
 
----
+### Erro 1: "PA não configurado" (Atendimento Imediato)
 
-## Etapa 1 — Migration: RLS + RPCs (Bug critico + Seguranca)
+A RPC `fn_pa_reservar_slot` busca a configuração com:
+```sql
+SELECT (value->>'servico_id')::uuid FROM app_settings WHERE key = 'atendimento_imediato'
+```
 
-Uma unica migration SQL que faz:
+Mas a configuração real no banco usa:
+- **Chave:** `atendimento_imediato.servico_id`  
+- **Valor:** UUID direto (`a3fa895b-...`), não um JSON com campo `servico_id`
 
-1. **RLS `agenda_slots`**: Drop policy `"Slots disponíveis públicos a autenticados"` (authenticated only) e criar `"Slots disponíveis visíveis publicamente"` com `TO authenticated, anon` e `USING (status = 'disponivel')`. Isso corrige a invisibilidade de slots particulares para visitantes nao-logados no perfil do medico.
+Todas as outras funções (`fn_pa_slots_disponiveis`, frontend, admin) usam a chave correta. Apenas `fn_pa_reservar_slot` está errada.
 
-2. **RPC `fn_servico_reservar_slot`**: Recriar com 2 parametros (`_slot_inicio`, `_servico_id`) em vez de 3. O `_paciente_id` sera derivado internamente via `auth.uid()` + lookup em `pacientes`. Adiciona guard `auth.uid() IS NOT NULL`. Isso corrige o mismatch de parametros com o frontend e impede impersonacao.
+### Erro 2: "Erro ao reservar" (Serviço da Plataforma)
 
-3. **RPC `fn_servico_confirmar_reserva`**: Idem — recriar com 2 parametros (`_slot_id`, `_servico_id`). Adiciona verificacao de que o slot foi reservado pelo mesmo paciente. Revoga `EXECUTE` de `anon` em ambas as RPCs.
-
----
-
-## Etapa 2 — Limpeza de codigo
-
-1. **`src/lib/format.ts`**: Adicionar funcao `dataLabel(iso: string): string` centralizada (Hoje/Amanha/data formatada).
-
-2. **`src/components/public/MedicoSlotsPanel.tsx`**: Remover `formatHora` e `dataLabel` locais, importar `fmtHora` e `dataLabel` de `@/lib/format`.
-
-3. **`src/pages/public/ServicoDetalhe.tsx`**: Remover `dataLabel` local, importar de `@/lib/format`.
+A RPC `fn_servico_reservar_slot` funciona corretamente em termos de lógica, mas:
+- Se o usuário logado **não tem perfil de paciente**, retorna "Perfil de paciente não encontrado" que é engolido pelo frontend genérico "Erro ao reservar"
+- O frontend não exibe a mensagem de erro específica da RPC corretamente em todos os cenários
 
 ---
 
-## Etapa 3 — (incluida na Etapa 1)
+## Plano de ação
 
-A seguranca das RPCs ja esta coberta na migration da Etapa 1.
+### Etapa 1: Migration - Corrigir `fn_pa_reservar_slot`
 
----
+Atualizar a RPC para usar a chave correta:
 
-## Etapa 4 — Melhorias UX
+```sql
+-- DE (errado):
+SELECT (value->>'servico_id')::uuid FROM app_settings WHERE key = 'atendimento_imediato';
 
-1. **`MedicoHorarios.tsx`**: Na info-bar de duracao, quando `tipoSlot === "servico"`, mostrar a duracao do(s) servico(s) selecionado(s) em vez da duracao da especialidade.
+-- PARA (correto, igual fn_pa_slots_disponiveis):
+SELECT (value #>> '{}')::uuid FROM app_settings WHERE key = 'atendimento_imediato.servico_id';
+```
 
-2. **`PacienteAgendamentos.tsx`**: Melhorar o empty state de "futuras" com card mais destacado e CTA maior.
+Também adicionar:
+- Filtro `s.servico_id = _pa_servico_id` nos SELECTs (consistência com `fn_pa_slots_disponiveis`)
+- Validação de perfil paciente + `reservado_por`
+- Mensagens de erro específicas
 
----
+### Etapa 2: Melhorar tratamento de erro no frontend
 
-## Arquivos modificados
+Nos dois componentes (`AtendimentoImediato.tsx` e `ServicoDetalhe.tsx`), melhorar o toast de erro para exibir a mensagem real da RPC ao invés de mensagem genérica. Atualmente o código já faz `(data as any)?.erro || "Erro ao reservar..."` mas quando a RPC retorna um `error` de rede (não um `data.erro`), a mensagem se perde.
 
-| Arquivo | Tipo |
-|---------|------|
-| Migration SQL (novo) | DB schema |
-| `src/lib/format.ts` | Adicionar `dataLabel` |
-| `src/components/public/MedicoSlotsPanel.tsx` | Remover helpers locais, usar centralizados |
-| `src/pages/public/ServicoDetalhe.tsx` | Remover `dataLabel` local, importar |
-| `src/pages/app/medico/MedicoHorarios.tsx` | Fix info-bar duracao |
-| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Melhorar empty state |
+### Arquivos alterados
+
+| Arquivo | Tipo | O que muda |
+|---------|------|------------|
+| Migration SQL | DB | Corrige `fn_pa_reservar_slot` |
+| `src/pages/public/AtendimentoImediato.tsx` | Frontend | Melhor exibicao de erro |
+| `src/pages/public/ServicoDetalhe.tsx` | Frontend | Melhor exibicao de erro |
+
+### Impacto em outros módulos
+Nenhum. As RPCs e componentes alterados são auto-contidos.
