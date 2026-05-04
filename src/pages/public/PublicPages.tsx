@@ -719,7 +719,7 @@ export const Agendar = () => {
           </SheetHeader>
           <div className="mt-4">
             {sheetMedico && (
-              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} />
+              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} especialidadeId={espId || undefined} />
             )}
           </div>
         </SheetContent>
