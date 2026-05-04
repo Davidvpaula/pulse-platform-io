@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  criarConsultaComReserva,
+  reservarSlotUnificado,
   formatDataBR,
   formatHora,
   getPacienteAtual,
