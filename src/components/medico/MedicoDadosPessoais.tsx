@@ -96,12 +96,18 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
 
   async function salvar() {
     setSaving(true);
+    if (!crm.trim()) { toast.error("CRM é obrigatório."); setSaving(false); return; }
+    if (!crmEstado) { toast.error("Selecione o estado do CRM."); setSaving(false); return; }
+    if (!especialidade.trim()) { toast.error("Especialidade é obrigatória."); setSaving(false); return; }
     const { error: medErr } = await supabase.from("medicos").update({
       nome: nome.trim() || medico.nome,
       data_nascimento: dataNasc || null,
       telefone: telefone.trim() || null,
       rqe: rqe.trim() || null,
       sexo: sexo || null,
+      crm: crm.trim(),
+      crm_estado: crmEstado,
+      especialidade: especialidade.trim(),
     } as any).eq("id", medico.id);
     if (medErr) { toast.error(medErr.message); setSaving(false); return; }
 
