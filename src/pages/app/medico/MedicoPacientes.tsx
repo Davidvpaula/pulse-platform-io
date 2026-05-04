@@ -8,9 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
-import { pacientes as pacientesMock, agendamentos } from "@/lib/mock";
 import { listPacientesDoMedico, type PacienteDoMedico } from "@/lib/clinico";
-import { StatusBadge } from "@/components/StatusBadge";
 
 type FiltroTipo = "todos" | "ativos" | "pendentes" | "empresariais";
 
