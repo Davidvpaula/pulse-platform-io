@@ -716,7 +716,7 @@ export default function MedicoHorarios() {
               <div className="flex justify-end">
                 <Button
                   onClick={gerarDia}
-                  disabled={savingDia || !duracao || !dataSel || devMode || (modalidade === "online" && !linkSala && !!session)}
+                  disabled={savingDia || (tipoSlot === "particular" && !duracao) || (tipoSlot === "servico" && servicosSel.length === 0) || !dataSel || devMode || (modalidade === "online" && !linkSala && !!session)}
                   className="bg-gradient-primary hover:opacity-90"
                 >
                   {savingDia ? "Gerando…" : "Adicionar ao dia"}
