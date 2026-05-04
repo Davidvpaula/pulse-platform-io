@@ -31,6 +31,16 @@ export function fmtHora(d: string | Date): string {
  * Retorna label amigável para uma data ISO (yyyy-MM-dd ou ISO completo).
  * Ex.: "Hoje", "Amanhã", "seg., 12 de mai."
  */
+/**
+ * Formata ISO date (yyyy-MM-dd) para "dd/mm/yyyy".
+ */
+export function formatDataBR(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = iso.slice(0, 10);
+  const [y, m, dd] = d.split("-");
+  return `${dd}/${m}/${y}`;
+}
+
 export function dataLabel(iso: string): string {
   const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso);
   const hoje = new Date();
