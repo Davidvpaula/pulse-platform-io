@@ -29,6 +29,12 @@ function formatCpf(v: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+] as const;
+}
+
 function EnderecoForm({ label, value, onChange, disabled }: {
   label: string; value: Endereco; onChange: (v: Endereco) => void; disabled?: boolean;
 }) {
