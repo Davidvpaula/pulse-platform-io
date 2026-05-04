@@ -40,8 +40,8 @@ const medicoSchema = z.object({
   ...baseCadastro,
   role: z.literal("medico"),
   crm: z.string().trim().min(3, "CRM inválido").max(20),
-  rqe: z.string().trim().min(1, "Informe o RQE").max(20),
-  especialidade: z.string().min(1, "Selecione a especialidade"),
+  rqe: z.string().trim().max(20).optional().or(z.literal("")),
+  especialidade: z.string().optional().or(z.literal("")),
 }).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
@@ -129,8 +129,8 @@ export default function Auth() {
 
     if (role === "medico") {
       raw.crm = fd.get("crm");
-      raw.rqe = (fd.get("rqe") as string)?.trim() || undefined;
-      raw.especialidade = (fd.get("especialidade") as string) || undefined;
+      raw.rqe = (fd.get("rqe") as string)?.trim() || "";
+      raw.especialidade = (fd.get("especialidade") as string) || "";
     }
 
     const schema = role === "medico" ? medicoSchema : pacienteSchema;
@@ -164,8 +164,8 @@ export default function Auth() {
     if (role === "medico") {
       const md = parsed.data as z.infer<typeof medicoSchema>;
       metadata.crm = md.crm;
-      metadata.rqe = md.rqe;
-      metadata.especialidade = md.especialidade;
+      if (md.rqe) metadata.rqe = md.rqe;
+      if (md.especialidade) metadata.especialidade = md.especialidade;
       metadata.crm_estado = "";
     }
 
@@ -308,13 +308,13 @@ export default function Auth() {
                       <Input id="crm" name="crm" required maxLength={20} placeholder="123456" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="rqe">RQE <span className="text-destructive">*</span></Label>
-                      <Input id="rqe" name="rqe" required maxLength={20} placeholder="Registro de qualificação" />
+                      <Label htmlFor="rqe">RQE</Label>
+                      <Input id="rqe" name="rqe" maxLength={20} placeholder="Registro de qualificação (opcional)" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Especialidade <span className="text-destructive">*</span></Label>
-                      <Select name="especialidade" required>
-                        <SelectTrigger><SelectValue placeholder="Selecione a especialidade" /></SelectTrigger>
+                      <Label>Especialidade inicial</Label>
+                      <Select name="especialidade">
+                        <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
                         <SelectContent>
                           {ESPECIALIDADES.map(s => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
