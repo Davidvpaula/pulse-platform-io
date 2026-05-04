@@ -18,9 +18,7 @@ type Props = {
   medicoNome: string;
 };
 
-function formatHora(iso: string) {
-  return fmtHora(iso);
-}
+
 
 function groupByDate(slots: Slot[]): Map<string, Slot[]> {
   const map = new Map<string, Slot[]>();
