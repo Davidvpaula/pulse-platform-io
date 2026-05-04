@@ -70,20 +70,6 @@ export default function ServicoDetalhe() {
     })();
   }, [slug, navigate]);
 
-  // Pre-fill patient data
-  useEffect(() => {
-    if (!session) return;
-    getPacienteAtual().then((p) => {
-      if (p) {
-        setNome(p.nome_completo ?? "");
-        setCpf(p.cpf ? maskCpf(p.cpf) : "");
-        setTelefone(p.telefone ? maskFone(p.telefone) : "");
-        setDataNasc(p.data_nascimento ?? "");
-        setSexo(p.sexo ?? "nao_informado");
-        setCep(p.cep ? maskCEP(p.cep) : "");
-      }
-    });
-  }, [session]);
 
   // Load slots
   const carregarSlots = useCallback(async () => {
