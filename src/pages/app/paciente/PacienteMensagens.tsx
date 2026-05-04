@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  Bell, Calendar, CheckCircle2, Repeat, CreditCard, FileText, Video,
-  AlertTriangle, Search, Inbox, Filter, Check, Settings,
-  Stethoscope, MessageSquare, Sparkles, ChevronRight, Clock,
-  Send, Loader2, type LucideIcon, User, MessageCircle, Paperclip, Download, Image, X,
-  Eye, EyeOff, ChevronDown,
+  Calendar, CheckCircle2, Check, Settings, Search, Inbox,
+  Stethoscope, MessageSquare, Sparkles, Bell,
+  Send, Loader2, type LucideIcon, User, MessageCircle, Paperclip, Download, FileText, X,
+  ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -26,31 +25,6 @@ import {
   type MensagemPaciente,
 } from "@/lib/pacienteConversas";
 import { toast } from "sonner";
-
-/* ─── Mocks (fallback sem sessão) ─── */
-type MockMsg = {
-  id: string; categoria: string; titulo: string; resumo: string;
-  corpo: string; data: string; lida: boolean; importante?: boolean;
-  cta?: { label: string; to: string }; remetente?: string;
-};
-
-const catMeta: Record<string, { label: string; icon: typeof Bell; color: string; bg: string }> = {
-  lembrete:     { label: "Lembrete",     icon: Bell,           color: "text-primary",     bg: "bg-primary/10" },
-  alteracao:    { label: "Alteração",     icon: AlertTriangle,  color: "text-warning",     bg: "bg-warning/10" },
-  retorno:      { label: "Retorno",       icon: Repeat,         color: "text-success",     bg: "bg-success/10" },
-  pagamento:    { label: "Pagamento",     icon: CreditCard,     color: "text-destructive", bg: "bg-destructive/10" },
-  documento:    { label: "Documento",     icon: FileText,       color: "text-primary",     bg: "bg-primary/10" },
-  telemedicina: { label: "Telemedicina",  icon: Video,          color: "text-primary",     bg: "bg-primary/10" },
-  sistema:      { label: "Sistema",       icon: Sparkles,       color: "text-muted-foreground", bg: "bg-muted" },
-};
-
-const mensagensMock: MockMsg[] = [
-  { id: "m1", categoria: "lembrete", titulo: "Sua consulta começa em 1 hora", resumo: "Dr. Rafael Lasmar · Cardiologia · 14:30", corpo: "Lembre-se de testar câmera e microfone.", data: new Date(Date.now() - 5 * 60_000).toISOString(), lida: false, importante: true, cta: { label: "Entrar na sala", to: "/app/paciente/agendamentos" }, remetente: "Automático" },
-  { id: "m2", categoria: "retorno", titulo: "Retorno gratuito disponível 🎉", resumo: "Cardiologia · válido por 15 dias", corpo: "Aproveite seu retorno gratuito.", data: new Date(Date.now() - 2 * 3600_000).toISOString(), lida: false, cta: { label: "Agendar retorno", to: "/agendar" }, remetente: "Automático" },
-  { id: "m3", categoria: "pagamento", titulo: "Pagamento pendente · R$ 220,00", resumo: "Vence hoje · Cardiologia", corpo: "Pague via Pix, cartão ou boleto.", data: new Date(Date.now() - 24 * 3600_000).toISOString(), lida: false, cta: { label: "Pagar agora", to: "/app/paciente/financeiro" }, remetente: "Financeiro" },
-  { id: "m4", categoria: "documento", titulo: "Nova receita disponível", resumo: "Dr. Rafael Lasmar", corpo: "Receita assinada digitalmente disponível.", data: new Date(Date.now() - 2 * 86400_000).toISOString(), lida: true, cta: { label: "Abrir documento", to: "/app/paciente/documentos" }, remetente: "Dr. Rafael Lasmar" },
-  { id: "m5", categoria: "sistema", titulo: "Bem-vinda ao MedClin", resumo: "Tudo pronto!", corpo: "Complete seu perfil.", data: new Date(Date.now() - 7 * 86400_000).toISOString(), lida: true, cta: { label: "Completar perfil", to: "/app/paciente/perfil" }, remetente: "MedClin" },
-];
 
 /* ─── Sender type icon/label ─── */
 const senderMeta: Record<string, { icon: LucideIcon; label: string; align: "left" | "right" }> = {
@@ -118,7 +92,6 @@ export default function PacienteMensagens() {
       setLoadingMsgs(false);
       setTimeout(() => msgsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     });
-    // Mark messages as read when opening conversation
     marcarMensagensComoLidas(selectedConvId).then(() => {
       setConversas((prev) =>
         prev.map((c) => c.id === selectedConvId ? { ...c, unread_count: 0 } : c)
@@ -126,7 +99,7 @@ export default function PacienteMensagens() {
     });
   }, [selectedConvId, session]);
 
-  // Realtime subscription for messages — with toast notification
+  // Realtime subscription for messages
   useEffect(() => {
     if (!selectedConvId || !session) return;
     const channel = supabase
@@ -142,13 +115,11 @@ export default function PacienteMensagens() {
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
-        // Toast notification for incoming messages (not from me)
         const meta = senderMeta[msg.sender_type];
         if (meta?.align !== "right") {
           toast.info(`${msg.sender_name ?? meta?.label ?? "Nova mensagem"}: ${(msg.body ?? "📎 Anexo").slice(0, 60)}`, {
             duration: 4000,
           });
-          // Auto-mark as read since user is viewing
           marcarMensagensComoLidas(selectedConvId);
         }
         setTimeout(() => msgsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -157,7 +128,7 @@ export default function PacienteMensagens() {
     return () => { supabase.removeChannel(channel); };
   }, [selectedConvId, session]);
 
-  // Global realtime subscription — notify for ANY new message across all conversations
+  // Global realtime subscription
   useEffect(() => {
     if (!session) return;
     const channel = supabase
@@ -168,11 +139,9 @@ export default function PacienteMensagens() {
         table: "messages",
       }, (payload) => {
         const msg = payload.new as any;
-        // Skip if it's the currently viewed conversation (handled above) or sent by me
         if (msg.conversation_id === selectedConvId) return;
         const meta = senderMeta[msg.sender_type];
         if (meta?.align === "right") return;
-        // Update unread count in sidebar
         setConversas((prev) =>
           prev.map((c) =>
             c.id === msg.conversation_id
@@ -186,7 +155,7 @@ export default function PacienteMensagens() {
     return () => { supabase.removeChannel(channel); };
   }, [session, selectedConvId]);
 
-  // Realtime: listen to UPDATE on messages (for read receipts from the other side)
+  // Realtime: listen to UPDATE on messages (read receipts)
   useEffect(() => {
     if (!selectedConvId || !session) return;
     const channel = supabase
@@ -253,12 +222,22 @@ export default function PacienteMensagens() {
   const hasMoreConvs = conversas.length < convsTotal;
   const hasMoreMsgs = mensagens.length < msgsTotal;
 
-  // ─── Se não há sessão, mostra mock (notificações) ───
+  // ─── Sem sessão → pedir login ───
   if (!session) {
-    return <MockMensagens />;
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Mensagens" description="Faça login para ver suas conversas." />
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-muted">
+            <MessageSquare className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">Você precisa estar logado para acessar suas mensagens.</p>
+        </div>
+      </div>
+    );
   }
 
-  // ─── Se não há conversas reais, mostra empty state ───
+  // ─── Sem conversas → empty state limpo ───
   if (!loading && conversas.length === 0 && !buscaDebounced) {
     return (
       <div className="space-y-6">
@@ -276,32 +255,6 @@ export default function PacienteMensagens() {
           <Button asChild className="bg-gradient-primary hover:opacity-90">
             <Link to="/agendar"><Calendar className="mr-2 h-4 w-4" /> Agendar consulta</Link>
           </Button>
-        </div>
-
-        <div className="card-elevated p-6">
-          <h3 className="font-display text-lg font-semibold flex items-center gap-2 mb-4">
-            <Bell className="h-4 w-4 text-primary" /> Notificações recentes
-          </h3>
-          <div className="divide-y divide-border">
-            {mensagensMock.map((m) => {
-              const cat = catMeta[m.categoria] ?? catMeta.sistema;
-              const Icon = cat.icon;
-              return (
-                <div key={m.id} className="flex items-start gap-3 py-3">
-                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", cat.bg)}>
-                    <Icon className={cn("h-4 w-4", cat.color)} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{m.titulo}</p>
-                    <p className="truncate text-xs text-muted-foreground">{m.resumo}</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                    {formatTempoRelativo(m.data)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
     );
@@ -347,7 +300,7 @@ export default function PacienteMensagens() {
               </div>
             ) : conversas.length === 0 ? (
               <div className="flex flex-col items-center gap-2 p-10 text-center text-sm text-muted-foreground">
-                <Inbox className="h-8 w-8 opacity-50" /> Nenhuma conversa
+                <Inbox className="h-8 w-8 opacity-50" /> Nenhuma conversa encontrada
               </div>
             ) : (
               <>
@@ -377,6 +330,8 @@ export default function PacienteMensagens() {
                             <p className="truncate text-xs text-muted-foreground">
                               {c.last_message_preview ?? "Sem mensagens"}
                             </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
                             <span className="text-[10px] text-muted-foreground">
                               {formatTempoRelativo(c.last_message_at)}
                             </span>
@@ -488,7 +443,6 @@ export default function PacienteMensagens() {
                               )}>
                                 {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                               </span>
-                              {/* Read receipt indicator — only for messages I sent */}
                               {isMe && (
                                 <ReadReceipt readAt={m.read_at} isMe={isMe} />
                               )}
@@ -615,44 +569,5 @@ function AttachmentPreview({ url, name, type, isMe }: { url: string; name: strin
       <span className="truncate flex-1">{fileName}</span>
       <Download className="h-3.5 w-3.5 shrink-0 opacity-60" />
     </a>
-  );
-}
-
-/* ─── Mock fallback (sem sessão) ─── */
-function MockMensagens() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Mensagens"
-        description="Faça login para ver suas conversas"
-      />
-      <div className="card-elevated p-6">
-        <h3 className="font-display text-lg font-semibold flex items-center gap-2 mb-4">
-          <Bell className="h-4 w-4 text-primary" /> Notificações (demonstração)
-        </h3>
-        <div className="divide-y divide-border">
-          {mensagensMock.map((m) => {
-            const cat = catMeta[m.categoria] ?? catMeta.sistema;
-            const Icon = cat.icon;
-            return (
-              <div key={m.id} className="flex items-start gap-3 py-3">
-                <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", cat.bg)}>
-                  <Icon className={cn("h-4 w-4", cat.color)} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{m.titulo}</p>
-                  <p className="truncate text-xs text-muted-foreground">{m.resumo}</p>
-                </div>
-                {m.cta && (
-                  <Button asChild size="sm" variant="ghost">
-                    <Link to={m.cta.to}>{m.cta.label}</Link>
-                  </Button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
   );
 }
