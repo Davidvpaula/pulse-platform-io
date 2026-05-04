@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Wallet, Search, Filter, CheckCircle2, Clock, XCircle, AlertTriangle,
   CreditCard, Receipt, ChevronRight, Download, ExternalLink, Loader2,
-  Calendar, Stethoscope, Tag, Copy, RefreshCw, FileText,
+  Calendar, Stethoscope, Tag, Copy, RefreshCw, FileText, FileDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useSession } from "@/lib/session";
 import { formatBRL, abrirCheckout, criarCheckoutSession, type PagamentoStatus, type PagamentoMetodo } from "@/lib/pagamentos";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { gerarReciboPdf, type DadosRecibo } from "@/lib/reciboPdf";
 
 type Linha = {
   id: string;
@@ -424,8 +425,25 @@ export default function PacienteFinanceiro() {
                       </Button>
                     )}
                     {detalhe.status === "pago" && (
-                      <Button variant="outline" onClick={() => window.print()}>
-                        <Download className="mr-2 h-4 w-4" /> Salvar / imprimir recibo
+                      <Button variant="outline" onClick={() => {
+                        const pacNome = session?.user?.user_metadata?.nome ?? session?.user?.email ?? "Paciente";
+                        gerarReciboPdf({
+                          pagamentoId: detalhe.id,
+                          consultaId: detalhe.consulta_id,
+                          valorCentavos: detalhe.valor_centavos,
+                          metodo: detalhe.metodo,
+                          paidAt: detalhe.paid_at,
+                          createdAt: detalhe.created_at,
+                          medicoNome: detalhe.consulta?.medico_nome ?? "Profissional",
+                          especialidadeNome: detalhe.consulta?.especialidade_nome ?? "—",
+                          consultaData: detalhe.consulta?.inicio ?? null,
+                          modalidade: detalhe.consulta?.modalidade ?? "—",
+                          pacienteNome: pacNome,
+                          cupom: detalhe.metadata?.cupom ?? null,
+                        });
+                        toast.success("Recibo PDF gerado com sucesso!");
+                      }}>
+                        <FileDown className="mr-2 h-4 w-4" /> Baixar recibo PDF
                       </Button>
                     )}
                     <Button asChild variant="ghost">
