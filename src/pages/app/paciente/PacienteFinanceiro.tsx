@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Wallet, Search, Filter, CheckCircle2, Clock, XCircle, AlertTriangle,
   CreditCard, Receipt, ChevronRight, Download, ExternalLink, Loader2,
-  Calendar, Stethoscope, Tag, Copy, RefreshCw, FileText,
+  Calendar, Stethoscope, Tag, Copy, RefreshCw, FileText, FileDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useSession } from "@/lib/session";
 import { formatBRL, abrirCheckout, criarCheckoutSession, type PagamentoStatus, type PagamentoMetodo } from "@/lib/pagamentos";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { gerarReciboPdf, type DadosRecibo } from "@/lib/reciboPdf";
 
 type Linha = {
   id: string;
