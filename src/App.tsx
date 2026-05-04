@@ -178,7 +178,7 @@ const App = () => (
 
             {/* APP */}
             <Route path="/app" element={<AppLayout />}>
-              <Route index element={<Navigate to="/app/admin/dashboard" replace />} />
+              <Route index element={<SmartRedirect />} />
 
               {/* Paciente */}
               <Route path="paciente/dashboard" element={<PacienteDashboard />} />
