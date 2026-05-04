@@ -1,43 +1,30 @@
 
-## Melhorias na página Meus Horários (MedicoHorarios)
+## Problema encontrado
 
-### 1. Botão "Excluir dia" na lista de horários cadastrados
+A página de Atendimento Imediato não mostra horários porque a função de banco `fn_pa_slots_disponiveis` tem **duas falhas**:
 
-Ao lado do título de cada dia (ex: "SEGUNDA-FEIRA, 04 DE MAIO"), adicionar um botão "Excluir dia" com ícone de lixeira. Ao clicar, abre o AlertDialog de confirmação informando quantos slots disponíveis serão excluídos. Somente slots com status `disponivel` são removidos (reservados/bloqueados ficam).
+1. **Chave errada no app_settings** — A função busca `key = 'atendimento_imediato'` e tenta `value->>'servico_id'`, mas o app salva com `key = 'atendimento_imediato.servico_id'` e o value é diretamente o UUID (`a3fa895b-...`). Resultado: a CTE `pa_cfg` retorna vazio, e a função retorna zero linhas.
 
-**Alterações:**
-- `src/lib/clinico.ts` — nova função `excluirSlotsDoDia(medicoId, dataISO)` que deleta todos slots disponíveis daquele dia de uma vez.
-- `src/pages/app/medico/MedicoHorarios.tsx` — adicionar botão ao lado do label do dia + state para controlar o dialog de confirmação de exclusão em lote.
+2. **Não filtra por servico_id no slot** — Mesmo se corrigisse a chave, a query junta `agenda_slots` apenas por `medico_id`, sem verificar `s.servico_id = pa_cfg.servico_id`. Isso mostraria slots de qualquer tipo (particular, outros serviços) em vez de apenas os do PA.
 
-### 2. Seleção múltipla de serviços (tipo "Serviço da plataforma")
+Os horários existem (17 slots disponíveis com `servico_id = a3fa895b-...` para hoje), a config existe (`atendimento_imediato.servico_id`), e o médico está vinculado ao serviço. O problema é só na função SQL.
 
-Atualmente o médico seleciona 1 serviço por vez no Select. Trocar para um sistema de checkboxes/multi-select: o médico marca vários serviços e ao gerar horários, cria slots separados para cada serviço selecionado (cada slot tem seu `servico_id`).
+## Plano de correção
 
-**Alterações:**
-- `src/pages/app/medico/MedicoHorarios.tsx`:
-  - `servicoSel: string | null` vira `servicosSel: string[]`
-  - Trocar o `<Select>` por uma lista de checkboxes com nome, duração e preço de cada serviço
-  - Na geração (`gerarSemanal` / `gerarDia`), iterar sobre cada serviço selecionado e chamar `criarSlotsEmLote` para cada um (usando a duração específica do serviço)
-  - Validação: exigir ao menos 1 serviço selecionado
-  - Info de duração: mostrar a duração de cada serviço selecionado (ou "variável" se múltiplos com durações diferentes)
+### 1. Migration: recriar `fn_pa_slots_disponiveis`
 
-### 3. Modo Particular — conectar com perfil/especialidade real
+Alterar a CTE `pa_cfg` para:
+- Buscar `key = 'atendimento_imediato.servico_id'` (a chave real)
+- Extrair o value como texto puro convertido para UUID: `(value #>> '{}')::uuid`
 
-Verificar que quando `tipoSlot === "particular"`:
-- A duração vem de `medico_especialidades` (já funciona via `getDuracaoSlotMedico`)
-- Mostrar o nome da especialidade e o preço (`preco_centavos`) do médico na UI, para que ele saiba exatamente o que está configurando
-- Se não houver especialidade ativa, bloquear geração e linkar para Configurações
+Adicionar filtro no JOIN principal:
+- `JOIN pa_cfg ON s.servico_id = pa_cfg.servico_id` para garantir que só retorne slots criados especificamente para o serviço de PA.
 
-**Alterações:**
-- `src/pages/app/medico/MedicoHorarios.tsx`:
-  - No `refresh()`, buscar também `medico_especialidades` (nome da especialidade + preço) para o médico logado
-  - No card de info de duração, quando `particular`, mostrar: "Especialidade: {nome} · Duração: {X}min · Valor: R$ {Y}"
-  - Se não tiver especialidade ativa, mostrar alerta com link para Configurações
+### 2. Nenhuma alteração em código frontend
 
-### Arquivos impactados
-- `src/lib/clinico.ts` — nova função `excluirSlotsDoDia`
-- `src/pages/app/medico/MedicoHorarios.tsx` — as 3 melhorias acima
+A página `AtendimentoImediato.tsx` e os componentes de calendário já estão corretos. O problema é exclusivamente no banco.
 
-### Sem impacto em
-- Ranking, gamificação, financeiro — nenhuma dessas funcionalidades é alterada
-- Rotas, tabelas, migrations — não necessários (a exclusão em lote usa o mesmo `DELETE` do RLS existente)
+### Impacto
+- Nenhum impacto em ranking, gamificação ou financeiro
+- Nenhuma tabela nova ou coluna alterada
+- Apenas a função SQL é recriada com a query corrigida
