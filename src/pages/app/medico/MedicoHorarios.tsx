@@ -41,6 +41,7 @@ import {
   criarSlotsEmLote,
   excluirSlot,
   excluirSlotsDoDia,
+  excluirTodosSlots,
   getDuracaoSlotMedico,
   getMedicoAtual,
   type AgendaSlot,
