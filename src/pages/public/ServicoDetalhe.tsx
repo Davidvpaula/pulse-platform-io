@@ -213,7 +213,7 @@ export default function ServicoDetalhe() {
       });
     } else {
       toast.success(`Reservado ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}`, {
-        description: "Você tem 1m30s para confirmar.",
+        description: "Você tem 10 minutos para confirmar.",
       });
     }
   }
