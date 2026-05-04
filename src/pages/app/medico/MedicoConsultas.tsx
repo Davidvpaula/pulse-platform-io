@@ -84,13 +84,13 @@ export default function MedicoConsultas() {
   const cancelar = async (id: string) => {
     if (!confirm("Cancelar esta consulta? O paciente será notificado.")) return;
     setAcaoId(id);
-    const ok = await updateConsultaStatus(id, "cancelada");
+    const result = await updateConsultaStatus(id, "cancelada");
     setAcaoId(null);
-    if (ok) {
+    if (result.ok) {
       toast.success("Consulta cancelada");
       void carregar();
     } else {
-      toast.error("Não foi possível cancelar");
+      toast.error(result.error ?? "Não foi possível cancelar");
     }
   };
 
