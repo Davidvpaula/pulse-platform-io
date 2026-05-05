@@ -81,13 +81,14 @@ export default function AdminIAMedicos() {
   const carregar = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: meds }, ops, comps, alts, anos, auds] = await Promise.all([
+      const [{ data: meds }, ops, comps, alts, anos, auds, rnks] = await Promise.all([
         supabase.from("medicos" as any).select("id, nome, ativo").eq("ativo", true).order("nome"),
         listarScoresOperacionais(),
         listarScoresCompliance(),
         listarAlertasIA(),
         listarAnomalias(),
         listarAuditoriaIA(),
+        listarRankingTop(200),
       ]);
       setMedicos((meds ?? []) as any);
       setScoresOp(ops);
@@ -95,6 +96,7 @@ export default function AdminIAMedicos() {
       setAlertas(alts);
       setAnomalias(anos);
       setAuditoria(auds);
+      setRankings(rnks);
     } catch (e: any) {
       toast.error("Erro ao carregar dados: " + e.message);
     } finally {
