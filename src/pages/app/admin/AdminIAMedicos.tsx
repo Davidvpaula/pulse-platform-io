@@ -69,7 +69,7 @@ export default function AdminIAMedicos() {
   const [scoresComp, setScoresComp] = useState<ScoreCompliance[]>([]);
   const [alertas, setAlertas] = useState<AlertaIA[]>([]);
   const [anomalias, setAnomalias] = useState<Anomalia[]>([]);
-  const [auditoria, setAuditoria] = useState<AuditoriaIA[]>([]);
+  const [rankings, setRankings] = useState<MedicoRanking[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroSeveridade, setFiltroSeveridade] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
