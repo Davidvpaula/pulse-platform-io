@@ -316,6 +316,28 @@ export const MedicoDetalhe = () => {
             .order("ordem_exibicao");
           setPlanosMedico(planos ?? []);
         }
+
+        // Load public reviews visible on profile
+        const { data: reviews } = await (supabase as any)
+          .from("avaliacoes_medicas")
+          .select("id, nota, comentario, created_at, paciente_id")
+          .eq("medico_id", med.id)
+          .eq("avaliacao_publica", true)
+          .eq("exibir_no_perfil", true)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (reviews && reviews.length > 0) {
+          // Fetch patient names
+          const pacienteIds = [...new Set(reviews.map((r: any) => r.paciente_id))];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, nome")
+            .in("id", pacienteIds);
+          const nameMap: Record<string, string> = {};
+          (profiles ?? []).forEach((p: any) => { nameMap[p.id] = p.nome; });
+          setAvaliacoesPublicas(reviews.map((r: any) => ({ ...r, paciente_nome: nameMap[r.paciente_id] ?? "Paciente" })));
+        }
       }
 
       setLoading(false);
