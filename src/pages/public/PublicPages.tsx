@@ -799,28 +799,92 @@ export const Agendar = () => {
 /* ── Planos ── */
 
 export const Planos = () => {
-  const planos = [
-    { nome: "Essencial", preco: "R$ 49", desc: "Ideal para uso pontual", feats: ["Telemedicina sob demanda", "Receita digital", "Suporte em horário comercial"], featured: false },
-    { nome: "Saúde+", preco: "R$ 119", desc: "O mais escolhido", feats: ["Consultas ilimitadas", "Pronto atendimento 24h", "Histórico digital", "Suporte prioritário"], featured: true },
-    { nome: "Família", preco: "R$ 219", desc: "Até 4 pessoas", feats: ["Tudo do Saúde+", "Multi-usuário", "Pediatria incluída", "Relatórios mensais"], featured: false },
-  ];
+  const navigate = useNavigate();
+  const [planos, setPlanos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      // Fetch planos published to the site
+      const { data: planosData } = await supabase
+        .from("planos")
+        .select("id, nome, descricao, descricao_comercial, valor_mensal_centavos, valor_anual_centavos, destacado, ordem_exibicao, cta_texto, nivel, categoria")
+        .eq("status", "ativo" as any)
+        .eq("publicado_site", true)
+        .order("ordem_exibicao");
+
+      if (!planosData?.length) { setPlanos([]); setLoading(false); return; }
+
+      // Fetch benefits for all plans
+      const ids = planosData.map(p => p.id);
+      const { data: beneficios } = await supabase
+        .from("plano_beneficios")
+        .select("plano_id, nome")
+        .in("plano_id", ids)
+        .order("ordem");
+
+      const benefMap: Record<string, string[]> = {};
+      (beneficios ?? []).forEach(b => {
+        if (!b.nome) return;
+        if (!benefMap[b.plano_id]) benefMap[b.plano_id] = [];
+        benefMap[b.plano_id].push(b.nome);
+      });
+
+      setPlanos(planosData.map(p => ({ ...p, feats: benefMap[p.id] ?? [] })));
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) {
+    return (
+      <PageShell title="Planos" subtitle="Escolha o plano que melhor se encaixa na sua rotina.">
+        <div className="grid gap-5 md:grid-cols-3">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-72 rounded-xl" />)}
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!planos.length) {
+    return (
+      <PageShell title="Planos" subtitle="Escolha o plano que melhor se encaixa na sua rotina.">
+        <p className="text-muted-foreground text-center py-16">Nenhum plano disponível no momento.</p>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell title="Planos" subtitle="Escolha o plano que melhor se encaixa na sua rotina.">
-      <div className="grid gap-5 md:grid-cols-3">
-        {planos.map(p => (
-          <div key={p.nome} className={`card-elevated p-7 ${p.featured ? "ring-2 ring-primary shadow-elegant" : ""}`}>
-            {p.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">Popular</span>}
-            <p className="mt-3 font-display text-xl font-bold">{p.nome}</p>
-            <p className="text-sm text-muted-foreground">{p.desc}</p>
-            <p className="mt-4 font-display text-4xl font-extrabold">{p.preco}<span className="text-base font-medium text-muted-foreground">/mês</span></p>
-            <ul className="mt-5 space-y-2 text-sm">
-              {p.feats.map(f => <li key={f} className="flex gap-2"><span className="text-success">✓</span>{f}</li>)}
-            </ul>
-            <Button className={`mt-6 w-full ${p.featured ? "bg-gradient-primary hover:opacity-90" : ""}`} variant={p.featured ? "default" : "outline"}>
-              Assinar {p.nome}
-            </Button>
-          </div>
-        ))}
+      <div className={`grid gap-5 ${planos.length === 1 ? "max-w-md mx-auto" : planos.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
+        {planos.map(p => {
+          const featured = !!p.destacado;
+          const preco = p.valor_mensal_centavos != null ? brl(p.valor_mensal_centavos) : "Sob consulta";
+          const desc = p.descricao_comercial || p.descricao || "";
+          const cta = p.cta_texto || `Assinar ${p.nome}`;
+          return (
+            <div key={p.id} className={`card-elevated p-7 ${featured ? "ring-2 ring-primary shadow-elegant" : ""}`}>
+              {featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">Popular</span>}
+              <p className="mt-3 font-display text-xl font-bold">{p.nome}</p>
+              {desc && <p className="text-sm text-muted-foreground">{desc}</p>}
+              <p className="mt-4 font-display text-4xl font-extrabold">
+                {preco}
+                {p.valor_mensal_centavos != null && <span className="text-base font-medium text-muted-foreground">/mês</span>}
+              </p>
+              {p.feats.length > 0 && (
+                <ul className="mt-5 space-y-2 text-sm">
+                  {p.feats.map((f: string) => <li key={f} className="flex gap-2"><span className="text-success">✓</span>{f}</li>)}
+                </ul>
+              )}
+              <Button
+                className={`mt-6 w-full ${featured ? "bg-gradient-primary hover:opacity-90" : ""}`}
+                variant={featured ? "default" : "outline"}
+                onClick={() => navigate("/auth")}
+              >
+                {cta}
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </PageShell>
   );
