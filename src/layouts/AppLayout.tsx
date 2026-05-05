@@ -196,7 +196,7 @@ function SidebarBody({
 
   // Coleta todas as permission keys que ESTE menu pode precisar.
   const keysNeeded = useMemo(() => {
-    if (profileKey === "colaborador") return collectMenuKeys(colaboradorMenu);
+    if (profileKey === "colaborador" || profileKey === "secretaria") return collectMenuKeys(colaboradorMenu);
     // Demais perfis: chaves declaradas em requiresCapability nos itens fixos.
     const set = new Set<string>();
     for (const item of profile.nav) {
