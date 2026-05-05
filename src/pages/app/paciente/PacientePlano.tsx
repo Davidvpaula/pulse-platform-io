@@ -398,29 +398,30 @@ export default function PacientePlano() {
         />
       )}
 
-      {/* Cancelamento */}
-      {status !== "cancelada" && (
-        <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-              <div className="text-sm">
-                <p className="font-medium">Cancelar meu plano</p>
-                <p className="text-muted-foreground">
-                  A solicitação será analisada. Você manterá a cobertura até a próxima data de vencimento.
-                </p>
-              </div>
+      {/* Cancelamento — sempre visível */}
+      <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div className="text-sm">
+              <p className="font-medium">Cancelar meu plano</p>
+              <p className="text-muted-foreground">
+                {status === "cancelada"
+                  ? "Este plano já foi cancelado."
+                  : "A solicitação será analisada. Você manterá a cobertura até a próxima data de vencimento."}
+              </p>
             </div>
-            <Button
-              variant="outline"
-              className="border-destructive/30 text-destructive hover:bg-destructive/10"
-              onClick={() => setShowCancelDialog(true)}
-            >
-              Solicitar cancelamento
-            </Button>
           </div>
-        </section>
-      )}
+          <Button
+            variant="outline"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => setShowCancelDialog(true)}
+            disabled={status === "cancelada"}
+          >
+            {status === "cancelada" ? "Já cancelado" : "Solicitar cancelamento"}
+          </Button>
+        </div>
+      </section>
 
       {/* Dialog de cancelamento */}
       <Dialog open={showCancelDialog} onOpenChange={(v) => { if (!cancelando) setShowCancelDialog(v); }}>
