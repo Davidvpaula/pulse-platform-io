@@ -222,7 +222,7 @@ describe("Fluxo E2E: formulário → reserva → checkout", () => {
       _slot_id: SLOT_ESPECIALIDADE.id,
       _tipo: "especialidade",
       _referencia_id: ESPECIALIDADE_REF.id,
-      _motivo: "Check-up",
+      _motivo: "Check-up anual",
       _nome_completo: VALID_FORM_DATA.nome_completo,
       _cpf: VALID_FORM_DATA.cpf,
       _telefone: VALID_FORM_DATA.telefone,
