@@ -11,13 +11,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Calendar, Clock, Stethoscope, User, AlertCircle, Loader2, ShieldCheck, ArrowLeft,
+  Calendar, Clock, Stethoscope, User, AlertCircle, Loader2, ShieldCheck, ArrowLeft, FileText,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -27,7 +28,7 @@ import { reservarSlotUnificado, getPacienteAtual, formatDataBR, formatHora } fro
 import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
-import { useTermsCheck } from "@/hooks/useTermsCheck";
+import { buscarTermoAtivo, registrarAceite, verificarAceite, type TermoRow } from "@/lib/termos";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
 
