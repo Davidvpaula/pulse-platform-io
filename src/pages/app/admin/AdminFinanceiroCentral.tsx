@@ -140,8 +140,18 @@ export default function AdminFinanceiroCentral() {
       setDash(d);
       const { data: p } = await supabase.from("pagamentos").select("*, paciente:pacientes(id,nome_completo), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500);
       setPagamentos(p || []);
-      const { data: r } = await supabase.from("reembolsos").select("*").order("created_at", { ascending: false }).limit(200);
-      setReembolsos(r || []);
+      const { data: r } = await supabase.from("reembolsos")
+        .select("*, consulta:consultas!inner(inicio, paciente:pacientes!inner(nome_completo), medico:medicos!inner(nome)), pagamento:pagamentos!pagamento_id(provider_payment_id, gateway_ref), solicitante:profiles!actor_id(nome), analisador:profiles!analisado_por(nome)")
+        .order("created_at", { ascending: false }).limit(200);
+      setReembolsos((r || []).map((x: any) => ({
+        ...x,
+        paciente_nome: x.consulta?.paciente?.nome_completo ?? "—",
+        medico_nome: x.consulta?.medico?.nome ?? "—",
+        consulta_data: x.consulta?.inicio,
+        payment_ref: x.pagamento?.provider_payment_id || x.pagamento?.gateway_ref || null,
+        solicitante_nome: x.solicitante?.nome ?? null,
+        analisador_nome: x.analisador?.nome ?? null,
+      })));
       const { data: l } = await supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome_completo)").order("created_at", { ascending: false }).limit(500);
       setLinks(l || []);
       const { data: f } = await supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100);
