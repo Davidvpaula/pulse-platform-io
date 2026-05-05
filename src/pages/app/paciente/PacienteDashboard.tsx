@@ -362,6 +362,9 @@ export default function PacienteDashboard() {
         )}
       </div>
 
+      {/* Cancelamentos e Reembolsos */}
+      {session && <HistoricoCancelamentos />}
+
       {/* Comunicação real */}
       <ComunicacaoCanais proximaConsulta={proxima} mensagemConsulta={msgConsulta} />
 
