@@ -153,8 +153,7 @@ export default function MedicoConsultas() {
     const status = toStatusBadge(c.status);
     const ini = new Date(c.inicio);
     const podeIniciar =
-      (c.status === "agendada" || c.status === "confirmada") &&
-      ini.getTime() - Date.now() < 30 * 60_000;
+      (c.status === "agendada" || c.status === "confirmada");
     const podeConcluir = c.status === "em_andamento";
     const podeCancelar = c.status !== "cancelada" && c.status !== "concluida" && c.status !== "no_show";
     const valor = (c as any).valor_snapshot_centavos ?? (c as any).valor_centavos;
@@ -227,7 +226,7 @@ export default function MedicoConsultas() {
             )}
 
             {/* Pronta para iniciar */}
-            {podeIniciar && c.modalidade === "online" && c.link_sala && (
+            {podeIniciar && (
               <Button
                 size="sm"
                 className="bg-gradient-primary hover:opacity-90"
