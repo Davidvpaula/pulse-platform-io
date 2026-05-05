@@ -46,7 +46,7 @@ export default function PlanoPersonalizadoTab({ assinaturas, beneficiosMap, paci
 
     const { data: medicosData } = await supabase
       .from("medicos")
-      .select("id, user_id, nome, especialidade, foto_url, slug")
+      .select("id, user_id, nome, especialidade, foto_url")
       .in("id", medicoIds);
 
     // Benefits per plan
