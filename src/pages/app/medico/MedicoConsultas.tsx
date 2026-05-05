@@ -95,22 +95,31 @@ export default function MedicoConsultas() {
   };
 
   const iniciar = async (c: ConsultaDetalhada) => {
-    // Se já está em_andamento, apenas abre a sala sem update desnecessário
+    // Já em andamento → só abre sala
     if (c.status === "em_andamento") {
       if (c.link_sala) window.open(c.link_sala, "_blank", "noopener,noreferrer");
       return;
     }
+    if (c.status !== "agendada" && c.status !== "confirmada") {
+      toast.error("Esta consulta não pode ser iniciada no status atual.");
+      return;
+    }
     setAcaoId(c.id);
-    const result = await updateConsultaStatus(c.id, "em_andamento");
-    setAcaoId(null);
-    if (result.ok && c.link_sala) {
-      window.open(c.link_sala, "_blank", "noopener,noreferrer");
-      void carregar();
-    } else if (result.ok) {
+    try {
+      // State machine: agendada → confirmada → em_andamento
+      if (c.status === "agendada") {
+        const r1 = await updateConsultaStatus(c.id, "confirmada");
+        if (!r1.ok) throw new Error(r1.error);
+      }
+      const result = await updateConsultaStatus(c.id, "em_andamento");
+      if (!result.ok) throw new Error(result.error);
       toast.success("Consulta iniciada");
+      if (c.link_sala) window.open(c.link_sala, "_blank", "noopener,noreferrer");
       void carregar();
-    } else {
-      toast.error("Não foi possível iniciar");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível iniciar");
+    } finally {
+      setAcaoId(null);
     }
   };
 

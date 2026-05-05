@@ -228,8 +228,27 @@ export default function MedicoDashboard() {
       toast.error("Você não tem permissão para iniciar consultas.");
       return;
     }
+    // Já em andamento → só abre sala
+    if (c.status === "em_andamento") {
+      if (c.modalidade === "online" && c.link_sala) {
+        window.open(c.link_sala, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+    if (c.status !== "agendada" && c.status !== "confirmada") {
+      toast.error("Esta consulta não pode ser iniciada no status atual.");
+      return;
+    }
     setIniciandoId(c.id);
     try {
+      // State machine: agendada → confirmada → em_andamento
+      if (c.status === "agendada") {
+        const { error: errConfirm } = await supabase
+          .from("consultas")
+          .update({ status: "confirmada" })
+          .eq("id", c.id);
+        if (errConfirm) throw errConfirm;
+      }
       const { error } = await supabase
         .from("consultas")
         .update({ status: "em_andamento" })
