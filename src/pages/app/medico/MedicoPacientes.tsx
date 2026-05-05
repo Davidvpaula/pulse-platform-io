@@ -30,6 +30,7 @@ function soDigitos(t: string | null | undefined) {
 
 export default function MedicoPacientes() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<FiltroTipo>("todos");
   const [loading, setLoading] = useState(false);
