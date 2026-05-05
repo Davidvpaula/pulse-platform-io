@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Play, Filter, Database, Loader2, Video, ExternalLink, CheckCircle2, History, Calendar, LogIn,
+  Play, Filter, Database, Loader2, Video, ExternalLink, CheckCircle2, History, Calendar, LogIn, ListChecks,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
@@ -117,8 +117,26 @@ export default function MedicoAgenda() {
   }, [dbConsultas]);
 
   async function iniciarConsulta(c: ConsultaDetalhada) {
+    if (c.status === "em_andamento") {
+      if (c.modalidade === "online" && c.link_sala) {
+        window.open(c.link_sala, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+    if (c.status !== "agendada" && c.status !== "confirmada") {
+      toast.error("Esta consulta não pode ser iniciada no status atual.");
+      return;
+    }
     setAcaoId(c.id);
     try {
+      // State machine: agendada → confirmada → em_andamento
+      if (c.status === "agendada") {
+        const { error: errConfirm } = await supabase
+          .from("consultas")
+          .update({ status: "confirmada" })
+          .eq("id", c.id);
+        if (errConfirm) throw errConfirm;
+      }
       const { error } = await supabase
         .from("consultas")
         .update({ status: "em_andamento" })
@@ -166,9 +184,14 @@ export default function MedicoAgenda() {
         title="Agenda"
         description="Sua agenda com filtros por período, status e ações rápidas."
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-            <Database className="h-3 w-3" /> Dados em tempo real
-          </span>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/app/medico/consultas"><ListChecks className="mr-2 h-4 w-4" />Ver fila de atendimento</Link>
+            </Button>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+              <Database className="h-3 w-3" /> Dados em tempo real
+            </span>
+          </div>
         }
       />
 
