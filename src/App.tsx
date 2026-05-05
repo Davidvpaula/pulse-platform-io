@@ -256,7 +256,7 @@ const App = () => (
               <Route path="medico/servicos" element={<MedicoGuard><MedicoServicos /></MedicoGuard>} />
               
               <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
-              <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
+              <Route path="medico/mensagens" element={<MedicoGuard><MedicoMensagensConsultas /></MedicoGuard>} />
               <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
               <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
               <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
