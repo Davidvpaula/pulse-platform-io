@@ -179,7 +179,7 @@ export default function AgendamentoConfirmar() {
       nome_completo: "", cpf: "", telefone: "", data_nascimento: "",
       sexo: "nao_informado", cep: "", motivo: "",
     },
-    mode: "onBlur",
+    mode: "onSubmit",
   });
 
   // Back URL baseado no tipo
