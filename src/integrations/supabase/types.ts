@@ -6532,35 +6532,6 @@ export type Database = {
         }[]
       }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
-      criar_consulta_com_reserva:
-        | {
-            Args: {
-              _cep?: string
-              _cpf?: string
-              _data_nascimento?: string
-              _especialidade_id: string
-              _motivo?: string
-              _nome_completo?: string
-              _sexo?: string
-              _slot_id: string
-              _telefone?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _cep: string
-              _cpf: string
-              _data_nascimento: string
-              _especialidade_id: string
-              _motivo: string
-              _nome_completo: string
-              _sexo: Database["public"]["Enums"]["sexo_biologico"]
-              _slot_id: string
-              _telefone: string
-            }
-            Returns: Json
-          }
       criar_consulta_pos_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
@@ -6721,10 +6692,6 @@ export type Database = {
       }
       fn_servico_confirmar_reserva: {
         Args: { _servico_id: string; _slot_id: string }
-        Returns: Json
-      }
-      fn_servico_reservar_slot: {
-        Args: { _servico_id: string; _slot_inicio: string }
         Returns: Json
       }
       fn_servico_slots_disponiveis: {
