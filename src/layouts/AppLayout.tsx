@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
+  Menu, LogOut, ShieldCheck, ChevronDown,
   Building2, Heart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
