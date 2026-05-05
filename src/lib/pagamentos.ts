@@ -35,6 +35,16 @@ export interface CriarCheckoutInput {
     paciente_id: string;
     medico_id: string;
   };
+  /** Snapshot financeiro imutável — congelado no momento do checkout */
+  snapshot?: {
+    valor_bruto_centavos: number;
+    referencia_nome: string;
+    medico_nome: string;
+    duracao_minutos: number;
+    inicio: string;
+    fim: string;
+    modalidade: string;
+  };
 }
 
 export interface CheckoutSession {
@@ -84,6 +94,10 @@ const mockProvider = {
       metadata.motivo = input.reserva.motivo ?? null;
       metadata.paciente_id = input.reserva.paciente_id;
       metadata.medico_id = input.reserva.medico_id;
+    }
+    // Snapshot financeiro imutável
+    if (input.snapshot) {
+      metadata.snapshot = input.snapshot;
     }
 
     const insertObj: Record<string, unknown> = {

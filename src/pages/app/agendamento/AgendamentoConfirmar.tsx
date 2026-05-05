@@ -245,7 +245,7 @@ export default function AgendamentoConfirmar() {
         cep: values.cep,
       });
 
-      // 2) Cria checkout (sem consulta_id)
+      // 2) Cria checkout (sem consulta_id) com snapshot financeiro imutável
       const checkoutSession = await criarCheckoutSession({
         valorCentavos: reserva.valor_centavos,
         descricao: `${slotInfo.referencia_nome} · ${slotInfo.medico_nome}`,
@@ -256,6 +256,15 @@ export default function AgendamentoConfirmar() {
           motivo: reserva.motivo,
           paciente_id: reserva.paciente_id,
           medico_id: reserva.medico_id,
+        },
+        snapshot: {
+          valor_bruto_centavos: reserva.valor_centavos,
+          referencia_nome: slotInfo.referencia_nome,
+          medico_nome: slotInfo.medico_nome,
+          duracao_minutos: slotInfo.duracao_minutos,
+          inicio: slotInfo.inicio,
+          fim: slotInfo.fim,
+          modalidade: slotInfo.modalidade,
         },
       });
 
