@@ -29,6 +29,7 @@ import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
 import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
+import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
@@ -44,6 +45,7 @@ export default function PacienteAgendamentos() {
   const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
   const [expandedPag, setExpandedPag] = useState<string | null>(null);
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
+  const [cancelarConsulta, setCancelarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); setVouchers([]); setAvaliadas(new Set()); return; }
@@ -91,8 +93,7 @@ export default function PacienteAgendamentos() {
     );
   }, [rows, filtro, busca]);
 
-  const cancelar = async (id: string) => {
-    if (!confirm("Cancelar esta consulta? Essa ação não pode ser desfeita.")) return;
+  const confirmarCancelamento = async (id: string) => {
     setCancelando(id);
     const result = await updateConsultaStatus(id, "cancelada");
     setCancelando(null);
@@ -103,7 +104,7 @@ export default function PacienteAgendamentos() {
       toast.error(msg);
       return;
     }
-    // Audit log
+    setCancelarConsulta(null);
     supabase.functions.invoke("audit-log", {
       body: { action: "consulta.cancelada", entity_type: "consulta", entity_id: id },
     }).catch(() => {});
@@ -269,7 +270,7 @@ export default function PacienteAgendamentos() {
                           size="sm"
                           variant="outline"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => cancelar(c.id)}
+                          onClick={() => setCancelarConsulta(c)}
                           disabled={cancelando === c.id}
                         >
                           {cancelando === c.id ? (
@@ -338,6 +339,14 @@ export default function PacienteAgendamentos() {
           onAvaliado={() => { setAvaliarConsulta(null); void carregar(); }}
         />
       )}
+
+      <CancelarConsultaDialog
+        consulta={cancelarConsulta}
+        open={!!cancelarConsulta}
+        onOpenChange={(v) => { if (!v) setCancelarConsulta(null); }}
+        onConfirmar={confirmarCancelamento}
+        confirmando={cancelando === cancelarConsulta?.id}
+      />
     </div>
   );
 }
