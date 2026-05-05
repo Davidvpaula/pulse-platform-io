@@ -281,14 +281,14 @@ export type RecomendacaoIA = {
 
 /* ── Nível helpers ── */
 
-const NIVEIS = [
+const NIVEIS: { min: number; nivel: number; nome: string }[] = [
   { min: 0, nivel: 1, nome: "Iniciante" },
   { min: 100, nivel: 2, nome: "Ativo" },
   { min: 300, nivel: 3, nome: "Engajado" },
   { min: 600, nivel: 4, nome: "Destaque" },
   { min: 1000, nivel: 5, nome: "Referência" },
   { min: 1500, nivel: 6, nome: "Elite" },
-] as const;
+];
 
 export function getNivelInfo(pontos: number) {
   let resultado = NIVEIS[0];
