@@ -518,12 +518,21 @@ export default function AgendamentoConfirmar() {
         </aside>
       </div>
 
-      <TermsAcceptanceDialog
-        tipo="consulta_paciente"
-        open={termsCheck.showDialog}
-        onOpenChange={termsCheck.setShowDialog}
-        onAccepted={handleTermsAccepted}
-      />
+      {/* Dialog de preview de termo */}
+      {previewTermo && (
+        <Dialog open={!!previewTermo} onOpenChange={() => setPreviewTermo(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>{previewTermo.titulo} (v{previewTermo.versao})</DialogTitle>
+            </DialogHeader>
+            <div
+              className="flex-1 overflow-y-auto border rounded-md p-4 prose prose-sm dark:prose-invert max-w-none"
+              style={{ maxHeight: "60vh" }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewTermo.conteudo) }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
