@@ -331,42 +331,8 @@ export type Pendencia = {
 };
 
 export const pendenciasFeegow = (): Pendencia[] => {
-  const out: Pendencia[] = [];
-
-  pacientes.forEach(p => {
-    if (p.status === "paciente_criado") {
-      out.push({
-        tipo: "paciente",
-        id: p.id,
-        titulo: p.nome,
-        motivo: "Paciente recém-criado. Aguardando envio para Feegow.",
-        acao: "Enviar para Feegow",
-      });
-    }
-    if (p.status === "feegow_enviado") {
-      out.push({
-        tipo: "paciente",
-        id: p.id,
-        titulo: p.nome,
-        motivo: "Envio realizado. Aguardando confirmação da Feegow.",
-        acao: "Verificar status",
-      });
-    }
-  });
-
-  agendamentos.forEach(a => {
-    if (a.status === "agendamento_criado") {
-      out.push({
-        tipo: "agendamento",
-        id: a.id,
-        titulo: `${a.paciente} · ${a.medico}`,
-        motivo: `Agendamento criado, ainda não enviado para Feegow (${a.data} ${a.hora}).`,
-        acao: "Sincronizar agendamento",
-      });
-    }
-  });
-
-  return out;
+  // Dados reais serão carregados do banco quando a integração Feegow estiver ativa.
+  return [];
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
