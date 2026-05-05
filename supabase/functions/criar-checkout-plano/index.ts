@@ -56,13 +56,21 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const uid = userData.user.id;
 
-    // Verificar se paciente já tem plano ativo
-    const { data: existentes } = await admin
-      .from("planos")
+    // Buscar paciente_id primeiro (necessário para verificar assinatura)
+    const { data: paciente } = await admin
+      .from("pacientes")
       .select("id")
-      .eq("created_by", uid)
-      .eq("nivel", "paciente_custom")
-      .in("status", ["ativo", "rascunho"])
+      .eq("user_id", uid)
+      .maybeSingle();
+
+    if (!paciente) return json({ error: "Perfil de paciente não encontrado" }, 404);
+
+    // Verificar se paciente já tem assinatura ativa
+    const { data: existentes } = await admin
+      .from("assinaturas")
+      .select("id")
+      .eq("paciente_id", paciente.id)
+      .in("status", ["ativa", "trial"])
       .limit(1);
 
     if (existentes && existentes.length > 0) {
@@ -81,15 +89,6 @@ Deno.serve(async (req) => {
     if (!planosData?.length) {
       return json({ error: "Nenhum plano válido encontrado" }, 404);
     }
-
-    // Buscar paciente_id
-    const { data: paciente } = await admin
-      .from("pacientes")
-      .select("id")
-      .eq("user_id", uid)
-      .maybeSingle();
-
-    if (!paciente) return json({ error: "Perfil de paciente não encontrado" }, 404);
 
     // Buscar medicos PKs para plano_medicos
     const medicoUserIds = [...new Set(planosData.map((p: any) => p.medico_id))];
