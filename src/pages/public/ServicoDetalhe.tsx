@@ -8,9 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import CalendarioFila from "@/components/atendimento-imediato/CalendarioFila";
-import RodapeReserva from "@/components/atendimento-imediato/RodapeReserva";
 import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
-import type { PASlot, PAReserva } from "@/lib/pa-types";
+import type { PASlot } from "@/lib/pa-types";
 import { Button } from "@/components/ui/button";
 
 type Servico = {
@@ -21,12 +20,9 @@ type Servico = {
   valor_paciente_centavos: number;
 };
 
-const TTL_MS_DEFAULT = 10 * 60 * 1000;
-
 function dataKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
-
 
 export default function ServicoDetalhe() {
   const { slug } = useParams();
@@ -35,9 +31,6 @@ export default function ServicoDetalhe() {
   const [loading, setLoading] = useState(true);
   const [servico, setServico] = useState<Servico | null>(null);
   const [slots, setSlots] = useState<PASlot[]>([]);
-  const [reserva, setReserva] = useState<PAReserva | null>(null);
-  const [agora, setAgora] = useState(() => Date.now());
-  const [destacar, setDestacar] = useState<string | null>(null);
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
 
   // Load service
@@ -69,7 +62,6 @@ export default function ServicoDetalhe() {
       setLoading(false);
     })();
   }, [slug, navigate]);
-
 
   // Load slots
   const carregarSlots = useCallback(async () => {
@@ -111,24 +103,6 @@ export default function ServicoDetalhe() {
     return () => clearInterval(interval);
   }, [servico, carregarSlots]);
 
-  // Expiration tick
-  useEffect(() => {
-    const t = setInterval(() => {
-      setAgora(Date.now());
-      setReserva((prev) => {
-        if (prev && prev.expiresAt <= Date.now()) {
-          toast.message("Reserva expirou", {
-            description: `O horário ${fmtHora(prev.inicio)} foi liberado.`,
-          });
-          carregarSlots();
-          return null;
-        }
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [carregarSlots]);
-
   // Group slots by date
   const diasComSlots = useMemo(() => {
     const map = new Map<string, PASlot[]>();
@@ -146,82 +120,36 @@ export default function ServicoDetalhe() {
   }, [slots, diaSelecionado]);
 
   const estadoPorSlot = useMemo(() => {
+    const now = Date.now();
     const map = new Map<string, { estado: SlotEstado; vagas: number; capacidade: number }>();
     for (const s of slotsNoDia) {
       const fimMs = s.fim.getTime();
       const inicioMs = s.inicio.getTime();
-      const minhaAqui = reserva?.slot_key === s.key && reserva.expiresAt > agora;
 
       let estado: SlotEstado;
-      if (fimMs < agora) estado = "passado";
+      if (fimMs < now) estado = "passado";
       else if ((s.total_vagas ?? 0) === 0) estado = "lotado";
-      else if (minhaAqui) estado = "reservado_por_mim";
-      else if (inicioMs <= agora && agora < fimMs) estado = "em_atendimento";
+      else if (inicioMs <= now && now < fimMs) estado = "em_atendimento";
       else estado = "livre";
 
       map.set(s.key, { estado, vagas: s.total_vagas ?? 0, capacidade: s.total_vagas ?? 0 });
     }
     return map;
-  }, [slotsNoDia, reserva, agora]);
+  }, [slotsNoDia]);
 
-  async function reservar(slot: PASlot) {
+  /**
+   * Ao clicar no slot, NÃO reservamos aqui.
+   * Apenas redirecionamos para a rota unificada que cuida de:
+   * Formulário → Reserva → Checkout → Pagamento → Consulta
+   */
+  function escolherSlot(slot: PASlot) {
     if (!session) {
       toast.error("Faça login para reservar um horário.");
       navigate("/auth");
       return;
     }
     if (!servico) return;
-
-    const { data, error } = await supabase.rpc("fn_servico_reservar_slot" as any, {
-      _slot_inicio: slot.key,
-      _servico_id: servico.id,
-    });
-
-    if (error) {
-      toast.error("Erro de conexão ao reservar.", { description: error.message });
-      carregarSlots();
-      return;
-    }
-    if (!(data as any)?.ok) {
-      toast.error((data as any)?.erro || "Erro ao reservar. Tente novamente.");
-      carregarSlots();
-      return;
-    }
-
-    const res = data as any;
-    setReserva({
-      slot_id: res.slot_id,
-      slot_key: res.inicio,
-      medico_id: res.medico_id,
-      medico_nome: res.medico_nome,
-      inicio: res.inicio,
-      fim: res.fim,
-      expiresAt: res.reserva_expira_em ? new Date(res.reserva_expira_em).getTime() : Date.now() + TTL_MS_DEFAULT,
-    });
-    setDestacar(res.inicio);
-    setTimeout(() => setDestacar(null), 3000);
-    carregarSlots();
-
-    if (res.transferido) {
-      toast.warning("Horário trocado automaticamente", {
-        description: `O horário pedido foi ocupado. Alocamos ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}.`,
-      });
-    } else {
-      toast.success(`Reservado ${fmtHora(res.inicio)} com Dr(a). ${res.medico_nome}`, {
-        description: "Você tem 10 minutos para confirmar.",
-      });
-    }
-  }
-
-  function cancelar() {
-    setReserva(null);
-    carregarSlots();
-    toast.message("Reserva liberada");
-  }
-
-  function irParaFormulario() {
-    if (!reserva || !servico) return;
-    navigate(`/app/agendamento/confirmar/${reserva.slot_id}?tipo=servico&ref=${servico.id}`);
+    navigate(`/app/agendamento/confirmar/${slot.slot_id}?tipo=servico&ref=${servico.id}`);
   }
 
   const totalLivres = Array.from(estadoPorSlot.values()).filter((v) => v.estado === "livre").length;
@@ -250,7 +178,6 @@ export default function ServicoDetalhe() {
 
   const idxDia = diasComSlots.findIndex(([dk]) => dk === diaSelecionado);
 
-  // ─── Step: Slot Selection ───
   return (
     <PageShell
       title={servico.nome}
@@ -279,7 +206,6 @@ export default function ServicoDetalhe() {
             </div>
             <div className="flex items-center gap-3">
               <Legenda cor="bg-card border border-primary/30" texto="Livre" />
-              <Legenda cor="bg-accent ring-2 ring-primary" texto="Você reservou" />
               <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
             </div>
           </div>
@@ -289,9 +215,8 @@ export default function ServicoDetalhe() {
         <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <span>
-            Se outro paciente reservar o mesmo horário antes de você, o sistema move você
-            automaticamente para o horário <strong>mais próximo</strong> com vaga e atribui
-            o melhor profissional disponível pelo <strong>ranking</strong>.
+            Selecione o horário desejado. Na próxima etapa você preencherá seus dados
+            e seguirá para o pagamento. O horário ficará reservado por 15 minutos.
           </span>
         </div>
 
@@ -356,19 +281,8 @@ export default function ServicoDetalhe() {
           <CalendarioFila
             slots={slotsNoDia}
             estadoPorSlot={estadoPorSlot}
-            destacar={destacar}
-            onPick={reservar}
-          />
-        )}
-
-        {reserva && (
-          <RodapeReserva
-            medicoNome={reserva.medico_nome}
-            inicio={reserva.inicio}
-            msRestantes={reserva.expiresAt - agora}
-            precoCentavos={servico.valor_paciente_centavos}
-            onCancelar={cancelar}
-            onConfirmar={irParaFormulario}
+            destacar={null}
+            onPick={escolherSlot}
           />
         )}
       </div>
