@@ -227,29 +227,53 @@ const mockProvider = {
 
 const stripeProvider = {
   async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
+    // Monta body dependendo do fluxo (unificado vs legado)
+    const body: Record<string, unknown> = {};
+
+    if (input.reserva) {
+      // Fluxo unificado — enviar dados de reserva
+      body.reserva = input.reserva;
+      body.valorCentavos = input.valorCentavos;
+      body.descricao = input.descricao ?? null;
+      if (input.snapshot) body.snapshot = input.snapshot;
+    } else if (input.consultaId) {
+      // Fluxo legado
+      body.consulta_id = input.consultaId;
+    } else {
+      throw new Error("Dados insuficientes para checkout Stripe");
+    }
+
+    // Detectar environment via client token
+    const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
+    body.environment = clientToken?.startsWith("pk_test_") ? "sandbox" : "live";
+
     const { data, error } = await supabase.functions.invoke("criar-checkout-stripe", {
-      body: { consulta_id: input.consultaId },
+      body,
     });
     if (error) {
       throw new Error(error.message ?? "Falha ao iniciar checkout Stripe");
     }
     const payload = data as
-      | { pagamento_id: string; checkout_url: string; session_id?: string }
+      | { pagamento_id: string; checkout_url?: string; clientSecret?: string; session_id?: string }
       | { error: string };
     if ("error" in payload) throw new Error(payload.error);
+
+    // Se retornou clientSecret (embedded checkout), redirecionar para checkout interno
+    const checkoutUrl = payload.checkout_url
+      ?? `/app/paciente/checkout/${payload.pagamento_id}`;
+
     return {
       pagamentoId: payload.pagamento_id,
-      checkoutUrl: payload.checkout_url,
+      checkoutUrl,
       simulated: false,
       provider: "stripe",
-      external: true,
+      external: !!payload.checkout_url && !payload.clientSecret,
     };
   },
   async confirmar(_pagamentoId: string, _metodo: PagamentoMetodo): Promise<void> {
     throw new Error("Confirmação Stripe ocorre via webhook do servidor.");
   },
   async cancelar(_pagamentoId: string): Promise<void> {
-    // Marca como cancelado localmente (sem revogar no Stripe — sessões expiram sozinhas)
     const { error } = await supabase
       .from("pagamentos")
       .update({ status: "cancelado", cancelled_at: new Date().toISOString() })

@@ -122,20 +122,42 @@ Deno.serve(async (req) => {
             return new Response("RPC error", { status: 500, headers: corsHeaders });
           }
 
-          // Dispara e-mail de confirmação (best effort)
+          // Fluxo unificado: cria consulta pós-pagamento
           try {
             const { data: pag } = await admin
+              .from("pagamentos")
+              .select("id, consulta_id")
+              .eq("provider_session_id", sessionId)
+              .maybeSingle();
+
+            if (pag && !pag.consulta_id) {
+              // Sem consulta_id = fluxo unificado → criar consulta via RPC
+              const { data: rpcRes, error: rpcErr } = await admin.rpc(
+                "criar_consulta_pos_pagamento",
+                { _pagamento_id: pag.id },
+              );
+              if (rpcErr) {
+                console.error("[payments-webhook] criar_consulta_pos_pagamento:", rpcErr);
+              } else {
+                const r = rpcRes as any;
+                if (r && !r.ok) console.warn("[payments-webhook] rpc resultado:", r.erro);
+              }
+            }
+
+            // Dispara e-mail de confirmação (best effort)
+            // Re-fetch para pegar consulta_id atualizado
+            const { data: pagAtual } = await admin
               .from("pagamentos")
               .select("consulta_id")
               .eq("provider_session_id", sessionId)
               .maybeSingle();
-            if (pag?.consulta_id) {
+            if (pagAtual?.consulta_id) {
               await admin.functions.invoke("enviar-confirmacao-consulta", {
-                body: { consulta_id: pag.consulta_id },
+                body: { consulta_id: pagAtual.consulta_id },
               });
             }
-          } catch (mailErr) {
-            console.warn("[payments-webhook] e-mail falhou (ignorado)", mailErr);
+          } catch (postErr) {
+            console.warn("[payments-webhook] pós-pagamento falhou (ignorado)", postErr);
           }
         }
         break;

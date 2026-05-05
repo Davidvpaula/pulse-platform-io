@@ -2,3 +2,6 @@ project_id = "vhuttaowzebgeqlscmpm"
 
 [functions.payments-webhook]
 verify_jwt = false
+
+[functions.criar-checkout-stripe]
+verify_jwt = false
