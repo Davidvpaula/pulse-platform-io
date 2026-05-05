@@ -133,6 +133,10 @@ Deno.serve(async (req) => {
 
     const stripe = createStripeClient(stripeEnv);
 
+    // Build return URL from request origin or SUPABASE_URL
+    const origin = req.headers.get("origin") || SUPABASE_URL.replace(".supabase.co", ".lovableproject.com");
+    const returnUrl = `${origin}/app/paciente/plano/checkout-retorno?session_id={CHECKOUT_SESSION_ID}`;
+
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
