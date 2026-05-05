@@ -25,6 +25,9 @@ export default function AdminFinanceiroCentral() {
   const [loading, setLoading] = useState(false);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [reembolsos, setReembolsos] = useState<any[]>([]);
+  const [expandedReembolso, setExpandedReembolso] = useState<string | null>(null);
+  const [reembolsoAudit, setReembolsoAudit] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [links, setLinks] = useState<any[]>([]);
   const [repasses, setRepasses] = useState<any[]>([]);
 
