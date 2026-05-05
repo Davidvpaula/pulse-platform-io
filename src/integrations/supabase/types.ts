@@ -1004,6 +1004,50 @@ export type Database = {
           },
         ]
       }
+      campanha_metricas_diarias: {
+        Row: {
+          campanha_id: string
+          cliques: number
+          conversoes: number
+          cpc_medio_centavos: number | null
+          data: string
+          gasto_centavos: number
+          id: string
+          impressoes: number
+          taxa_conversao: number | null
+        }
+        Insert: {
+          campanha_id: string
+          cliques?: number
+          conversoes?: number
+          cpc_medio_centavos?: number | null
+          data: string
+          gasto_centavos?: number
+          id?: string
+          impressoes?: number
+          taxa_conversao?: number | null
+        }
+        Update: {
+          campanha_id?: string
+          cliques?: number
+          conversoes?: number
+          cpc_medio_centavos?: number | null
+          data?: string
+          gasto_centavos?: number
+          id?: string
+          impressoes?: number
+          taxa_conversao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_metricas_diarias_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "impulsionamento_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cobrancas_links: {
         Row: {
           consulta_id: string | null
@@ -3308,6 +3352,57 @@ export type Database = {
         }
         Relationships: []
       }
+      medico_badges: {
+        Row: {
+          ativo: boolean
+          badge_descricao: string | null
+          badge_icone: string | null
+          badge_key: string
+          badge_nome: string
+          conquistado_em: string
+          expira_em: string | null
+          id: string
+          medico_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          badge_descricao?: string | null
+          badge_icone?: string | null
+          badge_key: string
+          badge_nome: string
+          conquistado_em?: string
+          expira_em?: string | null
+          id?: string
+          medico_id: string
+        }
+        Update: {
+          ativo?: boolean
+          badge_descricao?: string | null
+          badge_icone?: string | null
+          badge_key?: string
+          badge_nome?: string
+          conquistado_em?: string
+          expira_em?: string | null
+          id?: string
+          medico_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_badges_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_badges_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_comissao_override: {
         Row: {
           ativo: boolean
@@ -3633,6 +3728,106 @@ export type Database = {
           },
         ]
       }
+      medico_metas: {
+        Row: {
+          ativo: boolean
+          badge_recompensa: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          periodo: string
+          pontos_recompensa: number
+          threshold: number
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          badge_recompensa?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          periodo?: string
+          pontos_recompensa?: number
+          threshold: number
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          badge_recompensa?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          periodo?: string
+          pontos_recompensa?: number
+          threshold?: number
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      medico_metas_progresso: {
+        Row: {
+          concluida: boolean
+          concluida_em: string | null
+          id: string
+          medico_id: string
+          meta_id: string
+          periodo_referencia: string
+          pontos_creditados: boolean
+          updated_at: string
+          valor_atual: number
+        }
+        Insert: {
+          concluida?: boolean
+          concluida_em?: string | null
+          id?: string
+          medico_id: string
+          meta_id: string
+          periodo_referencia: string
+          pontos_creditados?: boolean
+          updated_at?: string
+          valor_atual?: number
+        }
+        Update: {
+          concluida?: boolean
+          concluida_em?: string | null
+          id?: string
+          medico_id?: string
+          meta_id?: string
+          periodo_referencia?: string
+          pontos_creditados?: boolean
+          updated_at?: string
+          valor_atual?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_metas_progresso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_metas_progresso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_metas_progresso_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "medico_metas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_nfes: {
         Row: {
           arquivo_url: string | null
@@ -3901,6 +4096,72 @@ export type Database = {
           },
         ]
       }
+      medico_score_detalhado: {
+        Row: {
+          detalhes_clinico: Json | null
+          detalhes_comercial: Json | null
+          detalhes_operacional: Json | null
+          detalhes_reputacional: Json | null
+          medico_id: string
+          nivel: number
+          nivel_nome: string
+          score_clinico: number
+          score_comercial: number
+          score_final: number
+          score_operacional: number
+          score_reputacional: number
+          total_pontos_acumulados: number
+          updated_at: string
+        }
+        Insert: {
+          detalhes_clinico?: Json | null
+          detalhes_comercial?: Json | null
+          detalhes_operacional?: Json | null
+          detalhes_reputacional?: Json | null
+          medico_id: string
+          nivel?: number
+          nivel_nome?: string
+          score_clinico?: number
+          score_comercial?: number
+          score_final?: number
+          score_operacional?: number
+          score_reputacional?: number
+          total_pontos_acumulados?: number
+          updated_at?: string
+        }
+        Update: {
+          detalhes_clinico?: Json | null
+          detalhes_comercial?: Json | null
+          detalhes_operacional?: Json | null
+          detalhes_reputacional?: Json | null
+          medico_id?: string
+          nivel?: number
+          nivel_nome?: string
+          score_clinico?: number
+          score_comercial?: number
+          score_final?: number
+          score_operacional?: number
+          score_reputacional?: number
+          total_pontos_acumulados?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_score_detalhado_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_score_detalhado_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_servicos: {
         Row: {
           aderido_em: string
@@ -3936,6 +4197,51 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      medico_streaks: {
+        Row: {
+          dias_consecutivos: number
+          id: string
+          medico_id: string
+          melhor_streak: number
+          tipo: string
+          ultima_atividade: string | null
+          updated_at: string
+        }
+        Insert: {
+          dias_consecutivos?: number
+          id?: string
+          medico_id: string
+          melhor_streak?: number
+          tipo: string
+          ultima_atividade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          dias_consecutivos?: number
+          id?: string
+          medico_id?: string
+          melhor_streak?: number
+          tipo?: string
+          ultima_atividade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_streaks_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_streaks_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medicos: {
         Row: {
@@ -5229,6 +5535,145 @@ export type Database = {
           },
         ]
       }
+      premium_assinaturas: {
+        Row: {
+          auto_renovar: boolean
+          cancelado_em: string | null
+          created_at: string
+          environment: string
+          fim_ciclo_atual: string | null
+          id: string
+          inicio: string
+          medico_id: string
+          moeda: string
+          motivo_cancelamento: string | null
+          plano: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          auto_renovar?: boolean
+          cancelado_em?: string | null
+          created_at?: string
+          environment?: string
+          fim_ciclo_atual?: string | null
+          id?: string
+          inicio?: string
+          medico_id: string
+          moeda?: string
+          motivo_cancelamento?: string | null
+          plano: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          auto_renovar?: boolean
+          cancelado_em?: string | null
+          created_at?: string
+          environment?: string
+          fim_ciclo_atual?: string | null
+          id?: string
+          inicio?: string
+          medico_id?: string
+          moeda?: string
+          motivo_cancelamento?: string | null
+          plano?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "premium_assinaturas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "premium_assinaturas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      premium_creditos: {
+        Row: {
+          campanha_id: string | null
+          created_at: string
+          creditos_centavos: number
+          creditos_restantes_centavos: number
+          id: string
+          medico_id: string
+          pontos_convertidos: number | null
+          taxa_conversao: number
+          tipo: string
+          utilizado: boolean
+          utilizado_em: string | null
+          valido_ate: string
+        }
+        Insert: {
+          campanha_id?: string | null
+          created_at?: string
+          creditos_centavos: number
+          creditos_restantes_centavos: number
+          id?: string
+          medico_id: string
+          pontos_convertidos?: number | null
+          taxa_conversao?: number
+          tipo: string
+          utilizado?: boolean
+          utilizado_em?: string | null
+          valido_ate: string
+        }
+        Update: {
+          campanha_id?: string | null
+          created_at?: string
+          creditos_centavos?: number
+          creditos_restantes_centavos?: number
+          id?: string
+          medico_id?: string
+          pontos_convertidos?: number | null
+          taxa_conversao?: number
+          tipo?: string
+          utilizado?: boolean
+          utilizado_em?: string | null
+          valido_ate?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "premium_creditos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "impulsionamento_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "premium_creditos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "premium_creditos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescricoes: {
         Row: {
           assinatura_digital: string | null
@@ -5473,10 +5918,68 @@ export type Database = {
           },
         ]
       }
+      ranking_audit_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detalhes: Json | null
+          evento: string
+          id: string
+          medico_id: string
+          posicao_anterior: number | null
+          posicao_nova: number | null
+          score_anterior: number | null
+          score_novo: number | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          evento: string
+          id?: string
+          medico_id: string
+          posicao_anterior?: number | null
+          posicao_nova?: number | null
+          score_anterior?: number | null
+          score_novo?: number | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          evento?: string
+          id?: string
+          medico_id?: string
+          posicao_anterior?: number | null
+          posicao_nova?: number | null
+          score_anterior?: number | null
+          score_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ranking_audit_log_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranking_audit_log_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ranking_config: {
         Row: {
+          badge_check_interval_hours: number
           cpc_padrao_centavos: number
+          creditos_taxa_conversao: number
+          creditos_validade_dias: number
           id: string
+          meta_bonus_pontos: number
           min_avaliacoes_exibir: number
           peso_atendimentos: number
           peso_avaliacao: number
@@ -5484,6 +5987,10 @@ export type Database = {
           peso_no_show: number
           peso_premium: number
           peso_recencia: number
+          peso_score_clinico: number
+          peso_score_comercial: number
+          peso_score_operacional: number
+          peso_score_reputacional: number
           premium_bonus_ranking: number
           premium_max_no_show: number
           premium_min_atendimentos: number
@@ -5492,12 +5999,17 @@ export type Database = {
           recencia_dias_ativo: number
           recencia_dias_penalidade: number
           saldo_por_consulta: number
+          streak_bonus_multiplicador: number
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          badge_check_interval_hours?: number
           cpc_padrao_centavos?: number
+          creditos_taxa_conversao?: number
+          creditos_validade_dias?: number
           id?: string
+          meta_bonus_pontos?: number
           min_avaliacoes_exibir?: number
           peso_atendimentos?: number
           peso_avaliacao?: number
@@ -5505,6 +6017,10 @@ export type Database = {
           peso_no_show?: number
           peso_premium?: number
           peso_recencia?: number
+          peso_score_clinico?: number
+          peso_score_comercial?: number
+          peso_score_operacional?: number
+          peso_score_reputacional?: number
           premium_bonus_ranking?: number
           premium_max_no_show?: number
           premium_min_atendimentos?: number
@@ -5513,12 +6029,17 @@ export type Database = {
           recencia_dias_ativo?: number
           recencia_dias_penalidade?: number
           saldo_por_consulta?: number
+          streak_bonus_multiplicador?: number
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          badge_check_interval_hours?: number
           cpc_padrao_centavos?: number
+          creditos_taxa_conversao?: number
+          creditos_validade_dias?: number
           id?: string
+          meta_bonus_pontos?: number
           min_avaliacoes_exibir?: number
           peso_atendimentos?: number
           peso_avaliacao?: number
@@ -5526,6 +6047,10 @@ export type Database = {
           peso_no_show?: number
           peso_premium?: number
           peso_recencia?: number
+          peso_score_clinico?: number
+          peso_score_comercial?: number
+          peso_score_operacional?: number
+          peso_score_reputacional?: number
           premium_bonus_ranking?: number
           premium_max_no_show?: number
           premium_min_atendimentos?: number
@@ -5534,10 +6059,65 @@ export type Database = {
           recencia_dias_ativo?: number
           recencia_dias_penalidade?: number
           saldo_por_consulta?: number
+          streak_bonus_multiplicador?: number
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: []
+      }
+      recomendacoes_ia: {
+        Row: {
+          created_at: string
+          dados: Json | null
+          descricao: string
+          id: string
+          lida: boolean
+          medico_id: string
+          prioridade: string
+          tipo: string
+          titulo: string
+          valida_ate: string
+        }
+        Insert: {
+          created_at?: string
+          dados?: Json | null
+          descricao: string
+          id?: string
+          lida?: boolean
+          medico_id: string
+          prioridade?: string
+          tipo: string
+          titulo: string
+          valida_ate: string
+        }
+        Update: {
+          created_at?: string
+          dados?: Json | null
+          descricao?: string
+          id?: string
+          lida?: boolean
+          medico_id?: string
+          prioridade?: string
+          tipo?: string
+          titulo?: string
+          valida_ate?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recomendacoes_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recomendacoes_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reembolso_planos: {
         Row: {
@@ -6578,6 +7158,13 @@ export type Database = {
               valor_novo: string
             }[]
           }
+      calcular_nivel_medico: {
+        Args: { p_total_pontos: number }
+        Returns: {
+          nivel: number
+          nivel_nome: string
+        }[]
+      }
       calcular_reembolso_proporcional: {
         Args: {
           _data_cancelamento?: string

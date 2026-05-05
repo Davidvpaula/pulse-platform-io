@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { brl } from "@/lib/format";
 import {
   Star, Trophy, TrendingUp, Users, Activity, Eye, EyeOff, Loader2, Award, BarChart3,
   Crown, Megaphone, PlusCircle, Pause, Play, XCircle, Zap, History,
-  FileText, CheckCircle2, AlertTriangle,
+  FileText, CheckCircle2, AlertTriangle, Shield, Flame, Target,
+  ArrowRight, Lightbulb,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -12,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -23,8 +26,11 @@ import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
   listarSaldoCrescimento, getRankingConfig, ativarPremiumConquistado,
+  getScoreDetalhado, listarBadgesMedico, listarStreaksMedico,
+  listarRecomendacoes, getNivelInfo,
   type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
   type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
+  type MedicoScoreDetalhado, type MedicoBadge, type MedicoStreak, type RecomendacaoIA,
 } from "@/lib/gamificacao";
 import {
   buscarTermosPendentes, registrarAceite, TERMO_TIPO_LABELS,
@@ -38,6 +44,79 @@ function recenciaLabel(f: number) {
   if (f >= 1) return { label: "Ativo", cls: "bg-success/15 text-success" };
   if (f >= 0.8) return { label: "Moderado", cls: "bg-warning/15 text-warning" };
   return { label: "Inativo", cls: "bg-destructive/15 text-destructive" };
+}
+
+const BADGE_ICONS: Record<string, string> = {
+  perfil_completo: "✅",
+  pontual: "⏱️",
+  top_avaliado: "⭐",
+  maratonista: "🏃",
+  fidelizador: "🤝",
+  velocista: "⚡",
+  veterano: "🏅",
+  premium_conquistado: "👑",
+};
+
+/* ── Radar chart SVG simples ── */
+function ScoreRadar({ scores }: { scores: { label: string; value: number; max: number }[] }) {
+  const cx = 100, cy = 100, r = 70;
+  const n = scores.length;
+  const angleStep = (2 * Math.PI) / n;
+
+  const points = scores.map((s, i) => {
+    const angle = -Math.PI / 2 + angleStep * i;
+    const ratio = Math.min(s.value / (s.max || 1), 1);
+    return {
+      x: cx + r * ratio * Math.cos(angle),
+      y: cy + r * ratio * Math.sin(angle),
+      lx: cx + (r + 18) * Math.cos(angle),
+      ly: cy + (r + 18) * Math.sin(angle),
+      label: s.label,
+      value: s.value,
+    };
+  });
+
+  const polygon = points.map((p) => `${p.x},${p.y}`).join(" ");
+
+  // Grid rings
+  const rings = [0.25, 0.5, 0.75, 1];
+
+  return (
+    <svg viewBox="0 0 200 200" className="w-full max-w-[220px] mx-auto">
+      {/* Grid */}
+      {rings.map((ring) => (
+        <polygon
+          key={ring}
+          points={scores.map((_, i) => {
+            const angle = -Math.PI / 2 + angleStep * i;
+            return `${cx + r * ring * Math.cos(angle)},${cy + r * ring * Math.sin(angle)}`;
+          }).join(" ")}
+          fill="none"
+          stroke="hsl(var(--border))"
+          strokeWidth="0.5"
+          opacity="0.5"
+        />
+      ))}
+      {/* Axes */}
+      {points.map((p, i) => (
+        <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(-Math.PI / 2 + angleStep * i)} y2={cy + r * Math.sin(-Math.PI / 2 + angleStep * i)} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3" />
+      ))}
+      {/* Data polygon */}
+      <polygon points={polygon} fill="hsl(var(--primary) / 0.15)" stroke="hsl(var(--primary))" strokeWidth="2" />
+      {/* Dots + labels */}
+      {points.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r="3" fill="hsl(var(--primary))" />
+          <text x={p.lx} y={p.ly} textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-[7px] font-medium">
+            {p.label}
+          </text>
+          <text x={p.lx} y={p.ly + 9} textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground text-[6px]">
+            {(p.value * 100).toFixed(0)}%
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
 }
 
 export default function MedicoGamificacao() {
@@ -54,6 +133,10 @@ export default function MedicoGamificacao() {
   const [novaCampanhaOpen, setNovaCampanhaOpen] = useState(false);
   const [config, setConfig] = useState<RankingConfig | null>(null);
   const [showSaldoHistory, setShowSaldoHistory] = useState(false);
+  const [scoreDetalhado, setScoreDetalhado] = useState<MedicoScoreDetalhado | null>(null);
+  const [badges, setBadges] = useState<MedicoBadge[]>([]);
+  const [streaks, setStreaks] = useState<MedicoStreak[]>([]);
+  const [recomendacoes, setRecomendacoes] = useState<RecomendacaoIA[]>([]);
 
   // Premium activation + terms
   const [activatingPremium, setActivatingPremium] = useState(false);
@@ -67,7 +150,7 @@ export default function MedicoGamificacao() {
     const medico = await getMedicoAtual();
     if (!medico) { setLoading(false); return; }
     setMedicoId(medico.id);
-    const [r, a, saldo, hist, prem, camps, cfg] = await Promise.all([
+    const [r, a, saldo, hist, prem, camps, cfg, sd, bdg, str, rec] = await Promise.all([
       getRankingMedico(medico.id),
       listarAvaliacoesMedico(medico.id),
       getSaldoAtual(medico.id),
@@ -75,6 +158,10 @@ export default function MedicoGamificacao() {
       getMedicoPremium(medico.id),
       listarCampanhasMedico(medico.id),
       getRankingConfig(),
+      getScoreDetalhado(medico.id),
+      listarBadgesMedico(medico.id),
+      listarStreaksMedico(medico.id),
+      listarRecomendacoes(medico.id),
     ]);
     setRanking(r);
     setAvaliacoes(a);
@@ -83,6 +170,10 @@ export default function MedicoGamificacao() {
     setPremium(prem);
     setCampanhas(camps);
     setConfig(cfg);
+    setScoreDetalhado(sd);
+    setBadges(bdg);
+    setStreaks(str);
+    setRecomendacoes(rec);
     setLoading(false);
   };
 
@@ -113,30 +204,22 @@ export default function MedicoGamificacao() {
     }
   };
 
-  /** Fluxo de ativação premium: verifica termos → exige aceite → ativa */
   const handleAtivarPremium = async () => {
     if (!medicoId) return;
     setActivatingPremium(true);
     try {
-      // 1. Verifica termos pendentes de gamificação/premium
       const pendentes = await buscarTermosPendentes("medico");
-      // Filtra apenas os tipos obrigatórios para premium
       const premiumTermos = pendentes.filter(t =>
         t.tipo === "gamificacao_premium" || t.tipo === "contrato_medico"
       );
-
       if (premiumTermos.length > 0) {
-        // Precisa aceitar termos primeiro
         setTermosPendentes(premiumTermos);
         setTermoAtual(premiumTermos[0]);
         setActivatingPremium(false);
-        return; // O fluxo continua após aceitar todos os termos
+        return;
       }
-
-      // 2. Todos os termos aceitos — ativa premium
       await ativarPremiumConquistado(medicoId);
       toast.success("Premium ativado com sucesso! 🎉");
-      // Recarrega estado
       const prem = await getMedicoPremium(medicoId);
       setPremium(prem);
     } catch (e: any) {
@@ -154,12 +237,9 @@ export default function MedicoGamificacao() {
       toast.success(`"${termoAtual.titulo}" aceito!`);
       const restantes = termosPendentes.filter(t => t.id !== termoAtual.id);
       setTermosPendentes(restantes);
-
       if (restantes.length > 0) {
-        // Mais termos para aceitar
         setTermoAtual(restantes[0]);
       } else {
-        // Todos aceitos — prossegue com ativação
         setTermoAtual(null);
         if (medicoId) {
           setActivatingPremium(true);
@@ -192,8 +272,8 @@ export default function MedicoGamificacao() {
 
   const rec = ranking ? recenciaLabel(ranking.fator_recencia) : null;
   const isPremium = premium?.ativo ?? false;
+  const nivelInfo = getNivelInfo(scoreDetalhado?.total_pontos_acumulados ?? saldoCrescimento);
 
-  // Premium qualification progress
   const premiumProgress = config && ranking ? {
     atendimentos: { atual: ranking.total_atendimentos, meta: config.premium_min_atendimentos, ok: ranking.total_atendimentos >= config.premium_min_atendimentos },
     avaliacao: { atual: ranking.avaliacao_media, meta: config.premium_min_avaliacao, ok: ranking.avaliacao_media >= config.premium_min_avaliacao },
@@ -206,22 +286,172 @@ export default function MedicoGamificacao() {
         title="Gamificação & Ranking"
         description="Acompanhe sua performance, avaliações e posição no ranking da plataforma."
         actions={
-          isPremium ? (
-            <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white px-3 py-1.5 text-sm">
-              <Crown className="mr-1.5 h-4 w-4" /> Premium {premium?.tipo === "conquistado" ? "(conquistado)" : ""}
-            </Badge>
-          ) : null
+          <div className="flex items-center gap-2">
+            {isPremium ? (
+              <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white px-3 py-1.5 text-sm">
+                <Crown className="mr-1.5 h-4 w-4" /> Premium {premium?.tipo === "conquistado" ? "(conquistado)" : ""}
+              </Badge>
+            ) : (
+              <Link to="/app/medico/premium">
+                <Button variant="outline" size="sm">
+                  <Crown className="mr-1.5 h-4 w-4 text-amber-500" /> Conhecer Premium
+                </Button>
+              </Link>
+            )}
+          </div>
         }
       />
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <StatCard label="Nota média" value={ranking ? ranking.avaliacao_media.toFixed(1) : "—"} icon={Star} hint={`${ranking?.total_avaliacoes ?? 0} avaliações recebidas`} />
-        <StatCard label="Posição no ranking" value={ranking?.posicao ? `#${ranking.posicao}` : "—"} icon={Trophy} hint="Entre todos os médicos aprovados" />
-        <StatCard label="Taxa de conversão" value={ranking ? pct(ranking.taxa_conversao) : "—"} icon={TrendingUp} hint="Consultas concluídas / agendadas" />
-        <StatCard label="Atendimentos" value={String(ranking?.total_atendimentos ?? 0)} icon={Users} hint={`${ranking?.total_agendamentos ?? 0} agendamentos no total`} />
-        <StatCard label="Saldo crescimento" value={saldoCrescimento.toFixed(0)} icon={Award} hint="Pontos acumulados por performance" />
+      {/* Level + Stats */}
+      <div className="grid gap-4 md:grid-cols-6">
+        {/* Level card */}
+        <div className="md:col-span-2 card-elevated p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className={cn(
+              "w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold",
+              nivelInfo.nivel >= 5 ? "bg-gradient-to-br from-amber-500/20 to-yellow-400/20 text-amber-500" :
+              nivelInfo.nivel >= 3 ? "bg-primary/10 text-primary" :
+              "bg-muted text-muted-foreground",
+            )}>
+              {nivelInfo.nivel}
+            </div>
+            <div>
+              <p className="font-display font-bold text-lg">{nivelInfo.nome}</p>
+              <p className="text-xs text-muted-foreground">
+                {nivelInfo.proximoNome
+                  ? `${nivelInfo.pontosParaProximo.toFixed(0)} pts para ${nivelInfo.proximoNome}`
+                  : "Nível máximo atingido!"}
+              </p>
+            </div>
+          </div>
+          <Progress value={nivelInfo.progresso * 100} className="h-2" />
+          <p className="text-xs text-muted-foreground mt-2">
+            Total acumulado: {(scoreDetalhado?.total_pontos_acumulados ?? saldoCrescimento).toFixed(0)} pontos
+          </p>
+        </div>
+
+        {/* Quick stats */}
+        <StatCard label="Nota média" value={ranking ? ranking.avaliacao_media.toFixed(1) : "—"} icon={Star} hint={`${ranking?.total_avaliacoes ?? 0} avaliações`} />
+        <StatCard label="Posição" value={ranking?.posicao ? `#${ranking.posicao}` : "—"} icon={Trophy} hint="No ranking geral" />
+        <StatCard label="Conversão" value={ranking ? pct(ranking.taxa_conversao) : "—"} icon={TrendingUp} hint="Consultas / agendamentos" />
+        <StatCard label="Saldo" value={saldoCrescimento.toFixed(0)} icon={Zap} hint="Pontos disponíveis" />
       </div>
+
+      {/* Score Radar + Badges + Streaks */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Radar chart */}
+        <div className="card-elevated p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-semibold">Score Multi-Dimensional</h3>
+          </div>
+          {scoreDetalhado ? (
+            <>
+              <ScoreRadar scores={[
+                { label: "Operacional", value: scoreDetalhado.score_operacional, max: 1 },
+                { label: "Clínico", value: scoreDetalhado.score_clinico, max: 1 },
+                { label: "Comercial", value: scoreDetalhado.score_comercial, max: 1 },
+                { label: "Reputacional", value: scoreDetalhado.score_reputacional, max: 1 },
+              ]} />
+              <div className="text-center mt-2">
+                <p className="text-2xl font-bold text-primary">{(scoreDetalhado.score_final * 100).toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">Score final</p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <Target className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              Score será calculado após suas primeiras consultas.
+            </div>
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="card-elevated p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-semibold">Badges</h3>
+            <Badge variant="secondary" className="ml-auto text-xs">{badges.length}</Badge>
+          </div>
+          {badges.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {badges.map((b) => (
+                <div key={b.id} className="rounded-lg border border-border bg-muted/30 p-2.5 text-center">
+                  <span className="text-2xl">{BADGE_ICONS[b.badge_key] ?? "🏆"}</span>
+                  <p className="text-xs font-medium mt-1 truncate">{b.badge_nome}</p>
+                  {b.expira_em && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Expira: {new Date(b.expira_em).toLocaleDateString("pt-BR")}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <Shield className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              Continue atendendo para desbloquear badges!
+            </div>
+          )}
+        </div>
+
+        {/* Streaks */}
+        <div className="card-elevated p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Flame className="h-5 w-5 text-orange-500" />
+            <h3 className="font-display font-semibold">Streaks</h3>
+          </div>
+          {streaks.length > 0 ? (
+            <div className="space-y-3">
+              {streaks.map((s) => (
+                <div key={s.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium capitalize">{s.tipo.replace(/_/g, " ")}</p>
+                    <Badge className={cn(
+                      "text-xs",
+                      s.dias_consecutivos > 0 ? "bg-orange-500/15 text-orange-600" : "bg-muted text-muted-foreground",
+                    )}>
+                      🔥 {s.dias_consecutivos} dias
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recorde: {s.melhor_streak} dias
+                    {s.ultima_atividade && ` · Última: ${new Date(s.ultima_atividade).toLocaleDateString("pt-BR")}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <Flame className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              Realize consultas consecutivas para iniciar seu streak!
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* IA Recommendations */}
+      {recomendacoes.length > 0 && (
+        <div className="card-elevated p-5 border-l-4 border-l-primary">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-semibold">Recomendações Inteligentes</h3>
+          </div>
+          <div className="space-y-2">
+            {recomendacoes.slice(0, 3).map((r) => (
+              <div key={r.id} className={cn(
+                "rounded-lg border p-3 text-sm",
+                r.prioridade === "urgente" ? "border-destructive/30 bg-destructive/5" :
+                r.prioridade === "alta" ? "border-warning/30 bg-warning/5" :
+                "border-border bg-muted/30",
+              )}>
+                <p className="font-medium">{r.titulo}</p>
+                <p className="text-xs text-muted-foreground mt-1">{r.descricao}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Premium status card */}
       <div className={cn(
@@ -236,10 +466,17 @@ export default function MedicoGamificacao() {
               <p className="text-xs text-muted-foreground">
                 {isPremium
                   ? `Ativo desde ${premium?.inicio ? new Date(premium.inicio).toLocaleDateString("pt-BR") : "—"} · Bônus de ${config?.premium_bonus_ranking ?? 1.2}x no ranking`
-                  : "Desbloqueie o bônus no ranking e destaque nos resultados de busca."}
+                  : "Desbloqueie campanhas, relatórios avançados e recomendações IA."}
               </p>
             </div>
           </div>
+          {!isPremium && (
+            <Link to="/app/medico/premium">
+              <Button size="sm" variant="outline">
+                Ver planos <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Premium qualification progress */}
@@ -263,14 +500,13 @@ export default function MedicoGamificacao() {
           </div>
         )}
 
-        {/* Activation button — shown when all qualifications met */}
         {!isPremium && premiumProgress &&
           premiumProgress.atendimentos.ok && premiumProgress.avaliacao.ok && premiumProgress.noShow.ok && (
           <div className="mt-4 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
             <Crown className="h-5 w-5 text-amber-500 shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium">Parabéns! Você atingiu todos os requisitos.</p>
-              <p className="text-xs text-muted-foreground">Aceite os termos obrigatórios e ative seu plano Premium agora.</p>
+              <p className="text-xs text-muted-foreground">Aceite os termos e ative seu Premium conquistado.</p>
             </div>
             <Button
               onClick={handleAtivarPremium}
@@ -285,7 +521,7 @@ export default function MedicoGamificacao() {
         )}
       </div>
 
-      {/* Dialog: aceite de termos obrigatórios para Premium */}
+      {/* Dialog: aceite de termos */}
       <Dialog open={!!termoAtual} onOpenChange={(o) => { if (!o) { setTermoAtual(null); setTermosPendentes([]); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
@@ -301,17 +537,15 @@ export default function MedicoGamificacao() {
               Você precisa aceitar {termosPendentes.length > 1 ? `${termosPendentes.length} termos` : "este termo"} para ativar o Premium.
             </div>
           </DialogHeader>
-
           <ScrollArea className="flex-1 max-h-[50vh] border rounded-md p-4">
             <div
               className="prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{ __html: termoAtual?.conteudo ?? "" }}
             />
           </ScrollArea>
-
           <DialogFooter className="flex-col sm:flex-row gap-2 mt-2">
             <p className="text-xs text-muted-foreground flex-1">
-              Ao aceitar, você concorda com os termos acima. Seu aceite será registrado com data, IP e navegador.
+              Ao aceitar, você concorda com os termos acima.
             </p>
             <Button variant="outline" onClick={() => { setTermoAtual(null); setTermosPendentes([]); }} disabled={aceitandoTermo}>
               Cancelar
@@ -322,10 +556,9 @@ export default function MedicoGamificacao() {
                 : <><CheckCircle2 className="mr-2 h-4 w-4" /> Li e aceito</>}
             </Button>
           </DialogFooter>
-
           {termosPendentes.length > 1 && termoAtual && (
             <p className="text-xs text-muted-foreground text-center mt-1">
-              + {termosPendentes.filter(t => t.id !== termoAtual.id).length} termo(s) restante(s) após este
+              + {termosPendentes.filter(t => t.id !== termoAtual.id).length} termo(s) restante(s)
             </p>
           )}
         </DialogContent>
@@ -382,7 +615,6 @@ export default function MedicoGamificacao() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="mt-2 text-2xl font-bold">{ranking ? pct(ranking.taxa_no_show) : "—"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Faltas dos pacientes em relação ao total</p>
         </div>
         <div className="card-elevated p-5">
           <div className="flex items-center justify-between">
@@ -398,7 +630,6 @@ export default function MedicoGamificacao() {
             <Award className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-2 text-2xl font-bold">{ranking ? ranking.ranking_score.toFixed(2) : "—"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Calculado com avaliações, volume, conversão, recência</p>
         </div>
       </div>
 
@@ -414,7 +645,6 @@ export default function MedicoGamificacao() {
           </Button>
         </div>
 
-        {/* Status counters */}
         {(() => {
           const ativas = campanhas.filter(c => c.status === "ativa").length;
           const pausadas = campanhas.filter(c => c.status === "pausada").length;
@@ -507,7 +737,7 @@ export default function MedicoGamificacao() {
 
         {avaliacoes.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            Nenhuma avaliação recebida ainda. As avaliações aparecerão aqui após seus pacientes avaliarem consultas concluídas.
+            Nenhuma avaliação recebida ainda.
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -531,7 +761,7 @@ export default function MedicoGamificacao() {
                     checked={av.exibir_no_perfil}
                     disabled={toggling === av.id || !av.avaliacao_publica}
                     onCheckedChange={() => handleToggle(av)}
-                    title={!av.avaliacao_publica ? "Apenas avaliações públicas podem ser exibidas no perfil" : av.exibir_no_perfil ? "Ocultar do perfil público" : "Exibir no perfil público"}
+                    title={!av.avaliacao_publica ? "Apenas avaliações públicas" : av.exibir_no_perfil ? "Ocultar do perfil" : "Exibir no perfil"}
                   />
                 </div>
               </div>
@@ -615,7 +845,6 @@ function NovaCampanhaDialog({ open, onOpenChange, medicoId, saldoAtual, cpcPadra
           </div>
           <p className="text-xs text-muted-foreground">
             Estimativa: ~{orcamento && cpc ? Math.floor((parseFloat(orcamento) || 0) / (parseFloat(cpc) || 1)) : 0} cliques.
-            Você paga apenas por cliques reais no seu perfil.
           </p>
         </div>
         <DialogFooter>
