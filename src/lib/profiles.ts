@@ -3,6 +3,7 @@ import {
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
   Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy, Send, HelpCircle,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
