@@ -4215,12 +4215,17 @@ export type Database = {
       }
       medico_ranking: {
         Row: {
+          avaliacao_bayesiana: number
           avaliacao_media: number
+          bonus_novato: number
           fator_premium: number
           fator_recencia: number
           last_activity_at: string | null
           medico_id: string
+          penalidade_anomalia: number
+          penalidade_compliance: number
           posicao: number | null
+          protecao_detalhes: Json
           ranking_score: number
           taxa_conversao: number
           taxa_no_show: number
@@ -4230,12 +4235,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avaliacao_bayesiana?: number
           avaliacao_media?: number
+          bonus_novato?: number
           fator_premium?: number
           fator_recencia?: number
           last_activity_at?: string | null
           medico_id: string
+          penalidade_anomalia?: number
+          penalidade_compliance?: number
           posicao?: number | null
+          protecao_detalhes?: Json
           ranking_score?: number
           taxa_conversao?: number
           taxa_no_show?: number
@@ -4245,12 +4255,17 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avaliacao_bayesiana?: number
           avaliacao_media?: number
+          bonus_novato?: number
           fator_premium?: number
           fator_recencia?: number
           last_activity_at?: string | null
           medico_id?: string
+          penalidade_anomalia?: number
+          penalidade_compliance?: number
           posicao?: number | null
+          protecao_detalhes?: Json
           ranking_score?: number
           taxa_conversao?: number
           taxa_no_show?: number
