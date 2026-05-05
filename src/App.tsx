@@ -362,7 +362,7 @@ const App = () => (
               <Route path="admin/cupons" element={<G perm="financeiro.servicos_gerenciar"><SecretariaCupons /></G>} />
               <Route path="admin/cupons/log" element={<G perm="financeiro.servicos_gerenciar"><CuponsUsoLog /></G>} />
               <Route path="admin/pendencias-integracao" element={<G perm="integracoes.ver_logs"><PendenciasIntegracao /></G>} />
-              <Route path="secretaria/pendencias-integracao" element={<PendenciasIntegracao />} />
+              
 
               {/* Empresa */}
               <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
