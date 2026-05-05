@@ -57,6 +57,7 @@ export type AvaliacaoMedica = {
 export type MedicoRanking = {
   medico_id: string;
   avaliacao_media: number;
+  avaliacao_bayesiana: number;
   total_avaliacoes: number;
   total_atendimentos: number;
   total_agendamentos: number;
@@ -66,6 +67,10 @@ export type MedicoRanking = {
   fator_premium: number;
   ranking_score: number;
   posicao: number | null;
+  penalidade_anomalia: number;
+  bonus_novato: number;
+  penalidade_compliance: number;
+  protecao_detalhes: Record<string, any>;
   last_activity_at: string | null;
   updated_at: string;
 };
