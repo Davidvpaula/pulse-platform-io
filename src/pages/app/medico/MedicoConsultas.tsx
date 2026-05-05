@@ -49,6 +49,7 @@ function getGroup(c: ConsultaDetalhada): StatusGroup {
 
 export default function MedicoConsultas() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ConsultaDetalhada[] | null>(null);
   const [busca, setBusca] = useState("");
