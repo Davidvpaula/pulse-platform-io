@@ -196,7 +196,10 @@ export default function PacientePlano() {
           <PlanosDisponiveisSection
             planos={planosDisponiveis}
             planoAtualId={null}
-            onSelecionar={() => {}}
+            onSelecionar={(planoId) => {
+              toast.info("Redirecionando para contratação...");
+              navigate("/app/paciente/montar-plano");
+            }}
           />
         )}
       </div>
