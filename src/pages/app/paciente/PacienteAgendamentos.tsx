@@ -45,6 +45,7 @@ export default function PacienteAgendamentos() {
   const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
   const [expandedPag, setExpandedPag] = useState<string | null>(null);
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
+  const [cancelarConsulta, setCancelarConsulta] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
     if (!session) { setRows(null); setVouchers([]); setAvaliadas(new Set()); return; }
