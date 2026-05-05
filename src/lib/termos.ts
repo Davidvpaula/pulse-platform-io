@@ -24,7 +24,7 @@ export const TERMO_TIPO_LABELS: Record<TermoTipo, string> = {
 };
 
 export const TERMO_CATEGORIAS = {
-  paciente: ["consulta_paciente", "privacidade", "plano_plataforma", "plano_medico"] as TermoTipo[],
+  paciente: ["consulta_paciente", "privacidade", "plano_plataforma", "plano_medico", "cancelamento_reembolso"] as TermoTipo[],
   medico: ["contrato_medico", "gamificacao_premium", "criacao_plano_medico", "uso_feegow", "proposta_medico"] as TermoTipo[],
   empresa: ["proposta_empresa"] as TermoTipo[],
 };
