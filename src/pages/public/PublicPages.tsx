@@ -863,7 +863,7 @@ export const Login = () => {
   const demos: { k: Parameters<typeof setProfileKey>[0]; label: string; to: string }[] = [
     { k: "paciente", label: "Paciente", to: "/app/paciente/dashboard" },
     { k: "medico", label: "Médico", to: "/app/medico/dashboard" },
-    { k: "secretaria", label: "Secretaria", to: "/app/secretaria/dashboard" },
+    { k: "colaborador", label: "Colaborador", to: "/app/colaborador/dashboard" },
     { k: "admin", label: "Admin", to: "/app/admin/dashboard" },
     { k: "empresa", label: "Empresa", to: "/app/empresa/dashboard" },
   ];

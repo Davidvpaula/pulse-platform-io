@@ -270,9 +270,7 @@ export default function ComunicacaoInterna() {
     ? "/app/admin"
     : location.pathname.includes("/medico/")
     ? "/app/medico"
-    : location.pathname.includes("/colaborador/")
-    ? "/app/colaborador"
-    : "/app/secretaria";
+    : "/app/colaborador";
 
   if (!session) {
     return (

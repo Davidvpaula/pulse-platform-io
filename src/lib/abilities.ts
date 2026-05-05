@@ -46,11 +46,11 @@ export const abilities: Record<ProfileKey, Matrix> = {
     "financeiro.own": ["view"],
     "tarefas": ["view"],
   },
+  // secretaria é alias de colaborador (perfil legado)
   secretaria: {
     "agenda.own": ALL,
     "agenda.others": ["view", "edit"],
     "consulta.cancel": ALL,
-    "whatsapp.central": ["view", "edit"],
     "tarefas": ALL,
   },
   admin: {

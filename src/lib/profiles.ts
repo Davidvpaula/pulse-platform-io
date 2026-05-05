@@ -81,44 +81,17 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Perfil", to: "/app/medico/perfil", icon: User },
     ],
   },
+  /**
+   * Secretaria — perfil LEGADO. Redireciona para Colaborador.
+   * Mantido para compatibilidade de profileFromPath e rolesToProfileKey.
+   */
   secretaria: {
     key: "secretaria",
-    label: "Secretaria",
-    basePath: "/app/secretaria",
+    label: "Colaborador",
+    basePath: "/app/colaborador",
     accent: "Operação",
-    user: { name: "Juliana Reis", role: "Secretária", avatarInitials: "JR" },
-    nav: [
-      { label: "Dashboard", to: "/app/secretaria/dashboard", icon: LayoutDashboard },
-      { label: "Pacientes", to: "/app/secretaria/pacientes", icon: Users },
-      { label: "Agenda", to: "/app/secretaria/agenda", icon: Calendar },
-      { label: "Agendamentos", to: "/app/secretaria/agendamentos", icon: ClipboardList },
-      {
-        label: "Comunicação",
-        icon: MessageCircle,
-        requiresCapability: "comunicacao.acessar",
-        children: [
-          { label: "Inbox", to: "/app/comunicacao/inbox" },
-          { label: "Equipe (interna)", to: "/app/secretaria/comunicacao-interna" },
-          { label: "Templates", to: "/app/comunicacao/templates" },
-          { label: "Métricas", to: "/app/comunicacao/metricas" },
-        ],
-      },
-      { label: "Financeiro", to: "/app/secretaria/financeiro", icon: Wallet, requiresCapability: "secretaria.financeiro" },
-      { label: "Cupons", to: "/app/secretaria/cupons", icon: BadgeCheck },
-      { label: "Tarefas", to: "/app/secretaria/tarefas", icon: ListTodo },
-      { label: "Pendências Feegow", to: "/app/secretaria/pendencias-integracao", icon: AlertTriangle },
-      // ─── módulos liberados ao perfil "Secretaria com supervisão"
-      {
-        label: "Supervisão",
-        icon: Activity,
-        requiresCapability: "secretaria.supervisor",
-        children: [
-          { label: "Visão da equipe", to: "/app/secretaria/equipe" },
-          { label: "Relatórios operacionais", to: "/app/secretaria/relatorios" },
-        ],
-      },
-      { label: "Perfil", to: "/app/secretaria/perfil", icon: User },
-    ],
+    user: { name: "Colaborador", role: "Colaborador", avatarInitials: "CL" },
+    nav: [], // vazio — se alguém cair aqui, usa o menu dinâmico do colaborador
   },
   admin: {
     key: "admin",

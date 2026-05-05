@@ -113,8 +113,8 @@ export default function SecretariaDashboard() {
   const { loading, consultas, stats } = useDashboardData();
   const { pathname } = useLocation();
 
-  // Detecta contexto (secretaria ou colaborador) para links
-  const base = pathname.startsWith("/app/colaborador") ? "/app/colaborador" : "/app/secretaria";
+  // Links sempre apontam para /app/colaborador (secretaria é legado)
+  const base = "/app/colaborador";
 
   // Fila inteligente
   const filaInteligente = useMemo(() => {

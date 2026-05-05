@@ -192,9 +192,7 @@ export default function PacientePerfil() {
     ? "/app/admin/pacientes"
     : location.pathname.startsWith("/app/medico")
     ? "/app/medico/pacientes"
-    : location.pathname.startsWith("/app/colaborador")
-    ? "/app/colaborador/pacientes"
-    : "/app/secretaria/pacientes";
+    : "/app/colaborador/pacientes";
 
   const carregar = useCallback(async () => {
     if (!id) return;
