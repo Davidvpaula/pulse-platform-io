@@ -1273,7 +1273,7 @@ export async function criarConsultaComReserva(
 
 export type ReservaUnificadaInput = DadosPaciente & {
   slot_id: string;
-  tipo: "especialidade" | "servico";
+  tipo: "especialidade" | "servico" | "pa";
   referencia_id: string; // especialidade_id ou servico_id
   motivo?: string;
 };
