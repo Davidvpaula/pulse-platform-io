@@ -29,7 +29,10 @@ import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 import { buscarTermoAtivo, registrarAceite, verificarAceite, type TermoRow } from "@/lib/termos";
-import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
 
 /* ─── Tipos de agendamento suportados ─── */
