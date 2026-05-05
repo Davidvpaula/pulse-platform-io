@@ -270,7 +270,7 @@ export default function PacienteAgendamentos() {
                           size="sm"
                           variant="outline"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => cancelar(c.id)}
+                          onClick={() => setCancelarConsulta(c)}
                           disabled={cancelando === c.id}
                         >
                           {cancelando === c.id ? (
