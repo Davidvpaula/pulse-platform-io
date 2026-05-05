@@ -38,20 +38,34 @@ export async function getSaqueConfig(): Promise<SaqueConfig> {
   const map: Record<string, any> = {};
   (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
 
-  const rawDias = map["financeiro.saque.dias_fechamento"] ?? DEFAULTS.dias_fechamento;
-  const dias_fechamento = Array.isArray(rawDias)
-    ? rawDias
-    : typeof rawDias === "string"
-      ? JSON.parse(rawDias)
-      : DEFAULTS.dias_fechamento;
+  // Helper: DB jsonb may return string, number, boolean, or array — normalize each field
+  const parseStr = (v: any, fallback: string) => (typeof v === "string" ? v.replace(/^"|"$/g, "") : v) ?? fallback;
+  const parseNum = (v: any, fallback: number): number => {
+    if (v == null) return fallback;
+    const n = Number(v);
+    return isNaN(n) ? fallback : n;
+  };
+  const parseBool = (v: any, fallback: boolean): boolean => {
+    if (v == null) return fallback;
+    if (typeof v === "boolean") return v;
+    if (typeof v === "string") return v === "true";
+    return fallback;
+  };
+  const parseArr = (v: any, fallback: number[]): number[] => {
+    if (Array.isArray(v)) return v.map(Number).filter(n => !isNaN(n));
+    if (typeof v === "string") {
+      try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(Number).filter(n => !isNaN(n)); } catch { /* ignore */ }
+    }
+    return fallback;
+  };
 
   return {
-    frequencia: map["financeiro.saque.frequencia"] ?? DEFAULTS.frequencia,
-    dias_fechamento,
-    prazo_liberacao_dias: map["financeiro.saque.prazo_liberacao_dias"] ?? DEFAULTS.prazo_liberacao_dias,
-    valor_minimo_centavos: map["financeiro.saque.valor_minimo_centavos"] ?? DEFAULTS.valor_minimo_centavos,
-    exigir_nfe: map["financeiro.saque.exigir_nfe"] ?? DEFAULTS.exigir_nfe,
-    permitir_parcial: map["financeiro.saque.permitir_parcial"] ?? DEFAULTS.permitir_parcial,
+    frequencia: parseStr(map["financeiro.saque.frequencia"], DEFAULTS.frequencia),
+    dias_fechamento: parseArr(map["financeiro.saque.dias_fechamento"], DEFAULTS.dias_fechamento),
+    prazo_liberacao_dias: parseNum(map["financeiro.saque.prazo_liberacao_dias"], DEFAULTS.prazo_liberacao_dias),
+    valor_minimo_centavos: parseNum(map["financeiro.saque.valor_minimo_centavos"], DEFAULTS.valor_minimo_centavos),
+    exigir_nfe: parseBool(map["financeiro.saque.exigir_nfe"], DEFAULTS.exigir_nfe),
+    permitir_parcial: parseBool(map["financeiro.saque.permitir_parcial"], DEFAULTS.permitir_parcial),
   };
 }
 
