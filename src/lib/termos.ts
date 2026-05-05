@@ -20,6 +20,7 @@ export const TERMO_TIPO_LABELS: Record<TermoTipo, string> = {
   uso_feegow: "Termos de uso da Feegow",
   proposta_empresa: "Termos de proposta comercial (Empresa)",
   proposta_medico: "Termos de proposta comercial (Médico)",
+  cancelamento_reembolso: "Termos de cancelamento e reembolso",
 };
 
 export const TERMO_CATEGORIAS = {
