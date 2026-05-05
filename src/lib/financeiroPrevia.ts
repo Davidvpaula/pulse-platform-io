@@ -108,7 +108,7 @@ export async function listConsultasParticularesParaPrevia(
       `id, medico_id, inicio, status, valor_centavos,
        valor_snapshot_centavos, comissao_snapshot_centavos, comissao_percentual_snapshot,
        servico_id,
-       medicos:medico_id ( nome_completo )`,
+        medicos:medico_id ( nome )`,
     )
     .is("servico_id", null)
     .order("inicio", { ascending: false })
@@ -134,7 +134,7 @@ export async function listConsultasParticularesParaPrevia(
     return {
       id: r.id,
       medico_id: r.medico_id,
-      medico_nome: r.medicos?.nome_completo ?? null,
+      medico_nome: r.medicos?.nome ?? null,
       inicio: r.inicio,
       status: r.status,
       valor_centavos: valorBase,
@@ -154,7 +154,7 @@ export async function listSlotsParticularesFuturosParaPrevia(
     .from("agenda_slots")
     .select(
       `id, medico_id, inicio, status, servico_id,
-       medicos:medico_id ( nome_completo )`,
+       medicos:medico_id ( nome )`,
     )
     .is("servico_id", null)
     .eq("status", "disponivel")
@@ -190,7 +190,7 @@ export async function listSlotsParticularesFuturosParaPrevia(
   return rows.map((r) => ({
     slot_id: r.id,
     medico_id: r.medico_id,
-    medico_nome: r.medicos?.nome_completo ?? null,
+    medico_nome: r.medicos?.nome ?? null,
     inicio: r.inicio,
     preco_centavos: precoPorMedico.get(r.medico_id) ?? 0,
   }));

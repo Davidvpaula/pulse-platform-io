@@ -284,10 +284,10 @@ export default function ComunicacaoInbox() {
     if (conv.medico_id) {
       const { data } = await supabase
         .from("medicos")
-        .select("nome_completo")
+        .select("nome")
         .eq("id", conv.medico_id)
         .maybeSingle();
-      setMedicoName((data as any)?.nome_completo || null);
+      setMedicoName((data as any)?.nome || null);
     }
 
     if (conv.consulta_id) {

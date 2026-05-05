@@ -90,7 +90,7 @@ export async function listOverridesParticulares(): Promise<ComissaoOverrideRow[]
     .from("medico_comissao_override")
     .select(
       `id, medico_id, servico_id, comissao_pct, motivo, ativo, created_at, updated_at,
-       medicos:medico_id ( nome_completo, crm )`,
+       medicos:medico_id ( nome, crm )`,
     )
     .is("servico_id", null)
     .order("created_at", { ascending: false });
@@ -104,7 +104,7 @@ export async function listOverridesParticulares(): Promise<ComissaoOverrideRow[]
     ativo: r.ativo,
     created_at: r.created_at,
     updated_at: r.updated_at,
-    medico_nome: r.medicos?.nome_completo ?? null,
+    medico_nome: r.medicos?.nome ?? null,
     medico_crm: r.medicos?.crm ?? null,
   }));
 }
@@ -235,14 +235,14 @@ export async function listAuditoriaRepasse(
       ? supabase.from("profiles").select("id, nome").in("id", actorIds)
       : Promise.resolve({ data: [] as any[], error: null }),
     medicoIds.length
-      ? supabase.from("medicos").select("id, nome_completo").in("id", medicoIds)
+      ? supabase.from("medicos").select("id, nome").in("id", medicoIds)
       : Promise.resolve({ data: [] as any[], error: null }),
   ]);
 
   const profilesMap = new Map<string, string>();
   (profilesRes.data ?? []).forEach((p: any) => profilesMap.set(p.id, p.nome ?? ""));
   const medicosMap = new Map<string, string>();
-  (medicosRes.data ?? []).forEach((m: any) => medicosMap.set(m.id, m.nome_completo ?? ""));
+  (medicosRes.data ?? []).forEach((m: any) => medicosMap.set(m.id, m.nome ?? ""));
 
   return rows.map((r) => ({
     ...r,
@@ -262,16 +262,16 @@ export type MedicoOption = { id: string; nome: string; crm: string | null };
 export async function searchMedicosAtivos(q: string): Promise<MedicoOption[]> {
   let query = supabase
     .from("medicos")
-    .select("id, nome_completo, crm, status")
+    .select("id, nome, crm, status")
     .eq("status", "aprovado")
-    .order("nome_completo", { ascending: true })
+    .order("nome", { ascending: true })
     .limit(20);
   if (q.trim()) {
-    query = query.ilike("nome_completo", `%${q.trim()}%`);
+    query = query.ilike("nome", `%${q.trim()}%`);
   }
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map((m: any) => ({ id: m.id, nome: m.nome_completo, crm: m.crm ?? null }));
+  return (data ?? []).map((m: any) => ({ id: m.id, nome: m.nome, crm: m.crm ?? null }));
 }
 
 function round2(n: number): number {
