@@ -38,7 +38,7 @@ export default function EmpresaDocumentos() {
       // Query documents marked as visible to empresa
       const { data, error } = await supabase
         .from("documentos_paciente")
-        .select("id, titulo, tipo, created_at, descricao, arquivo_url, paciente:pacientes(nome_completo), medico:medicos(nome_completo)")
+        .select("id, titulo, tipo, created_at, descricao, arquivo_url, paciente:pacientes(nome_completo), medico:medicos(nome)")
         .eq("visibilidade_empresa", true)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -51,7 +51,7 @@ export default function EmpresaDocumentos() {
           titulo: d.titulo ?? "Documento",
           tipo: d.tipo ?? "geral",
           data_criacao: d.created_at,
-          medico_nome: d.medico?.nome_completo ?? "—",
+          medico_nome: d.medico?.nome ?? "—",
           funcionario_nome: d.paciente?.nome_completo ?? "—",
           conteudo_url: d.arquivo_url ?? null,
           descricao: d.descricao ?? null,
