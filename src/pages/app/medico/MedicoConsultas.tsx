@@ -226,7 +226,7 @@ export default function MedicoConsultas() {
             )}
 
             {/* Pronta para iniciar */}
-            {podeIniciar && c.modalidade === "online" && c.link_sala && (
+            {podeIniciar && (
               <Button
                 size="sm"
                 className="bg-gradient-primary hover:opacity-90"
