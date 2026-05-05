@@ -81,39 +81,20 @@ export async function listMensagensConversa(
   return { data: (data ?? []) as MensagemPaciente[], total: count ?? 0 };
 }
 
-/** Envia mensagem como paciente */
+/** @deprecated Paciente não envia mensagens pelo sistema interno. */
 export async function enviarMensagemPaciente(
-  conversationId: string,
-  body: string,
-  senderName: string,
-  attachment?: { url: string; name: string; type: string },
+  _conversationId: string,
+  _body: string,
+  _senderName: string,
+  _attachment?: { url: string; name: string; type: string },
 ) {
-  const { data: user } = await supabase.auth.getUser();
-  const { error } = await supabase.from("messages").insert({
-    conversation_id: conversationId,
-    sender_type: "paciente" as any,
-    sender_id: user?.user?.id ?? null,
-    sender_name: senderName,
-    body: body || null,
-    message_type: attachment ? "attachment" as any : "text" as any,
-    status: "sent" as any,
-    attachment_url: attachment?.url ?? null,
-    attachment_name: attachment?.name ?? null,
-    attachment_type: attachment?.type ?? null,
-  });
-  if (error) throw new Error(error.message);
+  throw new Error("Paciente não pode enviar mensagens pelo sistema interno. Use o WhatsApp oficial.");
 }
 
-/** Upload de arquivo para o bucket message-attachments */
-export async function uploadAnexoMensagem(file: File): Promise<{ url: string; name: string; type: string }> {
-  const { data: user } = await supabase.auth.getUser();
-  const uid = user?.user?.id ?? "anon";
-  const ts = Date.now();
-  const path = `${uid}/${ts}_${file.name}`;
-
-  const { error } = await supabase.storage.from("message-attachments").upload(path, file);
-  if (error) throw new Error(error.message);
-
+/** @deprecated Upload removido — paciente não envia pelo sistema. */
+export async function uploadAnexoMensagem(_file: File): Promise<{ url: string; name: string; type: string }> {
+  throw new Error("Upload de anexo desabilitado para paciente.");
+}
   const { data: urlData } = supabase.storage.from("message-attachments").getPublicUrl(path);
   return { url: urlData.publicUrl, name: file.name, type: file.type };
 }
