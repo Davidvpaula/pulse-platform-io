@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.criar-checkout-plano]
 verify_jwt = false
+
+[functions.criar-checkout-premium]
+verify_jwt = false
