@@ -376,24 +376,114 @@ export default function AdminFinanceiroCentral() {
         <TabsContent value="reembolsos" className="space-y-2">
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40"><tr><th className="text-left p-2">ID</th><th className="text-left p-2">Tipo</th><th className="text-left p-2">Valor</th><th className="text-left p-2">Motivo</th><th className="text-left p-2">Status</th><th className="text-right p-2">Ações</th></tr></thead>
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="w-8 p-2" />
+                  <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Paciente</th>
+                  <th className="text-left p-2">Médico</th>
+                  <th className="text-left p-2">Tipo</th>
+                  <th className="text-left p-2">Valor</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Data</th>
+                  <th className="text-right p-2">Ações</th>
+                </tr>
+              </thead>
               <tbody>
-                {reembolsos.map(r => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-2 font-mono text-xs">{r.id.slice(0, 8)}</td>
-                    <td className="p-2">{r.tipo}</td>
-                    <td className="p-2">{brl(r.valor_centavos)}</td>
-                    <td className="p-2 max-w-xs truncate">{r.motivo}</td>
-                    <td className="p-2"><StatusBadge s={r.status} /></td>
-                    <td className="p-2 text-right space-x-1">
-                      {(r.status === "solicitado" || r.status === "em_analise") && <>
-                        <Button size="sm" variant="outline" onClick={() => setReembolsoModal({ id: r.id, motivo: "", observacao: "", aprovar: true })}><CheckCircle2 className="h-3 w-3" /></Button>
-                        <Button size="sm" variant="outline" onClick={() => setReembolsoModal({ id: r.id, motivo: "", observacao: "", aprovar: false })}><XCircle className="h-3 w-3" /></Button>
-                      </>}
-                    </td>
-                  </tr>
-                ))}
-                {!reembolsos.length && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">Sem reembolsos</td></tr>}
+                {reembolsos.map(r => {
+                  const isExpanded = expandedReembolso === r.id;
+                  return (
+                    <React.Fragment key={r.id}>
+                      <tr className="border-t cursor-pointer hover:bg-muted/30" onClick={() => toggleReembolsoAudit(r.id)}>
+                        <td className="p-2 text-muted-foreground">
+                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </td>
+                        <td className="p-2 font-mono text-xs">{r.id.slice(0, 8)}</td>
+                        <td className="p-2">{r.paciente_nome}</td>
+                        <td className="p-2">{r.medico_nome}</td>
+                        <td className="p-2"><Badge variant="outline">{r.tipo}</Badge></td>
+                        <td className="p-2 font-semibold">{brl(r.valor_centavos)}</td>
+                        <td className="p-2"><StatusBadge s={r.status} /></td>
+                        <td className="p-2 text-xs text-muted-foreground">{fmtData(r.created_at)}</td>
+                        <td className="p-2 text-right space-x-1" onClick={e => e.stopPropagation()}>
+                          {(r.status === "solicitado" || r.status === "em_analise") && <>
+                            <Button size="sm" variant="outline" onClick={() => setReembolsoModal({ id: r.id, motivo: "", observacao: "", aprovar: true })}><CheckCircle2 className="h-3 w-3" /></Button>
+                            <Button size="sm" variant="outline" onClick={() => setReembolsoModal({ id: r.id, motivo: "", observacao: "", aprovar: false })}><XCircle className="h-3 w-3" /></Button>
+                          </>}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-muted/20">
+                          <td colSpan={9} className="p-4">
+                            {auditLoading ? (
+                              <div className="flex items-center gap-2 text-muted-foreground py-4"><Loader2 className="h-4 w-4 animate-spin" /> Carregando auditoria…</div>
+                            ) : (
+                              <div className="grid gap-4 md:grid-cols-2">
+                                {/* Detalhes */}
+                                <div className="space-y-3">
+                                  <h4 className="font-semibold text-sm flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary" /> Detalhes do Reembolso</h4>
+                                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                                    <dt className="text-muted-foreground">Motivo:</dt>
+                                    <dd>{r.motivo}</dd>
+                                    {r.observacao && <><dt className="text-muted-foreground">Observação:</dt><dd>{r.observacao}</dd></>}
+                                    <dt className="text-muted-foreground">Solicitado por:</dt>
+                                    <dd className="flex items-center gap-1"><User className="h-3 w-3" /> {r.solicitante_nome ?? "—"}</dd>
+                                    <dt className="text-muted-foreground">Solicitado em:</dt>
+                                    <dd>{fmtData(r.created_at)}</dd>
+                                    {r.analisador_nome && <>
+                                      <dt className="text-muted-foreground">Analisado por:</dt>
+                                      <dd className="flex items-center gap-1"><User className="h-3 w-3" /> {r.analisador_nome}</dd>
+                                    </>}
+                                    {r.decidido_em && <>
+                                      <dt className="text-muted-foreground">Decidido em:</dt>
+                                      <dd>{fmtData(r.decidido_em)}</dd>
+                                    </>}
+                                    <dt className="text-muted-foreground">Consulta:</dt>
+                                    <dd>{r.consulta_data ? fmtData(r.consulta_data) : "—"}</dd>
+                                    <dt className="text-muted-foreground">Payment Ref:</dt>
+                                    <dd className="font-mono text-xs">{r.payment_ref ?? "—"}</dd>
+                                    <dt className="text-muted-foreground">Estorno processado:</dt>
+                                    <dd>{r.snapshot_estornado ? "Sim ✓" : "Não"}</dd>
+                                  </dl>
+                                </div>
+
+                                {/* Timeline de auditoria */}
+                                <div className="space-y-3">
+                                  <h4 className="font-semibold text-sm flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> Histórico de Auditoria</h4>
+                                  {reembolsoAudit.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground">Sem registros de auditoria.</p>
+                                  ) : (
+                                    <div className="relative border-l-2 border-border pl-4 space-y-3">
+                                      {reembolsoAudit.map((a: any) => (
+                                        <div key={a.id} className="relative">
+                                          <div className="absolute -left-[1.35rem] top-1 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
+                                          <p className="text-xs font-medium">{a.acao}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {a.actor?.nome ?? "Sistema"} · {fmtData(a.created_at)}
+                                          </p>
+                                          {(a.valor_anterior || a.valor_novo) && (
+                                            <p className="text-xs mt-0.5">
+                                              <span className="text-muted-foreground">{a.valor_anterior ?? "—"}</span>
+                                              <span className="mx-1">→</span>
+                                              <span className="font-medium">{a.valor_novo ?? "—"}</span>
+                                            </p>
+                                          )}
+                                          {a.motivo && <p className="text-xs text-muted-foreground italic">{a.motivo}</p>}
+                                          {a.observacao && <p className="text-xs text-muted-foreground">{a.observacao}</p>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+                {!reembolsos.length && <tr><td colSpan={9} className="p-4 text-center text-muted-foreground">Sem reembolsos</td></tr>}
               </tbody>
             </table>
           </div>
