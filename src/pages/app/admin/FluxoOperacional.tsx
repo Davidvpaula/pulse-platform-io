@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { automacoesFluxo, pacientes, agendamentos } from "@/lib/mock";
+import type { Automacao, Paciente, Agendamento } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 const fluxoEmpresa = [
