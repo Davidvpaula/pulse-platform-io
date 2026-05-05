@@ -259,24 +259,25 @@ const App = () => (
               <Route path="medico/corporativo" element={<MedicoGuard><MedicoCorporativo /></MedicoGuard>} />
               <Route path="medico/propostas" element={<MedicoGuard><MedicoPropostas /></MedicoGuard>} />
 
-              {/* Secretaria (inclui módulos de supervisão liberados via capability) */}
-              <Route path="secretaria/dashboard" element={<SecretariaDashboard />} />
-              <Route path="secretaria/pacientes" element={<SecretariaPacientes />} />
-              <Route path="secretaria/agenda" element={<SecretariaAgenda />} />
-              <Route path="secretaria/agendamentos" element={<SecretariaAgendamentos />} />
-              <Route path="secretaria/cupons" element={<SecretariaCupons />} />
-              <Route path="secretaria/cupons/log" element={<CuponsUsoLog />} />
-              <Route path="secretaria/comunicacao" element={<Conversas />} />
-              <Route path="secretaria/financeiro" element={<SecretariaFinanceiro />} />
-              <Route path="secretaria/tarefas" element={<Tarefas />} />
-              <Route path="secretaria/equipe" element={<SupervisorEquipe />} />
-              <Route path="secretaria/relatorios" element={<SecretariaRelatorios />} />
-              <Route path="secretaria/comunicacao-interna" element={<ComunicacaoInterna />} />
-              <Route path="secretaria/pacientes/:id" element={<PacientePerfil />} />
-              <Route path="secretaria/perfil" element={<SecretariaPerfil />} />
+              {/* Secretaria → Colaborador (redirects de compatibilidade) */}
+              <Route path="secretaria/dashboard" element={<Navigate to="/app/colaborador/dashboard" replace />} />
+              <Route path="secretaria/pacientes/:id" element={<Navigate to="/app/colaborador/pacientes/:id" replace />} />
+              <Route path="secretaria/pacientes" element={<Navigate to="/app/colaborador/pacientes" replace />} />
+              <Route path="secretaria/agenda" element={<Navigate to="/app/colaborador/agenda" replace />} />
+              <Route path="secretaria/agendamentos" element={<Navigate to="/app/colaborador/agendamentos" replace />} />
+              <Route path="secretaria/cupons/log" element={<Navigate to="/app/colaborador/cupons/log" replace />} />
+              <Route path="secretaria/cupons" element={<Navigate to="/app/colaborador/cupons" replace />} />
+              <Route path="secretaria/comunicacao" element={<Navigate to="/app/colaborador/dashboard" replace />} />
+              <Route path="secretaria/financeiro" element={<Navigate to="/app/colaborador/financeiro" replace />} />
+              <Route path="secretaria/tarefas" element={<Navigate to="/app/colaborador/tarefas" replace />} />
+              <Route path="secretaria/equipe" element={<Navigate to="/app/colaborador/equipe" replace />} />
+              <Route path="secretaria/relatorios" element={<Navigate to="/app/colaborador/relatorios" replace />} />
+              <Route path="secretaria/comunicacao-interna" element={<Navigate to="/app/colaborador/comunicacao-interna" replace />} />
+              <Route path="secretaria/perfil" element={<Navigate to="/app/colaborador/perfil" replace />} />
+              <Route path="secretaria/pendencias-integracao" element={<Navigate to="/app/colaborador/pendencias-integracao" replace />} />
 
-              {/* Compat: redireciona rotas antigas de Supervisor para Secretaria */}
-              <Route path="supervisor/*" element={<Navigate to="/app/secretaria/dashboard" replace />} />
+              {/* Compat: redireciona rotas antigas de Supervisor para Colaborador */}
+              <Route path="supervisor/*" element={<Navigate to="/app/colaborador/dashboard" replace />} />
 
               {/* Colaborador — aliases das mesmas páginas, protegidos por has_permission */}
               <Route path="colaborador/dashboard" element={<SecretariaDashboard />} />
