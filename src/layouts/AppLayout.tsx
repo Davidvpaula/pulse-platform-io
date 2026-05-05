@@ -231,7 +231,7 @@ function SidebarBody({
       }
     }
     return out;
-  }, [profileKey, profile.nav, loading, has, isDemoMode]);
+  }, [profileKey, profile.nav, loading, has]);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -247,43 +247,14 @@ function SidebarBody({
         <Logo />
       </div>
 
-      {showDemoSwitcher ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-left hover:opacity-90 flow-sidebar-card">
-              <flow.icon className="h-4 w-4 flow-icon shrink-0" />
-              <span className="flex-1">
-                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Perfil (demo) · {flow.label}</span>
-                <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
-              </span>
-              <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Mudar dashboard</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-              <DropdownMenuItem
-                key={k}
-                onClick={() => switchProfile(k)}
-                className="gap-2"
-              >
-                {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-                {profiles[k].label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
-          <flow.icon className="h-4 w-4 flow-icon shrink-0" />
-          <span className="flex-1">
-            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
-            <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
-          </span>
-          <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
-        </div>
-      )}
+      <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
+        <flow.icon className="h-4 w-4 flow-icon shrink-0" />
+        <span className="flex-1">
+          <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
+          <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
+        </span>
+        <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
+      </div>
 
       <AccordionNav visibleNav={visibleNav} loading={loading} isDemoMode={isDemoMode} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
 
