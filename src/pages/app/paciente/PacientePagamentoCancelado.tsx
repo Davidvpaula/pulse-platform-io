@@ -13,7 +13,7 @@ export default function PacientePagamentoCancelado() {
         </div>
         <h2 className="mt-3 font-display text-xl font-bold">Tudo certo</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Você cancelou o pagamento. A consulta segue como pendente até o pagamento ser concluído.
+          Você cancelou o pagamento. O horário reservado foi liberado e pode ser agendado por outro paciente.
         </p>
         <div className="mt-5 flex justify-center gap-2">
           <Button asChild>
