@@ -164,9 +164,15 @@ export default function AdminFinanceiroCentral() {
     try {
       if (reembolsoModal.aprovar) {
         await supabase.rpc("financeiro_reembolso_aprovar" as any, { _reembolso_id: reembolsoModal.id, _observacao: reembolsoModal.observacao || null });
+        supabase.functions.invoke("notificar-reembolso", {
+          body: { reembolso_id: reembolsoModal.id, evento: "aprovado" },
+        }).catch(() => {});
         toast.success("Reembolso aprovado");
       } else {
         await supabase.rpc("financeiro_reembolso_recusar" as any, { _reembolso_id: reembolsoModal.id, _motivo: reembolsoModal.motivo || "Recusado" });
+        supabase.functions.invoke("notificar-reembolso", {
+          body: { reembolso_id: reembolsoModal.id, evento: "recusado" },
+        }).catch(() => {});
         toast.success("Reembolso recusado");
       }
       setReembolsoModal(null); carregar();

@@ -1,24 +1,19 @@
-## Histórico de cancelamentos e reembolsos no dashboard do paciente
+## Notificações automáticas de reembolso (paciente + médico)
 
-### 1. Migração — RLS para paciente ler reembolsos
-Atualmente apenas admin, médico e staff podem ler a tabela `reembolsos`. Adicionar policy para que o paciente veja reembolsos das suas próprias consultas:
+### 1. Criar edge function `notificar-reembolso`
+Edge function que recebe `{ reembolso_id, evento }` e:
+- Busca dados do reembolso, consulta, paciente e médico
+- Cria/reutiliza conversa canal "sistema" para cada destinatário
+- Insere mensagem no inbox com texto contextual (valor, data, motivo, status)
+- Atualiza `last_message_at` e `unread_count` da conversa
 
-```sql
-CREATE POLICY "Paciente ve seus proprios reembolsos"
-ON public.reembolsos FOR SELECT TO authenticated
-USING (EXISTS (
-  SELECT 1 FROM consultas c
-  JOIN pacientes p ON p.id = c.paciente_id
-  WHERE c.id = reembolsos.consulta_id AND p.user_id = auth.uid()
-));
-```
+Eventos: `solicitado`, `aprovado`, `recusado`, `concluido`
 
-### 2. Criar `src/components/paciente/HistoricoCancelamentos.tsx`
-Componente que:
-- Busca últimos 10 reembolsos do paciente logado (`reembolsos` + join `consultas` + `medicos`)
-- Mostra para cada item: nome do médico, data da consulta, motivo, valor e status
-- Status com ícone e cor: solicitado (amarelo), em_análise (azul/spin), aprovado (verde), concluído (verde escuro), recusado (vermelho)
-- Estado vazio: "Nenhum cancelamento ou reembolso registrado"
+### 2. Disparar notificação na criação do reembolso
+No `PacientePerfil.tsx`, após o `insert` bem-sucedido na tabela `reembolsos`, chamar `supabase.functions.invoke("notificar-reembolso", { body: { reembolso_id, evento: "solicitado" } })`.
 
-### 3. Editar `src/pages/app/paciente/PacienteDashboard.tsx`
-- Importar e renderizar `HistoricoCancelamentos` após a seção "Próximos agendamentos" e antes de "Comunicação"
+### 3. Disparar notificação na mudança de status
+No `AdminFinanceiroCentral.tsx` (onde o admin atualiza status do reembolso), após update bem-sucedido, chamar a edge function com o evento correspondente (`concluido`, `aprovado`, `recusado`).
+
+### 4. Deploy da edge function
+Deploy automático do `notificar-reembolso`.
