@@ -5172,6 +5172,63 @@ export type Database = {
         }
         Relationships: []
       }
+      politica_reembolso: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          escopo: Database["public"]["Enums"]["politica_reembolso_escopo"]
+          horas_antecedencia_min: number | null
+          id: string
+          medico_id: string | null
+          percentual: number
+          situacao: Database["public"]["Enums"]["politica_reembolso_situacao"]
+          tipo_reembolso: Database["public"]["Enums"]["politica_reembolso_acao"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          escopo?: Database["public"]["Enums"]["politica_reembolso_escopo"]
+          horas_antecedencia_min?: number | null
+          id?: string
+          medico_id?: string | null
+          percentual?: number
+          situacao: Database["public"]["Enums"]["politica_reembolso_situacao"]
+          tipo_reembolso?: Database["public"]["Enums"]["politica_reembolso_acao"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          escopo?: Database["public"]["Enums"]["politica_reembolso_escopo"]
+          horas_antecedencia_min?: number | null
+          id?: string
+          medico_id?: string | null
+          percentual?: number
+          situacao?: Database["public"]["Enums"]["politica_reembolso_situacao"]
+          tipo_reembolso?: Database["public"]["Enums"]["politica_reembolso_acao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "politica_reembolso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "politica_reembolso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescricoes: {
         Row: {
           assinatura_digital: string | null
@@ -7422,6 +7479,13 @@ export type Database = {
         | "arquivado"
         | "encerramento_pendente"
         | "encerrado"
+      politica_reembolso_acao: "total" | "parcial" | "zero"
+      politica_reembolso_escopo: "global" | "medico"
+      politica_reembolso_situacao:
+        | "cancelamento_antecipado"
+        | "cancelamento_tardio"
+        | "medico_no_show"
+        | "sem_inicio_finalizacao"
       proposta_empresa_status:
         | "criada"
         | "em_analise"
@@ -7489,6 +7553,7 @@ export type Database = {
         | "uso_feegow"
         | "proposta_empresa"
         | "proposta_medico"
+        | "cancelamento_reembolso"
       tipo_conta_bancaria: "corrente" | "poupanca"
       tipo_pessoa: "pf" | "pj"
       whatsapp_instance_status:
@@ -7931,6 +7996,14 @@ export const Constants = {
         "encerramento_pendente",
         "encerrado",
       ],
+      politica_reembolso_acao: ["total", "parcial", "zero"],
+      politica_reembolso_escopo: ["global", "medico"],
+      politica_reembolso_situacao: [
+        "cancelamento_antecipado",
+        "cancelamento_tardio",
+        "medico_no_show",
+        "sem_inicio_finalizacao",
+      ],
       proposta_empresa_status: [
         "criada",
         "em_analise",
@@ -8004,6 +8077,7 @@ export const Constants = {
         "uso_feegow",
         "proposta_empresa",
         "proposta_medico",
+        "cancelamento_reembolso",
       ],
       tipo_conta_bancaria: ["corrente", "poupanca"],
       tipo_pessoa: ["pf", "pj"],
