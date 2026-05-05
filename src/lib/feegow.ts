@@ -13,7 +13,7 @@
  * Toda comunicação real deve ocorrer via backend (edge functions / servidor).
  * ========================================================================= */
 
-import { agendamentos, pacientes, type Agendamento, type Paciente } from "./mock";
+import type { Agendamento, Paciente } from "./mock";
 
 /* ──────────────────────────────────────────────────────────────────────────
  * SCHEMA LÓGICO — usado para documentação visual no Admin
