@@ -207,14 +207,13 @@ export default function MedicoPacientes() {
                             <Phone className="h-4 w-4" />
                           </a>
                         </Button>
-                        <Button size="sm" variant="ghost" asChild title="WhatsApp">
-                          <a
-                            href={`https://wa.me/55${tel}?text=${wppMsg}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Abrir conversa"
+                          onClick={() => navigate(`/app/medico/mensagens`)}
+                        >
+                          <MessageCircle className="h-4 w-4" />
                         </Button>
                       </>
                     )}
