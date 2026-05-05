@@ -77,7 +77,8 @@ export default function PacienteMontarPlano() {
         .from("planos")
         .select("medico_id, valor_mensal_centavos")
         .eq("nivel", "medico")
-        .eq("status", "ativo");
+        .eq("status", "ativo")
+        .eq("aprovado_admin", true);
 
       // 4. Regras de desconto
       const { data: r } = await supabase
