@@ -1,42 +1,22 @@
+## Corrigir `nome_completo` -> `nome` na tabela medicos
 
-# Mover "Agenda" para dentro de "Consultas" no menu do Médico
+A tabela `medicos` usa o campo `nome`, mas 4 arquivos referenciam `nome_completo` (inexistente), causando falha silenciosa em todas as buscas de médico.
 
-## O que muda
+### Arquivos e correções
 
-No menu lateral do médico, "Agenda" deixará de ser um item separado e passará a ser um sub-item colapsável dentro de "Consultas" — igual ao padrão já usado no menu do Admin (ex.: Financeiro, Empresas, etc.).
+**1. `src/lib/financeiroConfig.ts`** (5 pontos)
+- Query de overrides: `nome_completo` -> `nome` no select e no map
+- Query de auditoria: `nome_completo` -> `nome` no select e no forEach
+- `searchMedicosAtivos`: `nome_completo` -> `nome` no select, order, ilike e map
 
-**Antes:**
-```
-Dashboard
-Agenda          ← item separado
-Meus horários
-Consultas       ← item separado
-```
+**2. `src/lib/financeiroPrevia.ts`** (4 pontos)
+- Duas queries de prévia: `nome_completo` -> `nome` no select join e no map
 
-**Depois:**
-```
-Dashboard
-Consultas  ▾
-  └ Fila de atendimento   (/app/medico/consultas)
-  └ Agenda                (/app/medico/agenda)
-Meus horários
-```
+**3. `src/pages/app/comunicacao/Inbox.tsx`** (2 pontos)
+- Query de nome do médico: `nome_completo` -> `nome` no select e no acesso ao dado
 
-## Alteração técnica
+**4. `src/pages/app/empresa/EmpresaDocumentos.tsx`** (2 pontos)
+- Query de documentos: `nome_completo` -> `nome` no select join e no map
 
-**Arquivo:** `src/lib/profiles.ts` (linhas 66-69)
-
-Substituir os dois itens separados (Agenda e Consultas) por um único item com `children`:
-
-```ts
-{
-  label: "Consultas",
-  icon: Video,
-  children: [
-    { label: "Fila de atendimento", to: "/app/medico/consultas" },
-    { label: "Agenda", to: "/app/medico/agenda" },
-  ],
-},
-```
-
-Nenhuma rota, página ou componente será alterado — apenas a estrutura do menu.
+### Resultado
+Busca de médicos funcionará em: modal de exceção de repasse, modal de reembolso, prévia de repasse, auditoria financeira, inbox e documentos empresa.
