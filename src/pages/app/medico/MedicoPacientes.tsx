@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search, Building2, User, FileText, Eye, Loader2, Database, Calendar,
   MessageCircle, Phone, AlertCircle, Filter,
