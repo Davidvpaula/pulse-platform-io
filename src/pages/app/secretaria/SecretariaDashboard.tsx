@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Phone,
   RotateCcw, X, Activity, TrendingUp, ShieldCheck, AlertTriangle, Clock,
@@ -11,7 +11,7 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { cn } from "@/lib/utils";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
+// whatsappUrl removido — botões redirecionam ao Inbox interno
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
