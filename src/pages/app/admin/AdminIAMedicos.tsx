@@ -257,33 +257,52 @@ export default function AdminIAMedicos() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="grid grid-cols-[1fr_80px_80px_80px_80px_60px_60px_100px] gap-2 px-4 py-2.5 bg-muted/50 text-xs font-semibold text-muted-foreground">
+            <div className="grid grid-cols-[40px_1fr_70px_70px_70px_70px_70px_50px_50px_90px] gap-1 px-4 py-2.5 bg-muted/50 text-[11px] font-semibold text-muted-foreground">
+              <span className="text-center">#</span>
               <span>Médico</span>
-              <span className="text-center">Op. Score</span>
-              <span className="text-center">Compliance</span>
+              <span className="text-center">Ranking</span>
+              <span className="text-center">Bayesian</span>
               <span className="text-center">Risco</span>
-              <span className="text-center">Confiança</span>
-              <span className="text-center">Alertas</span>
+              <span className="text-center">Proteção</span>
+              <span className="text-center">Compliance</span>
+              <span className="text-center">Alert.</span>
               <span className="text-center">Anom.</span>
               <span className="text-center">Ações</span>
             </div>
 
             <ScrollArea className="max-h-[500px]">
-              {medicosMerged.map(m => (
+              {medicosMerged.map((m, idx) => (
                 <div key={m.id}>
                   <div
                     className={cn(
-                      "grid grid-cols-[1fr_80px_80px_80px_80px_60px_60px_100px] gap-2 px-4 py-3 border-t border-border text-sm items-center cursor-pointer hover:bg-muted/30 transition-colors",
+                      "grid grid-cols-[40px_1fr_70px_70px_70px_70px_70px_50px_50px_90px] gap-1 px-4 py-3 border-t border-border text-sm items-center cursor-pointer hover:bg-muted/30 transition-colors",
                       expandedMedico === m.id && "bg-muted/20",
                     )}
                     onClick={() => setExpandedMedico(expandedMedico === m.id ? null : m.id)}
                   >
-                    <div className="flex items-center gap-2">
-                      {expandedMedico === m.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                      <span className="font-medium truncate">{m.nome}</span>
+                    <div className="text-center text-xs font-bold text-muted-foreground">
+                      {m.rank?.posicao ?? idx + 1}
                     </div>
-                    <div className="text-center">{m.op ? scoreBar(m.op.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
-                    <div className="text-center">{m.comp ? scoreBar(m.comp.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
+                    <div className="flex items-center gap-2">
+                      {expandedMedico === m.id ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                      <span className="font-medium truncate">{m.nome}</span>
+                      {m.rank && m.rank.bonus_novato > 0 && (
+                        <Badge className="bg-blue-500/10 text-blue-600 text-[9px] px-1">Novato</Badge>
+                      )}
+                      {m.rank && m.rank.penalidade_anomalia > 0 && (
+                        <Badge className="bg-destructive/10 text-destructive text-[9px] px-1">⚠ Anomalia</Badge>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <span className="text-xs font-bold">{m.rank.ranking_score.toFixed(2)}</span>
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                    </div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <span className="text-xs">{m.rank.avaliacao_bayesiana.toFixed(2)} <span className="text-muted-foreground">({m.rank.avaliacao_media.toFixed(1)})</span></span>
+                      ) : "—"}
+                    </div>
                     <div className="text-center">
                       {m.comp ? (
                         <Badge className={cn("text-[10px]", RISCO_STYLES[m.comp.nivel_risco])}>
@@ -291,7 +310,19 @@ export default function AdminIAMedicos() {
                         </Badge>
                       ) : "—"}
                     </div>
-                    <div className="text-center">{m.comp ? <span className="text-xs font-medium">{m.comp.score_confianca.toFixed(0)}</span> : "—"}</div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          {m.rank.penalidade_anomalia > 0 && <span className="text-[9px] text-destructive">-{(m.rank.penalidade_anomalia * 100).toFixed(0)}% fraude</span>}
+                          {m.rank.penalidade_compliance > 0 && <span className="text-[9px] text-orange-600">-{(m.rank.penalidade_compliance * 100).toFixed(0)}% compl.</span>}
+                          {m.rank.bonus_novato > 0 && <span className="text-[9px] text-blue-600">+{(m.rank.bonus_novato * 100).toFixed(0)}% novato</span>}
+                          {m.rank.penalidade_anomalia === 0 && m.rank.penalidade_compliance === 0 && m.rank.bonus_novato === 0 && (
+                            <span className="text-[9px] text-success">✓ limpo</span>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </div>
+                    <div className="text-center">{m.comp ? scoreBar(m.comp.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
                     <div className="text-center">
                       {m.alertasCount > 0 ? (
                         <Badge variant="destructive" className="text-[10px]">{m.alertasCount}</Badge>
