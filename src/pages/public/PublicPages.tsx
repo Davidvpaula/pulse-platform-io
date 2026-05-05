@@ -12,6 +12,7 @@ import {
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
