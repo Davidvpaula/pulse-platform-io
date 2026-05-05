@@ -26,7 +26,7 @@ import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
   listarSaldoCrescimento, getRankingConfig, ativarPremiumConquistado,
-  getScoreDetalhado, listarBadgesMedico, listarStreaksMedico,
+  getScoreDetalhado, recalcularScoreMedico, listarBadgesMedico, listarStreaksMedico,
   listarRecomendacoes, getNivelInfo,
   type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
   type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
@@ -337,25 +337,39 @@ export default function MedicoGamificacao() {
         <StatCard label="Saldo" value={saldoCrescimento.toFixed(0)} icon={Zap} hint="Pontos disponíveis" />
       </div>
 
-      {/* Score Radar + Badges + Streaks */}
+      {/* Score Radar + Detailed Breakdown */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Radar chart */}
         <div className="card-elevated p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="h-5 w-5 text-primary" />
-            <h3 className="font-display font-semibold">Score Multi-Dimensional</h3>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              <h3 className="font-display font-semibold">Score Multi-Dimensional</h3>
+            </div>
+            {medicoId && (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={async () => {
+                try {
+                  await recalcularScoreMedico(medicoId);
+                  const sd = await getScoreDetalhado(medicoId);
+                  setScoreDetalhado(sd);
+                  toast.success("Score recalculado!");
+                } catch { toast.error("Erro ao recalcular"); }
+              }}>
+                <Activity className="h-3.5 w-3.5 mr-1" /> Atualizar
+              </Button>
+            )}
           </div>
           {scoreDetalhado ? (
             <>
               <ScoreRadar scores={[
-                { label: "Operacional", value: scoreDetalhado.score_operacional, max: 1 },
-                { label: "Clínico", value: scoreDetalhado.score_clinico, max: 1 },
-                { label: "Comercial", value: scoreDetalhado.score_comercial, max: 1 },
-                { label: "Reputacional", value: scoreDetalhado.score_reputacional, max: 1 },
+                { label: "Operacional", value: scoreDetalhado.score_operacional / 100, max: 1 },
+                { label: "Clínico", value: scoreDetalhado.score_clinico / 100, max: 1 },
+                { label: "Comercial", value: scoreDetalhado.score_comercial / 100, max: 1 },
+                { label: "Reputacional", value: scoreDetalhado.score_reputacional / 100, max: 1 },
               ]} />
               <div className="text-center mt-2">
-                <p className="text-2xl font-bold text-primary">{(scoreDetalhado.score_final * 100).toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground">Score final</p>
+                <p className="text-2xl font-bold text-primary">{scoreDetalhado.score_final.toFixed(1)}</p>
+                <p className="text-xs text-muted-foreground">Score final (0-100)</p>
               </div>
             </>
           ) : (
@@ -366,7 +380,91 @@ export default function MedicoGamificacao() {
           )}
         </div>
 
-        {/* Badges */}
+        {/* Detailed metric breakdown */}
+        <div className="md:col-span-2 card-elevated p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-semibold">Detalhamento das Métricas</h3>
+          </div>
+          {scoreDetalhado ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Operacional */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <Activity className="h-4 w-4 text-blue-500" /> Operacional
+                  </p>
+                  <Badge variant="secondary" className="text-xs">{scoreDetalhado.score_operacional.toFixed(1)}/100</Badge>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between"><span>Taxa de conclusão</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_operacional?.taxa_conclusao ?? 0}%</span></div>
+                  <div className="flex justify-between"><span>Taxa no-show</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_operacional?.taxa_no_show ?? 0}%</span></div>
+                  <div className="flex justify-between"><span>Consultas concluídas</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_operacional?.concluidas ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Recência (fator)</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_operacional?.fator_recencia ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Dias desde última</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_operacional?.dias_desde_ultima ?? '—'}</span></div>
+                </div>
+              </div>
+
+              {/* Clínico */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <Star className="h-4 w-4 text-yellow-500" /> Clínico
+                  </p>
+                  <Badge variant="secondary" className="text-xs">{scoreDetalhado.score_clinico.toFixed(1)}/100</Badge>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between"><span>Nota média</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_clinico?.media_nota ?? 0}/5.0</span></div>
+                  <div className="flex justify-between"><span>Total avaliações</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_clinico?.total_avaliacoes ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Avaliações públicas</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_clinico?.avaliacoes_publicas ?? 0}</span></div>
+                  <div className="flex justify-between"><span>% públicas</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_clinico?.pct_publicas ?? 0}%</span></div>
+                </div>
+              </div>
+
+              {/* Comercial */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-green-500" /> Comercial
+                  </p>
+                  <Badge variant="secondary" className="text-xs">{scoreDetalhado.score_comercial.toFixed(1)}/100</Badge>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between"><span>Taxa conversão</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_comercial?.taxa_conversao ?? 0}%</span></div>
+                  <div className="flex justify-between"><span>Pacientes únicos</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_comercial?.pacientes_unicos ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Pacientes retorno</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_comercial?.pacientes_retorno ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Taxa retorno</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_comercial?.taxa_retorno ?? 0}%</span></div>
+                </div>
+              </div>
+
+              {/* Reputacional */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <Shield className="h-4 w-4 text-purple-500" /> Reputacional
+                  </p>
+                  <Badge variant="secondary" className="text-xs">{scoreDetalhado.score_reputacional.toFixed(1)}/100</Badge>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="flex justify-between"><span>Badges conquistados</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_reputacional?.total_badges ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Melhor streak</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_reputacional?.melhor_streak ?? 0} dias</span></div>
+                  <div className="flex justify-between"><span>Meses na plataforma</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_reputacional?.meses_ativo ?? 0}</span></div>
+                  <div className="flex justify-between"><span>Foto de perfil</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_reputacional?.tem_foto ? '✅' : '❌'}</span></div>
+                  <div className="flex justify-between"><span>Especialidade</span><span className="font-medium text-foreground">{scoreDetalhado.detalhes_reputacional?.tem_especialidade ? '✅' : '❌'}</span></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              Métricas detalhadas aparecerão após o cálculo do seu primeiro score.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Badges + Streaks */}
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="card-elevated p-5">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-5 w-5 text-primary" />

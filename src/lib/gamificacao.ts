@@ -591,6 +591,16 @@ export async function getScoreDetalhado(medico_id: string): Promise<MedicoScoreD
   return data as unknown as MedicoScoreDetalhado | null;
 }
 
+export async function recalcularScoreMedico(medico_id: string) {
+  const { error } = await rpcCall("calcular_score_medico", { p_medico_id: medico_id });
+  if (error) throw error;
+}
+
+export async function recalcularScoreTodos() {
+  const { error } = await rpcCall("recalcular_scores_todos");
+  if (error) throw error;
+}
+
 /* ── Badges ── */
 
 export async function listarBadgesMedico(medico_id: string): Promise<MedicoBadge[]> {

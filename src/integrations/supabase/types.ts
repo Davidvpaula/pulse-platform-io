@@ -7178,6 +7178,10 @@ export type Database = {
           valor_proporcional: number
         }[]
       }
+      calcular_score_medico: {
+        Args: { p_medico_id: string }
+        Returns: undefined
+      }
       colaborador_alterar_status: {
         Args: {
           _id: string
@@ -7587,6 +7591,7 @@ export type Database = {
         Returns: undefined
       }
       recalcular_ranking_todos: { Args: never; Returns: undefined }
+      recalcular_scores_todos: { Args: never; Returns: undefined }
       registrar_auditoria_colaborador: {
         Args: {
           _acao: string
