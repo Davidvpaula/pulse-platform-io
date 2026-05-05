@@ -179,6 +179,32 @@ export default function PacienteDashboard() {
 
       {session && <AvaliacaoPendenteBanner />}
 
+      {/* Banner de retorno gratuito */}
+      {vouchers.length > 0 && (
+        <div className="card-elevated overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
+            <Gift className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold">
+              Você tem {vouchers.length} retorno{vouchers.length > 1 ? "s" : ""} gratuito{vouchers.length > 1 ? "s" : ""} disponível{vouchers.length > 1 ? "is" : ""}!
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 p-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-muted-foreground">
+                {vouchers.length === 1
+                  ? `Retorno com ${vouchers[0].medico_nome ?? "seu médico"} — válido até ${new Date(vouchers[0].valido_ate).toLocaleDateString("pt-BR")}`
+                  : "Agende seus retornos gratuitos antes que expirem."}
+              </p>
+            </div>
+            <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
+              <Link to="/app/paciente/agendamentos">
+                <Gift className="mr-1.5 h-3.5 w-3.5" /> Ver e agendar
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Vínculo do paciente — real, read-only */}
       <div className="card-elevated flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="flex items-center gap-3">
