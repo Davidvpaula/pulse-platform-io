@@ -200,21 +200,11 @@ export default function PacienteAgendamentos() {
           </div>
         )}
 
-        {!loading && demoMode && (
-          <div className="flex flex-col items-center gap-4 py-12">
-            <LogIn className="h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Faça login para ver seus agendamentos.</p>
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <Link to="/auth">Fazer login</Link>
-            </Button>
-          </div>
-        )}
-
-        {!loading && !demoMode && lista.length === 0 && (
+        {!loading && lista.length === 0 && (
           <EmptyState filtro={filtro} />
         )}
 
-        {!loading && !demoMode && lista.length > 0 && (
+        {!loading && lista.length > 0 && (
           <ul className="divide-y divide-border">
             {lista.map((c) => {
               const isOnline = c.modalidade === "online";
