@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
