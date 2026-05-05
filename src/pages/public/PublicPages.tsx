@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom"
 import {
   Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
   Clock, Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, ChevronDown, ChevronUp, User,
+  CheckCircle2, ArrowUpRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
