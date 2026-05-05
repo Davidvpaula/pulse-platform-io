@@ -104,4 +104,23 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
       "comunicacao.ver_metricas",
     ],
   },
+  {
+    key: "atendimento_ilimitado",
+    label: "Atendimento Ilimitado",
+    description: "Vê e gerencia todas as conversas do Inbox. Não acessa configurações sensíveis.",
+    permissions: [
+      "pacientes.ver",
+      "agenda.ver_todas",
+      "comunicacao.ver_inbox",
+      "comunicacao.ver_todas",
+      "comunicacao.ver_atribuidas",
+      "comunicacao.responder",
+      "comunicacao.transferir",
+      "comunicacao.finalizar",
+      "comunicacao.inbox.assumir",
+      "comunicacao.inbox.encerrar",
+      "comunicacao.usar_templates",
+      "comunicacao.ver_metricas",
+    ],
+  },
 ];
