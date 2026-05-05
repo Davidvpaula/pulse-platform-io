@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Calendar, FileText, Loader2, Clock, Video, ExternalLink } from "lucide-react";
+import { CheckCircle2, Calendar, Loader2, Clock, User, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { formatBRL, getPagamento, type Pagamento } from "@/lib/pagamentos";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function PacientePagamentoSucesso() {
   const [params] = useSearchParams();
   const id = params.get("p") ?? "";
   const [p, setP] = useState<Pagamento | null>(null);
   const [polling, setPolling] = useState(true);
-  const [linkSala, setLinkSala] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -34,27 +32,48 @@ export default function PacientePagamentoSucesso() {
     };
   }, [id]);
 
-  // Carrega o link da sala da consulta vinculada ao pagamento
-  useEffect(() => {
-    if (!p?.consulta_id) return;
-    supabase
-      .from("consultas")
-      .select("link_sala")
-      .eq("id", p.consulta_id)
-      .maybeSingle()
-      .then(({ data }) => setLinkSala(data?.link_sala ?? null));
-  }, [p?.consulta_id]);
-
   const pago = p?.status === "pago";
+  const meta = p?.metadata as Record<string, any> | null;
+  const snapshot = meta?.snapshot as Record<string, any> | null;
+
+  const medicoNome = snapshot?.medico_nome ?? meta?.medico_nome ?? null;
+  const referenciaNome = snapshot?.referencia_nome ?? null;
+  const modalidade = snapshot?.modalidade ?? null;
+  const duracaoMin = snapshot?.duracao_minutos ?? null;
+
+  // Formatar data/hora do snapshot
+  const inicioStr = snapshot?.inicio;
+  let dataFormatada: string | null = null;
+  let horaFormatada: string | null = null;
+  if (inicioStr) {
+    try {
+      const d = new Date(inicioStr);
+      dataFormatada = d.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+      horaFormatada = d.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {}
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={pago ? "Pagamento confirmado" : "Aguardando confirmação"}
-        description={pago ? "Sua consulta está garantida." : "Recebemos seu pagamento — confirmando com o provedor."}
+        description={
+          pago
+            ? "Sua consulta está garantida. Confira os detalhes abaixo."
+            : "Recebemos seu pagamento — confirmando com o provedor."
+        }
       />
 
       <div className="card-elevated overflow-hidden">
+        {/* Status header */}
         <div className="gradient-soft flex flex-col items-center gap-3 p-8 text-center">
           <div
             className={`grid h-14 w-14 place-items-center rounded-full ${
@@ -74,7 +93,7 @@ export default function PacientePagamentoSucesso() {
           </h2>
           {p && (
             <p className="text-sm text-muted-foreground">
-              Valor: <strong>{formatBRL(p.valor_centavos)}</strong> · Status:{" "}
+              Valor: <strong className="text-success">{formatBRL(p.valor_centavos)}</strong> · Status:{" "}
               <strong className="capitalize">{p.status}</strong>
             </p>
           )}
@@ -86,47 +105,69 @@ export default function PacientePagamentoSucesso() {
           )}
         </div>
 
-        {/* Link da sala — quando consulta online já tem link */}
-        {pago && linkSala && (
-          <div className="border-t border-border bg-success/5 p-6">
-            <div className="flex items-start gap-3">
-              <Video className="mt-0.5 h-5 w-5 text-success shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold">Sua sala de atendimento</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Salve este link. Você também encontrará no seu painel.
-                </p>
-                <a
-                  href={linkSala}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate rounded-md bg-card px-3 py-1.5 text-xs font-medium text-primary hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{linkSala}</span>
-                </a>
-              </div>
+        {/* Detalhes da consulta */}
+        {pago && (referenciaNome || medicoNome || dataFormatada) && (
+          <div className="border-t border-border p-6">
+            <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Detalhes do agendamento
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {referenciaNome && (
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <Calendar className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Serviço</p>
+                    <p className="font-medium text-sm">{referenciaNome}</p>
+                  </div>
+                </div>
+              )}
+              {medicoNome && (
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <User className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Profissional</p>
+                    <p className="font-medium text-sm">{medicoNome}</p>
+                  </div>
+                </div>
+              )}
+              {dataFormatada && (
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <Clock className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Data e horário</p>
+                    <p className="font-medium text-sm capitalize">{dataFormatada}</p>
+                    {horaFormatada && (
+                      <p className="text-xs text-muted-foreground">
+                        {horaFormatada}
+                        {duracaoMin ? ` · ${duracaoMin} min` : ""}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {modalidade && (
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <MapPin className="mt-0.5 h-4 w-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Modalidade</p>
+                    <p className="font-medium text-sm capitalize">{modalidade === "online" ? "Telemedicina" : modalidade}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
+        {/* Ações */}
         <div className="grid gap-3 p-6 sm:grid-cols-2">
-          {pago && linkSala ? (
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <a href={linkSala} target="_blank" rel="noopener noreferrer">
-                <Video className="mr-2 h-4 w-4" /> Entrar na sala agora
-              </a>
-            </Button>
-          ) : (
-            <Button asChild>
-              <Link to="/app/paciente/dashboard">
-                <Calendar className="mr-2 h-4 w-4" /> Ver minhas consultas
-              </Link>
-            </Button>
-          )}
+          <Button asChild className="bg-gradient-primary hover:opacity-90">
+            <Link to="/app/paciente/agendamentos">
+              <Calendar className="mr-2 h-4 w-4" /> Acessar seus agendamentos
+            </Link>
+          </Button>
           <Button asChild variant="outline">
             <Link to="/app/paciente/dashboard">
-              <FileText className="mr-2 h-4 w-4" /> Voltar ao painel
+              <Calendar className="mr-2 h-4 w-4" /> Voltar ao painel
             </Link>
           </Button>
         </div>
