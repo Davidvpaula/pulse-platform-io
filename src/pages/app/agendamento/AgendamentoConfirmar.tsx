@@ -11,13 +11,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Calendar, Clock, Stethoscope, User, AlertCircle, Loader2, ShieldCheck, ArrowLeft,
+  Calendar, Clock, Stethoscope, User, AlertCircle, Loader2, ShieldCheck, ArrowLeft, FileText,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -27,8 +28,11 @@ import { reservarSlotUnificado, getPacienteAtual, formatDataBR, formatHora } fro
 import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
-import { useTermsCheck } from "@/hooks/useTermsCheck";
-import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import { buscarTermoAtivo, registrarAceite, verificarAceite, type TermoRow } from "@/lib/termos";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
 
 /* ─── Tipos de agendamento suportados ─── */
@@ -171,8 +175,13 @@ export default function AgendamentoConfirmar() {
   const [slotInfo, setSlotInfo] = useState<SlotInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
-  const termsCheck = useTermsCheck("consulta_paciente");
+
+  // Terms acceptance state
+  const [termoConsulta, setTermoConsulta] = useState<TermoRow | null>(null);
+  const [termoPrivacidade, setTermoPrivacidade] = useState<TermoRow | null>(null);
+  const [aceitouConsulta, setAceitouConsulta] = useState(false);
+  const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false);
+  const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -200,11 +209,25 @@ export default function AgendamentoConfirmar() {
         navigate(`/auth?redirect=/app/agendamento/confirmar/${slotId}?tipo=${tipo}&ref=${ref}`);
         return;
       }
-      const [info, paciente] = await Promise.all([
+      const [info, paciente, tConsulta, tPriv] = await Promise.all([
         carregarSlotInfo(slotId, tipo, ref),
         getPacienteAtual(),
+        buscarTermoAtivo("consulta_paciente"),
+        buscarTermoAtivo("privacidade"),
       ]);
       setSlotInfo(info);
+      setTermoConsulta(tConsulta);
+      setTermoPrivacidade(tPriv);
+
+      // Check if user already accepted these terms
+      if (session.user) {
+        const [accC, accP] = await Promise.all([
+          tConsulta ? verificarAceite("consulta_paciente", session.user.id) : true,
+          tPriv ? verificarAceite("privacidade", session.user.id) : true,
+        ]);
+        setAceitouConsulta(accC);
+        setAceitouPrivacidade(accP);
+      }
 
       if (info) {
         trackEvent("inicio_agendamento", {
@@ -286,22 +309,25 @@ export default function AgendamentoConfirmar() {
     }
   }, [slotInfo, navigate, tipo, ref]);
 
+  // Determine if terms need acceptance
+  const needsConsulta = !!termoConsulta && !aceitouConsulta;
+  const needsPrivacidade = !!termoPrivacidade && !aceitouPrivacidade;
+  const termsBlocked = needsConsulta || needsPrivacidade;
+
   const onSubmit = async (values: FormData) => {
-    if (termsCheck.needsAcceptance) {
-      setPendingFormData(values);
-      termsCheck.setShowDialog(true);
+    if (termsBlocked) {
+      toast.error("Você precisa aceitar todos os termos para continuar.");
       return;
     }
+    // Register acceptance for terms not yet registered
+    try {
+      const promises: Promise<void>[] = [];
+      if (termoConsulta) promises.push(registrarAceite(termoConsulta.id).catch(() => {}));
+      if (termoPrivacidade) promises.push(registrarAceite(termoPrivacidade.id).catch(() => {}));
+      await Promise.all(promises);
+    } catch { /* non-blocking */ }
     await doSubmit(values);
   };
-
-  const handleTermsAccepted = useCallback(() => {
-    termsCheck.onAccepted();
-    if (pendingFormData) {
-      doSubmit(pendingFormData);
-      setPendingFormData(null);
-    }
-  }, [termsCheck, pendingFormData, doSubmit]);
 
   /* ─── Renders ─── */
 
@@ -388,6 +414,53 @@ export default function AgendamentoConfirmar() {
             <Textarea id="motivo" {...form.register("motivo")} placeholder="Conte resumidamente o que motiva a consulta. O médico verá antes do atendimento." rows={3} maxLength={500} />
           </div>
 
+          {/* Termos de aceite */}
+          {(termoConsulta || termoPrivacidade) && (
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" /> Termos obrigatórios
+              </p>
+              {termoConsulta && (
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="aceite-consulta"
+                    checked={aceitouConsulta}
+                    onCheckedChange={(v) => setAceitouConsulta(!!v)}
+                  />
+                  <label htmlFor="aceite-consulta" className="text-xs leading-relaxed cursor-pointer select-none">
+                    Li e concordo com os{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline hover:text-primary/80"
+                      onClick={() => setPreviewTermo(termoConsulta)}
+                    >
+                      Termos de compra de consulta
+                    </button>
+                  </label>
+                </div>
+              )}
+              {termoPrivacidade && (
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="aceite-privacidade"
+                    checked={aceitouPrivacidade}
+                    onCheckedChange={(v) => setAceitouPrivacidade(!!v)}
+                  />
+                  <label htmlFor="aceite-privacidade" className="text-xs leading-relaxed cursor-pointer select-none">
+                    Li e concordo com a{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline hover:text-primary/80"
+                      onClick={() => setPreviewTermo(termoPrivacidade)}
+                    >
+                      Política de Privacidade
+                    </button>
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/5 p-3 text-xs text-muted-foreground">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-info" />
             <span>
@@ -400,7 +473,7 @@ export default function AgendamentoConfirmar() {
             <Button type="button" variant="ghost" asChild>
               <Link to={backUrl}><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Link>
             </Button>
-            <Button type="submit" disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+            <Button type="submit" disabled={submitting || termsBlocked} className="bg-gradient-primary hover:opacity-90">
               {submitting ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reservando…</>
               ) : (
@@ -448,12 +521,21 @@ export default function AgendamentoConfirmar() {
         </aside>
       </div>
 
-      <TermsAcceptanceDialog
-        tipo="consulta_paciente"
-        open={termsCheck.showDialog}
-        onOpenChange={termsCheck.setShowDialog}
-        onAccepted={handleTermsAccepted}
-      />
+      {/* Dialog de preview de termo */}
+      {previewTermo && (
+        <Dialog open={!!previewTermo} onOpenChange={() => setPreviewTermo(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>{previewTermo.titulo} (v{previewTermo.versao})</DialogTitle>
+            </DialogHeader>
+            <div
+              className="flex-1 overflow-y-auto border rounded-md p-4 prose prose-sm dark:prose-invert max-w-none"
+              style={{ maxHeight: "60vh" }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewTermo.conteudo) }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
