@@ -3352,6 +3352,183 @@ export type Database = {
         }
         Relationships: []
       }
+      medico_alertas_ia: {
+        Row: {
+          created_at: string
+          dados_utilizados: Json
+          descricao: string
+          id: string
+          justificativa: string | null
+          medico_id: string
+          recomendacao_ia: string | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          severidade: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status: Database["public"]["Enums"]["alerta_ia_status"]
+          tipo: Database["public"]["Enums"]["alerta_ia_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dados_utilizados?: Json
+          descricao: string
+          id?: string
+          justificativa?: string | null
+          medico_id: string
+          recomendacao_ia?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status?: Database["public"]["Enums"]["alerta_ia_status"]
+          tipo: Database["public"]["Enums"]["alerta_ia_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dados_utilizados?: Json
+          descricao?: string
+          id?: string
+          justificativa?: string | null
+          medico_id?: string
+          recomendacao_ia?: string | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status?: Database["public"]["Enums"]["alerta_ia_status"]
+          tipo?: Database["public"]["Enums"]["alerta_ia_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_alertas_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_alertas_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_anomalias: {
+        Row: {
+          created_at: string
+          dados_evidencia: Json
+          descricao: string
+          id: string
+          investigado_em: string | null
+          investigado_por: string | null
+          medico_id: string
+          score_confianca: number
+          severidade: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status: Database["public"]["Enums"]["anomalia_status"]
+          tipo_anomalia: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dados_evidencia?: Json
+          descricao: string
+          id?: string
+          investigado_em?: string | null
+          investigado_por?: string | null
+          medico_id: string
+          score_confianca?: number
+          severidade?: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status?: Database["public"]["Enums"]["anomalia_status"]
+          tipo_anomalia: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dados_evidencia?: Json
+          descricao?: string
+          id?: string
+          investigado_em?: string | null
+          investigado_por?: string | null
+          medico_id?: string
+          score_confianca?: number
+          severidade?: Database["public"]["Enums"]["alerta_ia_severidade"]
+          status?: Database["public"]["Enums"]["anomalia_status"]
+          tipo_anomalia?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_anomalias_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_anomalias_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_auditoria_ia: {
+        Row: {
+          created_at: string
+          dados_entrada: Json
+          dados_saida: Json
+          id: string
+          medico_id: string
+          modelo_ia: string
+          resultado: string
+          tipo_analise: string
+          versao_prompt: string
+        }
+        Insert: {
+          created_at?: string
+          dados_entrada?: Json
+          dados_saida?: Json
+          id?: string
+          medico_id: string
+          modelo_ia?: string
+          resultado: string
+          tipo_analise: string
+          versao_prompt?: string
+        }
+        Update: {
+          created_at?: string
+          dados_entrada?: Json
+          dados_saida?: Json
+          id?: string
+          medico_id?: string
+          modelo_ia?: string
+          resultado?: string
+          tipo_analise?: string
+          versao_prompt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_auditoria_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_auditoria_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_badges: {
         Row: {
           ativo: boolean
@@ -3728,6 +3905,57 @@ export type Database = {
           },
         ]
       }
+      medico_logs_confianca: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detalhes: Json
+          evento: string
+          id: string
+          medico_id: string
+          motivo: string | null
+          score_antes: number | null
+          score_depois: number | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          evento: string
+          id?: string
+          medico_id: string
+          motivo?: string | null
+          score_antes?: number | null
+          score_depois?: number | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          evento?: string
+          id?: string
+          medico_id?: string
+          motivo?: string | null
+          score_antes?: number | null
+          score_depois?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_logs_confianca_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_logs_confianca_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_metas: {
         Row: {
           ativo: boolean
@@ -4096,6 +4324,57 @@ export type Database = {
           },
         ]
       }
+      medico_score_compliance: {
+        Row: {
+          detalhes: Json
+          medico_id: string
+          nivel_risco: Database["public"]["Enums"]["nivel_risco"]
+          score_avaliacoes_integridade: number
+          score_campanhas_integridade: number
+          score_confianca: number
+          score_padrao_comportamento: number
+          score_total: number
+          updated_at: string
+        }
+        Insert: {
+          detalhes?: Json
+          medico_id: string
+          nivel_risco?: Database["public"]["Enums"]["nivel_risco"]
+          score_avaliacoes_integridade?: number
+          score_campanhas_integridade?: number
+          score_confianca?: number
+          score_padrao_comportamento?: number
+          score_total?: number
+          updated_at?: string
+        }
+        Update: {
+          detalhes?: Json
+          medico_id?: string
+          nivel_risco?: Database["public"]["Enums"]["nivel_risco"]
+          score_avaliacoes_integridade?: number
+          score_campanhas_integridade?: number
+          score_confianca?: number
+          score_padrao_comportamento?: number
+          score_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_score_compliance_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_score_compliance_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_score_detalhado: {
         Row: {
           detalhes_clinico: Json | null
@@ -4155,6 +4434,60 @@ export type Database = {
           },
           {
             foreignKeyName: "medico_score_detalhado_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_score_operacional: {
+        Row: {
+          detalhes: Json
+          medico_id: string
+          score_cancelamento: number
+          score_documentacao: number
+          score_no_show: number
+          score_pontualidade: number
+          score_resposta: number
+          score_total: number
+          score_uso_sistema: number
+          updated_at: string
+        }
+        Insert: {
+          detalhes?: Json
+          medico_id: string
+          score_cancelamento?: number
+          score_documentacao?: number
+          score_no_show?: number
+          score_pontualidade?: number
+          score_resposta?: number
+          score_total?: number
+          score_uso_sistema?: number
+          updated_at?: string
+        }
+        Update: {
+          detalhes?: Json
+          medico_id?: string
+          score_cancelamento?: number
+          score_documentacao?: number
+          score_no_show?: number
+          score_pontualidade?: number
+          score_resposta?: number
+          score_total?: number
+          score_uso_sistema?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_score_operacional_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_score_operacional_medico_id_fkey"
             columns: ["medico_id"]
             isOneToOne: true
             referencedRelation: "medicos_publicos"
@@ -7218,6 +7551,7 @@ export type Database = {
         }
         Returns: Json
       }
+      coletar_metricas_medico: { Args: { p_medico_id: string }; Returns: Json }
       consultas_pendentes_avaliacao: {
         Args: never
         Returns: {
@@ -7799,6 +8133,33 @@ export type Database = {
     Enums: {
       ai_handoff_level: "urgente" | "moderado" | "baixo"
       ai_provider: "lovable" | "openai" | "anthropic" | "gemini" | "outro"
+      alerta_ia_severidade: "info" | "atencao" | "alerta" | "critico"
+      alerta_ia_status:
+        | "novo"
+        | "visto"
+        | "em_acompanhamento"
+        | "resolvido"
+        | "ignorado"
+      alerta_ia_tipo:
+        | "queda_pontualidade"
+        | "aumento_reclamacoes"
+        | "excesso_retrabalho"
+        | "correcoes_receita"
+        | "crescimento_suspeito_avaliacoes"
+        | "conversoes_incompativeis"
+        | "comportamento_fora_padrao"
+        | "queda_atividade"
+        | "risco_churn"
+        | "possivel_manipulacao"
+        | "abuso_campanha"
+        | "no_show_recorrente"
+        | "conflito_operacional"
+        | "anomalia_generica"
+      anomalia_status:
+        | "detectada"
+        | "investigando"
+        | "confirmada"
+        | "descartada"
       app_role:
         | "paciente"
         | "medico"
@@ -8010,6 +8371,7 @@ export type Database = {
         | "reembolso_imediato"
         | "hibrido"
       nfe_status: "pendente" | "validada" | "recusada"
+      nivel_risco: "baixo" | "medio" | "alto" | "critico"
       origem_receita_assinatura:
         | "consulta"
         | "servico_plataforma"
@@ -8283,6 +8645,36 @@ export const Constants = {
     Enums: {
       ai_handoff_level: ["urgente", "moderado", "baixo"],
       ai_provider: ["lovable", "openai", "anthropic", "gemini", "outro"],
+      alerta_ia_severidade: ["info", "atencao", "alerta", "critico"],
+      alerta_ia_status: [
+        "novo",
+        "visto",
+        "em_acompanhamento",
+        "resolvido",
+        "ignorado",
+      ],
+      alerta_ia_tipo: [
+        "queda_pontualidade",
+        "aumento_reclamacoes",
+        "excesso_retrabalho",
+        "correcoes_receita",
+        "crescimento_suspeito_avaliacoes",
+        "conversoes_incompativeis",
+        "comportamento_fora_padrao",
+        "queda_atividade",
+        "risco_churn",
+        "possivel_manipulacao",
+        "abuso_campanha",
+        "no_show_recorrente",
+        "conflito_operacional",
+        "anomalia_generica",
+      ],
+      anomalia_status: [
+        "detectada",
+        "investigando",
+        "confirmada",
+        "descartada",
+      ],
       app_role: [
         "paciente",
         "medico",
@@ -8520,6 +8912,7 @@ export const Constants = {
         "hibrido",
       ],
       nfe_status: ["pendente", "validada", "recusada"],
+      nivel_risco: ["baixo", "medio", "alto", "critico"],
       origem_receita_assinatura: [
         "consulta",
         "servico_plataforma",

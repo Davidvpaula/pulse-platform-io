@@ -72,6 +72,9 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/financeiro/previa-repasse":[admin(), { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Prévia de repasse" }],
   "/app/admin/financeiro/saques-medicos":[admin(), { label: "Financeiro", to: "/app/admin/financeiro" }, { label: "Saques médicos" }],
 
+  // ── Admin: IA Auditora ──
+  "/app/admin/ia-medicos":                [admin(), { label: "IA Auditora" }, { label: "Gestão Médica Inteligente" }],
+
   // ── Admin: Planos ──
   "/app/admin/planos":              [admin(), { label: "Planos" }, { label: "Planos da plataforma" }],
   "/app/admin/planos-medicos":      [admin(), { label: "Planos", to: "/app/admin/planos" }, { label: "Planos de médicos" }],
