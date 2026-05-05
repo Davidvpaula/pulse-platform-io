@@ -22,7 +22,6 @@ type AuthCtx = {
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
-const STORAGE_KEY = "lasmar.profile";
 const LINK_KEY = "lasmar.patientLink";
 
 // Prioridade quando o usuário tem múltiplos papéis no banco.
@@ -39,12 +38,8 @@ function rolesToProfileKey(roles: string[]): ProfileKey | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, roles } = useSession();
-  const isDev = import.meta.env.DEV;
 
-  const [profileKey, setProfileKeyState] = useState<ProfileKey>(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    return (stored as ProfileKey) || "admin";
-  });
+  const [profileKey, setProfileKeyState] = useState<ProfileKey>("paciente");
 
   const [patientLink, setPatientLinkState] = useState<PatientLink>(() => {
     if (typeof window === "undefined") return { tipo: "particular" };
@@ -53,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { tipo: "particular" };
   });
 
-  // Quando há sessão real, o papel ativo vem do banco (sessão > demo).
+  // O papel ativo vem do banco (sessão é a fonte da verdade).
   useEffect(() => {
     if (!session) return;
     const fromRoles = rolesToProfileKey(roles);
@@ -63,19 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, roles]);
 
   useEffect(() => {
-    if (session) return; // não persiste em sessão real
-    if (isDev) localStorage.setItem(STORAGE_KEY, profileKey);
-  }, [profileKey, session, isDev]);
-
-  useEffect(() => {
     localStorage.setItem(LINK_KEY, JSON.stringify(patientLink));
   }, [patientLink]);
 
-  const setProfileKey = (k: ProfileKey) => {
-    // Em sessão real, ignora trocas manuais — banco é a fonte da verdade.
-    if (session) return;
-    setProfileKeyState(k);
-  };
+  // Troca manual de perfil bloqueada — banco é a fonte da verdade.
+  const setProfileKey = (_k: ProfileKey) => {};
 
   const { active: impersonation } = useImpersonation();
 
