@@ -234,7 +234,7 @@ export default function AgendamentoConfirmar() {
       // 1) Reserva o slot SEM criar consulta
       const reserva = await reservarSlotUnificado({
         slot_id: slotInfo.id,
-        tipo: tipo as "especialidade" | "servico",
+        tipo: tipo as "especialidade" | "servico" | "pa",
         referencia_id: ref,
         motivo: values.motivo,
         nome_completo: values.nome_completo,
