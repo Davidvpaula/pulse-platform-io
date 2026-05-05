@@ -187,10 +187,11 @@ export default function AdminIAMedicos() {
       ...m,
       op: opMap[m.id] ?? null,
       comp: compMap[m.id] ?? null,
+      rank: rankMap[m.id] ?? null,
       alertasCount: alertas.filter(a => a.medico_id === m.id && (a.status === "novo" || a.status === "em_acompanhamento")).length,
       anomaliasCount: anomalias.filter(a => a.medico_id === m.id && (a.status === "detectada" || a.status === "investigando")).length,
     }))
-    .sort((a, b) => (a.op?.score_total ?? 999) - (b.op?.score_total ?? 999));
+    .sort((a, b) => (b.rank?.ranking_score ?? 0) - (a.rank?.ranking_score ?? 0));
 
   const alertasFiltrados = alertas.filter(a => {
     if (filtroSeveridade !== "todos" && a.severidade !== filtroSeveridade) return false;
