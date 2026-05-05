@@ -62,8 +62,6 @@ export default function AppLayout() {
   const { profileKey, setProfileKey, user } = useAuth();
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
-  const isDev = import.meta.env.DEV;
-  const showDemoSwitcher = isDev && !session;
   const flow = getFlowContext(profileKey, pathname);
 
   const handleLogout = async () => {
