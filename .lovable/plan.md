@@ -1,46 +1,37 @@
 
 ## Problema
 
-1. **AdminPlanos.tsx** carrega TODOS os planos sem filtrar por `nivel`, misturando planos da plataforma com planos de médicos.
-2. **Perfil público do médico** (`MedicoDetalhe` em PublicPages.tsx) não exibe os planos do médico.
-3. **PacientePlano.tsx** — quando o paciente não tem assinatura, o botão "Selecionar" do plano chama `onSelecionar={() => {}}` (no-op). Nada acontece ao clicar.
-4. **PacienteMontarPlano.tsx** — não filtra por `aprovado_admin`, permitindo que médicos não aprovados apareçam.
+A página **Admin > Planos de Médicos** retorna 0 resultados porque a query PostgREST falha com erro 400:
 
----
+```
+Could not find a relationship between 'planos' and 'medicos' in the schema cache
+```
 
-## Plano de Implementação
+A query usa `medicos!planos_medico_id_fkey(nome, especialidade)`, mas essa FK não existe no banco.
 
-### 1. AdminPlanos — filtrar apenas planos da plataforma
+## Causa raiz
 
-Em `src/pages/app/admin/AdminPlanos.tsx`, na função `carregar()`, adicionar filtro `.not("nivel", "eq", "medico")` na query de planos. Isso exclui planos de médicos dessa tela (que já têm a tela dedicada `AdminPlanosMedicos`).
+- `planos.medico_id` armazena `auth.users.id`
+- `medicos.user_id` armazena o mesmo valor
+- `medicos.user_id` já possui UNIQUE index (`medicos_user_id_key`)
+- Porém **nenhuma FK** liga `planos.medico_id` a `medicos.user_id`
 
-### 2. Perfil público do médico — exibir planos aprovados
+## Solução
 
-Em `src/pages/public/PublicPages.tsx`, no componente `MedicoDetalhe`:
+### Migration: criar a FK
 
-- Carregar planos do médico: query `planos` com `medico_id = med.id`, `nivel = medico`, `status = ativo`, `aprovado_admin = true`, `publicado_site = true`, incluindo `plano_beneficios(nome)`.
-- Renderizar seção "Planos do Médico" ao final da coluna principal, com cards mostrando nome, valor, benefícios e botão "Assinar" (link para `/app/paciente/plano`).
+```sql
+ALTER TABLE public.planos
+  ADD CONSTRAINT planos_medico_id_fkey
+  FOREIGN KEY (medico_id) REFERENCES public.medicos(user_id)
+  ON DELETE SET NULL;
+```
 
-### 3. PacientePlano — corrigir seleção de planos sem assinatura
+Isso é tudo. Nenhuma alteração de código necessária -- a query existente no `AdminPlanosMedicos.tsx` já usa exatamente `medicos!planos_medico_id_fkey`, que passará a funcionar assim que a FK existir.
 
-Em `src/pages/app/paciente/PacientePlano.tsx`:
+### Verificações
 
-- No bloco sem assinatura (linhas ~194-199), trocar `onSelecionar={() => {}}` por uma função que redirecione o paciente para a contratação (ex: `toast.info("Funcionalidade de contratação em breve")` ou navegar para checkout quando disponível).
-- Garantir que o botão "Selecionar" tenha feedback visual claro.
-
-### 4. PacienteMontarPlano — filtrar por aprovado_admin
-
-Em `src/pages/app/paciente/PacienteMontarPlano.tsx`, na query de `planosMedicos` (linha ~77), adicionar `.eq("aprovado_admin", true)` para que apenas médicos com planos aprovados pelo admin apareçam como selecionáveis.
-
-### 5. AdminPlanosMedicos — melhorias de dados
-
-A tela `AdminPlanosMedicos.tsx` já filtra por `nivel = medico` e já funciona corretamente. Nenhuma alteração necessária.
-
----
-
-## Arquivos Afetados
-
-- `src/pages/app/admin/AdminPlanos.tsx` — adicionar filtro de nivel
-- `src/pages/public/PublicPages.tsx` — seção de planos no perfil do médico
-- `src/pages/app/paciente/PacientePlano.tsx` — corrigir onSelecionar
-- `src/pages/app/paciente/PacienteMontarPlano.tsx` — filtrar aprovado_admin
+- `medicos.user_id` já tem UNIQUE index (confirmado: `medicos_user_id_key`)
+- Os 2 planos existentes (`medico_id = 59282375-...`) batem com `medicos.user_id` do mesmo valor
+- Nenhum arquivo de código será alterado
+- O schema cache do PostgREST é atualizado automaticamente após a migration
