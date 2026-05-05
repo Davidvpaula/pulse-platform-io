@@ -56,12 +56,14 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState("");
   const [cpfValue, setCpfValue] = useState("");
 
+  const redirectTo = params.get("redirect") || "/app";
+
   // já logado? manda pro destino padrão
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/app", { replace: true });
+      if (data.session) navigate(redirectTo, { replace: true });
     });
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
