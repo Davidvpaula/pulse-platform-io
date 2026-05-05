@@ -927,7 +927,7 @@ export const Planos = () => {
                   <Button
                     className={`mt-6 w-full ${featured ? "bg-gradient-primary hover:opacity-90" : ""}`}
                     variant={featured ? "default" : "outline"}
-                    onClick={() => navigate("/auth")}
+                    onClick={() => navigate(`/auth?redirect=${encodeURIComponent(`/app/paciente/assinar-plano/${p.id}`)}`)}
                   >
                     {cta}
                   </Button>
