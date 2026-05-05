@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { FloatingWhatsApp, whatsappUrl } from "@/components/FloatingWhatsApp";
 import AvaliacaoPendenteBanner from "@/components/paciente/AvaliacaoPendenteBanner";
+import HistoricoCancelamentos from "@/components/paciente/HistoricoCancelamentos";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
@@ -360,6 +361,9 @@ export default function PacienteDashboard() {
           </div>
         )}
       </div>
+
+      {/* Cancelamentos e Reembolsos */}
+      {session && <HistoricoCancelamentos />}
 
       {/* Comunicação real */}
       <ComunicacaoCanais proximaConsulta={proxima} mensagemConsulta={msgConsulta} />
