@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2, History, LogIn,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
