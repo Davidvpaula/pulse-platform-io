@@ -35,6 +35,16 @@ export interface CriarCheckoutInput {
     paciente_id: string;
     medico_id: string;
   };
+  /** Snapshot financeiro imutável — congelado no momento do checkout */
+  snapshot?: {
+    valor_bruto_centavos: number;
+    referencia_nome: string;
+    medico_nome: string;
+    duracao_minutos: number;
+    inicio: string;
+    fim: string;
+    modalidade: string;
+  };
 }
 
 export interface CheckoutSession {
