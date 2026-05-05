@@ -1,40 +1,87 @@
 
-## 1. Ativar botão "Solicitar cancelamento" no PacientePlano
+# Reestruturar Área "Meu Plano" do Paciente
 
-**Arquivo:** `src/pages/app/paciente/PacientePlano.tsx` (linhas 409-422)
+## Visao geral
 
-O botão está `disabled` com tooltip "Em breve". Vou:
-- Remover `disabled` e o wrapper `Tooltip`
-- Adicionar um `Dialog` de confirmação com campo de motivo obrigatório
-- Ao confirmar, inserir registro em `plano_cancelamento_evento` (tabela já existente) e atualizar status da assinatura para `cancelada` e do plano para `encerramento_pendente`
-- O paciente sempre pode cancelar, independente do status do plano (exceto se já estiver `cancelada`)
+Refatorar `/app/paciente/plano` para mostrar **todas** as assinaturas do paciente organizadas em 3 abas, com fluxo completo de gestao (visualizar, cancelar, consumir creditos, trocar plano).
 
 ---
 
-## 2. Card "Meus Profissionais do Plano" no PacienteAgendamentos
+## Estrutura
 
-**Arquivo:** `src/pages/app/paciente/PacienteAgendamentos.tsx`
+Rota unica: `/app/paciente/plano` com `Tabs` (shadcn).
 
-Criar uma seção acima da lista de agendamentos que:
-- Busca a assinatura ativa do paciente + plano vinculado
-- Busca os médicos vinculados via `plano_medicos` (JOIN com `medicos`)
-- Busca os benefícios do plano (`plano_beneficios`) para mostrar créditos (quantidade, ilimitado, período)
-- Exibe cards com: foto do médico, nome, especialidade, créditos restantes/totais
-- Botão "Agendar" em cada card que navega para a agenda do médico (`/app/agendamento?medico_id=...`)
+| Aba | Filtro | CTA vazio |
+|-----|--------|-----------|
+| Plataforma | `planos.nivel = 'admin'` | "Ver planos disponiveis" -> `/planos` |
+| Personalizado | `planos.nivel IN ('medico', 'paciente_custom')` | "Montar meu plano" -> `/app/paciente/montar-plano` |
+| Empresa | `planos.empresa_id IS NOT NULL` | "Em breve" (placeholder) |
 
-### Sistema de créditos
-
-A tabela `plano_beneficios` já tem `quantidade`, `ilimitado`, `periodo`. Para calcular créditos usados, vou contar consultas do paciente com cada médico no período atual (mês corrente). Créditos restantes = `quantidade - consultas_no_periodo` (ou "Ilimitado" se `ilimitado = true`).
-
-Não existe tabela de "consumo de créditos" separada. O cálculo é derivado: conta-se quantas consultas confirmadas/concluídas o paciente teve com o médico no período vigente da assinatura.
+Cada aba mostra badge com contagem de planos ativos.
 
 ---
 
-## Mudanças técnicas
+## Mudancas tecnicas
 
-| Arquivo | O que muda |
-|---|---|
-| `src/pages/app/paciente/PacientePlano.tsx` | Remover `disabled` do botão cancelamento, adicionar Dialog com motivo, lógica de cancelamento via Supabase |
-| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Novo componente `MeusProfissionaisPlano` com cards dos médicos e créditos, navegação para agenda |
+### 1. Refatorar `PacientePlano.tsx` (pagina principal)
 
-Nenhuma migração de banco necessária -- as tabelas `plano_cancelamento_evento`, `plano_medicos`, `plano_beneficios`, `assinaturas` já existem.
+- Substituir a query `limit(1)` por busca de **todas** assinaturas do paciente com join `planos(*)`
+- Agrupar assinaturas por tipo (plataforma / personalizado / empresa)
+- Renderizar componente `Tabs` com 3 abas
+- Suporte a query param `?tab=personalizado` para deep-linking
+- Manter loading skeleton e estado vazio global (sem nenhum plano)
+
+### 2. Criar `PlanoCard.tsx` (componente reutilizavel)
+
+Extrair do codigo atual o card de plano + beneficios + pagamento + cancelamento.
+Props: `assinatura`, `plano`, `beneficios`, `onCancelado`.
+
+Cada card mostra:
+- Nome e descricao do plano
+- Status (badge colorido)
+- Categoria, ciclo, inicio, fim de acesso
+- Botoes: carteirinha (em breve), contrato (em breve), historico financeiro
+- Beneficios inclusos com icones
+- Info de pagamento (mensalidade, proxima cobranca, forma)
+- Botao "Cancelar" (sempre ativo, dialog com motivo obrigatorio)
+- Para planos personalizados: mostrar medicos vinculados e creditos restantes (reutilizar logica de `MeusProfissionaisPlano.tsx`)
+
+### 3. Criar `PlanoPlataformaTab.tsx`
+
+- Filtra assinaturas onde `plano.nivel === 'admin'`
+- Lista cada uma como `PlanoCard`
+- Se vazio: CTA para `/planos`
+- Mostra secao "Planos disponiveis" (planos publicados no site que o paciente ainda nao assinou)
+
+### 4. Criar `PlanoPersonalizadoTab.tsx`
+
+- Filtra assinaturas onde `plano.nivel IN ('medico', 'paciente_custom')`
+- Lista cada uma como `PlanoCard`
+- Dentro de cada card: sub-secao "Meus Profissionais" com medicos do plano, creditos restantes/totais, botao "Agendar" -> `/medicos/:slug`
+- Se vazio: CTA para `/app/paciente/montar-plano`
+
+### 5. Criar `PlanoEmpresaTab.tsx`
+
+- Filtra assinaturas onde `plano.empresa_id IS NOT NULL`
+- Lista cada uma como `PlanoCard` (quando houver)
+- Se vazio: mensagem "Em breve - planos empresariais"
+- Estrutura pronta para quando a feature empresa for implementada
+
+### 6. Mover helpers para arquivo compartilhado
+
+Extrair `Info`, `Row`, `KpiCard`, `ResumoFinanceiro`, `PlanosDisponiveisSection`, `ConfirmacaoDialog` e constantes de status para `src/components/paciente/plano-helpers.tsx` para reutilizacao entre abas.
+
+---
+
+## Arquivos
+
+| Arquivo | Acao |
+|---------|------|
+| `src/pages/app/paciente/PacientePlano.tsx` | Reescrever (Tabs + carregamento unificado) |
+| `src/components/paciente/PlanoCard.tsx` | Criar |
+| `src/components/paciente/PlanoPlataformaTab.tsx` | Criar |
+| `src/components/paciente/PlanoPersonalizadoTab.tsx` | Criar |
+| `src/components/paciente/PlanoEmpresaTab.tsx` | Criar |
+| `src/components/paciente/plano-helpers.tsx` | Criar (helpers extraidos) |
+
+Sem migracoes necessarias. A tabela `planos` ja possui `nivel` e `empresa_id`. A tabela `assinaturas` ja suporta multiplas por paciente.
