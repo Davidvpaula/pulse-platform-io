@@ -99,11 +99,6 @@ const mockProvider = {
     if (input.snapshot) {
       metadata.snapshot = input.snapshot;
     }
-      metadata.referencia_id = input.reserva.referencia_id;
-      metadata.motivo = input.reserva.motivo ?? null;
-      metadata.paciente_id = input.reserva.paciente_id;
-      metadata.medico_id = input.reserva.medico_id;
-    }
 
     const insertObj: Record<string, unknown> = {
       valor_centavos: input.valorCentavos,
