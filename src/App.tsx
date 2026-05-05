@@ -136,6 +136,7 @@ import FeegowSchema from "@/pages/app/admin/FeegowSchema";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
 import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
+import MedicoPremiumPage from "@/pages/app/medico/MedicoPremiumPage";
 import AdminGamificacao from "@/pages/app/admin/AdminGamificacao";
 import AdminGamificacaoFinanceiro from "@/pages/app/admin/AdminGamificacaoFinanceiro";
 import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
