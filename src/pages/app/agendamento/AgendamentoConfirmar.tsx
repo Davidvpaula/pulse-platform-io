@@ -107,15 +107,16 @@ async function carregarSlotInfo(slotId: string, tipo: TipoAgendamento, ref: stri
       referencia_nome = esp?.nome ?? "—";
     }
   } else if (tipo === "servico" || tipo === "pa") {
-    const { data: srv } = await (supabase as any)
-      .from("servicos_publicos")
+    const { data: srv } = await supabase
+      .from("servicos_financeiros")
       .select("nome, valor_paciente_centavos, duracao_min")
       .eq("id", ref)
+      .eq("ativo", true)
       .maybeSingle();
     if (srv) {
       referencia_nome = srv.nome;
-      preco_centavos = srv.valor_paciente_centavos;
-      duracao_minutos = srv.duracao_min;
+      preco_centavos = srv.valor_paciente_centavos ?? 0;
+      duracao_minutos = srv.duracao_min ?? 30;
     }
   } else if (tipo === "retorno") {
     // Retorno gratuito — preço 0
