@@ -6532,6 +6532,10 @@ export type Database = {
         }[]
       }
       cpf_valido: { Args: { _cpf: string }; Returns: boolean }
+      create_conversation_for_consulta: {
+        Args: { _consulta_id: string }
+        Returns: string
+      }
       criar_consulta_pos_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
