@@ -1,37 +1,40 @@
 
-## Problema
+## 1. Ativar botão "Solicitar cancelamento" no PacientePlano
 
-A página **Admin > Planos de Médicos** retorna 0 resultados porque a query PostgREST falha com erro 400:
+**Arquivo:** `src/pages/app/paciente/PacientePlano.tsx` (linhas 409-422)
 
-```
-Could not find a relationship between 'planos' and 'medicos' in the schema cache
-```
+O botão está `disabled` com tooltip "Em breve". Vou:
+- Remover `disabled` e o wrapper `Tooltip`
+- Adicionar um `Dialog` de confirmação com campo de motivo obrigatório
+- Ao confirmar, inserir registro em `plano_cancelamento_evento` (tabela já existente) e atualizar status da assinatura para `cancelada` e do plano para `encerramento_pendente`
+- O paciente sempre pode cancelar, independente do status do plano (exceto se já estiver `cancelada`)
 
-A query usa `medicos!planos_medico_id_fkey(nome, especialidade)`, mas essa FK não existe no banco.
+---
 
-## Causa raiz
+## 2. Card "Meus Profissionais do Plano" no PacienteAgendamentos
 
-- `planos.medico_id` armazena `auth.users.id`
-- `medicos.user_id` armazena o mesmo valor
-- `medicos.user_id` já possui UNIQUE index (`medicos_user_id_key`)
-- Porém **nenhuma FK** liga `planos.medico_id` a `medicos.user_id`
+**Arquivo:** `src/pages/app/paciente/PacienteAgendamentos.tsx`
 
-## Solução
+Criar uma seção acima da lista de agendamentos que:
+- Busca a assinatura ativa do paciente + plano vinculado
+- Busca os médicos vinculados via `plano_medicos` (JOIN com `medicos`)
+- Busca os benefícios do plano (`plano_beneficios`) para mostrar créditos (quantidade, ilimitado, período)
+- Exibe cards com: foto do médico, nome, especialidade, créditos restantes/totais
+- Botão "Agendar" em cada card que navega para a agenda do médico (`/app/agendamento?medico_id=...`)
 
-### Migration: criar a FK
+### Sistema de créditos
 
-```sql
-ALTER TABLE public.planos
-  ADD CONSTRAINT planos_medico_id_fkey
-  FOREIGN KEY (medico_id) REFERENCES public.medicos(user_id)
-  ON DELETE SET NULL;
-```
+A tabela `plano_beneficios` já tem `quantidade`, `ilimitado`, `periodo`. Para calcular créditos usados, vou contar consultas do paciente com cada médico no período atual (mês corrente). Créditos restantes = `quantidade - consultas_no_periodo` (ou "Ilimitado" se `ilimitado = true`).
 
-Isso é tudo. Nenhuma alteração de código necessária -- a query existente no `AdminPlanosMedicos.tsx` já usa exatamente `medicos!planos_medico_id_fkey`, que passará a funcionar assim que a FK existir.
+Não existe tabela de "consumo de créditos" separada. O cálculo é derivado: conta-se quantas consultas confirmadas/concluídas o paciente teve com o médico no período vigente da assinatura.
 
-### Verificações
+---
 
-- `medicos.user_id` já tem UNIQUE index (confirmado: `medicos_user_id_key`)
-- Os 2 planos existentes (`medico_id = 59282375-...`) batem com `medicos.user_id` do mesmo valor
-- Nenhum arquivo de código será alterado
-- O schema cache do PostgREST é atualizado automaticamente após a migration
+## Mudanças técnicas
+
+| Arquivo | O que muda |
+|---|---|
+| `src/pages/app/paciente/PacientePlano.tsx` | Remover `disabled` do botão cancelamento, adicionar Dialog com motivo, lógica de cancelamento via Supabase |
+| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Novo componente `MeusProfissionaisPlano` com cards dos médicos e créditos, navegação para agenda |
+
+Nenhuma migração de banco necessária -- as tabelas `plano_cancelamento_evento`, `plano_medicos`, `plano_beneficios`, `assinaturas` já existem.
