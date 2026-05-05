@@ -29,6 +29,7 @@ import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
 import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
+import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
