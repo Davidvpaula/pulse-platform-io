@@ -62,7 +62,7 @@ export default function PacienteMontarPlano() {
       // 1. Médicos aprovados com especialidades e foto
       const { data: rawMedicos } = await supabase
         .from("medicos")
-        .select("id, nome, especialidade, foto_url, crm")
+        .select("id, user_id, nome, especialidade, foto_url, crm")
         .eq("status", "aprovado")
         .order("nome");
 
@@ -128,7 +128,7 @@ export default function PacienteMontarPlano() {
         foto_url: m.foto_url,
         crm: m.crm,
         especialidades: espMap.get(m.id) || (m.especialidade ? [m.especialidade] : []),
-        valor_mensal_centavos: valorMap.get(m.id) || 0,
+        valor_mensal_centavos: valorMap.get(m.user_id) || 0,
       }));
 
       setMedicos(enriched);
