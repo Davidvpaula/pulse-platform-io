@@ -108,6 +108,8 @@ const mockProvider = {
       metadata,
     };
     if (input.consultaId) insertObj.consulta_id = input.consultaId;
+    if (input.reserva?.paciente_id) insertObj.paciente_id = input.reserva.paciente_id;
+    if (input.reserva?.medico_id) insertObj.medico_id = input.reserva.medico_id;
 
     const { data, error } = await supabase
       .from("pagamentos")
