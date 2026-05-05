@@ -16,7 +16,7 @@ import NotFound from "./pages/NotFound";
 import Home from "@/pages/public/Home";
 import {
   Especialidades, Medicos, MedicoDetalhe, Agendar, Planos,
-  Empresas, ParaMedicos, Faq, Login,
+  Empresas, ParaMedicos, Faq,
 } from "@/pages/public/PublicPages";
 import CadastroMedico from "@/pages/public/CadastroMedico";
 import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
