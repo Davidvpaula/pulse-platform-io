@@ -127,7 +127,11 @@ export default function PacienteDashboard() {
               empresa: (funcRow as any).empresas?.nome_fantasia ?? "Empresa",
               status: funcRow.status,
             });
-          }
+        }
+
+        // Retornos gratuitos disponíveis
+        const vs = await listRetornosDisponiveis();
+        setVouchers(vs);
         }
       } catch (e) {
         console.error("[PacienteDashboard] load:", e);
