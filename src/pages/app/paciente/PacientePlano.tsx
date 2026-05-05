@@ -61,6 +61,9 @@ export default function PacientePlano() {
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [acaoPendente, setAcaoPendente] = useState<any>(null);
   const [processando, setProcessando] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [motivoCancelamento, setMotivoCancelamento] = useState("");
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     loadData();
