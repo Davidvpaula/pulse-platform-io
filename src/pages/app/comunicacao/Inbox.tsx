@@ -215,6 +215,7 @@ export default function ComunicacaoInbox() {
     let query = supabase
       .from("conversations")
       .select("*")
+      .neq("channel", "interno")
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
 
@@ -556,8 +557,14 @@ export default function ComunicacaoInbox() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                {isMedico ? "Nenhuma conversa vinculada às suas consultas." : "Nenhuma conversa."}
+              <div className="p-8 text-center text-sm text-muted-foreground space-y-2">
+                <Phone className="mx-auto h-8 w-8 opacity-40" />
+                <p>{isMedico
+                  ? "Nenhuma conversa WhatsApp vinculada às suas consultas."
+                  : convs.length === 0
+                    ? "Nenhuma conversa WhatsApp ainda. Quando a integração estiver ativa, as conversas aparecerão aqui."
+                    : "Nenhuma conversa encontrada com os filtros atuais."
+                }</p>
               </div>
             ) : (
               filtered.map(c => {
