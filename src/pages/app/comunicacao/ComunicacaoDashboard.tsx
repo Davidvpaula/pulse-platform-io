@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
-import { conversasWpp } from "@/lib/mock";
+// Dados reais serão carregados quando a integração WhatsApp estiver ativa.
+type ConversaWpp = { id: number; nome: string; ultima: string; tag: string; responsavel: string; status: string; canal: string; unread: number };
+const conversasWpp: ConversaWpp[] = [];
 
 const tagTone: Record<string, string> = {
   Paciente: "bg-primary-soft text-primary",
