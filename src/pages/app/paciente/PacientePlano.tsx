@@ -51,6 +51,7 @@ function diasAteData(iso: string | null | undefined) {
 /* ─────────── Main Component ─────────── */
 
 export default function PacientePlano() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [assinatura, setAssinatura] = useState<any>(null);
   const [plano, setPlano] = useState<any>(null);
