@@ -90,15 +90,6 @@ Deno.serve(async (req) => {
       return json({ error: "Nenhum plano válido encontrado" }, 404);
     }
 
-    // Buscar paciente_id
-    const { data: paciente } = await admin
-      .from("pacientes")
-      .select("id")
-      .eq("user_id", uid)
-      .maybeSingle();
-
-    if (!paciente) return json({ error: "Perfil de paciente não encontrado" }, 404);
-
     // Buscar medicos PKs para plano_medicos
     const medicoUserIds = [...new Set(planosData.map((p: any) => p.medico_id))];
     const { data: medicosData } = await admin
