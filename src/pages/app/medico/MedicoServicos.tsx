@@ -35,12 +35,7 @@ export default function MedicoServicos() {
   const [medicoId, setMedicoId] = useState<string | null>(null);
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [adesoes, setAdesoes] = useState<Record<string, Adesao>>({});
-  const [recebe, setRecebe] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [overrideOpen, setOverrideOpen] = useState<Servico | null>(null);
-  const [overrideMotivo, setOverrideMotivo] = useState("");
-  const [overridePct, setOverridePct] = useState<number>(0); // % MÉDICO desejado (UI)
-  const [overrideValid, setOverrideValid] = useState<boolean>(true);
 
   async function load() {
     if (!user) return;
