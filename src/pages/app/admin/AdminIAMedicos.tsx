@@ -80,7 +80,7 @@ export default function AdminIAMedicos() {
     setLoading(true);
     try {
       const [{ data: meds }, ops, comps, alts, anos, auds] = await Promise.all([
-        supabase.from("medicos").select("id, nome, ativo").eq("ativo", true).order("nome" as any) as any,
+        (supabase.from("medicos").select("id, nome, ativo").eq("ativo" as any, true).order("nome" as any)) as any,
         listarScoresOperacionais(),
         listarScoresCompliance(),
         listarAlertasIA(),
