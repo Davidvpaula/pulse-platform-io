@@ -357,9 +357,10 @@ export default function AdminSaquesMedicos() {
                 <Select value={config.frequencia} onValueChange={v => setConfig({ ...config, frequencia: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="semanal">Semanal</SelectItem>
-                    <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                    <SelectItem value="mensal">Mensal</SelectItem>
+                     <SelectItem value="diaria">Diária</SelectItem>
+                     <SelectItem value="semanal">Semanal</SelectItem>
+                     <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                     <SelectItem value="mensal">Mensal</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
