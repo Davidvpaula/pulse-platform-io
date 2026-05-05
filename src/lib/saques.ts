@@ -128,14 +128,22 @@ export async function calcularSaldo(medicoId: string, config: SaqueConfig): Prom
 }
 
 function calcularProximaLiberacao(config: SaqueConfig): Date | null {
-  const dias = config.dias_fechamento;
+  // Frequência diária = próximo dia útil (amanhã)
+  if (config.frequencia === "diaria") {
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+    return amanha;
+  }
+
+  const dias = Array.isArray(config.dias_fechamento) ? [...config.dias_fechamento] : [];
   if (!dias.length) return null;
   const hoje = new Date();
   const ano = hoje.getFullYear();
   const mes = hoje.getMonth();
   const dia = hoje.getDate();
 
-  for (const d of dias.sort((a, b) => a - b)) {
+  dias.sort((a, b) => a - b);
+  for (const d of dias) {
     if (d > dia) return new Date(ano, mes, d);
   }
   // Próximo mês, primeiro dia de fechamento
