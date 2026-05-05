@@ -800,22 +800,22 @@ export const Agendar = () => {
 
 export const Planos = () => {
   const navigate = useNavigate();
-  const [planos, setPlanos] = useState<any[]>([]);
+  const [planosPlataforma, setPlanosPlataforma] = useState<any[]>([]);
+  const [planosMedico, setPlanosMedico] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      // Fetch planos published to the site
       const { data: planosData } = await supabase
         .from("planos")
-        .select("id, nome, descricao, descricao_comercial, valor_mensal_centavos, valor_anual_centavos, destacado, ordem_exibicao, cta_texto, nivel, categoria")
+        .select("id, nome, descricao, descricao_comercial, valor_mensal_centavos, valor_anual_centavos, destacado, ordem_exibicao, cta_texto, nivel, categoria, medico_id")
         .eq("status", "ativo" as any)
         .eq("publicado_site", true)
         .order("ordem_exibicao");
 
-      if (!planosData?.length) { setPlanos([]); setLoading(false); return; }
+      if (!planosData?.length) { setPlanosPlataforma([]); setPlanosMedico([]); setLoading(false); return; }
 
-      // Fetch benefits for all plans
+      // Fetch benefits
       const ids = planosData.map(p => p.id);
       const { data: beneficios } = await supabase
         .from("plano_beneficios")
@@ -830,7 +830,25 @@ export const Planos = () => {
         benefMap[b.plano_id].push(b.nome);
       });
 
-      setPlanos(planosData.map(p => ({ ...p, feats: benefMap[p.id] ?? [] })));
+      // Fetch medico info for medico-level plans
+      const medicoIds = [...new Set(planosData.filter(p => p.medico_id).map(p => p.medico_id))];
+      let medicoMap: Record<string, any> = {};
+      if (medicoIds.length > 0) {
+        const { data: medicos } = await supabase
+          .from("medicos")
+          .select("user_id, nome, especialidade, foto_url, crm")
+          .in("user_id", medicoIds);
+        for (const m of (medicos ?? [])) medicoMap[m.user_id] = m;
+      }
+
+      const enriched = planosData.map(p => ({
+        ...p,
+        feats: benefMap[p.id] ?? [],
+        medico: p.medico_id ? medicoMap[p.medico_id] ?? null : null,
+      }));
+
+      setPlanosPlataforma(enriched.filter(p => p.nivel === "admin"));
+      setPlanosMedico(enriched.filter(p => p.nivel === "medico"));
       setLoading(false);
     })();
   }, []);
@@ -845,7 +863,9 @@ export const Planos = () => {
     );
   }
 
-  if (!planos.length) {
+  const nenhum = !planosPlataforma.length && !planosMedico.length;
+
+  if (nenhum) {
     return (
       <PageShell title="Planos" subtitle="Escolha o plano que melhor se encaixa na sua rotina.">
         <p className="text-muted-foreground text-center py-16">Nenhum plano disponível no momento.</p>
@@ -855,37 +875,138 @@ export const Planos = () => {
 
   return (
     <PageShell title="Planos" subtitle="Escolha o plano que melhor se encaixa na sua rotina.">
-      <div className={`grid gap-5 ${planos.length === 1 ? "max-w-md mx-auto" : planos.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
-        {planos.map(p => {
-          const featured = !!p.destacado;
-          const preco = p.valor_mensal_centavos != null ? brl(p.valor_mensal_centavos) : "Sob consulta";
-          const desc = p.descricao_comercial || p.descricao || "";
-          const cta = p.cta_texto || `Assinar ${p.nome}`;
-          return (
-            <div key={p.id} className={`card-elevated p-7 ${featured ? "ring-2 ring-primary shadow-elegant" : ""}`}>
-              {featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">Popular</span>}
-              <p className="mt-3 font-display text-xl font-bold">{p.nome}</p>
-              {desc && <p className="text-sm text-muted-foreground">{desc}</p>}
-              <p className="mt-4 font-display text-4xl font-extrabold">
-                {preco}
-                {p.valor_mensal_centavos != null && <span className="text-base font-medium text-muted-foreground">/mês</span>}
-              </p>
-              {p.feats.length > 0 && (
-                <ul className="mt-5 space-y-2 text-sm">
-                  {p.feats.map((f: string) => <li key={f} className="flex gap-2"><span className="text-success">✓</span>{f}</li>)}
-                </ul>
-              )}
-              <Button
-                className={`mt-6 w-full ${featured ? "bg-gradient-primary hover:opacity-90" : ""}`}
-                variant={featured ? "default" : "outline"}
-                onClick={() => navigate("/auth")}
-              >
-                {cta}
-              </Button>
-            </div>
-          );
-        })}
-      </div>
+      {/* ─── Planos da Plataforma ─── */}
+      {planosPlataforma.length > 0 && (
+        <section className="mb-16">
+          <div className="mb-8 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+              <ShieldCheck className="h-4 w-4" /> Planos da Plataforma
+            </span>
+            <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">Cobertura completa para seu cuidado</h2>
+            <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm">
+              Planos criados pela Lasmar Telemed com benefícios exclusivos, acesso a múltiplos profissionais e descontos progressivos.
+            </p>
+          </div>
+          <div className={`grid gap-6 ${planosPlataforma.length === 1 ? "max-w-md mx-auto" : planosPlataforma.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
+            {planosPlataforma.map(p => {
+              const featured = !!p.destacado;
+              const preco = p.valor_mensal_centavos != null ? brl(p.valor_mensal_centavos) : "Sob consulta";
+              const desc = p.descricao_comercial || p.descricao || "";
+              const cta = p.cta_texto || "Quero esse plano";
+              return (
+                <div key={p.id} className={`relative overflow-hidden rounded-2xl border bg-card p-7 transition-shadow hover:shadow-lg ${featured ? "ring-2 ring-primary shadow-elegant border-primary/30" : "border-border"}`}>
+                  {featured && (
+                    <div className="absolute top-0 right-0 rounded-bl-xl bg-primary px-3 py-1">
+                      <span className="text-[10px] font-bold uppercase text-primary-foreground">Recomendado</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-lg font-bold">{p.nome}</p>
+                    </div>
+                  </div>
+                  {desc && <p className="text-sm text-muted-foreground mb-4">{desc}</p>}
+                  <p className="font-display text-4xl font-extrabold text-foreground">
+                    {preco}
+                    {p.valor_mensal_centavos != null && <span className="text-base font-medium text-muted-foreground">/mês</span>}
+                  </p>
+                  {p.feats.length > 0 && (
+                    <ul className="mt-5 space-y-2.5 text-sm">
+                      {p.feats.map((f: string) => (
+                        <li key={f} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-success" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button
+                    className={`mt-6 w-full ${featured ? "bg-gradient-primary hover:opacity-90" : ""}`}
+                    variant={featured ? "default" : "outline"}
+                    onClick={() => navigate("/auth")}
+                  >
+                    {cta}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ─── Planos Personalizados de Médicos ─── */}
+      {planosMedico.length > 0 && (
+        <section>
+          <div className="mb-8 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-accent/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+              <Stethoscope className="h-4 w-4" /> Planos de Profissionais
+            </span>
+            <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">Escolha seu médico, monte seu plano</h2>
+            <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm">
+              Planos criados diretamente pelos profissionais. Selecione um ou mais e aproveite descontos progressivos.
+            </p>
+          </div>
+          <div className={`grid gap-5 ${planosMedico.length === 1 ? "max-w-md mx-auto" : planosMedico.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
+            {planosMedico.map(p => {
+              const preco = p.valor_mensal_centavos != null ? brl(p.valor_mensal_centavos) : "Sob consulta";
+              const desc = p.descricao_comercial || p.descricao || "";
+              const med = p.medico;
+              const initials = med?.nome?.split(" ").map((n: string) => n[0]).slice(0, 2).join("") || "?";
+              return (
+                <div key={p.id} className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-md">
+                  {/* Médico header */}
+                  {med && (
+                    <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+                      <Avatar className="h-11 w-11 ring-2 ring-primary/20">
+                        <AvatarImage src={med.foto_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{med.nome}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {med.especialidade || "Clínico Geral"}
+                          {med.crm ? ` · CRM ${med.crm}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <p className="font-display text-base font-bold">{p.nome}</p>
+                  {desc && <p className="text-xs text-muted-foreground mt-1">{desc}</p>}
+                  <p className="mt-3 font-display text-3xl font-extrabold text-primary">
+                    {preco}
+                    {p.valor_mensal_centavos != null && <span className="text-sm font-medium text-muted-foreground">/mês</span>}
+                  </p>
+                  {p.feats.length > 0 && (
+                    <ul className="mt-4 space-y-2 text-sm">
+                      {p.feats.map((f: string) => (
+                        <li key={f} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
+                          <span className="text-muted-foreground">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="mt-5 w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={() => navigate("/auth")}
+                  >
+                    Assinar com este médico
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-xs text-muted-foreground">
+              💡 Dica: Após o cadastro, você pode combinar vários planos de médicos e ganhar <strong>desconto progressivo</strong>.
+            </p>
+          </div>
+        </section>
+      )}
     </PageShell>
   );
 };
