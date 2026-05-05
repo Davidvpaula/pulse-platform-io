@@ -1,70 +1,45 @@
 
-# Reformulação do Atendimento Imediato (PA)
+# Corrigir RLS da tabela `pagamentos` para fluxo unificado
 
-## Diagnóstico
+## Problema
+A política de INSERT na tabela `pagamentos` exige `is_paciente_da_consulta(consulta_id)`, mas no fluxo unificado o `consulta_id` é NULL (consulta só nasce pós-pagamento). O erro aparece tanto no PA quanto em Especialidades e Serviços.
 
-Dois problemas raiz foram identificados:
+## Solução (2 partes)
 
-1. **RLS bloqueia slot reservado**: A tabela `agenda_slots` tem uma política pública de leitura que permite apenas `status = 'disponivel'`. Quando o PA reserva o slot (via `fn_pa_reservar_slot`, status muda para `reservado`), o paciente não consegue mais ler esse slot. Resultado: `carregarSlotInfo()` retorna `null` → "Horário indisponível".
+### 1. Migração SQL — Atualizar RLS de `pagamentos`
 
-2. **Dupla reserva conflitante**: O PA pré-reserva o slot com 90 segundos de TTL via `fn_pa_reservar_slot`, depois redireciona para a rota unificada onde `reservarSlotUnificado` tenta reservar novamente com 15 minutos. Essa dupla reserva é desnecessária e causa conflito.
-
-Os Serviços da Plataforma (Pediátrico Online, Check-up, etc.) funcionam porque **não pré-reservam** — o slot está `disponivel` quando o paciente chega no formulário, e a reserva só acontece no submit.
-
-## Solução: Alinhar PA ao padrão dos Serviços
-
-### 1. Migração — RLS para paciente ver slot reservado por ele
-
-Adicionar política na `agenda_slots` para que o paciente consiga ler slots reservados para ele:
+A tabela já tem colunas `paciente_id` e `medico_id` diretas. Atualizar as políticas do paciente para usar essas colunas como alternativa:
 
 ```sql
-CREATE POLICY "Paciente ve slot reservado por ele"
-  ON public.agenda_slots FOR SELECT
-  TO authenticated
-  USING (
-    status = 'reservado'
-    AND reservado_por = (SELECT id FROM pacientes WHERE user_id = auth.uid() LIMIT 1)
+DROP POLICY "paciente cria pagamento próprio" ON pagamentos;
+DROP POLICY "paciente vê seus pagamentos" ON pagamentos;
+DROP POLICY "paciente atualiza pagamento próprio" ON pagamentos;
+
+-- INSERT: aceita com consulta_id (legado) OU paciente_id direto (unificado)
+CREATE POLICY "paciente cria pagamento proprio"
+  ON pagamentos FOR INSERT TO authenticated
+  WITH CHECK (
+    status = 'pendente' AND (
+      (consulta_id IS NOT NULL AND is_paciente_da_consulta(consulta_id))
+      OR
+      (consulta_id IS NULL AND paciente_id = (SELECT id FROM pacientes WHERE user_id = auth.uid()))
+    )
   );
+
+-- SELECT e UPDATE com lógica equivalente
 ```
 
-Isso garante que mesmo se um slot for reservado, o dono da reserva pode visualizá-lo.
+### 2. Frontend — Preencher `paciente_id` e `medico_id` no insert
 
-### 2. Refatorar `AtendimentoImediato.tsx` — Remover pré-reserva
+No `src/lib/pagamentos.ts`, o mock provider precisa incluir `paciente_id` e `medico_id` como colunas diretas (não só na metadata) para que o RLS consiga validar:
 
-Simplificar o fluxo PA para funcionar igual aos Serviços:
+```typescript
+if (input.reserva?.paciente_id) insertObj.paciente_id = input.reserva.paciente_id;
+if (input.reserva?.medico_id) insertObj.medico_id = input.reserva.medico_id;
+```
 
-- **Remover** a chamada a `fn_pa_reservar_slot` no clique do slot
-- **Remover** o rodapé de reserva com countdown de 90 segundos
-- Ao clicar em um slot, navegar **diretamente** para `/app/agendamento/confirmar/:slotId?tipo=pa&ref={servico_id}`
-- O slot continua `disponivel` até o paciente submeter o formulário (onde `reservarSlotUnificado` faz a reserva de 15 minutos)
-
-O componente ficará muito mais simples — sem estado de reserva, sem timer, sem `RodapeReserva`.
-
-### 3. Atualizar `carregarSlotInfo()` — Fallback para `servicos_financeiros`
-
-No branch `tipo === "pa"`, usar `servicos_financeiros` diretamente em vez da view `servicos_publicos` (que já é um wrapper simples). Isso garante que a nova política de leitura pública que adicionamos funcione.
-
-### 4. Atualizar `reservarSlotUnificado` (RPC) — Lógica de ranking para PA
-
-Adicionar ao RPC `reservar_slot_unificado` a lógica de seleção por ranking quando `tipo = 'pa'`:
-- Se o slot solicitado está disponível, usá-lo
-- Se não, buscar o mais próximo no mesmo dia (mesma lógica que `fn_pa_reservar_slot` tinha)
-
-Isso move a inteligência de alocação do PA para dentro do fluxo unificado.
-
-### Resumo dos arquivos
-
+### Arquivos afetados
 | Arquivo | Mudança |
 |---------|---------|
-| Migração SQL | RLS para paciente ler slot reservado por ele |
-| `src/pages/public/AtendimentoImediato.tsx` | Remover pré-reserva e countdown; clicar no slot navega direto para confirmar |
-| `src/pages/app/agendamento/AgendamentoConfirmar.tsx` | Usar `servicos_financeiros` em vez de `servicos_publicos` para tipo `pa` e `servico` |
-| Migração SQL (RPC) | Opcional: adicionar fallback de ranking no `reservar_slot_unificado` para tipo PA |
-| `src/components/atendimento-imediato/RodapeReserva.tsx` | Pode ser removido ou mantido (não será mais importado) |
-
-### O que NÃO muda
-
-- Fluxo dos Serviços e Especialidades — já funciona corretamente
-- Checkout e pagamento — intactos
-- `criar_consulta_pos_pagamento` — intacto
-- Edge functions Stripe — intactas
+| Migração SQL | Atualizar 3 políticas do paciente em `pagamentos` |
+| `src/lib/pagamentos.ts` | Adicionar `paciente_id` e `medico_id` no insertObj do mock provider |
