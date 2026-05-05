@@ -411,23 +411,88 @@ export default function PacientePlano() {
                 </p>
               </div>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                    disabled
-                  >
-                    Solicitar cancelamento
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Em breve — cancelamento online</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              variant="outline"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => setShowCancelDialog(true)}
+            >
+              Solicitar cancelamento
+            </Button>
           </div>
         </section>
       )}
+
+      {/* Dialog de cancelamento */}
+      <Dialog open={showCancelDialog} onOpenChange={(v) => { if (!cancelando) setShowCancelDialog(v); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" /> Cancelar meu plano
+            </DialogTitle>
+            <DialogDescription>
+              Ao cancelar, você manterá acesso até o fim do ciclo atual.
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label htmlFor="motivo-cancelamento">Motivo do cancelamento *</Label>
+            <Textarea
+              id="motivo-cancelamento"
+              placeholder="Conte-nos o motivo do cancelamento..."
+              value={motivoCancelamento}
+              onChange={(e) => setMotivoCancelamento(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)} disabled={cancelando}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!motivoCancelamento.trim() || cancelando}
+              onClick={async () => {
+                setCancelando(true);
+                try {
+                  // Update assinatura status
+                  const { error: ae } = await supabase
+                    .from("assinaturas")
+                    .update({
+                      status: "cancelada" as any,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", assinatura.id);
+                  if (ae) throw ae;
+
+                  // Update plano status to encerramento_pendente
+                  const { error: pe } = await supabase
+                    .from("planos")
+                    .update({
+                      status: "encerramento_pendente" as any,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", plano.id);
+                  if (pe) console.warn("Erro ao atualizar plano:", pe);
+
+                  toast.success("Cancelamento solicitado com sucesso", {
+                    description: "Você manterá acesso até o fim do ciclo atual.",
+                  });
+                  setShowCancelDialog(false);
+                  setMotivoCancelamento("");
+                  loadData();
+                } catch (err: any) {
+                  toast.error(err.message ?? "Erro ao cancelar plano");
+                } finally {
+                  setCancelando(false);
+                }
+              }}
+            >
+              {cancelando ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação */}
       <ConfirmacaoDialog
@@ -438,7 +503,6 @@ export default function PacientePlano() {
         onConfirmar={async () => {
           if (!acaoPendente) return;
           setProcessando(true);
-          // 🔌 Integração futura: edge function de upgrade/downgrade
           toast.info("Em breve — troca de plano online", {
             description: "Esta funcionalidade será ativada com a integração de pagamentos.",
           });
