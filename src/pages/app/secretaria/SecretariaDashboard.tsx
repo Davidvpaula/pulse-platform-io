@@ -112,6 +112,7 @@ export default function SecretariaDashboard() {
   const [filaFiltro, setFilaFiltro] = useState<"todos" | "urgente" | "aguardando">("todos");
   const { loading, consultas, stats } = useDashboardData();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   // Links sempre apontam para /app/colaborador (secretaria é legado)
   const base = "/app/colaborador";
