@@ -126,19 +126,6 @@ export default function AppLayout() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
-              {showDemoSwitcher && (
-                <>
-                  <DropdownMenuLabel>Trocar perfil (demo)</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-                    <DropdownMenuItem key={k} onClick={() => switchProfile(k)} className="gap-2">
-                      {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-                      {profiles[k].label}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                </>
-              )}
               {session && (
                 <>
                   <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
