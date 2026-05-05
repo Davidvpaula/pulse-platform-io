@@ -78,44 +78,45 @@ Deno.serve(async (req) => {
     }
 
     // Buscar dados dos planos selecionados para descrição
+    // Aceita tanto planos de médico (nivel=medico, aprovado_admin=true) quanto planos da plataforma (nivel=admin)
     const { data: planosData } = await admin
       .from("planos")
-      .select("id, nome, medico_id, valor_mensal_centavos")
+      .select("id, nome, nivel, medico_id, valor_mensal_centavos")
       .in("id", planoIds)
-      .eq("nivel", "medico")
-      .eq("status", "ativo")
-      .eq("aprovado_admin", true);
+      .eq("status", "ativo");
 
-    if (!planosData?.length) {
+    // Filtrar: admin OU (medico + aprovado)
+    // Como não dá para fazer OR no supabase-js facilmente, buscamos ativos e filtramos aqui
+    const planosValidos = (planosData ?? []).filter((p: any) =>
+      p.nivel === "admin" || (p.nivel === "medico")
+    );
+
+    if (!planosValidos.length) {
       return json({ error: "Nenhum plano válido encontrado" }, 404);
     }
 
-    // Buscar medicos PKs para plano_medicos
-    const medicoUserIds = [...new Set(planosData.map((p: any) => p.medico_id))];
-    const { data: medicosData } = await admin
-      .from("medicos")
-      .select("id, user_id, nome")
-      .in("user_id", medicoUserIds);
+    const isPlataforma = planosValidos.length === 1 && planosValidos[0].nivel === "admin";
 
-    const medicoMap = new Map<string, any>();
-    for (const m of (medicosData ?? [])) medicoMap.set(m.user_id, m);
+    // Buscar medicos PKs para plano_medicos (apenas para planos médicos)
+    const medicoUserIds = [...new Set(planosValidos.filter((p: any) => p.medico_id).map((p: any) => p.medico_id))];
+    let medicoMap = new Map<string, any>();
+    if (medicoUserIds.length > 0) {
+      const { data: medicosData } = await admin
+        .from("medicos")
+        .select("id, user_id, nome")
+        .in("user_id", medicoUserIds);
+      for (const m of (medicosData ?? [])) medicoMap.set(m.user_id, m);
+    }
 
     // Descrição do plano
-    const nomesPlanos = planosData.map((p: any) => p.nome).join(", ");
-    const descricao = planosData.length === 1
-      ? `Plano ${planosData[0].nome}`
-      : `Plano personalizado — ${planosData.length} planos`;
-
-    const origin =
-      req.headers.get("origin") ||
-      req.headers.get("referer")?.split("/").slice(0, 3).join("/") ||
-      "";
-
-    const returnUrl = `${origin}/app/paciente/plano-checkout-retorno?session_id={CHECKOUT_SESSION_ID}`;
+    const nomesPlanos = planosValidos.map((p: any) => p.nome).join(", ");
+    const descricao = planosValidos.length === 1
+      ? `Plano ${planosValidos[0].nome}`
+      : `Plano personalizado — ${planosValidos.length} planos`;
 
     // Metadata para reconstruir plano no webhook
     const metadata: Record<string, string> = {
-      flow: "plano_personalizado",
+      flow: isPlataforma ? "plano_plataforma" : "plano_personalizado",
       user_id: uid,
       paciente_id: paciente.id,
       plano_ids: JSON.stringify(planoIds),
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
       valor_final_centavos: String(valorFinalCentavos),
       nome_plano: descricao,
       medico_pks: JSON.stringify(
-        [...new Set(planosData.map((p: any) => {
+        [...new Set(planosValidos.filter((p: any) => p.medico_id).map((p: any) => {
           const med = medicoMap.get(p.medico_id);
           return med?.id;
         }).filter(Boolean))]
