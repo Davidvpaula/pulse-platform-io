@@ -220,7 +220,7 @@ function SidebarBody({
 
   // Monta a lista visível conforme o perfil.
   const visibleNav: RenderItem[] = useMemo(() => {
-    if (profileKey === "colaborador") {
+    if (profileKey === "colaborador" || profileKey === "secretaria") {
       const out: RenderItem[] = [];
       for (const node of colaboradorMenu) {
         if (node.children?.length) {
