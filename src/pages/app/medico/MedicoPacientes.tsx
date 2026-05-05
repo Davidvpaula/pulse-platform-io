@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search, Building2, User, FileText, Eye, Loader2, Database, Calendar,
   MessageCircle, Phone, AlertCircle, Filter,
@@ -30,6 +30,7 @@ function soDigitos(t: string | null | undefined) {
 
 export default function MedicoPacientes() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<FiltroTipo>("todos");
   const [loading, setLoading] = useState(false);
@@ -206,14 +207,13 @@ export default function MedicoPacientes() {
                             <Phone className="h-4 w-4" />
                           </a>
                         </Button>
-                        <Button size="sm" variant="ghost" asChild title="WhatsApp">
-                          <a
-                            href={`https://wa.me/55${tel}?text=${wppMsg}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Abrir conversa"
+                          onClick={() => navigate(`/app/medico/mensagens`)}
+                        >
+                          <MessageCircle className="h-4 w-4" />
                         </Button>
                       </>
                     )}

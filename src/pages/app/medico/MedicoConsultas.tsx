@@ -18,10 +18,9 @@ import {
   listConsultasDoMedico, formatDataBR, formatHora, toStatusBadge,
   updateConsultaStatus, type ConsultaDetalhada,
 } from "@/lib/clinico";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
 
 type Filtro = "todas" | "hoje" | "futuras" | "passadas" | "canceladas";
@@ -50,6 +49,7 @@ function getGroup(c: ConsultaDetalhada): StatusGroup {
 
 export default function MedicoConsultas() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ConsultaDetalhada[] | null>(null);
   const [busca, setBusca] = useState("");
@@ -242,14 +242,13 @@ export default function MedicoConsultas() {
               </Button>
             )}
 
-            <Button size="sm" variant="ghost" asChild title="Mensagem WhatsApp">
-              <a
-                href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta`)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <MessageCircle className="h-4 w-4 text-success" />
-              </a>
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Abrir conversa do paciente"
+              onClick={() => navigate(`/app/medico/mensagens?conv=${c.id}`)}
+            >
+              <MessageCircle className="h-4 w-4 text-primary" />
             </Button>
             <Button
               size="sm"

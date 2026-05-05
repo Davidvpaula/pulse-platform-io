@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar, Users, MessageCircle, Wallet, ListTodo, Plus, Phone,
   RotateCcw, X, Activity, TrendingUp, ShieldCheck, AlertTriangle, Clock,
@@ -11,7 +11,7 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { cn } from "@/lib/utils";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
+// whatsappUrl removido — botões redirecionam ao Inbox interno
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -112,6 +112,7 @@ export default function SecretariaDashboard() {
   const [filaFiltro, setFilaFiltro] = useState<"todos" | "urgente" | "aguardando">("todos");
   const { loading, consultas, stats } = useDashboardData();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   // Links sempre apontam para /app/colaborador (secretaria é legado)
   const base = "/app/colaborador";
@@ -298,10 +299,8 @@ export default function SecretariaDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-1 justify-end">
-                <Button size="icon" variant="ghost" title="WhatsApp" asChild>
-                  <a href={whatsappUrl(`Olá ${f.paciente_nome}, sobre a consulta`)} target="_blank" rel="noreferrer">
-                    <MessageCircle className="h-3.5 w-3.5 text-success" />
-                  </a>
+                <Button size="icon" variant="ghost" title="Abrir conversa" onClick={() => navigate("/app/comunicacao/inbox")}>
+                    <MessageCircle className="h-3.5 w-3.5 text-primary" />
                 </Button>
                 <Button size="icon" variant="ghost" title="Confirmar" onClick={() => toast.success("Consulta confirmada (em breve: ação real)")}>
                   <CheckCircle2 className="h-3.5 w-3.5 text-success" />

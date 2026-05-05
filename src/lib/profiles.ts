@@ -3,6 +3,7 @@ import {
   Stethoscope, Users, Settings, Plug, Building2, ListTodo, Phone, MessageCircle,
   Bot, FileBarChart, ShieldCheck, ClipboardList, Video, BadgeCheck, UserCog,
   Activity, Eye, AlertTriangle, BookOpen, Clock, Tag, TrendingUp, Layers, Trophy, Send, HelpCircle,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -51,7 +52,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Meu Plano", to: "/app/paciente/plano", icon: BadgeCheck },
       { label: "Montar Plano", to: "/app/paciente/montar-plano", icon: Layers },
       { label: "Financeiro", to: "/app/paciente/financeiro", icon: Wallet },
-      { label: "Mensagens", to: "/app/paciente/mensagens", icon: MessageSquare },
+      { label: "Notificações", to: "/app/paciente/mensagens", icon: Bell },
       { label: "Perfil", to: "/app/paciente/perfil", icon: User },
     ],
   },
@@ -69,7 +70,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Serviços da plataforma", to: "/app/medico/servicos", icon: Stethoscope },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
-      { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle, requiresCapability: "medico.comunicacao" },
+      { label: "Mensagens das consultas", to: "/app/medico/mensagens", icon: MessageCircle },
       { label: "Comunicação interna", to: "/app/medico/comunicacao-interna", icon: MessageSquare },
       { label: "Financeiro", to: "/app/medico/financeiro", icon: Wallet },
       { label: "Treinamento", to: "/app/medico/treinamento", icon: BookOpen },

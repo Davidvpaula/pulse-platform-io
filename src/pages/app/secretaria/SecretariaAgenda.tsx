@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Filter, Plus, Play, Phone, MessageCircle, RotateCcw, UserCog, Loader2, History, LogIn,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
+// whatsappUrl removido — botões redirecionam ao Inbox interno
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
@@ -31,6 +31,7 @@ function offsetDate(label: string): { inicio: Date; fim: Date; titulo: string } 
 
 export default function SecretariaAgenda() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [medico, setMedico] = useState<string>("Todos");
   const [dia, setDia] = useState<string>("Hoje");
 
@@ -157,13 +158,13 @@ export default function SecretariaAgenda() {
                     >
                       <History className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" asChild title="WhatsApp">
-                      <a
-                        href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta às ${formatHora(c.inicio)}`)}
-                        target="_blank" rel="noreferrer"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5 text-success" />
-                      </a>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Abrir conversa"
+                      onClick={() => navigate(`/app/comunicacao/inbox`)}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-primary" />
                     </Button>
                   </div>
                 </div>

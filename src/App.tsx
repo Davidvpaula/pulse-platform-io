@@ -79,6 +79,7 @@ import EmpresaDocumentos from "@/pages/app/empresa/EmpresaDocumentos";
 import EmpresaTermos from "@/pages/app/empresa/EmpresaTermos";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
+import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
 import Templates from "@/pages/app/comunicacao/Templates";
 import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
@@ -255,7 +256,7 @@ const App = () => (
               <Route path="medico/servicos" element={<MedicoGuard><MedicoServicos /></MedicoGuard>} />
               
               <Route path="medico/treinamento" element={<MedicoGuard><MedicoTreinamento /></MedicoGuard>} />
-              <Route path="medico/mensagens" element={<MedicoGuard><Conversas /></MedicoGuard>} />
+              <Route path="medico/mensagens" element={<MedicoGuard><MedicoMensagensConsultas /></MedicoGuard>} />
               <Route path="medico/comunicacao-interna" element={<MedicoGuard><ComunicacaoInterna /></MedicoGuard>} />
               <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
               <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
