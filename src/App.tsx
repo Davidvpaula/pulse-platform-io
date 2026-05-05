@@ -79,6 +79,7 @@ import EmpresaDocumentos from "@/pages/app/empresa/EmpresaDocumentos";
 import EmpresaTermos from "@/pages/app/empresa/EmpresaTermos";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
+import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
 import Templates from "@/pages/app/comunicacao/Templates";
 import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
