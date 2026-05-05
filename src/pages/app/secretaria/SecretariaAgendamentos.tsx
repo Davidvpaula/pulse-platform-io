@@ -16,7 +16,7 @@ import {
 import TrocarMedicoDialog from "@/components/secretaria/TrocarMedicoDialog";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { useSession } from "@/lib/session";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
+// whatsappUrl removido — botões redirecionam ao Inbox interno
 import { cn } from "@/lib/utils";
 
 const filtros = [
