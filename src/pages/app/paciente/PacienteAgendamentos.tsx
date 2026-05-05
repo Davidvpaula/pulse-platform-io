@@ -164,6 +164,9 @@ export default function PacienteAgendamentos() {
         </div>
       )}
 
+      {/* Profissionais do plano */}
+      {session && <MeusProfissionaisPlano userId={session.user.id} />}
+
       {/* Filtros */}
       <div className="card-elevated flex flex-wrap items-center gap-3 p-4">
         <div className="relative flex-1 min-w-[220px]">
