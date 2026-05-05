@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/lib/auth";
+
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
