@@ -306,22 +306,25 @@ export default function AgendamentoConfirmar() {
     }
   }, [slotInfo, navigate, tipo, ref]);
 
+  // Determine if terms need acceptance
+  const needsConsulta = !!termoConsulta && !aceitouConsulta;
+  const needsPrivacidade = !!termoPrivacidade && !aceitouPrivacidade;
+  const termsBlocked = needsConsulta || needsPrivacidade;
+
   const onSubmit = async (values: FormData) => {
-    if (termsCheck.needsAcceptance) {
-      setPendingFormData(values);
-      termsCheck.setShowDialog(true);
+    if (termsBlocked) {
+      toast.error("Você precisa aceitar todos os termos para continuar.");
       return;
     }
+    // Register acceptance for terms not yet registered
+    try {
+      const promises: Promise<void>[] = [];
+      if (termoConsulta) promises.push(registrarAceite(termoConsulta.id).catch(() => {}));
+      if (termoPrivacidade) promises.push(registrarAceite(termoPrivacidade.id).catch(() => {}));
+      await Promise.all(promises);
+    } catch { /* non-blocking */ }
     await doSubmit(values);
   };
-
-  const handleTermsAccepted = useCallback(() => {
-    termsCheck.onAccepted();
-    if (pendingFormData) {
-      doSubmit(pendingFormData);
-      setPendingFormData(null);
-    }
-  }, [termsCheck, pendingFormData, doSubmit]);
 
   /* ─── Renders ─── */
 
