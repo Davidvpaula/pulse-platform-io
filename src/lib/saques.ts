@@ -54,7 +54,7 @@ export async function getSaqueConfig(): Promise<SaqueConfig> {
   const parseArr = (v: any, fallback: number[]): number[] => {
     if (Array.isArray(v)) return v.map(Number).filter(n => !isNaN(n));
     if (typeof v === "string") {
-      try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(Number).filter(n => !isNaN(n)); } catch { /* ignore */ }
+      try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(Number).filter(n => !isNaN(n)); } catch { return fallback; }
     }
     return fallback;
   };

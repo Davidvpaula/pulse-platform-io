@@ -1,26 +1,16 @@
 
-# Adicionar avaliações no perfil público do médico
+## Fix catch block in `src/lib/saques.ts`
 
-## O que será feito
+**Line 57** — the `parseArr` function has a `catch { /* ignore */ }` that silently swallows errors without returning the fallback value. This means if `JSON.parse` throws, the function falls through to `return fallback` on line 59 anyway, so functionally it's already correct. However, to match the requested pattern and be explicit:
 
-Na página pública do médico (`/medicos/:slug` - componente `MedicoDetalhe` em `PublicPages.tsx`), será adicionada uma seção **"Avaliações de pacientes"** exibindo as avaliações que o médico marcou como visíveis no site.
+**Change:**
+```ts
+try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(Number).filter(n => !isNaN(n)); } catch { /* ignore */ }
+```
 
-## Detalhes
+**To:**
+```ts
+try { const p = JSON.parse(v); if (Array.isArray(p)) return p.map(Number).filter(n => !isNaN(n)); } catch { return fallback; }
+```
 
-### 1. Carregar avaliações visíveis (PublicPages.tsx - MedicoDetalhe)
-- No `useEffect` existente, após carregar planos, buscar da tabela `avaliacoes_medicas` onde:
-  - `medico_id = med.id`
-  - `avaliacao_publica = true`
-  - `exibir_no_perfil = true`
-- Também buscar o nome do paciente (via `profiles.nome`) para exibição
-- Ordenar por `created_at` desc, limitar a 10
-
-### 2. Renderizar seção de avaliações
-- Após a seção "Planos deste profissional" e antes do sidebar
-- Card com titulo "Avaliações de pacientes" + badge com total
-- Cada avaliação mostra: estrelas, comentário, nome do paciente (primeiro nome), data
-- Nota média destacada no topo com estrelas preenchidas
-- Se não houver avaliações visíveis, a seção não aparece
-
-### Arquivos alterados
-- `src/pages/public/PublicPages.tsx` (MedicoDetalhe) - adicionar fetch + renderização
+After the edit, I'll verify there are no TypeScript errors (build and type-check run automatically).
