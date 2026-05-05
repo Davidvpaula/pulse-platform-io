@@ -172,8 +172,13 @@ export default function AgendamentoConfirmar() {
   const [slotInfo, setSlotInfo] = useState<SlotInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
-  const termsCheck = useTermsCheck("consulta_paciente");
+
+  // Terms acceptance state
+  const [termoConsulta, setTermoConsulta] = useState<TermoRow | null>(null);
+  const [termoPrivacidade, setTermoPrivacidade] = useState<TermoRow | null>(null);
+  const [aceitouConsulta, setAceitouConsulta] = useState(false);
+  const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false);
+  const [previewTermo, setPreviewTermo] = useState<TermoRow | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
