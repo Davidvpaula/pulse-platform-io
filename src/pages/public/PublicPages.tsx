@@ -24,6 +24,7 @@ import { useMedicosDestaque, type MedicoDestaque } from "@/hooks/useMedicosDesta
 import { useIsMobile } from "@/hooks/use-mobile";
 import EmBreveDialog from "@/components/EmBreveDialog";
 import MedicoSlotsPanel from "@/components/public/MedicoSlotsPanel";
+import { brl } from "@/lib/format";
 
 /* ── helpers ── */
 
