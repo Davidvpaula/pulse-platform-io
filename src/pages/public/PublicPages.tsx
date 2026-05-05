@@ -291,6 +291,17 @@ export const MedicoDetalhe = () => {
             rqe: e.rqe ?? null,
           }))
         );
+        // Load doctor's published plans
+        const { data: planos } = await supabase
+          .from("planos")
+          .select("id, nome, descricao_comercial, valor_mensal_centavos, plano_beneficios(nome)")
+          .eq("medico_id", med.id)
+          .eq("nivel", "medico" as any)
+          .eq("status", "ativo" as any)
+          .eq("aprovado_admin", true)
+          .eq("publicado_site", true)
+          .order("ordem_exibicao");
+        setPlanosMedico(planos ?? []);
       }
 
       setLoading(false);
