@@ -6881,6 +6881,10 @@ export type Database = {
       }
       plano_pertence_medico: { Args: { _plano_id: string }; Returns: boolean }
       plano_saude_financeira: { Args: { _plano_id: string }; Returns: Json }
+      pode_criar_assinatura_paciente: {
+        Args: { _paciente_id: string; _plano_id: string; _user_id: string }
+        Returns: boolean
+      }
       processar_pagamento_confirmado: {
         Args: {
           _metodo: Database["public"]["Enums"]["pagamento_metodo"]

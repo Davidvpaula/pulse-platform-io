@@ -263,7 +263,7 @@ export default function PacienteMontarPlano() {
           data_inicio: hoje,
           proxima_cobranca: proximaCobranca.toISOString().slice(0, 10),
           created_by: uid,
-          origem_receita: "plataforma" as any,
+          origem_receita: "plano_paciente_custom" as any,
         });
       if (ae) throw ae;
 
