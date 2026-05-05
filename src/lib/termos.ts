@@ -53,12 +53,24 @@ export async function buscarTermoAtivo(tipo: TermoTipo) {
 
 export async function criarTermo(input: { tipo: TermoTipo; titulo: string; conteudo: string; status?: string }) {
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Calculate next version for this type
+  const { data: existing, error: vErr } = await supabase
+    .from("termos_condicoes")
+    .select("versao")
+    .eq("tipo", input.tipo)
+    .order("versao", { ascending: false })
+    .limit(1);
+  if (vErr) throw vErr;
+  const nextVersao = (existing?.[0]?.versao ?? 0) + 1;
+
   const { data, error } = await supabase
     .from("termos_condicoes")
     .insert({
       tipo: input.tipo,
       titulo: input.titulo,
       conteudo: input.conteudo,
+      versao: nextVersao,
       status: input.status ?? "inativo",
       created_by: user?.id ?? null,
     })
