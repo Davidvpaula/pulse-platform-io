@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck,
-  ChevronRight, Building2, User, MessageCircle, Repeat, Stethoscope, Loader2, Bell,
+  ChevronRight, Building2, User, MessageCircle, Repeat, Stethoscope, Loader2, Bell, Gift,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
