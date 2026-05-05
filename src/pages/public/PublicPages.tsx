@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom"
 import {
   Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
   Clock, Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, ChevronDown, ChevronUp, User,
+  CheckCircle2, ArrowUpRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,6 +24,7 @@ import { useMedicosDestaque, type MedicoDestaque } from "@/hooks/useMedicosDesta
 import { useIsMobile } from "@/hooks/use-mobile";
 import EmBreveDialog from "@/components/EmBreveDialog";
 import MedicoSlotsPanel from "@/components/public/MedicoSlotsPanel";
+import { brl } from "@/lib/format";
 
 /* ── helpers ── */
 
@@ -260,6 +262,7 @@ export const MedicoDetalhe = () => {
   const { slug } = useParams();
   const [medico, setMedico] = useState<any>(null);
   const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null }[]>([]);
+  const [planosMedico, setPlanosMedico] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -288,6 +291,17 @@ export const MedicoDetalhe = () => {
             rqe: e.rqe ?? null,
           }))
         );
+        // Load doctor's published plans
+        const { data: planos } = await supabase
+          .from("planos")
+          .select("id, nome, descricao_comercial, valor_mensal_centavos, plano_beneficios(nome)")
+          .eq("medico_id", med.id)
+          .eq("nivel", "medico" as any)
+          .eq("status", "ativo" as any)
+          .eq("aprovado_admin", true)
+          .eq("publicado_site", true)
+          .order("ordem_exibicao");
+        setPlanosMedico(planos ?? []);
       }
 
       setLoading(false);
@@ -380,6 +394,42 @@ export const MedicoDetalhe = () => {
               </div>
             </div>
           </div>
+
+          {/* Planos do médico */}
+          {planosMedico.length > 0 && (
+            <div className="card-elevated p-6">
+              <h3 className="text-sm font-semibold mb-4">Planos deste profissional</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {planosMedico.map((p: any) => (
+                  <div key={p.id} className="rounded-xl border border-border bg-background/50 p-5 hover:border-primary/30 transition">
+                    <p className="font-medium">{p.nome}</p>
+                    {p.descricao_comercial && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.descricao_comercial}</p>
+                    )}
+                    <p className="mt-2 text-xl font-semibold">
+                      {brl(p.valor_mensal_centavos)}
+                      <span className="text-xs font-normal text-muted-foreground">/mês</span>
+                    </p>
+                    {p.plano_beneficios && p.plano_beneficios.length > 0 && (
+                      <ul className="mt-3 space-y-1.5 text-sm">
+                        {p.plano_beneficios.slice(0, 4).map((b: any, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
+                            <span>{b.nome}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Button className="mt-4 w-full" size="sm" asChild>
+                      <Link to="/app/paciente/plano">
+                        Assinar <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar – agenda */}

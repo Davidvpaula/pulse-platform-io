@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BadgeCheck, CheckCircle2, XCircle, Calendar, CreditCard, Users,
@@ -51,6 +51,7 @@ function diasAteData(iso: string | null | undefined) {
 /* ─────────── Main Component ─────────── */
 
 export default function PacientePlano() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [assinatura, setAssinatura] = useState<any>(null);
   const [plano, setPlano] = useState<any>(null);
@@ -195,7 +196,10 @@ export default function PacientePlano() {
           <PlanosDisponiveisSection
             planos={planosDisponiveis}
             planoAtualId={null}
-            onSelecionar={() => {}}
+            onSelecionar={(planoId) => {
+              toast.info("Redirecionando para contratação...");
+              navigate("/app/paciente/montar-plano");
+            }}
           />
         )}
       </div>

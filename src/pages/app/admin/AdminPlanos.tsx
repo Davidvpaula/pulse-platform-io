@@ -39,6 +39,7 @@ export default function AdminPlanos() {
       const { data: ps } = await supabase
         .from("planos")
         .select("*")
+        .not("nivel", "eq", "medico")
         .order("created_at", { ascending: false })
         .limit(500);
 

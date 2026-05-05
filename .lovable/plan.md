@@ -1,128 +1,46 @@
 
-# CHECKUP: Secretária vs Colaborador
+## Problema
 
-## DIAGNÓSTICO COMPLETO
-
-### O que existe hoje
-
-Existem **dois perfis** no sistema que fazem basicamente a mesma coisa:
-
-| Aspecto | `secretaria` | `colaborador` |
-|---|---|---|
-| Rotas | `/app/secretaria/*` (14 rotas) | `/app/colaborador/*` (16 rotas) |
-| Páginas próprias | 8 arquivos em `src/pages/app/secretaria/` | 1 arquivo (`ColaboradorPerfil.tsx`) |
-| Componentes usados | Páginas próprias (SecretariaDashboard, etc.) | **Reutiliza as mesmas páginas** de secretaria |
-| Menu | Nav fixo em `profiles.ts` | Menu dinâmico via `menuCatalog.ts` + `has_permission` |
-| Guards de permissão nas rotas | **NENHUM** (todas abertas) | Sim, usa `<G perm="...">` em cada rota |
-| Tabela no banco | Não tem tabela própria | `colaboradores` + `permissoes_colaborador` |
-| Enum no banco | `funcao_interna` inclui "secretaria" como valor | `funcao_interna` tem vários valores |
-| Auth mapping | `rolesToProfileKey()` mapeia role "secretaria" -> perfil "colaborador" | Perfil nativo |
-| Impersonation | `ROLE_TO_PROFILE` mapeia "colaborador" -> "secretaria" (invertido!) | - |
-
-### Relação entre eles
-
-**Colaborador é a evolução da Secretária.** O sistema já fez a transição parcial:
-
-1. `auth.tsx` linha 33: roles "secretaria" e "supervisor" sao normalizadas para perfil "colaborador"
-2. Todas as rotas `colaborador/*` usam os **mesmos componentes** de `secretaria/` (SecretariaDashboard, SecretariaPacientes, etc.)
-3. O menu do colaborador (`menuCatalog.ts`) é dinâmico e respeita permissões via `has_permission`
-4. O menu da secretária (`profiles.ts`) é fixo e usa `requiresCapability` (sistema antigo)
-
-**Porém a migração ficou incompleta** -- ambos os conjuntos de rotas continuam ativos.
+1. **AdminPlanos.tsx** carrega TODOS os planos sem filtrar por `nivel`, misturando planos da plataforma com planos de médicos.
+2. **Perfil público do médico** (`MedicoDetalhe` em PublicPages.tsx) não exibe os planos do médico.
+3. **PacientePlano.tsx** — quando o paciente não tem assinatura, o botão "Selecionar" do plano chama `onSelecionar={() => {}}` (no-op). Nada acontece ao clicar.
+4. **PacienteMontarPlano.tsx** — não filtra por `aprovado_admin`, permitindo que médicos não aprovados apareçam.
 
 ---
 
-## A) O QUE ESTA FUNCIONANDO
+## Plano de Implementação
 
-- Colaborador: rotas com guards `<G perm>` funcionam corretamente
-- Menu dinâmico do colaborador filtra itens por `has_permission`
-- Tabela `colaboradores` + `permissoes_colaborador` + auditoria existe e funciona
-- `rolesToProfileKey` resolve corretamente "secretaria" -> "colaborador"
-- Ambos usam os mesmos componentes (sem divergencia de dados)
-- RLS nas tabelas de colaboradores existe
-- Perfil generico (`PerfilGenerico`) e identico em ambos
+### 1. AdminPlanos — filtrar apenas planos da plataforma
 
----
+Em `src/pages/app/admin/AdminPlanos.tsx`, na função `carregar()`, adicionar filtro `.not("nivel", "eq", "medico")` na query de planos. Isso exclui planos de médicos dessa tela (que já têm a tela dedicada `AdminPlanosMedicos`).
 
-## B) O QUE ESTA QUEBRADO / INCONSISTENTE
+### 2. Perfil público do médico — exibir planos aprovados
 
-1. **Impersonation invertida**: `ROLE_TO_PROFILE` mapeia `colaborador -> "secretaria"` (linha 49 de impersonation.tsx), ou seja, ao impersonar um colaborador, o sistema joga para o perfil secretaria (sem guards de permissao)
-2. **Rotas secretaria SEM guards**: nenhuma rota `/app/secretaria/*` tem `<G perm>`. Qualquer usuario que acesse diretamente `/app/secretaria/financeiro` via URL entra sem verificacao de permissao
-3. **Rota `admin/secretaria`** redireciona para `/app/admin/colaboradores` -- confirmando que "secretaria" e considerada legada
+Em `src/pages/public/PublicPages.tsx`, no componente `MedicoDetalhe`:
 
----
+- Carregar planos do médico: query `planos` com `medico_id = med.id`, `nivel = medico`, `status = ativo`, `aprovado_admin = true`, `publicado_site = true`, incluindo `plano_beneficios(nome)`.
+- Renderizar seção "Planos do Médico" ao final da coluna principal, com cards mostrando nome, valor, benefícios e botão "Assinar" (link para `/app/paciente/plano`).
 
-## C) O QUE ESTA DUPLICADO
+### 3. PacientePlano — corrigir seleção de planos sem assinatura
 
-- 14 rotas `secretaria/*` duplicam exatamente as 16 rotas `colaborador/*` (colaborador tem 2 extras: gamificacao, pendencias-integracao)
-- Dois perfis em `profiles.ts` (secretaria e colaborador) para o mesmo papel
-- Dois arquivos de perfil identicos (SecretariaPerfil.tsx e ColaboradorPerfil.tsx)
-- Duas entradas no menu abilities (secretaria e colaborador em abilities.ts)
-- Rota legada `secretaria/pendencias-integracao` (linha 365) tambem existe em `colaborador/`
+Em `src/pages/app/paciente/PacientePlano.tsx`:
 
----
+- No bloco sem assinatura (linhas ~194-199), trocar `onSelecionar={() => {}}` por uma função que redirecione o paciente para a contratação (ex: `toast.info("Funcionalidade de contratação em breve")` ou navegar para checkout quando disponível).
+- Garantir que o botão "Selecionar" tenha feedback visual claro.
 
-## D) O QUE ESTA MOCKADO/SIMULADO
+### 4. PacienteMontarPlano — filtrar por aprovado_admin
 
-- Em modo demo (sem sessao), o usuario pode trocar livremente entre secretaria e colaborador via localStorage
-- `hasCapability` no menu da secretaria (`requiresCapability: "secretaria.financeiro"`) usa o sistema antigo de abilities, nao o `has_permission` do banco
+Em `src/pages/app/paciente/PacienteMontarPlano.tsx`, na query de `planosMedicos` (linha ~77), adicionar `.eq("aprovado_admin", true)` para que apenas médicos com planos aprovados pelo admin apareçam como selecionáveis.
+
+### 5. AdminPlanosMedicos — melhorias de dados
+
+A tela `AdminPlanosMedicos.tsx` já filtra por `nivel = medico` e já funciona corretamente. Nenhuma alteração necessária.
 
 ---
 
-## E) O QUE FALTA IMPLEMENTAR
+## Arquivos Afetados
 
-- Remocao completa do perfil "secretaria" (unificacao em "colaborador")
-- Migracao do mapeamento de impersonation
-
----
-
-## F) MELHORIAS DE UX/UI
-
-- Unificar tudo em "Colaborador" elimina confusao para o admin que gerencia equipe
-- Menu dinamico do colaborador ja e superior (filtra por permissao real do banco)
-
----
-
-## G) RISCOS TECNICOS E DE SEGURANCA
-
-1. **CRITICO**: Rotas `/app/secretaria/*` sem guards permitem bypass de permissoes via URL direta
-2. **MEDIO**: Impersonation de colaborador cai no perfil secretaria (sem guards)
-3. **BAIXO**: Codigo morto (8 arquivos de pagina + perfil duplicado) aumenta superficie de manutencao
-
----
-
-## H) PLANO DE ACAO (priorizado)
-
-### Etapa 1 -- Eliminar o bypass de seguranca (URGENTE)
-- Redirecionar TODAS as rotas `/app/secretaria/*` para `/app/colaborador/*` equivalente
-- Remover as rotas individuais de secretaria do App.tsx (manter apenas redirects)
-
-### Etapa 2 -- Corrigir Impersonation
-- Alterar `ROLE_TO_PROFILE` em impersonation.tsx: `colaborador -> "colaborador"` (nao "secretaria")
-
-### Etapa 3 -- Limpar perfil secretaria
-- Remover perfil "secretaria" de `profiles.ts` (manter apenas colaborador)
-- Remover `secretaria` de `abilities.ts`
-- Remover `ProfileKey = "secretaria"` do tipo (ou manter apenas como alias que resolve para colaborador)
-
-### Etapa 4 -- Limpar arquivos mortos
-- Manter os componentes em `src/pages/app/secretaria/` (sao usados pelas rotas de colaborador)
-- OU renomear pasta para `src/pages/app/colaborador/` e atualizar imports
-- Remover `SecretariaPerfil.tsx` (duplicata de `ColaboradorPerfil.tsx`)
-
-### Etapa 5 -- Validar
-- Testar que `rolesToProfileKey("secretaria")` ainda resolve para "colaborador"
-- Testar que nenhum link hardcoded aponta para `/app/secretaria/`
-- Confirmar breadcrumbs corretos
-
----
-
-### Impacto em outros modulos
-
-- **Permissoes (Admin)**: Nenhum impacto -- ja gerencia via `permissoes_colaborador`
-- **Financeiro**: Nenhum -- SecretariaFinanceiro.tsx ja verifica `has_permission` internamente
-- **Comunicacao/Inbox**: Nenhum -- usa rota compartilhada
-- **Impersonation**: Precisa ajuste (Etapa 2)
-- **Planos/Empresa/Gamificacao**: Nenhum impacto
-
-**Conclusao**: "Secretaria" e um perfil legado. "Colaborador" e a versao correta e evoluida. A unificacao e segura e necessaria, especialmente pela falha de seguranca nas rotas sem guards.
+- `src/pages/app/admin/AdminPlanos.tsx` — adicionar filtro de nivel
+- `src/pages/public/PublicPages.tsx` — seção de planos no perfil do médico
+- `src/pages/app/paciente/PacientePlano.tsx` — corrigir onSelecionar
+- `src/pages/app/paciente/PacienteMontarPlano.tsx` — filtrar aprovado_admin
