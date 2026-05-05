@@ -1,26 +1,24 @@
-## Modal de cancelamento com estimativa de reembolso
+## Histórico de cancelamentos e reembolsos no dashboard do paciente
 
-Substituir o `confirm()` nativo na página de agendamentos do paciente por um modal rico que mostra a estimativa de reembolso antes de confirmar.
+### 1. Migração — RLS para paciente ler reembolsos
+Atualmente apenas admin, médico e staff podem ler a tabela `reembolsos`. Adicionar policy para que o paciente veja reembolsos das suas próprias consultas:
 
-### 1. Criar `src/lib/reembolsoEstimativa.ts`
-Função `estimarReembolso(consultaId)` que:
-- Busca a consulta (valor, inicio, medico_id)
-- Calcula horas restantes até a consulta
-- Determina situação (antecipado vs tardio baseado na antecedência)
-- Busca regra do médico na `politica_reembolso`, fallback para global
-- Retorna: situação, tipo, percentual, valor estimado em centavos, horas restantes
+```sql
+CREATE POLICY "Paciente ve seus proprios reembolsos"
+ON public.reembolsos FOR SELECT TO authenticated
+USING (EXISTS (
+  SELECT 1 FROM consultas c
+  JOIN pacientes p ON p.id = c.paciente_id
+  WHERE c.id = reembolsos.consulta_id AND p.user_id = auth.uid()
+));
+```
 
-### 2. Criar `src/components/paciente/CancelarConsultaDialog.tsx`
-Modal com:
-- Resumo da consulta (médico, data, valor pago)
-- Estimativa de reembolso com destaque visual (total=verde, parcial=amarelo, zero=vermelho)
-- Valor estimado formatado em R$
-- Horas restantes até a consulta
-- Aviso sobre regra aplicada
-- Botões Cancelar/Confirmar cancelamento
+### 2. Criar `src/components/paciente/HistoricoCancelamentos.tsx`
+Componente que:
+- Busca últimos 10 reembolsos do paciente logado (`reembolsos` + join `consultas` + `medicos`)
+- Mostra para cada item: nome do médico, data da consulta, motivo, valor e status
+- Status com ícone e cor: solicitado (amarelo), em_análise (azul/spin), aprovado (verde), concluído (verde escuro), recusado (vermelho)
+- Estado vazio: "Nenhum cancelamento ou reembolso registrado"
 
-### 3. Editar `src/pages/app/paciente/PacienteAgendamentos.tsx`
-- Substituir `confirm()` por abrir o dialog
-- Adicionar estado para consulta selecionada para cancelamento
-- Importar e renderizar o novo componente
-- Manter a lógica de cancelamento existente (`updateConsultaStatus` + audit log)
+### 3. Editar `src/pages/app/paciente/PacienteDashboard.tsx`
+- Importar e renderizar `HistoricoCancelamentos` após a seção "Próximos agendamentos" e antes de "Comunicação"
