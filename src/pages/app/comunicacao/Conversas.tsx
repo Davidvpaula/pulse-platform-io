@@ -8,7 +8,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { conversasWpp } from "@/lib/mock";
+// Dados reais serão carregados do banco quando a integração WhatsApp estiver ativa.
+type ConversaWpp = { id: number; nome: string; ultima: string; tag: string; responsavel: string; status: string; canal: string; unread: number };
+const conversasWpp: ConversaWpp[] = [];
 import { cn } from "@/lib/utils";
 
 const tagTone: Record<string, string> = {
