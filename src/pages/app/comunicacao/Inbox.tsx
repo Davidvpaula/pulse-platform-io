@@ -215,6 +215,7 @@ export default function ComunicacaoInbox() {
     let query = supabase
       .from("conversations")
       .select("*")
+      .neq("channel", "interno")
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
 
