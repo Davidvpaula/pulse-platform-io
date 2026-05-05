@@ -206,11 +206,25 @@ export default function AgendamentoConfirmar() {
         navigate(`/auth?redirect=/app/agendamento/confirmar/${slotId}?tipo=${tipo}&ref=${ref}`);
         return;
       }
-      const [info, paciente] = await Promise.all([
+      const [info, paciente, tConsulta, tPriv] = await Promise.all([
         carregarSlotInfo(slotId, tipo, ref),
         getPacienteAtual(),
+        buscarTermoAtivo("consulta_paciente"),
+        buscarTermoAtivo("privacidade"),
       ]);
       setSlotInfo(info);
+      setTermoConsulta(tConsulta);
+      setTermoPrivacidade(tPriv);
+
+      // Check if user already accepted these terms
+      if (session.user) {
+        const [accC, accP] = await Promise.all([
+          tConsulta ? verificarAceite("consulta_paciente", session.user.id) : true,
+          tPriv ? verificarAceite("privacidade", session.user.id) : true,
+        ]);
+        setAceitouConsulta(accC);
+        setAceitouPrivacidade(accP);
+      }
 
       if (info) {
         trackEvent("inicio_agendamento", {
