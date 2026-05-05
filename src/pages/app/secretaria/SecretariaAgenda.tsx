@@ -31,6 +31,7 @@ function offsetDate(label: string): { inicio: Date; fim: Date; titulo: string } 
 
 export default function SecretariaAgenda() {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [medico, setMedico] = useState<string>("Todos");
   const [dia, setDia] = useState<string>("Hoje");
 
