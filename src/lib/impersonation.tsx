@@ -44,9 +44,9 @@ const C = createContext<Ctx | null>(null);
 const ROLE_TO_PROFILE: Record<string, ProfileKey> = {
   paciente: "paciente",
   medico: "medico",
-  secretaria: "secretaria",
+  secretaria: "colaborador",
   empresa: "empresa",
-  colaborador: "secretaria",
+  colaborador: "colaborador",
 };
 
 function loadFromStorage(): ImpersonationState | null {
