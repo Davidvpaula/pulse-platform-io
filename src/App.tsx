@@ -324,6 +324,7 @@ const App = () => (
               <Route path="admin/agendamentos" element={<G perm="agenda.ver_todas"><AdminAgendamentos /></G>} />
               <Route path="admin/financeiro" element={<G perm="financeiro.ver"><AdminFinanceiroCentral /></G>} />
               <Route path="admin/financeiro/repasse" element={<G perm="financeiro.editar_comissao"><AdminFinanceiroConfig /></G>} />
+              <Route path="admin/ia-medicos" element={<G perm="gamificacao.ver"><AdminIAMedicos /></G>} />
               <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
               <Route path="admin/financeiro/saques-medicos" element={<G perm="financeiro.saques.ver"><AdminSaquesMedicos /></G>} />
               <Route path="admin/financeiro/reembolsos" element={<G perm="financeiro.ver"><AdminReembolsoConfig /></G>} />
