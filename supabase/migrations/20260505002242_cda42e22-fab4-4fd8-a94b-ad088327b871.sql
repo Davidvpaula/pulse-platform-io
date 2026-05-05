@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET value = '"mock"' WHERE key = 'pagamentos_provider';
