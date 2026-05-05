@@ -18,10 +18,9 @@ import {
   listConsultasDoMedico, formatDataBR, formatHora, toStatusBadge,
   updateConsultaStatus, type ConsultaDetalhada,
 } from "@/lib/clinico";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
 
 type Filtro = "todas" | "hoje" | "futuras" | "passadas" | "canceladas";
