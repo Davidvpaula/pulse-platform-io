@@ -165,24 +165,19 @@ type RenderItem = {
 };
 
 function SidebarBody({
-  profileKey, flow, onNavigate, switchProfile, showDemoSwitcher,
+  profileKey, flow, onNavigate, switchProfile,
 }: {
   profileKey: ProfileKey;
   flow: FlowContext;
   onNavigate: () => void;
   switchProfile: (k: ProfileKey) => void;
-  showDemoSwitcher: boolean;
 }) {
   const profile = profiles[profileKey];
   const { pathname } = useLocation();
-  const { session } = useSession();
-  const isDev = import.meta.env.DEV;
-  const isDemoMode = isDev && !session;
 
   // Coleta todas as permission keys que ESTE menu pode precisar.
   const keysNeeded = useMemo(() => {
     if (profileKey === "colaborador" || profileKey === "secretaria") return collectMenuKeys(colaboradorMenu);
-    // Demais perfis: chaves declaradas em requiresCapability nos itens fixos.
     const set = new Set<string>();
     for (const item of profile.nav) {
       if (item.requiresCapability) set.add(item.requiresCapability);
@@ -193,15 +188,13 @@ function SidebarBody({
     return [...set];
   }, [profileKey, profile.nav]);
 
-  const { loading, has } = usePermissionsBatch(isDemoMode ? [] : keysNeeded);
+  const { loading, has } = usePermissionsBatch(keysNeeded);
 
-  // Em modo demo, libera tudo (sem ida ao banco).
-  const allow = (key?: string) => !key || isDemoMode || has(key);
+  const allow = (key?: string) => !key || has(key);
 
-  // Validação dev: avisa sobre keys ausentes em permissions_catalog.
   useEffect(() => {
-    if (!isDemoMode) void validateMenuKeys();
-  }, [isDemoMode]);
+    void validateMenuKeys();
+  }, []);
 
   // Monta a lista visível conforme o perfil.
   const visibleNav: RenderItem[] = useMemo(() => {
