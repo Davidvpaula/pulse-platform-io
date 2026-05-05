@@ -101,7 +101,7 @@ function emptyPlano(): Plano {
     destacado: false,
     ordem_exibicao: 0,
     cta_texto: "Quero esse plano",
-    valor_por_vida_centavos: null,
+    valor_por_vida_centavos: 0,
     coparticipacao_pct: null,
     sla_prioridade: "padrao",
     especialidades_liberadas: [],
