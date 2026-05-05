@@ -102,7 +102,7 @@ export default function SecretariaAgendamentos() {
         description="Lista cronológica de todas as consultas — busca, filtros e ações operacionais."
         actions={
           <Button asChild className="bg-gradient-primary hover:opacity-90">
-            <Link to="/app/secretaria/agenda">
+            <Link to="/app/colaborador/agenda">
               <CalendarIcon className="mr-2 h-4 w-4" /> Ver no calendário
             </Link>
           </Button>
@@ -171,7 +171,7 @@ export default function SecretariaAgendamentos() {
             <AlertCircle className="h-8 w-8 opacity-40" />
             <p className="text-sm">Nenhum agendamento encontrado.</p>
             <Button variant="link" size="sm" asChild>
-              <Link to="/app/secretaria/agenda">Abrir calendário</Link>
+              <Link to="/app/colaborador/agenda">Abrir calendário</Link>
             </Button>
           </div>
         ) : (
