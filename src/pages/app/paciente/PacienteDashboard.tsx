@@ -13,7 +13,7 @@ import AvaliacaoPendenteBanner from "@/components/paciente/AvaliacaoPendenteBann
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { useSession } from "@/lib/session";
-import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
+import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge, listRetornosDisponiveis, type RetornoComContexto } from "@/lib/clinico";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
