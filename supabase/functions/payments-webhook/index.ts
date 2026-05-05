@@ -105,6 +105,91 @@ Deno.serve(async (req) => {
         const sessionId: string = session?.id;
         const paymentIntentId: string | null = session?.payment_intent ?? null;
         const paymentStatus: string = session?.payment_status ?? "";
+        const metadata = session?.metadata ?? {};
+
+        // ── Fluxo plano personalizado ──
+        if (metadata.flow === "plano_personalizado" && paymentStatus === "paid") {
+          try {
+            const userId = metadata.user_id;
+            const pacienteId = metadata.paciente_id;
+            const planoIds: string[] = JSON.parse(metadata.plano_ids || "[]");
+            const descontoPct = Number(metadata.desconto_pct || 0);
+            const valorFinalCentavos = Number(metadata.valor_final_centavos || 0);
+            const nomePlano = metadata.nome_plano || "Plano personalizado";
+            const medicoPks: string[] = JSON.parse(metadata.medico_pks || "[]");
+
+            // Verificar se plano já foi criado (idempotência)
+            const { data: existente } = await admin
+              .from("planos")
+              .select("id")
+              .eq("created_by", userId)
+              .eq("nivel", "paciente_custom")
+              .in("status", ["ativo", "rascunho"])
+              .limit(1);
+
+            if (existente && existente.length > 0) {
+              console.log("[payments-webhook] plano já existe para user", userId);
+              break;
+            }
+
+            // Cria plano paciente_custom
+            const { data: plano, error: pe } = await admin
+              .from("planos")
+              .insert({
+                nome: nomePlano,
+                nivel: "paciente_custom",
+                status: "ativo",
+                valor_mensal_centavos: valorFinalCentavos,
+                created_by: userId,
+                categoria: "personalizado",
+                publico: "paciente",
+                modelo_cobranca: "mensal",
+                desconto_geral_pct: descontoPct,
+              } as any)
+              .select("id")
+              .single();
+
+            if (pe || !plano) {
+              console.error("[payments-webhook] erro criando plano:", pe);
+              break;
+            }
+
+            // Vincular médicos
+            if (medicoPks.length > 0) {
+              const rows = medicoPks.map((mid: string) => ({
+                plano_id: plano.id,
+                medico_id: mid,
+              }));
+              await admin.from("plano_medicos").insert(rows);
+            }
+
+            // Cria assinatura
+            const hoje = new Date().toISOString().slice(0, 10);
+            const proximaCobranca = new Date();
+            proximaCobranca.setMonth(proximaCobranca.getMonth() + 1);
+
+            await admin.from("assinaturas").insert({
+              plano_id: plano.id,
+              paciente_id: pacienteId,
+              status: "ativa",
+              ciclo: "mensal",
+              valor_cobrado_centavos: valorFinalCentavos,
+              forma_pagamento: "stripe",
+              data_inicio: hoje,
+              proxima_cobranca: proximaCobranca.toISOString().slice(0, 10),
+              created_by: userId,
+              origem_receita: "plano_paciente_custom",
+              stripe_subscription_id: session?.subscription ?? null,
+            } as any);
+
+            console.log("[payments-webhook] plano personalizado criado:", plano.id);
+          } catch (planErr) {
+            console.error("[payments-webhook] erro no fluxo plano:", planErr);
+          }
+          break;
+        }
+
+        // ── Fluxo consulta (existente) ──
         if (sessionId && paymentStatus === "paid") {
           const { error } = await admin.rpc("processar_pagamento_confirmado", {
             _provider_session_id: sessionId,
@@ -131,7 +216,6 @@ Deno.serve(async (req) => {
               .maybeSingle();
 
             if (pag && !pag.consulta_id) {
-              // Sem consulta_id = fluxo unificado → criar consulta via RPC
               const { data: rpcRes, error: rpcErr } = await admin.rpc(
                 "criar_consulta_pos_pagamento",
                 { _pagamento_id: pag.id },
@@ -144,8 +228,6 @@ Deno.serve(async (req) => {
               }
             }
 
-            // Dispara e-mail de confirmação (best effort)
-            // Re-fetch para pegar consulta_id atualizado
             const { data: pagAtual } = await admin
               .from("pagamentos")
               .select("consulta_id")
