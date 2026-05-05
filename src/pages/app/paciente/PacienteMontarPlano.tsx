@@ -88,11 +88,10 @@ export default function PacienteMontarPlano() {
         .order("qtd_medicos_min");
 
       const { data: existentes } = await supabase
-        .from("planos")
+        .from("assinaturas")
         .select("id")
-        .eq("created_by", uid)
-        .eq("nivel", "paciente_custom" as any)
-        .in("status", ["ativo", "rascunho"])
+        .eq("paciente_id", uid)
+        .in("status", ["ativa", "pendente"] as any[])
         .limit(1);
 
       setJaTemPlanoAtivo((existentes?.length ?? 0) > 0);
