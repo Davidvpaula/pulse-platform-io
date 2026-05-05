@@ -32,7 +32,7 @@ export default function TermosPendentesBanner() {
       ? "medico" as const
       : profileKey === "empresa"
         ? "empresa" as const
-        : undefined;
+        : null; // admin/colaborador → sem termos pendentes
 
   const check = useCallback(async () => {
     if (!session) return;
