@@ -411,6 +411,53 @@ export default function AgendamentoConfirmar() {
             <Textarea id="motivo" {...form.register("motivo")} placeholder="Conte resumidamente o que motiva a consulta. O médico verá antes do atendimento." rows={3} maxLength={500} />
           </div>
 
+          {/* Termos de aceite */}
+          {(termoConsulta || termoPrivacidade) && (
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" /> Termos obrigatórios
+              </p>
+              {termoConsulta && (
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="aceite-consulta"
+                    checked={aceitouConsulta}
+                    onCheckedChange={(v) => setAceitouConsulta(!!v)}
+                  />
+                  <label htmlFor="aceite-consulta" className="text-xs leading-relaxed cursor-pointer select-none">
+                    Li e concordo com os{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline hover:text-primary/80"
+                      onClick={() => setPreviewTermo(termoConsulta)}
+                    >
+                      Termos de compra de consulta
+                    </button>
+                  </label>
+                </div>
+              )}
+              {termoPrivacidade && (
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="aceite-privacidade"
+                    checked={aceitouPrivacidade}
+                    onCheckedChange={(v) => setAceitouPrivacidade(!!v)}
+                  />
+                  <label htmlFor="aceite-privacidade" className="text-xs leading-relaxed cursor-pointer select-none">
+                    Li e concordo com a{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline hover:text-primary/80"
+                      onClick={() => setPreviewTermo(termoPrivacidade)}
+                    >
+                      Política de Privacidade
+                    </button>
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/5 p-3 text-xs text-muted-foreground">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-info" />
             <span>
@@ -423,7 +470,7 @@ export default function AgendamentoConfirmar() {
             <Button type="button" variant="ghost" asChild>
               <Link to={backUrl}><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Link>
             </Button>
-            <Button type="submit" disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+            <Button type="submit" disabled={submitting || termsBlocked} className="bg-gradient-primary hover:opacity-90">
               {submitting ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reservando…</>
               ) : (
