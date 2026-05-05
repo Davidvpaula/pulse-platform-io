@@ -299,10 +299,8 @@ export default function SecretariaDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-1 justify-end">
-                <Button size="icon" variant="ghost" title="WhatsApp" asChild>
-                  <a href={whatsappUrl(`Olá ${f.paciente_nome}, sobre a consulta`)} target="_blank" rel="noreferrer">
-                    <MessageCircle className="h-3.5 w-3.5 text-success" />
-                  </a>
+                <Button size="icon" variant="ghost" title="Abrir conversa" onClick={() => navigate("/app/comunicacao/inbox")}>
+                    <MessageCircle className="h-3.5 w-3.5 text-primary" />
                 </Button>
                 <Button size="icon" variant="ghost" title="Confirmar" onClick={() => toast.success("Consulta confirmada (em breve: ação real)")}>
                   <CheckCircle2 className="h-3.5 w-3.5 text-success" />
