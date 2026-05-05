@@ -7,7 +7,7 @@ import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDi
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
-import { whatsappUrl } from "@/components/FloatingWhatsApp";
+// whatsappUrl removido — botões redirecionam ao Inbox interno
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
