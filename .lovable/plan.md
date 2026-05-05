@@ -1,62 +1,32 @@
+
 ## Problema
 
-O trigger `fn_consulta_status_guard` no banco bloqueia `agendada → em_andamento`. As transições válidas são:
+O retorno gratuito foi criado com sucesso no banco (status `disponivel`), mas não aparece para o paciente porque a query PostgREST falha com erro:
 
-- `agendada → confirmada`
-- `confirmada → em_andamento`
-- `em_andamento → concluida`
+```
+Could not find a relationship between 'retornos_gratuitos' and 'medico_id' in the schema cache
+```
 
-Os 3 arquivos tentam pular direto para `em_andamento`, causando o erro.
+A tabela `retornos_gratuitos` não possui **foreign keys** definidas para `medico_id`, `especialidade_id`, `paciente_id`, etc. Sem FK, o PostgREST não consegue fazer o JOIN implícito que o código usa (`medicos:medico_id ( nome )`), e a função `listRetornosDisponiveis` retorna array vazio silenciosamente.
 
----
+## Plano
 
-## 1. Corrigir botão Iniciar (3 arquivos)
+### 1. Migration: adicionar foreign keys na tabela `retornos_gratuitos`
 
-### `MedicoDashboard.tsx` (função `iniciarConsulta`, ~linha 226)
-- Se `c.status === "em_andamento"`: apenas abrir sala, retornar
-- Se `c.status === "agendada"`: update para `confirmada` primeiro, depois update para `em_andamento`
-- Se `c.status === "confirmada"`: update direto para `em_andamento`
-- Qualquer outro status: toast de erro, bloquear
+```sql
+ALTER TABLE retornos_gratuitos
+  ADD CONSTRAINT fk_retornos_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id),
+  ADD CONSTRAINT fk_retornos_medico FOREIGN KEY (medico_id) REFERENCES medicos(id),
+  ADD CONSTRAINT fk_retornos_especialidade FOREIGN KEY (especialidade_id) REFERENCES especialidades(id),
+  ADD CONSTRAINT fk_retornos_consulta_origem FOREIGN KEY (consulta_origem_id) REFERENCES consultas(id),
+  ADD CONSTRAINT fk_retornos_consulta_uso FOREIGN KEY (consulta_uso_id) REFERENCES consultas(id);
+```
 
-### `MedicoAgenda.tsx` (função `iniciarConsulta`, ~linha 119)
-- Mesma lógica: se agendada, confirmar primeiro; se confirmada, iniciar direto; se outro status, bloquear
+### 2. Adicionar banner de retorno gratuito no Dashboard do paciente
 
-### `MedicoConsultas.tsx` (função `iniciar`, ~linha 97)
-- Mesma lógica: se agendada, confirmar primeiro; se confirmada, iniciar direto
-- Já tem tratamento para `em_andamento` (só abre sala)
+Atualmente os vouchers só aparecem na página "Agendamentos". Vou adicionar um card/banner destacado no `PacienteDashboard.tsx` para que o paciente veja imediatamente ao entrar no app, com botão levando para a página de agendamentos ou abrindo o dialog de agendamento do retorno.
 
----
+### Resultado esperado
 
-## 2. Reorganizar UX de MedicoConsultas
-
-### Consultas agrupadas por status
-Na listagem, agrupar visualmente as consultas do dia em seções:
-- **Em andamento** (destaque, topo)
-- **Aguardando / Confirmadas** (prontas para iniciar)
-- **Concluídas** (colapsável ou ao final)
-
-### Botões condicionais
-- "Iniciar" / "Entrar na sala": só quando `agendada` ou `confirmada` e horário próximo (30min)
-- "Finalizar": só quando `em_andamento`
-- "Continuar": quando `em_andamento` e tem link de sala
-
-### Header
-- Adicionar badge "Fila de atendimento" no título para deixar claro o papel operacional
-
----
-
-## 3. Link Agenda → Consultas
-
-### `MedicoAgenda.tsx`
-- Adicionar botão "Ver fila de atendimento" no header, linkando para `/app/medico/consultas`
-- Manter Agenda focada em planejamento/calendário
-
----
-
-## Arquivos alterados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/app/medico/MedicoDashboard.tsx` | Fix iniciarConsulta com 2-step transition |
-| `src/pages/app/medico/MedicoAgenda.tsx` | Fix iniciarConsulta + link para Consultas |
-| `src/pages/app/medico/MedicoConsultas.tsx` | Fix iniciar + agrupamento por status + UX |
+- Vouchers aparecem na lista de agendamentos (corrigido pela FK)
+- Vouchers também aparecem em destaque no Dashboard do paciente

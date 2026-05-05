@@ -5652,7 +5652,50 @@ export type Database = {
           updated_at?: string
           valido_ate?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_retornos_consulta_origem"
+            columns: ["consulta_origem_id"]
+            isOneToOne: true
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_uso"
+            columns: ["consulta_uso_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_especialidade"
+            columns: ["especialidade_id"]
+            isOneToOne: false
+            referencedRelation: "especialidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_paciente"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saque_medico_itens: {
         Row: {
