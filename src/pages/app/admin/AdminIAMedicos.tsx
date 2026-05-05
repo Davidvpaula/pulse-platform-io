@@ -206,6 +206,15 @@ export default function AdminIAMedicos() {
         description="Auditoria operacional, compliance, antifraude e recomendações estratégicas por IA."
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                await recalcularRankingTodos();
+                toast.success("Ranking recalculado!");
+                await carregar();
+              } catch { toast.error("Erro ao recalcular ranking"); }
+            }}>
+              <RefreshCw className="mr-1.5 h-4 w-4" /> Recalcular Ranking
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDetectarAnomalias}>
               <Shield className="mr-1.5 h-4 w-4" /> Detectar Anomalias
             </Button>
