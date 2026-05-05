@@ -256,7 +256,7 @@ function SidebarBody({
         <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
       </div>
 
-      <AccordionNav visibleNav={visibleNav} loading={loading} isDemoMode={isDemoMode} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
+      <AccordionNav visibleNav={visibleNav} loading={loading} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
 
       <div className="border-t border-sidebar-border p-3">
         <div className="rounded-lg bg-gradient-primary p-3 text-primary-foreground">
