@@ -255,8 +255,44 @@ Deno.serve(async (req) => {
         }
         break;
       }
+      // ── Subscription lifecycle events ──
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data?.object;
+        const userId = sub?.metadata?.userId;
+        if (!userId) { console.warn("[payments-webhook] subscription sem userId"); break; }
+        const item = sub?.items?.data?.[0];
+        const priceId = item?.price?.metadata?.lovable_external_id || item?.price?.id;
+        const productId = item?.price?.product;
+        const periodStart = item?.current_period_start ?? sub?.current_period_start;
+        const periodEnd = item?.current_period_end ?? sub?.current_period_end;
+
+        await admin.from("subscriptions").upsert({
+          user_id: userId,
+          stripe_subscription_id: sub.id,
+          stripe_customer_id: sub.customer,
+          product_id: productId || "",
+          price_id: priceId || "",
+          status: sub.status,
+          current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
+          current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+          cancel_at_period_end: sub.cancel_at_period_end || false,
+          environment: env,
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: "stripe_subscription_id" });
+        console.log("[payments-webhook] subscription upserted:", sub.id, sub.status);
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = event.data?.object;
+        await admin.from("subscriptions").update({
+          status: "canceled",
+          updated_at: new Date().toISOString(),
+        } as any).eq("stripe_subscription_id", sub.id).eq("environment", env);
+        console.log("[payments-webhook] subscription canceled:", sub.id);
+        break;
+      }
       default:
-        // Outros eventos ignorados
         break;
     }
   } catch (e: any) {
