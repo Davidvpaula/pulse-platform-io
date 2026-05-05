@@ -357,15 +357,16 @@ export default function AdminSaquesMedicos() {
                 <Select value={config.frequencia} onValueChange={v => setConfig({ ...config, frequencia: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="semanal">Semanal</SelectItem>
-                    <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                    <SelectItem value="mensal">Mensal</SelectItem>
+                     <SelectItem value="diaria">Diária</SelectItem>
+                     <SelectItem value="semanal">Semanal</SelectItem>
+                     <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                     <SelectItem value="mensal">Mensal</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Dias de fechamento (separados por vírgula)</Label>
-                <Input value={config.dias_fechamento.join(", ")}
+                <Input value={Array.isArray(config.dias_fechamento) ? config.dias_fechamento.join(", ") : String(config.dias_fechamento)}
                   onChange={e => setConfig({ ...config, dias_fechamento: e.target.value.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n)) })} />
               </div>
               <div>
