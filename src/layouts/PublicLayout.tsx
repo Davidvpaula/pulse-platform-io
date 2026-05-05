@@ -44,7 +44,7 @@ export default function PublicLayout() {
             ))}
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
-            <Button asChild variant="ghost"><Link to="/login">Entrar</Link></Button>
+            <Button asChild variant="ghost"><Link to="/auth">Entrar</Link></Button>
             <Button asChild className="bg-gradient-primary hover:opacity-90">
               <Link to="/agendar">Agendar consulta</Link>
             </Button>
@@ -63,7 +63,7 @@ export default function PublicLayout() {
                 </Link>
               ))}
               <div className="mt-2 flex gap-2">
-                <Button asChild variant="outline" className="flex-1"><Link to="/login">Entrar</Link></Button>
+                <Button asChild variant="outline" className="flex-1"><Link to="/auth">Entrar</Link></Button>
                 <Button asChild className="flex-1 bg-gradient-primary"><Link to="/agendar">Agendar</Link></Button>
               </div>
             </nav>
@@ -100,7 +100,7 @@ export default function PublicLayout() {
           <div>
             <h4 className="font-display text-sm font-semibold">Acesso</h4>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/login" className="hover:text-foreground">Entrar</Link></li>
+              <li><Link to="/auth" className="hover:text-foreground">Entrar</Link></li>
               <li><Link to="/agendar" className="hover:text-foreground">Agendar consulta</Link></li>
             </ul>
           </div>
