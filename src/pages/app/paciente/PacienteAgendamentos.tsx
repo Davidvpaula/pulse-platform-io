@@ -111,8 +111,6 @@ export default function PacienteAgendamentos() {
     void carregar();
   };
 
-  // Modo demo (sem sessão): mostra mock para preservar UX da landing
-  const demoMode = !session;
 
   return (
     <div className="space-y-6">
