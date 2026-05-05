@@ -64,9 +64,15 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     user: { name: "Dr. Rafael Lasmar", role: "Médico", avatarInitials: "RL" },
     nav: [
       { label: "Dashboard", to: "/app/medico/dashboard", icon: LayoutDashboard },
-      { label: "Agenda", to: "/app/medico/agenda", icon: Calendar },
+      {
+        label: "Consultas",
+        icon: Video,
+        children: [
+          { label: "Fila de atendimento", to: "/app/medico/consultas" },
+          { label: "Agenda", to: "/app/medico/agenda" },
+        ],
+      },
       { label: "Meus horários", to: "/app/medico/horarios", icon: Clock },
-      { label: "Consultas", to: "/app/medico/consultas", icon: Video },
       { label: "Serviços da plataforma", to: "/app/medico/servicos", icon: Stethoscope },
       { label: "Pacientes", to: "/app/medico/pacientes", icon: Users },
       { label: "Documentos", to: "/app/medico/documentos", icon: FileText },
