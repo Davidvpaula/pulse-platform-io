@@ -173,6 +173,7 @@ export default function AdminIAMedicos() {
   const medicoMap = Object.fromEntries(medicos.map(m => [m.id, m.nome]));
   const opMap = Object.fromEntries(scoresOp.map(s => [s.medico_id, s]));
   const compMap = Object.fromEntries(scoresComp.map(s => [s.medico_id, s]));
+  const rankMap = Object.fromEntries(rankings.map(r => [r.medico_id, r]));
 
   const alertasAtivos = alertas.filter(a => a.status === "novo" || a.status === "em_acompanhamento").length;
   const alertasCriticos = alertas.filter(a => a.severidade === "critico" && a.status !== "resolvido").length;
