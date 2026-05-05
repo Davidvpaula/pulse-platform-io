@@ -152,17 +152,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/medico/configuracoes":   [medico(), { label: "Configurações" }],
   "/app/medico/perfil":          [medico(), { label: "Perfil" }],
 
-  // ── Secretaria ──
-  "/app/secretaria/dashboard":     [{ label: "Secretaria" }, { label: "Dashboard" }],
-  "/app/secretaria/pacientes":     [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Pacientes" }],
-  "/app/secretaria/agenda":        [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Agenda" }],
-  "/app/secretaria/agendamentos":  [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Agendamentos" }],
-  "/app/secretaria/financeiro":    [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Financeiro" }],
-  "/app/secretaria/cupons":        [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Cupons" }],
-  "/app/secretaria/cupons/log":    [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Cupons", to: "/app/secretaria/cupons" }, { label: "Log de uso" }],
-  "/app/secretaria/comunicacao-interna": [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Comunicação" }, { label: "Equipe (interna)" }],
-  "/app/secretaria/equipe":        [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Supervisão" }, { label: "Visão da equipe" }],
-  "/app/secretaria/relatorios":    [{ label: "Secretaria", to: "/app/secretaria/dashboard" }, { label: "Supervisão" }, { label: "Relatórios operacionais" }],
+  // ── Secretaria (legado — rotas redirecionam para colaborador) ──
 
   // ── Colaborador ──
   "/app/colaborador/dashboard":     [{ label: "Colaborador" }, { label: "Dashboard" }],
