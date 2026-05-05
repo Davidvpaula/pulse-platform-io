@@ -17,6 +17,8 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { brl, formatDataBR } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +63,9 @@ export default function PacientePlano() {
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [acaoPendente, setAcaoPendente] = useState<any>(null);
   const [processando, setProcessando] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [motivoCancelamento, setMotivoCancelamento] = useState("");
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -393,36 +398,102 @@ export default function PacientePlano() {
         />
       )}
 
-      {/* Cancelamento */}
-      {status !== "cancelada" && (
-        <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-              <div className="text-sm">
-                <p className="font-medium">Cancelar meu plano</p>
-                <p className="text-muted-foreground">
-                  A solicitação será analisada. Você manterá a cobertura até a próxima data de vencimento.
-                </p>
-              </div>
+      {/* Cancelamento — sempre visível */}
+      <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div className="text-sm">
+              <p className="font-medium">Cancelar meu plano</p>
+              <p className="text-muted-foreground">
+                {status === "cancelada"
+                  ? "Este plano já foi cancelado."
+                  : "A solicitação será analisada. Você manterá a cobertura até a próxima data de vencimento."}
+              </p>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                    disabled
-                  >
-                    Solicitar cancelamento
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Em breve — cancelamento online</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-        </section>
-      )}
+          <Button
+            variant="outline"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => setShowCancelDialog(true)}
+            disabled={status === "cancelada"}
+          >
+            {status === "cancelada" ? "Já cancelado" : "Solicitar cancelamento"}
+          </Button>
+        </div>
+      </section>
+
+      {/* Dialog de cancelamento */}
+      <Dialog open={showCancelDialog} onOpenChange={(v) => { if (!cancelando) setShowCancelDialog(v); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" /> Cancelar meu plano
+            </DialogTitle>
+            <DialogDescription>
+              Ao cancelar, você manterá acesso até o fim do ciclo atual.
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label htmlFor="motivo-cancelamento">Motivo do cancelamento *</Label>
+            <Textarea
+              id="motivo-cancelamento"
+              placeholder="Conte-nos o motivo do cancelamento..."
+              value={motivoCancelamento}
+              onChange={(e) => setMotivoCancelamento(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)} disabled={cancelando}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!motivoCancelamento.trim() || cancelando}
+              onClick={async () => {
+                setCancelando(true);
+                try {
+                  // Update assinatura status
+                  const { error: ae } = await supabase
+                    .from("assinaturas")
+                    .update({
+                      status: "cancelada" as any,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", assinatura.id);
+                  if (ae) throw ae;
+
+                  // Update plano status to encerramento_pendente
+                  const { error: pe } = await supabase
+                    .from("planos")
+                    .update({
+                      status: "encerramento_pendente" as any,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", plano.id);
+                  if (pe) console.warn("Erro ao atualizar plano:", pe);
+
+                  toast.success("Cancelamento solicitado com sucesso", {
+                    description: "Você manterá acesso até o fim do ciclo atual.",
+                  });
+                  setShowCancelDialog(false);
+                  setMotivoCancelamento("");
+                  loadData();
+                } catch (err: any) {
+                  toast.error(err.message ?? "Erro ao cancelar plano");
+                } finally {
+                  setCancelando(false);
+                }
+              }}
+            >
+              {cancelando ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação */}
       <ConfirmacaoDialog
@@ -433,7 +504,6 @@ export default function PacientePlano() {
         onConfirmar={async () => {
           if (!acaoPendente) return;
           setProcessando(true);
-          // 🔌 Integração futura: edge function de upgrade/downgrade
           toast.info("Em breve — troca de plano online", {
             description: "Esta funcionalidade será ativada com a integração de pagamentos.",
           });

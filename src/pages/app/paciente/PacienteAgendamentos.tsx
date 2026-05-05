@@ -28,6 +28,7 @@ import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
 import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
+import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
@@ -162,6 +163,9 @@ export default function PacienteAgendamentos() {
           </ul>
         </div>
       )}
+
+      {/* Profissionais do plano */}
+      {session && <MeusProfissionaisPlano userId={session.user.id} />}
 
       {/* Filtros */}
       <div className="card-elevated flex flex-wrap items-center gap-3 p-4">
