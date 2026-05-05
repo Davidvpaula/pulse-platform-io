@@ -93,8 +93,7 @@ export default function PacienteAgendamentos() {
     );
   }, [rows, filtro, busca]);
 
-  const cancelar = async (id: string) => {
-    if (!confirm("Cancelar esta consulta? Essa ação não pode ser desfeita.")) return;
+  const confirmarCancelamento = async (id: string) => {
     setCancelando(id);
     const result = await updateConsultaStatus(id, "cancelada");
     setCancelando(null);
@@ -105,7 +104,7 @@ export default function PacienteAgendamentos() {
       toast.error(msg);
       return;
     }
-    // Audit log
+    setCancelarConsulta(null);
     supabase.functions.invoke("audit-log", {
       body: { action: "consulta.cancelada", entity_type: "consulta", entity_id: id },
     }).catch(() => {});
