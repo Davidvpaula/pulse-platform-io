@@ -89,7 +89,7 @@ export default function PlanoPersonalizadoTab({ assinaturas, beneficiosMap, paci
         nome: med.nome,
         foto: med.foto_url,
         especialidade: med.especialidade,
-        slug: med.slug,
+        slug: null,
         creditosTotal: ben?.quantidade ?? 0,
         creditosUsados: usageMap.get(med.id) ?? 0,
         ilimitado: ben?.ilimitado ?? false,
