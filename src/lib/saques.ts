@@ -38,9 +38,16 @@ export async function getSaqueConfig(): Promise<SaqueConfig> {
   const map: Record<string, any> = {};
   (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
 
+  const rawDias = map["financeiro.saque.dias_fechamento"] ?? DEFAULTS.dias_fechamento;
+  const dias_fechamento = Array.isArray(rawDias)
+    ? rawDias
+    : typeof rawDias === "string"
+      ? JSON.parse(rawDias)
+      : DEFAULTS.dias_fechamento;
+
   return {
     frequencia: map["financeiro.saque.frequencia"] ?? DEFAULTS.frequencia,
-    dias_fechamento: map["financeiro.saque.dias_fechamento"] ?? DEFAULTS.dias_fechamento,
+    dias_fechamento,
     prazo_liberacao_dias: map["financeiro.saque.prazo_liberacao_dias"] ?? DEFAULTS.prazo_liberacao_dias,
     valor_minimo_centavos: map["financeiro.saque.valor_minimo_centavos"] ?? DEFAULTS.valor_minimo_centavos,
     exigir_nfe: map["financeiro.saque.exigir_nfe"] ?? DEFAULTS.exigir_nfe,
