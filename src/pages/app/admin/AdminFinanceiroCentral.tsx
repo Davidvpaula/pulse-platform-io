@@ -191,6 +191,21 @@ export default function AdminFinanceiroCentral() {
       setReembolsoModal(null); carregar();
     } catch (e: any) { toast.error(e.message); }
   }
+  async function toggleReembolsoAudit(id: string) {
+    if (expandedReembolso === id) { setExpandedReembolso(null); return; }
+    setExpandedReembolso(id);
+    setAuditLoading(true);
+    try {
+      const { data } = await supabase
+        .from("financeiro_auditoria")
+        .select("*, actor:profiles!actor_id(nome)")
+        .eq("entidade", "reembolso")
+        .eq("entidade_id", id)
+        .order("created_at", { ascending: true });
+      setReembolsoAudit(data || []);
+    } catch { setReembolsoAudit([]); }
+    setAuditLoading(false);
+  }
   async function marcarPagoRepasse(id: string) {
     try { await supabase.rpc("financeiro_repasse_marcar_pago" as any, { _fechamento_id: id }); toast.success("Repasse pago"); carregar(); }
     catch (e: any) { toast.error(e.message); }
