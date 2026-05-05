@@ -339,6 +339,14 @@ export default function PacienteAgendamentos() {
           onAvaliado={() => { setAvaliarConsulta(null); void carregar(); }}
         />
       )}
+
+      <CancelarConsultaDialog
+        consulta={cancelarConsulta}
+        open={!!cancelarConsulta}
+        onOpenChange={(v) => { if (!v) setCancelarConsulta(null); }}
+        onConfirmar={confirmarCancelamento}
+        confirmando={cancelando === cancelarConsulta?.id}
+      />
     </div>
   );
 }
