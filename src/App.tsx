@@ -205,6 +205,7 @@ const App = () => (
               <Route path="paciente/documentos" element={<PacienteDocumentos />} />
               <Route path="paciente/plano" element={<PacientePlano />} />
               <Route path="paciente/montar-plano" element={<PacienteMontarPlano />} />
+              <Route path="paciente/plano-checkout-retorno" element={<PlanoCheckoutRetorno />} />
               <Route path="paciente/financeiro" element={<PacienteFinanceiro />} />
               <Route path="paciente/perfil" element={<PacientePerfilPage />} />
               <Route path="paciente/mensagens" element={<PacienteMensagens />} />
