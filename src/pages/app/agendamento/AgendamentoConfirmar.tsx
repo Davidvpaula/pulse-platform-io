@@ -303,7 +303,14 @@ export default function AgendamentoConfirmar() {
       toast.success("Horário reservado por 15 minutos. Conclua o pagamento.");
       abrirCheckout(checkoutSession, navigate);
     } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível concluir o agendamento.");
+      const msg = e?.message ?? "";
+      const isSlotTaken = msg.includes("não está mais disponível") || msg.includes("indisponível");
+      if (isSlotTaken) {
+        toast.error("Esse horário acabou de ser reservado por outro paciente. Por favor, escolha outro horário disponível.", { duration: 6000 });
+        setTimeout(() => navigate(backUrl), 2500);
+      } else {
+        toast.error(msg || "Não foi possível concluir o agendamento.");
+      }
     } finally {
       setSubmitting(false);
     }
