@@ -211,7 +211,7 @@ export default function MedicoPacientes() {
                           size="sm"
                           variant="ghost"
                           title="Abrir conversa"
-                          onClick={() => navigate(`/app/medico/mensagens`)}
+                          onClick={() => navigate(`/app/comunicacao/inbox`)}
                         >
                           <MessageCircle className="h-4 w-4" />
                         </Button>

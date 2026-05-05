@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { usePermission } from "@/lib/permissions/usePermission";
@@ -17,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Send, Search, Bot, Sparkles, UserCheck, Phone, FileText,
   CreditCard, Calendar, ArrowRightLeft, Pause, X, AlertCircle,
-  FileEdit, Shield, Clock, Stethoscope, Headphones, Loader2,
+  FileEdit, Shield, Clock, Stethoscope, Headphones, Loader2, Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,13 @@ type Msg = {
 
 type Template = { id: string; name: string; content: string; category: string };
 
+type ConsultaJanela = {
+  id: string;
+  inicio: string;
+  status: string;
+  medico_id: string;
+};
+
 const STATUS_LABEL: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   aberta: { label: "Aberta", icon: <Headphones className="h-3 w-3" />, color: "bg-blue-500/10 text-blue-600 border-blue-500/30" },
   em_atendimento: { label: "Em atendimento", icon: <UserCheck className="h-3 w-3" />, color: "bg-green-500/10 text-green-600 border-green-500/30" },
@@ -93,8 +101,24 @@ async function registrarAuditoria(
   });
 }
 
+/* ─── Helpers de janela temporal para médico ─── */
+function isConvDentroJanela(
+  consulta: ConsultaJanela | undefined,
+  janelaPosDias: number,
+): boolean {
+  if (!consulta) return false;
+  const now = Date.now();
+  const inicio = new Date(consulta.inicio).getTime();
+  const preConsultaMs = 10 * 60 * 1000; // 10 minutos antes
+  const posConsultaMs = janelaPosDias * 24 * 60 * 60 * 1000;
+  return now >= inicio - preConsultaMs && now <= inicio + posConsultaMs;
+}
+
 export default function ComunicacaoInbox() {
   const { user } = useSession();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const convParam = searchParams.get("conv");
   const { loading: permLoading, allowed: perms } = usePermission(INBOX_PERMISSIONS);
   const [convs, setConvs] = useState<Conv[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -121,16 +145,102 @@ export default function ComunicacaoInbox() {
   const [acessoMedicoId, setAcessoMedicoId] = useState("");
   const [acessoLoading, setAcessoLoading] = useState(false);
 
+  /* ─── MODO MÉDICO ─── */
+  const [isMedico, setIsMedico] = useState(false);
+  const [medicoCheckDone, setMedicoCheckDone] = useState(false);
+  const [medicoUserId, setMedicoUserId] = useState<string | null>(null);
+  const [consultasMap, setConsultasMap] = useState<Record<string, ConsultaJanela>>({});
+  const [janelaConfig, setJanelaConfig] = useState({
+    janela_pos_consulta_dias: 7,
+    medico_iniciar_pos_consulta: true,
+  });
+
+  // Detect if the current user is a médico
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("medicos")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setIsMedico(true);
+        setMedicoUserId(data.id);
+      }
+      setMedicoCheckDone(true);
+    })();
+  }, [user]);
+
+  // Load inbox config for médico window
+  useEffect(() => {
+    if (!isMedico) return;
+    supabase
+      .from("app_settings")
+      .select("key, value")
+      .in("key", ["inbox.janela_pos_consulta_dias", "inbox.medico_iniciar_pos_consulta"])
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, any> = {};
+        data.forEach((r: any) => { map[r.key] = r.value; });
+        setJanelaConfig({
+          janela_pos_consulta_dias: Number(map["inbox.janela_pos_consulta_dias"] ?? 7),
+          medico_iniciar_pos_consulta:
+            map["inbox.medico_iniciar_pos_consulta"] === true ||
+            map["inbox.medico_iniciar_pos_consulta"] === "true",
+        });
+      });
+  }, [isMedico]);
+
+  // Load consultas vinculadas for temporal window (médico mode)
+  const loadConsultasMedico = useCallback(async (conversations: Conv[]) => {
+    if (!isMedico || !medicoUserId) return;
+    const consultaIds = conversations
+      .filter(c => c.consulta_id)
+      .map(c => c.consulta_id!);
+    if (consultaIds.length === 0) return;
+    const { data } = await supabase
+      .from("consultas")
+      .select("id, inicio, status, medico_id")
+      .in("id", consultaIds);
+    if (data) {
+      const m: Record<string, ConsultaJanela> = {};
+      (data as any[]).forEach(c => { m[c.id] = c; });
+      setConsultasMap(m);
+    }
+  }, [isMedico, medicoUserId]);
+
   const loadConvs = useCallback(async () => {
     setLoadingConvs(true);
-    const { data } = await supabase
+    let query = supabase
       .from("conversations")
       .select("*")
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
-    setConvs((data || []) as Conv[]);
+
+    // Médico: filter server-side by medico_id
+    if (isMedico && medicoUserId) {
+      query = query.eq("medico_id", medicoUserId);
+    }
+
+    const { data } = await query;
+    const conversations = (data || []) as Conv[];
+    setConvs(conversations);
     setLoadingConvs(false);
-  }, []);
+
+    // Load consultas for temporal window
+    if (isMedico) {
+      await loadConsultasMedico(conversations);
+    }
+
+    // Auto-select from query param
+    if (convParam && conversations.length > 0 && !activeId) {
+      const match = conversations.find(
+        c => c.id === convParam || c.consulta_id === convParam
+      );
+      if (match) setActiveId(match.id);
+    }
+  }, [isMedico, medicoUserId, loadConsultasMedico, convParam, activeId]);
 
   async function loadMsgs(id: string) {
     setLoadingMsgs(true);
@@ -146,6 +256,7 @@ export default function ComunicacaoInbox() {
   }
 
   async function loadTemplates() {
+    if (isMedico) return; // Médico não usa templates do inbox
     const { data } = await supabase
       .from("message_templates")
       .select("id,name,content,category")
@@ -188,7 +299,11 @@ export default function ComunicacaoInbox() {
     }
   }
 
-  useEffect(() => { loadConvs(); loadTemplates(); }, [loadConvs]);
+  useEffect(() => {
+    if (!medicoCheckDone) return;
+    loadConvs();
+    loadTemplates();
+  }, [medicoCheckDone, loadConvs]);
 
   useEffect(() => {
     if (activeId) loadMsgs(activeId);
@@ -220,20 +335,35 @@ export default function ComunicacaoInbox() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs.length]);
 
+  /* ─── Médico: check temporal window per conversation ─── */
+  const isConvAllowed = useCallback((conv: Conv): boolean => {
+    if (!isMedico) return true;
+    if (!conv.consulta_id) return false;
+    const consulta = consultasMap[conv.consulta_id];
+    return isConvDentroJanela(consulta, janelaConfig.janela_pos_consulta_dias);
+  }, [isMedico, consultasMap, janelaConfig.janela_pos_consulta_dias]);
+
+  const canMedicoRespond = useCallback((conv: Conv): boolean => {
+    if (!isMedico) return true;
+    if (!isConvAllowed(conv)) return false;
+    return janelaConfig.medico_iniciar_pos_consulta;
+  }, [isMedico, isConvAllowed, janelaConfig.medico_iniciar_pos_consulta]);
+
   // Filtros
   const filtered = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return convs.filter(c => {
       if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
-      if (filtroResp === "minhas" && c.assigned_to !== user?.id) return false;
-      if (filtroResp === "nao_atribuidas" && c.assigned_to) return false;
-      if (filtroTipo === "bot" && !c.bot_active) return false;
-      if (filtroTipo === "ia" && !c.ai_active) return false;
-      if (filtroTipo === "medico" && !c.medico_id) return false;
-      if (filtroTipo === "suporte" && (c.bot_active || c.ai_active || c.medico_id)) return false;
-      if (filtroTipo === "consulta_hoje") {
-        // Will be filtered after we load consulta data; for now approximate
-        if (!c.consulta_id) return false;
+      if (!isMedico) {
+        if (filtroResp === "minhas" && c.assigned_to !== user?.id) return false;
+        if (filtroResp === "nao_atribuidas" && c.assigned_to) return false;
+        if (filtroTipo === "bot" && !c.bot_active) return false;
+        if (filtroTipo === "ia" && !c.ai_active) return false;
+        if (filtroTipo === "medico" && !c.medico_id) return false;
+        if (filtroTipo === "suporte" && (c.bot_active || c.ai_active || c.medico_id)) return false;
+        if (filtroTipo === "consulta_hoje") {
+          if (!c.consulta_id) return false;
+        }
       }
       if (q) {
         const hay = `${c.contact_name || ""} ${c.contact_phone || ""} ${c.last_message_preview || ""}`.toLowerCase();
@@ -241,21 +371,26 @@ export default function ComunicacaoInbox() {
       }
       return true;
     });
-  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, user]);
+  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, user, isMedico]);
 
   // Actions with audit
-  const canAssume = perms["comunicacao.inbox.assumir"] || perms["comunicacao.responder"];
-  const canClose = perms["comunicacao.inbox.encerrar"] || perms["comunicacao.finalizar"];
-  const canTransfer = perms["comunicacao.transferir"];
-  const canRespond = perms["comunicacao.responder"];
+  const canAssume = !isMedico && (perms["comunicacao.inbox.assumir"] || perms["comunicacao.responder"]);
+  const canClose = !isMedico && (perms["comunicacao.inbox.encerrar"] || perms["comunicacao.finalizar"]);
+  const canTransfer = !isMedico && perms["comunicacao.transferir"];
+  const canRespond = isMedico ? true : perms["comunicacao.responder"];
 
   async function enviar() {
     if (!draft.trim() || !active || !user) return;
+    // Médico: validate access
+    if (isMedico && !canMedicoRespond(active)) {
+      toast.error("Você não tem permissão para enviar mensagens nesta conversa.");
+      return;
+    }
     const body = draft;
     setDraft("");
     const { error } = await supabase.from("messages").insert({
       conversation_id: active.id,
-      sender_type: "colaborador",
+      sender_type: isMedico ? "medico" : "colaborador",
       sender_id: user.id,
       sender_name: user.email || null,
       body,
@@ -270,7 +405,7 @@ export default function ComunicacaoInbox() {
   }
 
   async function assumir() {
-    if (!active || !user) return;
+    if (!active || !user || isMedico) return;
     const { error } = await supabase.from("conversations").update({
       assigned_to: user.id,
       status: "em_atendimento",
@@ -285,7 +420,7 @@ export default function ComunicacaoInbox() {
   }
 
   async function fechar() {
-    if (!active || !user) return;
+    if (!active || !user || isMedico) return;
     const { error } = await supabase.from("conversations").update({
       status: "fechada",
       closed_at: new Date().toISOString(),
@@ -301,14 +436,14 @@ export default function ComunicacaoInbox() {
   }
 
   async function toggleBot() {
-    if (!active) return;
+    if (!active || isMedico) return;
     const newState = !active.bot_active;
     await supabase.from("conversations").update({ bot_active: newState, ai_active: false }).eq("id", active.id);
     await registrarAuditoria(newState ? "ativar_bot" : "desativar_bot", active.id);
   }
 
   async function toggleAI() {
-    if (!active) return;
+    if (!active || isMedico) return;
     const newState = !active.ai_active;
     await supabase.from("conversations").update({ ai_active: newState, bot_active: false }).eq("id", active.id);
     await registrarAuditoria(newState ? "ativar_ia" : "desativar_ia", active.id);
@@ -348,11 +483,21 @@ export default function ComunicacaoInbox() {
     return { label: "Suporte", color: "bg-green-500/10 text-green-600 border-green-500/30", icon: <Headphones className="h-3 w-3" /> };
   }
 
-  if (permLoading) return <div className="p-8 text-sm text-muted-foreground">Carregando permissões…</div>;
+  /* ─── Médico: blocked conversation message ─── */
+  const activeBlocked = active && isMedico && !isConvAllowed(active);
+  const activeCanRespond = active && (isMedico ? canMedicoRespond(active) : canRespond);
+
+  if (permLoading || !medicoCheckDone) return <div className="p-8 text-sm text-muted-foreground">Carregando permissões…</div>;
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Inbox" description="Atendimento de pacientes e leads via WhatsApp." />
+      <PageHeader
+        title={isMedico ? "Inbox — Minhas Consultas" : "Inbox"}
+        description={isMedico
+          ? "Conversas vinculadas aos seus pacientes e atendimentos."
+          : "Atendimento de pacientes e leads via WhatsApp."
+        }
+      />
 
       <div className="grid grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
         {/* COLUNA ESQUERDA — Lista */}
@@ -360,39 +505,41 @@ export default function ComunicacaoInbox() {
           <div className="border-b p-3 space-y-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar nome, telefone..." className="pl-8" />
+              <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar paciente..." className="pl-8" />
             </div>
-            <div className="grid grid-cols-3 gap-1">
-              <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Status</SelectItem>
-                  <SelectItem value="aberta">Aberta</SelectItem>
-                  <SelectItem value="em_atendimento">Atendimento</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="fechada">Fechada</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filtroResp} onValueChange={setFiltroResp}>
-                <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Responsável</SelectItem>
-                  <SelectItem value="minhas">Minhas</SelectItem>
-                  <SelectItem value="nao_atribuidas">Sem dono</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filtroTipo} onValueChange={setFiltroTipo}>
-                <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Tipo</SelectItem>
-                  <SelectItem value="suporte">Suporte</SelectItem>
-                  <SelectItem value="bot">Bot</SelectItem>
-                  <SelectItem value="ia">IA</SelectItem>
-                  <SelectItem value="medico">Médico</SelectItem>
-                  <SelectItem value="consulta_hoje">Consulta hoje</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {!isMedico && (
+              <div className="grid grid-cols-3 gap-1">
+                <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                  <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Status</SelectItem>
+                    <SelectItem value="aberta">Aberta</SelectItem>
+                    <SelectItem value="em_atendimento">Atendimento</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="fechada">Fechada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroResp} onValueChange={setFiltroResp}>
+                  <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Responsável</SelectItem>
+                    <SelectItem value="minhas">Minhas</SelectItem>
+                    <SelectItem value="nao_atribuidas">Sem dono</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                  <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Tipo</SelectItem>
+                    <SelectItem value="suporte">Suporte</SelectItem>
+                    <SelectItem value="bot">Bot</SelectItem>
+                    <SelectItem value="ia">IA</SelectItem>
+                    <SelectItem value="medico">Médico</SelectItem>
+                    <SelectItem value="consulta_hoje">Consulta hoje</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <ScrollArea className="flex-1">
             {loadingConvs ? (
@@ -409,17 +556,21 @@ export default function ComunicacaoInbox() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">Nenhuma conversa.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                {isMedico ? "Nenhuma conversa vinculada às suas consultas." : "Nenhuma conversa."}
+              </div>
             ) : (
               filtered.map(c => {
                 const badge = getAtendimentoBadge(c);
+                const foraJanela = isMedico && !isConvAllowed(c);
                 return (
                   <button
                     key={c.id}
                     onClick={() => setActiveId(c.id)}
                     className={cn(
                       "w-full text-left border-b px-3 py-3 hover:bg-muted/50 transition-colors",
-                      activeId === c.id && "bg-muted"
+                      activeId === c.id && "bg-muted",
+                      foraJanela && "opacity-50"
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -429,13 +580,18 @@ export default function ComunicacaoInbox() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium text-sm truncate">{c.contact_name || c.contact_phone || "Sem nome"}</span>
-                          {c.unread_count > 0 && <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{c.unread_count}</Badge>}
+                          {c.unread_count > 0 && !foraJanela && <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{c.unread_count}</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">{c.last_message_preview || "—"}</div>
                         <div className="flex items-center gap-1 mt-1">
                           <Badge variant="outline" className={cn("text-[9px] py-0 h-4 flex items-center gap-0.5", badge.color)}>
                             {badge.icon} {badge.label}
                           </Badge>
+                          {foraJanela && (
+                            <Badge variant="outline" className="text-[9px] py-0 h-4 flex items-center gap-0.5 bg-red-500/10 text-red-600 border-red-500/30">
+                              <Lock className="h-2.5 w-2.5" /> Fora da janela
+                            </Badge>
+                          )}
                           {c.priority === "urgente" && <AlertCircle className="h-3 w-3 text-red-500" />}
                         </div>
                       </div>
@@ -453,6 +609,20 @@ export default function ComunicacaoInbox() {
             <div className="flex-1 grid place-items-center text-muted-foreground text-sm">
               Selecione uma conversa
             </div>
+          ) : activeBlocked ? (
+            <div className="flex-1 grid place-items-center p-8">
+              <div className="text-center space-y-3 max-w-md">
+                <div className="mx-auto h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <Lock className="h-6 w-6 text-red-500" />
+                </div>
+                <h3 className="font-semibold text-lg">Acesso restrito</h3>
+                <p className="text-sm text-muted-foreground">
+                  Você não tem permissão para acessar esta conversa. O acesso médico é limitado aos
+                  pacientes vinculados às suas consultas e dentro da janela configurada
+                  ({janelaConfig.janela_pos_consulta_dias} dias pós-consulta).
+                </p>
+              </div>
+            </div>
           ) : (
             <>
               <div className="border-b p-3 flex items-center justify-between gap-2">
@@ -463,7 +633,7 @@ export default function ComunicacaoInbox() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  {canRespond && (
+                  {!isMedico && canRespond && (
                     <>
                       <Button size="sm" variant="ghost" onClick={toggleBot} title={active.bot_active ? "Pausar bot" : "Ativar bot"}>
                         {active.bot_active ? <Pause className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
@@ -488,6 +658,9 @@ export default function ComunicacaoInbox() {
                   {msgs.map(m => {
                     const isExt = m.sender_type === "paciente" || m.sender_type === "lead";
                     const isBot = m.sender_type === "bot" || m.sender_type === "ia";
+                    const isSelf = isMedico
+                      ? m.sender_type === "medico"
+                      : !isExt && !isBot;
                     return (
                       <div key={m.id} className={cn("flex", isExt ? "justify-start" : "justify-end")}>
                         <div className={cn(
@@ -505,9 +678,9 @@ export default function ComunicacaoInbox() {
                 </div>
               </ScrollArea>
 
-              {canRespond && (
+              {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
-                  {templates.length > 0 && (
+                  {!isMedico && templates.length > 0 && (
                     <div className="flex gap-1 flex-wrap">
                       {templates.slice(0, 5).map(t => (
                         <Button key={t.id} size="sm" variant="outline" className="h-6 text-[11px]" onClick={() => aplicarTemplate(t)}>
@@ -520,7 +693,7 @@ export default function ComunicacaoInbox() {
                     <Textarea
                       value={draft}
                       onChange={e => setDraft(e.target.value)}
-                      placeholder="Digite sua mensagem..."
+                      placeholder={isMedico ? "Enviar mensagem ao paciente..." : "Digite sua mensagem..."}
                       className="min-h-[60px] resize-none"
                       onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }}
                     />
@@ -528,6 +701,13 @@ export default function ComunicacaoInbox() {
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {isMedico && !activeCanRespond && !activeBlocked && (
+                <div className="border-t p-3 text-center text-sm text-muted-foreground">
+                  <Lock className="h-4 w-4 inline mr-1" />
+                  Envio de mensagens desabilitado pela configuração da plataforma.
                 </div>
               )}
             </>
@@ -538,6 +718,10 @@ export default function ComunicacaoInbox() {
         <Card className="hidden lg:flex col-span-3 flex-col overflow-hidden">
           {!active ? (
             <div className="flex-1 grid place-items-center text-xs text-muted-foreground">—</div>
+          ) : activeBlocked ? (
+            <div className="flex-1 grid place-items-center text-xs text-muted-foreground p-4">
+              Sem acesso aos detalhes desta conversa.
+            </div>
           ) : (
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-5">
@@ -562,11 +746,13 @@ export default function ComunicacaoInbox() {
                         {STATUS_LABEL[active.status]?.icon} {STATUS_LABEL[active.status]?.label || active.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground w-20">Responsável:</span>
-                      <span className="font-medium">{assignedName || "Ninguém"}</span>
-                    </div>
-                    {active.assigned_sector && (
+                    {!isMedico && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Responsável:</span>
+                        <span className="font-medium">{assignedName || "Ninguém"}</span>
+                      </div>
+                    )}
+                    {!isMedico && active.assigned_sector && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground w-20">Setor:</span>
                         <span>{active.assigned_sector}</span>
@@ -574,16 +760,6 @@ export default function ComunicacaoInbox() {
                     )}
                   </div>
                 </div>
-
-                {/* Médico vinculado */}
-                {(active.medico_id || medicoName) && (
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
-                      <Stethoscope className="h-3 w-3" /> Médico Vinculado
-                    </h4>
-                    <p className="text-sm font-medium">{medicoName || "Carregando…"}</p>
-                  </div>
-                )}
 
                 {/* Consulta vinculada */}
                 {consultaInfo && (
@@ -598,46 +774,73 @@ export default function ComunicacaoInbox() {
                   </div>
                 )}
 
-                {/* Origem */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Origem</h4>
-                  <div className="text-xs space-y-1">
-                    <div>Canal: <Badge variant="outline" className="text-[10px]">{active.channel}</Badge></div>
-                    <div>Origem: <Badge variant="outline" className="text-[10px]">{active.origin}</Badge></div>
-                    {active.intent && <div>Intenção: <Badge variant="outline" className="text-[10px]">{active.intent}</Badge></div>}
+                {/* Médico vinculado (only for non-medico) */}
+                {!isMedico && (active.medico_id || medicoName) && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                      <Stethoscope className="h-3 w-3" /> Médico Vinculado
+                    </h4>
+                    <p className="text-sm font-medium">{medicoName || "Carregando…"}</p>
                   </div>
-                </div>
+                )}
 
-                {/* Ações rápidas */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Ações rápidas</h4>
-                  <div className="space-y-1">
-                    <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled={!active.patient_id}>
-                      <Calendar className="h-3 w-3 mr-2" /> Criar agendamento
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
-                      <CreditCard className="h-3 w-3 mr-2" /> Enviar cobrança
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
-                      <FileText className="h-3 w-3 mr-2" /> Documentos
-                    </Button>
-                    {canTransfer && (
-                      <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
-                        <ArrowRightLeft className="h-3 w-3 mr-2" /> Transferir setor
-                      </Button>
-                    )}
-                    {perms["comunicacao.ver_todas"] && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => setAcessoDialog(true)}
-                      >
-                        <Shield className="h-3 w-3 mr-2" /> Acesso temporário médico
-                      </Button>
-                    )}
+                {/* Origem (only for non-medico) */}
+                {!isMedico && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Origem</h4>
+                    <div className="text-xs space-y-1">
+                      <div>Canal: <Badge variant="outline" className="text-[10px]">{active.channel}</Badge></div>
+                      <div>Origem: <Badge variant="outline" className="text-[10px]">{active.origin}</Badge></div>
+                      {active.intent && <div>Intenção: <Badge variant="outline" className="text-[10px]">{active.intent}</Badge></div>}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Ações rápidas (non-medico only) */}
+                {!isMedico && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Ações rápidas</h4>
+                    <div className="space-y-1">
+                      <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled={!active.patient_id}>
+                        <Calendar className="h-3 w-3 mr-2" /> Criar agendamento
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
+                        <CreditCard className="h-3 w-3 mr-2" /> Enviar cobrança
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
+                        <FileText className="h-3 w-3 mr-2" /> Documentos
+                      </Button>
+                      {canTransfer && (
+                        <Button variant="outline" size="sm" className="w-full justify-start text-xs" disabled>
+                          <ArrowRightLeft className="h-3 w-3 mr-2" /> Transferir setor
+                        </Button>
+                      )}
+                      {perms["comunicacao.ver_todas"] && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                          onClick={() => setAcessoDialog(true)}
+                        >
+                          <Shield className="h-3 w-3 mr-2" /> Acesso temporário médico
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Janela temporal info (medico only) */}
+                {isMedico && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> Janela de Acesso
+                    </h4>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>Acesso: 10 min antes até {janelaConfig.janela_pos_consulta_dias} dias após a consulta.</p>
+                      <p>Envio de mensagens: {janelaConfig.medico_iniciar_pos_consulta ? "Habilitado" : "Desabilitado"}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Tags */}
                 {active.tags.length > 0 && (
@@ -654,36 +857,38 @@ export default function ComunicacaoInbox() {
         </Card>
       </div>
 
-      {/* Dialog — Acesso temporário para médico */}
-      <Dialog open={acessoDialog} onOpenChange={setAcessoDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Conceder Acesso Temporário a Médico</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>ID do Médico</Label>
-              <Input value={acessoMedicoId} onChange={e => setAcessoMedicoId(e.target.value)} placeholder="UUID do médico" />
+      {/* Dialog — Acesso temporário para médico (admin/colaborador only) */}
+      {!isMedico && (
+        <Dialog open={acessoDialog} onOpenChange={setAcessoDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Conceder Acesso Temporário a Médico</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>ID do Médico</Label>
+                <Input value={acessoMedicoId} onChange={e => setAcessoMedicoId(e.target.value)} placeholder="UUID do médico" />
+              </div>
+              <div>
+                <Label>Motivo (obrigatório)</Label>
+                <Textarea value={acessoMotivo} onChange={e => setAcessoMotivo(e.target.value)}
+                  placeholder="Ex.: Correção de receita, envio de documento..." rows={3} />
+              </div>
+              <div>
+                <Label>Duração (horas)</Label>
+                <Input type="number" value={acessoHoras} onChange={e => setAcessoHoras(Number(e.target.value))} min={1} max={168} />
+              </div>
             </div>
-            <div>
-              <Label>Motivo (obrigatório)</Label>
-              <Textarea value={acessoMotivo} onChange={e => setAcessoMotivo(e.target.value)}
-                placeholder="Ex.: Correção de receita, envio de documento..." rows={3} />
-            </div>
-            <div>
-              <Label>Duração (horas)</Label>
-              <Input type="number" value={acessoHoras} onChange={e => setAcessoHoras(Number(e.target.value))} min={1} max={168} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAcessoDialog(false)}>Cancelar</Button>
-            <Button onClick={concederAcessoTemporario} disabled={acessoLoading || !acessoMotivo.trim() || !acessoMedicoId}>
-              {acessoLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Conceder Acesso
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAcessoDialog(false)}>Cancelar</Button>
+              <Button onClick={concederAcessoTemporario} disabled={acessoLoading || !acessoMotivo.trim() || !acessoMedicoId}>
+                {acessoLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Conceder Acesso
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

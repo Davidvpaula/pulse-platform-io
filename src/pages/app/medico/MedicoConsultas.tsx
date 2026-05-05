@@ -246,7 +246,7 @@ export default function MedicoConsultas() {
               size="sm"
               variant="ghost"
               title="Abrir conversa do paciente"
-              onClick={() => navigate(`/app/medico/mensagens?conv=${c.id}`)}
+              onClick={() => navigate(`/app/comunicacao/inbox?conv=${c.id}`)}
             >
               <MessageCircle className="h-4 w-4 text-primary" />
             </Button>
