@@ -84,7 +84,7 @@ export default function AppLayout() {
       <div className="flex flex-1 w-full">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="flow-stripe w-full" />
-        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} />
       </aside>
 
       {mobileOpen && (
@@ -92,7 +92,7 @@ export default function AppLayout() {
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
             <div className="flow-stripe w-full" />
-            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} />
           </aside>
         </div>
       )}
