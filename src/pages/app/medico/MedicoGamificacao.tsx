@@ -26,7 +26,7 @@ import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
   listarSaldoCrescimento, getRankingConfig, ativarPremiumConquistado,
-  getScoreDetalhado, listarBadgesMedico, listarStreaksMedico,
+  getScoreDetalhado, recalcularScoreMedico, listarBadgesMedico, listarStreaksMedico,
   listarRecomendacoes, getNivelInfo,
   type AvaliacaoMedica, type MedicoRanking, type MedicoPremium,
   type ImpulsionamentoCampanha, type SaldoCrescimentoItem, type RankingConfig,
