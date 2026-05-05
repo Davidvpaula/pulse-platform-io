@@ -110,6 +110,7 @@ import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
 import AdminFinanceiroConfig from "@/pages/app/admin/AdminFinanceiroConfig";
+import AdminIAMedicos from "@/pages/app/admin/AdminIAMedicos";
 import AdminPreviaRepasse from "@/pages/app/admin/AdminPreviaRepasse";
 import AdminAtendimentoImediato from "@/pages/app/admin/AdminAtendimentoImediato";
 import AdminPlanos from "@/pages/app/admin/AdminPlanos";
