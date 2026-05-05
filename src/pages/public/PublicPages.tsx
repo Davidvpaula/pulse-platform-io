@@ -262,6 +262,7 @@ export const MedicoDetalhe = () => {
   const { slug } = useParams();
   const [medico, setMedico] = useState<any>(null);
   const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null }[]>([]);
+  const [planosMedico, setPlanosMedico] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
