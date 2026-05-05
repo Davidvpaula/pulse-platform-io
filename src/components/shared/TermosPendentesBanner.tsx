@@ -35,7 +35,7 @@ export default function TermosPendentesBanner() {
         : null; // admin/colaborador → sem termos pendentes
 
   const check = useCallback(async () => {
-    if (!session) return;
+    if (!session || categoria === null) return;
     try {
       const data = await buscarTermosPendentes(categoria);
       setPendentes(data);
