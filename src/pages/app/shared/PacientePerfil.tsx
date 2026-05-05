@@ -342,7 +342,7 @@ export default function PacientePerfil() {
     setReembolsoCriando(true);
     // Find consulta_id from pagamento
     const consultaId = pag.consulta_id;
-    const { error } = await supabase.from("reembolsos").insert({
+    const { data: inserted, error } = await supabase.from("reembolsos").insert({
       consulta_id: consultaId,
       pagamento_id: pag.id,
       valor_centavos: valorCentavos,
@@ -350,11 +350,17 @@ export default function PacientePerfil() {
       tipo: reembolsoForm.tipo,
       status: "solicitado",
       actor_id: (await supabase.auth.getUser()).data.user?.id,
-    } as any);
+    } as any).select("id").single();
     setReembolsoCriando(false);
     if (error) {
       toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
     } else {
+      // Notificar paciente e médico
+      if (inserted?.id) {
+        supabase.functions.invoke("notificar-reembolso", {
+          body: { reembolso_id: inserted.id, evento: "solicitado" },
+        }).catch(() => {});
+      }
       toast({ title: "Reembolso solicitado", description: "O reembolso entrará na fila para aprovação." });
       setReembolsoOpen(false);
       setReembolsoForm({ pagamento_id: "", tipo: "total", valor: "", motivo: "" });
