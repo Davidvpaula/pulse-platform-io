@@ -97,17 +97,30 @@ async function carregarSlotInfo(slotId: string, tipo: TipoAgendamento, ref: stri
   let duracao_minutos = 30;
 
   if (tipo === "especialidade") {
-    const { data: vinc } = await supabase
-      .from("medico_especialidades")
-      .select("preco_centavos, duracao_minutos, especialidade_id")
-      .eq("medico_id", slot.medico_id)
-      .eq("especialidade_id", ref)
-      .eq("ativo", true)
-      .maybeSingle();
+    let vinc: any = null;
+    if (ref) {
+      const { data } = await supabase
+        .from("medico_especialidades")
+        .select("preco_centavos, duracao_minutos, especialidade_id")
+        .eq("medico_id", slot.medico_id)
+        .eq("especialidade_id", ref)
+        .eq("ativo", true)
+        .maybeSingle();
+      vinc = data;
+    }
+    if (!vinc) {
+      const { data: fallbackList } = await supabase
+        .from("medico_especialidades")
+        .select("preco_centavos, duracao_minutos, especialidade_id")
+        .eq("medico_id", slot.medico_id)
+        .eq("ativo", true)
+        .limit(1);
+      vinc = fallbackList?.[0] ?? null;
+    }
     if (vinc) {
       preco_centavos = vinc.preco_centavos;
       duracao_minutos = vinc.duracao_minutos;
-      const { data: esp } = await supabase.from("especialidades").select("nome").eq("id", ref).maybeSingle();
+      const { data: esp } = await supabase.from("especialidades").select("nome").eq("id", vinc.especialidade_id).maybeSingle();
       referencia_nome = esp?.nome ?? "—";
     }
   } else if (tipo === "servico" || tipo === "pa") {
