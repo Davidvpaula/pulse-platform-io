@@ -110,7 +110,7 @@ export default function Auth() {
       return;
     }
     toast({ title: "Bem-vindo!" });
-    navigate("/app");
+    navigate(redirectTo);
   }
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
@@ -194,7 +194,7 @@ export default function Auth() {
     if (role === "medico") {
       navigate("/cadastro/medico");
     } else {
-      navigate("/app");
+      navigate(redirectTo);
     }
   }
 
@@ -209,7 +209,7 @@ export default function Auth() {
       return;
     }
     if (result.redirected) return;
-    navigate("/app");
+    navigate(redirectTo);
   }
 
   return (
