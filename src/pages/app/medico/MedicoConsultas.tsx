@@ -242,14 +242,13 @@ export default function MedicoConsultas() {
               </Button>
             )}
 
-            <Button size="sm" variant="ghost" asChild title="Mensagem WhatsApp">
-              <a
-                href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta`)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <MessageCircle className="h-4 w-4 text-success" />
-              </a>
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Abrir conversa do paciente"
+              onClick={() => navigate(`/app/medico/mensagens?conv=${c.id}`)}
+            >
+              <MessageCircle className="h-4 w-4 text-primary" />
             </Button>
             <Button
               size="sm"
