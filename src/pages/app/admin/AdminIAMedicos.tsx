@@ -403,7 +403,65 @@ export default function AdminIAMedicos() {
                         </div>
                       </div>
 
-                      {/* Métricas brutas */}
+                      {/* Ranking Protection Details */}
+                      {m.rank && (
+                        <div className="mt-4 rounded-lg border border-border p-4 space-y-3">
+                          <h4 className="text-sm font-semibold flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-green-500" /> Proteção do Ranking
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Score Final</p>
+                              <p className="text-lg font-bold">{m.rank.ranking_score.toFixed(3)}</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Avaliação Bayesiana</p>
+                              <p className="font-bold">{m.rank.avaliacao_bayesiana.toFixed(3)}</p>
+                              <p className="text-[10px] text-muted-foreground">Raw: {m.rank.avaliacao_media.toFixed(2)} ({m.rank.total_avaliacoes} aval.)</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Penalidade Anomalia</p>
+                              <p className={cn("font-bold", m.rank.penalidade_anomalia > 0 ? "text-destructive" : "text-success")}>
+                                {m.rank.penalidade_anomalia > 0 ? `-${(m.rank.penalidade_anomalia * 100).toFixed(0)}%` : "Nenhuma"}
+                              </p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Bônus Novato</p>
+                              <p className={cn("font-bold", m.rank.bonus_novato > 0 ? "text-blue-600" : "text-muted-foreground")}>
+                                {m.rank.bonus_novato > 0 ? `+${(m.rank.bonus_novato * 100).toFixed(0)}%` : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Pen. Compliance</p>
+                              <p className={cn("font-bold", m.rank.penalidade_compliance > 0 ? "text-orange-600" : "text-success")}>
+                                {m.rank.penalidade_compliance > 0 ? `-${(m.rank.penalidade_compliance * 100).toFixed(0)}%` : "Nenhuma"}
+                              </p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Fator Premium</p>
+                              <p className="font-bold">{m.rank.fator_premium === 1 ? "Padrão" : `×${m.rank.fator_premium.toFixed(1)}`}</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Recência</p>
+                              <p className="font-bold">{(m.rank.fator_recencia * 100).toFixed(0)}%</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Posição</p>
+                              <p className="text-lg font-bold">#{m.rank.posicao ?? "—"}</p>
+                            </div>
+                          </div>
+                          {m.rank.protecao_detalhes && (
+                            <details className="text-[10px] text-muted-foreground">
+                              <summary className="cursor-pointer hover:text-foreground">Detalhes técnicos do cálculo</summary>
+                              <pre className="mt-1 bg-muted/30 p-2 rounded overflow-auto max-h-32">
+                                {JSON.stringify(m.rank.protecao_detalhes, null, 2)}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      )}
                       {m.op?.detalhes && Object.keys(m.op.detalhes).length > 0 && (
                         <div className="mt-4 rounded-lg border border-border p-4">
                           <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
