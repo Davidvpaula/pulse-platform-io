@@ -214,7 +214,7 @@ describe("Fluxo E2E: formulário → reserva → checkout", () => {
       slot_id: SLOT_ESPECIALIDADE.id,
       tipo: "especialidade",
       referencia_id: ESPECIALIDADE_REF.id,
-      motivo: "Check-up",
+      motivo: "Check-up anual",
       ...VALID_FORM_DATA,
     });
 
