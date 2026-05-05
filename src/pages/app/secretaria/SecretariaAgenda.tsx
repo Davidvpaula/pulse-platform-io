@@ -158,13 +158,13 @@ export default function SecretariaAgenda() {
                     >
                       <History className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" asChild title="WhatsApp">
-                      <a
-                        href={whatsappUrl(`Olá ${c.paciente_nome ?? ""}, sobre sua consulta às ${formatHora(c.inicio)}`)}
-                        target="_blank" rel="noreferrer"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5 text-success" />
-                      </a>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Abrir conversa"
+                      onClick={() => navigate(`/app/comunicacao/inbox`)}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-primary" />
                     </Button>
                   </div>
                 </div>
