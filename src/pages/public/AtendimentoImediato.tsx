@@ -183,26 +183,10 @@ export default function AtendimentoImediato() {
     toast.message("Reserva liberada");
   }
 
-  async function confirmar() {
-    if (!reserva) return;
-
-    const { data, error } = await supabase.rpc("fn_pa_confirmar_reserva" as any, {
-      _slot_id: reserva.slot_id,
-    });
-
-    if (error || !(data as any)?.ok) {
-      toast.error((data as any)?.erro || "Erro ao confirmar. Reserva pode ter expirado.");
-      setReserva(null);
-      carregarSlots();
-      return;
-    }
-
-    toast.success("Confirmado!", {
-      description: `Atendimento agendado com Dr(a). ${reserva.medico_nome}. Redirecionando para pagamento…`,
-    });
-    setReserva(null);
-    // Redirecionar para o fluxo de pagamento
-    navigate(`/app/paciente/consultas`);
+  function confirmar() {
+    if (!reserva || !cfg?.servico_id) return;
+    // Redireciona para a rota unificada de agendamento (formulário → reserva → checkout → pagamento)
+    navigate(`/app/agendamento/confirmar/${reserva.slot_id}?tipo=pa&ref=${cfg.servico_id}`);
   }
 
   const totalLivres = Array.from(estadoPorSlot.values()).filter((v) => v.estado === "livre").length;
