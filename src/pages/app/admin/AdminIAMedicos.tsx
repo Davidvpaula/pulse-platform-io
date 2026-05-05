@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { listarRankingTop, recalcularRankingTodos, type MedicoRanking } from "@/lib/gamificacao";
 import {
   listarScoresOperacionais, listarScoresCompliance,
   listarAlertasIA, atualizarStatusAlerta,
@@ -69,6 +70,7 @@ export default function AdminIAMedicos() {
   const [alertas, setAlertas] = useState<AlertaIA[]>([]);
   const [anomalias, setAnomalias] = useState<Anomalia[]>([]);
   const [auditoria, setAuditoria] = useState<AuditoriaIA[]>([]);
+  const [rankings, setRankings] = useState<MedicoRanking[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroSeveridade, setFiltroSeveridade] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -79,13 +81,14 @@ export default function AdminIAMedicos() {
   const carregar = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: meds }, ops, comps, alts, anos, auds] = await Promise.all([
+      const [{ data: meds }, ops, comps, alts, anos, auds, rnks] = await Promise.all([
         supabase.from("medicos" as any).select("id, nome, ativo").eq("ativo", true).order("nome"),
         listarScoresOperacionais(),
         listarScoresCompliance(),
         listarAlertasIA(),
         listarAnomalias(),
         listarAuditoriaIA(),
+        listarRankingTop(200),
       ]);
       setMedicos((meds ?? []) as any);
       setScoresOp(ops);
@@ -93,6 +96,7 @@ export default function AdminIAMedicos() {
       setAlertas(alts);
       setAnomalias(anos);
       setAuditoria(auds);
+      setRankings(rnks);
     } catch (e: any) {
       toast.error("Erro ao carregar dados: " + e.message);
     } finally {
@@ -169,6 +173,7 @@ export default function AdminIAMedicos() {
   const medicoMap = Object.fromEntries(medicos.map(m => [m.id, m.nome]));
   const opMap = Object.fromEntries(scoresOp.map(s => [s.medico_id, s]));
   const compMap = Object.fromEntries(scoresComp.map(s => [s.medico_id, s]));
+  const rankMap = Object.fromEntries(rankings.map(r => [r.medico_id, r]));
 
   const alertasAtivos = alertas.filter(a => a.status === "novo" || a.status === "em_acompanhamento").length;
   const alertasCriticos = alertas.filter(a => a.severidade === "critico" && a.status !== "resolvido").length;
@@ -182,10 +187,11 @@ export default function AdminIAMedicos() {
       ...m,
       op: opMap[m.id] ?? null,
       comp: compMap[m.id] ?? null,
+      rank: rankMap[m.id] ?? null,
       alertasCount: alertas.filter(a => a.medico_id === m.id && (a.status === "novo" || a.status === "em_acompanhamento")).length,
       anomaliasCount: anomalias.filter(a => a.medico_id === m.id && (a.status === "detectada" || a.status === "investigando")).length,
     }))
-    .sort((a, b) => (a.op?.score_total ?? 999) - (b.op?.score_total ?? 999));
+    .sort((a, b) => (b.rank?.ranking_score ?? 0) - (a.rank?.ranking_score ?? 0));
 
   const alertasFiltrados = alertas.filter(a => {
     if (filtroSeveridade !== "todos" && a.severidade !== filtroSeveridade) return false;
@@ -200,6 +206,15 @@ export default function AdminIAMedicos() {
         description="Auditoria operacional, compliance, antifraude e recomendações estratégicas por IA."
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                await recalcularRankingTodos();
+                toast.success("Ranking recalculado!");
+                await carregar();
+              } catch { toast.error("Erro ao recalcular ranking"); }
+            }}>
+              <RefreshCw className="mr-1.5 h-4 w-4" /> Recalcular Ranking
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDetectarAnomalias}>
               <Shield className="mr-1.5 h-4 w-4" /> Detectar Anomalias
             </Button>
@@ -242,33 +257,52 @@ export default function AdminIAMedicos() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="grid grid-cols-[1fr_80px_80px_80px_80px_60px_60px_100px] gap-2 px-4 py-2.5 bg-muted/50 text-xs font-semibold text-muted-foreground">
+            <div className="grid grid-cols-[40px_1fr_70px_70px_70px_70px_70px_50px_50px_90px] gap-1 px-4 py-2.5 bg-muted/50 text-[11px] font-semibold text-muted-foreground">
+              <span className="text-center">#</span>
               <span>Médico</span>
-              <span className="text-center">Op. Score</span>
-              <span className="text-center">Compliance</span>
+              <span className="text-center">Ranking</span>
+              <span className="text-center">Bayesian</span>
               <span className="text-center">Risco</span>
-              <span className="text-center">Confiança</span>
-              <span className="text-center">Alertas</span>
+              <span className="text-center">Proteção</span>
+              <span className="text-center">Compliance</span>
+              <span className="text-center">Alert.</span>
               <span className="text-center">Anom.</span>
               <span className="text-center">Ações</span>
             </div>
 
             <ScrollArea className="max-h-[500px]">
-              {medicosMerged.map(m => (
+              {medicosMerged.map((m, idx) => (
                 <div key={m.id}>
                   <div
                     className={cn(
-                      "grid grid-cols-[1fr_80px_80px_80px_80px_60px_60px_100px] gap-2 px-4 py-3 border-t border-border text-sm items-center cursor-pointer hover:bg-muted/30 transition-colors",
+                      "grid grid-cols-[40px_1fr_70px_70px_70px_70px_70px_50px_50px_90px] gap-1 px-4 py-3 border-t border-border text-sm items-center cursor-pointer hover:bg-muted/30 transition-colors",
                       expandedMedico === m.id && "bg-muted/20",
                     )}
                     onClick={() => setExpandedMedico(expandedMedico === m.id ? null : m.id)}
                   >
-                    <div className="flex items-center gap-2">
-                      {expandedMedico === m.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                      <span className="font-medium truncate">{m.nome}</span>
+                    <div className="text-center text-xs font-bold text-muted-foreground">
+                      {m.rank?.posicao ?? idx + 1}
                     </div>
-                    <div className="text-center">{m.op ? scoreBar(m.op.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
-                    <div className="text-center">{m.comp ? scoreBar(m.comp.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
+                    <div className="flex items-center gap-2">
+                      {expandedMedico === m.id ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                      <span className="font-medium truncate">{m.nome}</span>
+                      {m.rank && m.rank.bonus_novato > 0 && (
+                        <Badge className="bg-blue-500/10 text-blue-600 text-[9px] px-1">Novato</Badge>
+                      )}
+                      {m.rank && m.rank.penalidade_anomalia > 0 && (
+                        <Badge className="bg-destructive/10 text-destructive text-[9px] px-1">⚠ Anomalia</Badge>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <span className="text-xs font-bold">{m.rank.ranking_score.toFixed(2)}</span>
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                    </div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <span className="text-xs">{m.rank.avaliacao_bayesiana.toFixed(2)} <span className="text-muted-foreground">({m.rank.avaliacao_media.toFixed(1)})</span></span>
+                      ) : "—"}
+                    </div>
                     <div className="text-center">
                       {m.comp ? (
                         <Badge className={cn("text-[10px]", RISCO_STYLES[m.comp.nivel_risco])}>
@@ -276,7 +310,19 @@ export default function AdminIAMedicos() {
                         </Badge>
                       ) : "—"}
                     </div>
-                    <div className="text-center">{m.comp ? <span className="text-xs font-medium">{m.comp.score_confianca.toFixed(0)}</span> : "—"}</div>
+                    <div className="text-center">
+                      {m.rank ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          {m.rank.penalidade_anomalia > 0 && <span className="text-[9px] text-destructive">-{(m.rank.penalidade_anomalia * 100).toFixed(0)}% fraude</span>}
+                          {m.rank.penalidade_compliance > 0 && <span className="text-[9px] text-orange-600">-{(m.rank.penalidade_compliance * 100).toFixed(0)}% compl.</span>}
+                          {m.rank.bonus_novato > 0 && <span className="text-[9px] text-blue-600">+{(m.rank.bonus_novato * 100).toFixed(0)}% novato</span>}
+                          {m.rank.penalidade_anomalia === 0 && m.rank.penalidade_compliance === 0 && m.rank.bonus_novato === 0 && (
+                            <span className="text-[9px] text-success">✓ limpo</span>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </div>
+                    <div className="text-center">{m.comp ? scoreBar(m.comp.score_total) : <span className="text-xs text-muted-foreground">—</span>}</div>
                     <div className="text-center">
                       {m.alertasCount > 0 ? (
                         <Badge variant="destructive" className="text-[10px]">{m.alertasCount}</Badge>
@@ -357,7 +403,65 @@ export default function AdminIAMedicos() {
                         </div>
                       </div>
 
-                      {/* Métricas brutas */}
+                      {/* Ranking Protection Details */}
+                      {m.rank && (
+                        <div className="mt-4 rounded-lg border border-border p-4 space-y-3">
+                          <h4 className="text-sm font-semibold flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-green-500" /> Proteção do Ranking
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Score Final</p>
+                              <p className="text-lg font-bold">{m.rank.ranking_score.toFixed(3)}</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Avaliação Bayesiana</p>
+                              <p className="font-bold">{m.rank.avaliacao_bayesiana.toFixed(3)}</p>
+                              <p className="text-[10px] text-muted-foreground">Raw: {m.rank.avaliacao_media.toFixed(2)} ({m.rank.total_avaliacoes} aval.)</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Penalidade Anomalia</p>
+                              <p className={cn("font-bold", m.rank.penalidade_anomalia > 0 ? "text-destructive" : "text-success")}>
+                                {m.rank.penalidade_anomalia > 0 ? `-${(m.rank.penalidade_anomalia * 100).toFixed(0)}%` : "Nenhuma"}
+                              </p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Bônus Novato</p>
+                              <p className={cn("font-bold", m.rank.bonus_novato > 0 ? "text-blue-600" : "text-muted-foreground")}>
+                                {m.rank.bonus_novato > 0 ? `+${(m.rank.bonus_novato * 100).toFixed(0)}%` : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Pen. Compliance</p>
+                              <p className={cn("font-bold", m.rank.penalidade_compliance > 0 ? "text-orange-600" : "text-success")}>
+                                {m.rank.penalidade_compliance > 0 ? `-${(m.rank.penalidade_compliance * 100).toFixed(0)}%` : "Nenhuma"}
+                              </p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Fator Premium</p>
+                              <p className="font-bold">{m.rank.fator_premium === 1 ? "Padrão" : `×${m.rank.fator_premium.toFixed(1)}`}</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Recência</p>
+                              <p className="font-bold">{(m.rank.fator_recencia * 100).toFixed(0)}%</p>
+                            </div>
+                            <div className="rounded bg-muted/30 p-2.5">
+                              <p className="text-muted-foreground">Posição</p>
+                              <p className="text-lg font-bold">#{m.rank.posicao ?? "—"}</p>
+                            </div>
+                          </div>
+                          {m.rank.protecao_detalhes && (
+                            <details className="text-[10px] text-muted-foreground">
+                              <summary className="cursor-pointer hover:text-foreground">Detalhes técnicos do cálculo</summary>
+                              <pre className="mt-1 bg-muted/30 p-2 rounded overflow-auto max-h-32">
+                                {JSON.stringify(m.rank.protecao_detalhes, null, 2)}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      )}
                       {m.op?.detalhes && Object.keys(m.op.detalhes).length > 0 && (
                         <div className="mt-4 rounded-lg border border-border p-4">
                           <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
