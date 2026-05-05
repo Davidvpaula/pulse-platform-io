@@ -3,17 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { brl } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Clock, DollarSign, AlertCircle } from "lucide-react";
-import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 
 type Servico = {
   id: string;
@@ -34,8 +27,6 @@ type Adesao = {
   ativo: boolean;
 };
 
-
-
 export default function MedicoServicos() {
   const { user } = useSession();
   const [medicoId, setMedicoId] = useState<string | null>(null);
@@ -43,10 +34,6 @@ export default function MedicoServicos() {
   const [adesoes, setAdesoes] = useState<Record<string, Adesao>>({});
   const [recebe, setRecebe] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [overrideOpen, setOverrideOpen] = useState<Servico | null>(null);
-  const [overrideMotivo, setOverrideMotivo] = useState("");
-  const [overridePct, setOverridePct] = useState<number>(0); // % MÉDICO desejado (UI)
-  const [overrideValid, setOverrideValid] = useState<boolean>(true);
 
   async function load() {
     if (!user) return;
@@ -97,26 +84,6 @@ export default function MedicoServicos() {
       toast({ title: "Adesão removida" });
     }
     load();
-  }
-
-  async function solicitarOverride() {
-    if (!overrideOpen || !medicoId) return;
-    if (!overrideValid) {
-      return toast({ title: "Corrija o percentual antes de enviar", variant: "destructive" });
-    }
-    // overridePct é o % desejado pelo médico (UI). No banco gravamos % plataforma = 100 - médico.
-    const plataformaPct = Math.round((100 - overridePct) * 100) / 100;
-    const { error } = await supabase.from("medico_comissao_override").insert({
-      medico_id: medicoId,
-      servico_id: overrideOpen.id,
-      comissao_pct: plataformaPct,
-      motivo: overrideMotivo,
-      ativo: false, // Admin precisa ativar
-    });
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
-    toast({ title: "Solicitação enviada", description: "O administrador vai analisar." });
-    setOverrideOpen(null);
-    setOverrideMotivo(""); setOverridePct(0);
   }
 
   const totalAderidos = Object.values(adesoes).filter((a) => a.status === "ativo" && a.ativo).length;
@@ -171,65 +138,18 @@ export default function MedicoServicos() {
                     Adesão requer aprovação do administrador.
                   </div>
                 )}
-                {ativo && (
-                  <Button variant="outline" size="sm" className="w-full"
-                    onClick={() => {
-                      setOverrideOpen(s);
-                      // s.comissao_pct é % plataforma; mostramos a % do médico atual como ponto de partida
-                      const atualMedicoPct = s.comissao_pct == null
-                        ? 56
-                        : Math.round((100 - Number(s.comissao_pct)) * 100) / 100;
-                      setOverridePct(atualMedicoPct);
-                    }}>
-                    Solicitar override de repasse
-                  </Button>
-                )}
               </CardContent>
             </Card>
           );
         })}
         {servicos.length === 0 && (
-          <Card className="md:col-span-2 lg:col-span-3">
+          <Card className="md:col-span-2 lg:col-cols-3">
             <CardContent className="pt-6 text-center text-muted-foreground">
               Nenhum serviço disponível na plataforma ainda.
             </CardContent>
           </Card>
         )}
       </div>
-
-      <Dialog open={!!overrideOpen} onOpenChange={(o) => !o && setOverrideOpen(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Solicitar override de repasse</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Sua solicitação para <b>{overrideOpen?.nome}</b> será analisada pelo administrador.
-            </p>
-            <div className="space-y-2">
-              <Label>Divisão desejada</Label>
-              <RepasseSplitInput
-                medicoPct={overridePct}
-                onChange={setOverridePct}
-                onValidityChange={setOverrideValid}
-                size="sm"
-                labels={{ medico: "% que você quer receber", plataforma: "% plataforma" }}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Motivo</Label>
-              <Textarea rows={4} value={overrideMotivo} onChange={(e) => setOverrideMotivo(e.target.value)}
-                placeholder="Justifique por que solicita um repasse diferente" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOverrideOpen(null)}>Cancelar</Button>
-            <Button onClick={solicitarOverride} disabled={overrideMotivo.length < 10 || !overrideValid}>
-              Enviar solicitação
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
