@@ -91,7 +91,7 @@ export default function PacienteMontarPlano() {
         .from("assinaturas")
         .select("id")
         .eq("paciente_id", uid)
-        .in("status", ["ativa", "pendente"] as any[])
+        .in("status", ["ativa", "trial"] as any[])
         .limit(1);
 
       setJaTemPlanoAtivo((existentes?.length ?? 0) > 0);
