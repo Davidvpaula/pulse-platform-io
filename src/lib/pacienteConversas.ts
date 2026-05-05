@@ -95,9 +95,6 @@ export async function enviarMensagemPaciente(
 export async function uploadAnexoMensagem(_file: File): Promise<{ url: string; name: string; type: string }> {
   throw new Error("Upload de anexo desabilitado para paciente.");
 }
-  const { data: urlData } = supabase.storage.from("message-attachments").getPublicUrl(path);
-  return { url: urlData.publicUrl, name: file.name, type: file.type };
-}
 
 /** Marca todas as mensagens de uma conversa como lidas */
 export async function marcarMensagensComoLidas(conversationId: string) {
