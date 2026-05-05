@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { DollarSign, RefreshCw, Loader2, Download, AlertTriangle, CheckCircle2, XCircle, Link2, FileText, Wallet, ChevronDown, ChevronRight, Clock, User, Shield } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
