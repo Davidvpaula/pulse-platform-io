@@ -1,32 +1,19 @@
 
 ## Problema
 
-O retorno gratuito foi criado com sucesso no banco (status `disponivel`), mas não aparece para o paciente porque a query PostgREST falha com erro:
+O botão "Iniciar" na página `/app/medico/consultas` tem duas condições extras que a página `/app/medico/agenda` não tem:
 
-```
-Could not find a relationship between 'retornos_gratuitos' and 'medico_id' in the schema cache
-```
+1. **Requer `c.link_sala`** — se por algum motivo a sala não estiver preenchida, o botão não aparece
+2. **Requer estar a menos de 30 minutos do horário** — se a consulta é mais adiante, o botão some
 
-A tabela `retornos_gratuitos` não possui **foreign keys** definidas para `medico_id`, `especialidade_id`, `paciente_id`, etc. Sem FK, o PostgREST não consegue fazer o JOIN implícito que o código usa (`medicos:medico_id ( nome )`), e a função `listRetornosDisponiveis` retorna array vazio silenciosamente.
+Na Agenda, o botão aparece sempre que o status é `agendada` ou `confirmada`, sem essas restrições.
 
-## Plano
+## Correção
 
-### 1. Migration: adicionar foreign keys na tabela `retornos_gratuitos`
+**Arquivo:** `src/pages/app/medico/MedicoConsultas.tsx`
 
-```sql
-ALTER TABLE retornos_gratuitos
-  ADD CONSTRAINT fk_retornos_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id),
-  ADD CONSTRAINT fk_retornos_medico FOREIGN KEY (medico_id) REFERENCES medicos(id),
-  ADD CONSTRAINT fk_retornos_especialidade FOREIGN KEY (especialidade_id) REFERENCES especialidades(id),
-  ADD CONSTRAINT fk_retornos_consulta_origem FOREIGN KEY (consulta_origem_id) REFERENCES consultas(id),
-  ADD CONSTRAINT fk_retornos_consulta_uso FOREIGN KEY (consulta_uso_id) REFERENCES consultas(id);
-```
+1. **Remover a restrição de 30 minutos** do `podeIniciar` (linha 155-157) — a Fila de Atendimento é a página operacional, o médico deve poder iniciar a qualquer momento.
 
-### 2. Adicionar banner de retorno gratuito no Dashboard do paciente
+2. **Remover a exigência de `c.link_sala`** do botão Iniciar (linha 230) — o botão deve aparecer independentemente de ter link de sala. Se tiver sala, abre após iniciar; se não tiver, só muda o status.
 
-Atualmente os vouchers só aparecem na página "Agendamentos". Vou adicionar um card/banner destacado no `PacienteDashboard.tsx` para que o paciente veja imediatamente ao entrar no app, com botão levando para a página de agendamentos ou abrindo o dialog de agendamento do retorno.
-
-### Resultado esperado
-
-- Vouchers aparecem na lista de agendamentos (corrigido pela FK)
-- Vouchers também aparecem em destaque no Dashboard do paciente
+Resultado: o botão Iniciar vai se comportar igual ao da Agenda.
