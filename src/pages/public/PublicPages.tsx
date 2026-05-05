@@ -329,7 +329,7 @@ export const MedicoDetalhe = () => {
 
         if (reviews && reviews.length > 0) {
           // Fetch patient names
-          const pacienteIds: string[] = [...new Set(reviews.map((r: any) => r.paciente_id as string))];
+          const pacienteIds = reviews.map((r: any) => r.paciente_id as string).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
           const { data: profiles } = await supabase
             .from("profiles")
             .select("id, nome")
