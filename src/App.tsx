@@ -141,6 +141,7 @@ import AdminGamificacaoFinanceiro from "@/pages/app/admin/AdminGamificacaoFinanc
 import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
 import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
 import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
+import AdminReembolsoConfig from "@/pages/app/admin/AdminReembolsoConfig";
 import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
 import PlanoCheckoutRetorno from "@/pages/app/paciente/PlanoCheckoutRetorno";
 import PacienteAssinarPlano from "@/pages/app/paciente/PacienteAssinarPlano";
