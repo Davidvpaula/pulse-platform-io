@@ -272,11 +272,10 @@ function SidebarBody({
 
 /* ─── Accordion Nav: only one group open at a time ─── */
 function AccordionNav({
-  visibleNav, loading, isDemoMode, profileKey, pathname, onNavigate, linkClass,
+  visibleNav, loading, profileKey, pathname, onNavigate, linkClass,
 }: {
   visibleNav: RenderItem[];
   loading: boolean;
-  isDemoMode: boolean;
   profileKey: ProfileKey;
   pathname: string;
   onNavigate: () => void;
@@ -298,7 +297,7 @@ function AccordionNav({
 
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
-      {loading && !isDemoMode ? (
+      {loading ? (
         <ul className="space-y-1.5 px-1">
           {Array.from({ length: 8 }).map((_, i) => (
             <li key={i} className="h-8 rounded-lg bg-sidebar-accent/40 animate-pulse" />
