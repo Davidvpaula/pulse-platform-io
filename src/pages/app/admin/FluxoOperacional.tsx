@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { automacoesFluxo, pacientes, agendamentos } from "@/lib/mock";
+import type { Automacao, Paciente, Agendamento } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 const fluxoEmpresa = [
@@ -23,8 +23,10 @@ const stepTone = {
 } as const;
 
 export default function FluxoOperacional() {
-  const novosPacientes = pacientes.filter(p => p.status !== "feegow_sincronizado");
-  const ativosHoje = agendamentos.filter(a => a.data === "Hoje");
+  // Dados carregados do banco — por enquanto vazio até integração Feegow
+  const novosPacientes: Paciente[] = [];
+  const ativosHoje: Agendamento[] = [];
+  const automacoesFluxo: Automacao[] = [];
 
   return (
     <div className="space-y-6">

@@ -4,13 +4,11 @@ import { useSession } from "@/lib/session";
 
 /**
  * Protege rotas /app/*.
- * - Em produção: exige sessão real Supabase; sem sessão → /auth.
- * - Em desenvolvimento: deixa passar mesmo sem sessão (seletor de demo do AppLayout assume).
+ * Exige sessão real; sem sessão → /auth.
  */
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useSession();
   const location = useLocation();
-  const isDev = import.meta.env.DEV;
 
   if (loading) {
     return (
@@ -20,7 +18,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!session && !isDev) {
+  if (!session) {
     return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   }
 

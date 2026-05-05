@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/lib/auth";
+
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
@@ -902,56 +902,5 @@ export const Faq = () => {
         )}
       </div>
     </PageShell>
-  );
-};
-
-/* ── Login (dev only) ── */
-
-export const Login = () => {
-  const { setProfileKey } = useAuth();
-  const navigate = useNavigate();
-  const isDev = import.meta.env.DEV;
-
-  React.useEffect(() => {
-    if (!isDev) navigate("/auth", { replace: true });
-  }, [isDev, navigate]);
-
-  if (!isDev) return null;
-
-  const enter = (k: Parameters<typeof setProfileKey>[0], to: string) => {
-    setProfileKey(k);
-    navigate(to);
-  };
-  const demos: { k: Parameters<typeof setProfileKey>[0]; label: string; to: string }[] = [
-    { k: "paciente", label: "Paciente", to: "/app/paciente/dashboard" },
-    { k: "medico", label: "Médico", to: "/app/medico/dashboard" },
-    { k: "colaborador", label: "Colaborador", to: "/app/colaborador/dashboard" },
-    { k: "admin", label: "Admin", to: "/app/admin/dashboard" },
-    { k: "empresa", label: "Empresa", to: "/app/empresa/dashboard" },
-  ];
-  return (
-    <section className="container grid min-h-[80vh] place-items-center py-16">
-      <div className="card-elevated w-full max-w-md p-8">
-        <h1 className="font-display text-2xl font-bold">Acesso de demonstração</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Disponível apenas em desenvolvimento. Para entrar de verdade, use{" "}
-          <Link to="/auth" className="text-primary hover:underline">/auth</Link>.
-        </p>
-        <div className="mt-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acesso rápido (demo)</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            {demos.map(d => (
-              <button key={d.k} onClick={() => enter(d.k, d.to)} className="rounded-lg border border-border px-3 py-2 text-left hover:bg-muted">
-                {d.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          É médico e ainda não tem cadastro?{" "}
-          <Link to="/cadastro/medico" className="font-semibold text-primary hover:underline">Cadastre-se</Link>
-        </p>
-      </div>
-    </section>
   );
 };

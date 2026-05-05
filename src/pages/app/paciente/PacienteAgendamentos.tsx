@@ -18,7 +18,7 @@ import {
   updateConsultaStatus, listRetornosDisponiveis,
   type ConsultaDetalhada, type RetornoComContexto,
 } from "@/lib/clinico";
-import { LogIn } from "lucide-react";
+
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -111,8 +111,6 @@ export default function PacienteAgendamentos() {
     void carregar();
   };
 
-  // Modo demo (sem sessão): mostra mock para preservar UX da landing
-  const demoMode = !session;
 
   return (
     <div className="space-y-6">
@@ -202,21 +200,11 @@ export default function PacienteAgendamentos() {
           </div>
         )}
 
-        {!loading && demoMode && (
-          <div className="flex flex-col items-center gap-4 py-12">
-            <LogIn className="h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Faça login para ver seus agendamentos.</p>
-            <Button asChild className="bg-gradient-primary hover:opacity-90">
-              <Link to="/auth">Fazer login</Link>
-            </Button>
-          </div>
-        )}
-
-        {!loading && !demoMode && lista.length === 0 && (
+        {!loading && lista.length === 0 && (
           <EmptyState filtro={filtro} />
         )}
 
-        {!loading && !demoMode && lista.length > 0 && (
+        {!loading && lista.length > 0 && (
           <ul className="divide-y divide-border">
             {lista.map((c) => {
               const isOnline = c.modalidade === "online";

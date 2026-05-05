@@ -16,7 +16,7 @@ import NotFound from "./pages/NotFound";
 import Home from "@/pages/public/Home";
 import {
   Especialidades, Medicos, MedicoDetalhe, Agendar, Planos,
-  Empresas, ParaMedicos, Faq, Login,
+  Empresas, ParaMedicos, Faq,
 } from "@/pages/public/PublicPages";
 import CadastroMedico from "@/pages/public/CadastroMedico";
 import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
@@ -188,7 +188,7 @@ const App = () => (
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/para-medicos" element={<ParaMedicos />} />
               <Route path="/faq" element={<Faq />} />
-              <Route path="/login" element={<Login />} />
+              {/* /login removed — use /auth */}
               <Route path="/cadastro/medico" element={<CadastroMedico />} />
               <Route path="/auth" element={<Auth />} />
             </Route>

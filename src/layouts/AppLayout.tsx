@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Menu, LogOut, ChevronsUpDown, Check, ShieldCheck, ChevronDown,
+  Menu, LogOut, ShieldCheck, ChevronDown,
   Building2, Heart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -62,8 +62,6 @@ export default function AppLayout() {
   const { profileKey, setProfileKey, user } = useAuth();
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
-  const isDev = import.meta.env.DEV;
-  const showDemoSwitcher = isDev && !session;
   const flow = getFlowContext(profileKey, pathname);
 
   const handleLogout = async () => {
@@ -86,7 +84,7 @@ export default function AppLayout() {
       <div className="flex flex-1 w-full">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="flow-stripe w-full" />
-        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} />
       </aside>
 
       {mobileOpen && (
@@ -94,7 +92,7 @@ export default function AppLayout() {
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
             <div className="flow-stripe w-full" />
-            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} showDemoSwitcher={showDemoSwitcher} />
+            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} />
           </aside>
         </div>
       )}
@@ -128,19 +126,6 @@ export default function AppLayout() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
-              {showDemoSwitcher && (
-                <>
-                  <DropdownMenuLabel>Trocar perfil (demo)</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-                    <DropdownMenuItem key={k} onClick={() => switchProfile(k)} className="gap-2">
-                      {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-                      {profiles[k].label}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                </>
-              )}
               {session && (
                 <>
                   <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
@@ -180,24 +165,19 @@ type RenderItem = {
 };
 
 function SidebarBody({
-  profileKey, flow, onNavigate, switchProfile, showDemoSwitcher,
+  profileKey, flow, onNavigate, switchProfile,
 }: {
   profileKey: ProfileKey;
   flow: FlowContext;
   onNavigate: () => void;
   switchProfile: (k: ProfileKey) => void;
-  showDemoSwitcher: boolean;
 }) {
   const profile = profiles[profileKey];
   const { pathname } = useLocation();
-  const { session } = useSession();
-  const isDev = import.meta.env.DEV;
-  const isDemoMode = isDev && !session;
 
   // Coleta todas as permission keys que ESTE menu pode precisar.
   const keysNeeded = useMemo(() => {
     if (profileKey === "colaborador" || profileKey === "secretaria") return collectMenuKeys(colaboradorMenu);
-    // Demais perfis: chaves declaradas em requiresCapability nos itens fixos.
     const set = new Set<string>();
     for (const item of profile.nav) {
       if (item.requiresCapability) set.add(item.requiresCapability);
@@ -208,15 +188,13 @@ function SidebarBody({
     return [...set];
   }, [profileKey, profile.nav]);
 
-  const { loading, has } = usePermissionsBatch(isDemoMode ? [] : keysNeeded);
+  const { loading, has } = usePermissionsBatch(keysNeeded);
 
-  // Em modo demo, libera tudo (sem ida ao banco).
-  const allow = (key?: string) => !key || isDemoMode || has(key);
+  const allow = (key?: string) => !key || has(key);
 
-  // Validação dev: avisa sobre keys ausentes em permissions_catalog.
   useEffect(() => {
-    if (!isDemoMode) void validateMenuKeys();
-  }, [isDemoMode]);
+    void validateMenuKeys();
+  }, []);
 
   // Monta a lista visível conforme o perfil.
   const visibleNav: RenderItem[] = useMemo(() => {
@@ -253,7 +231,7 @@ function SidebarBody({
       }
     }
     return out;
-  }, [profileKey, profile.nav, loading, has, isDemoMode]);
+  }, [profileKey, profile.nav, loading, has]);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -269,45 +247,16 @@ function SidebarBody({
         <Logo />
       </div>
 
-      {showDemoSwitcher ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-left hover:opacity-90 flow-sidebar-card">
-              <flow.icon className="h-4 w-4 flow-icon shrink-0" />
-              <span className="flex-1">
-                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">Perfil (demo) · {flow.label}</span>
-                <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
-              </span>
-              <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Mudar dashboard</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {(Object.keys(profiles) as ProfileKey[]).map((k) => (
-              <DropdownMenuItem
-                key={k}
-                onClick={() => switchProfile(k)}
-                className="gap-2"
-              >
-                {profileKey === k ? <Check className="h-4 w-4 text-primary" /> : <span className="w-4" />}
-                {profiles[k].label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
-          <flow.icon className="h-4 w-4 flow-icon shrink-0" />
-          <span className="flex-1">
-            <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
-            <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
-          </span>
-          <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
-        </div>
-      )}
+      <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
+        <flow.icon className="h-4 w-4 flow-icon shrink-0" />
+        <span className="flex-1">
+          <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{flow.description}</span>
+          <span className="block text-sm font-semibold text-sidebar-foreground">{profile.label}</span>
+        </span>
+        <span className="flow-badge rounded px-1.5 py-0.5 text-[10px] font-bold">{flow.label}</span>
+      </div>
 
-      <AccordionNav visibleNav={visibleNav} loading={loading} isDemoMode={isDemoMode} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
+      <AccordionNav visibleNav={visibleNav} loading={loading} profileKey={profileKey} pathname={pathname} onNavigate={onNavigate} linkClass={linkClass} />
 
       <div className="border-t border-sidebar-border p-3">
         <div className="rounded-lg bg-gradient-primary p-3 text-primary-foreground">
@@ -323,11 +272,10 @@ function SidebarBody({
 
 /* ─── Accordion Nav: only one group open at a time ─── */
 function AccordionNav({
-  visibleNav, loading, isDemoMode, profileKey, pathname, onNavigate, linkClass,
+  visibleNav, loading, profileKey, pathname, onNavigate, linkClass,
 }: {
   visibleNav: RenderItem[];
   loading: boolean;
-  isDemoMode: boolean;
   profileKey: ProfileKey;
   pathname: string;
   onNavigate: () => void;
@@ -349,7 +297,7 @@ function AccordionNav({
 
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
-      {loading && !isDemoMode ? (
+      {loading ? (
         <ul className="space-y-1.5 px-1">
           {Array.from({ length: 8 }).map((_, i) => (
             <li key={i} className="h-8 rounded-lg bg-sidebar-accent/40 animate-pulse" />
