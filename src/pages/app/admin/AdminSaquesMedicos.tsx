@@ -366,7 +366,7 @@ export default function AdminSaquesMedicos() {
               </div>
               <div>
                 <Label>Dias de fechamento (separados por vírgula)</Label>
-                <Input value={config.dias_fechamento.join(", ")}
+                <Input value={Array.isArray(config.dias_fechamento) ? config.dias_fechamento.join(", ") : String(config.dias_fechamento)}
                   onChange={e => setConfig({ ...config, dias_fechamento: e.target.value.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n)) })} />
               </div>
               <div>
