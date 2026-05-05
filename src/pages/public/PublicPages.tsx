@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
@@ -264,6 +265,7 @@ export const MedicoDetalhe = () => {
   const [medico, setMedico] = useState<any>(null);
   const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null }[]>([]);
   const [planosMedico, setPlanosMedico] = useState<any[]>([]);
+  const [avaliacoesPublicas, setAvaliacoesPublicas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -314,6 +316,28 @@ export const MedicoDetalhe = () => {
             .eq("publicado_site", true)
             .order("ordem_exibicao");
           setPlanosMedico(planos ?? []);
+        }
+
+        // Load public reviews visible on profile
+        const { data: reviews } = await (supabase as any)
+          .from("avaliacoes_medicas")
+          .select("id, nota, comentario, created_at, paciente_id")
+          .eq("medico_id", med.id)
+          .eq("avaliacao_publica", true)
+          .eq("exibir_no_perfil", true)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (reviews && reviews.length > 0) {
+          // Fetch patient names
+          const pacienteIds = reviews.map((r: any) => r.paciente_id as string).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, nome")
+            .in("id", pacienteIds);
+          const nameMap: Record<string, string> = {};
+          (profiles ?? []).forEach((p: any) => { nameMap[p.id] = p.nome; });
+          setAvaliacoesPublicas(reviews.map((r: any) => ({ ...r, paciente_nome: nameMap[r.paciente_id] ?? "Paciente" })));
         }
       }
 
@@ -438,6 +462,52 @@ export const MedicoDetalhe = () => {
                         Assinar <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
                       </Link>
                     </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Avaliações públicas */}
+          {avaliacoesPublicas.length > 0 && (
+            <div className="card-elevated p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold">Avaliações de pacientes</h3>
+                <Badge variant="secondary" className="text-[10px]">{avaliacoesPublicas.length} {avaliacoesPublicas.length === 1 ? "avaliação" : "avaliações"}</Badge>
+              </div>
+
+              {/* Nota média */}
+              {medico.avaliacao_media > 0 && (
+                <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} className={cn("h-5 w-5", s <= Math.round(medico.avaliacao_media) ? "fill-warning text-warning" : "text-muted-foreground/30")} />
+                    ))}
+                  </div>
+                  <span className="text-lg font-bold">{medico.avaliacao_media.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground">({medico.total_avaliacoes} {medico.total_avaliacoes === 1 ? "avaliação" : "avaliações"})</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {avaliacoesPublicas.map((av: any) => (
+                  <div key={av.id} className="rounded-lg border border-border p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <Star key={s} className={cn("h-3.5 w-3.5", s <= av.nota ? "fill-warning text-warning" : "text-muted-foreground/30")} />
+                          ))}
+                        </div>
+                        <span className="text-xs font-medium">{(av.paciente_nome ?? "Paciente").split(" ")[0]}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(av.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    {av.comentario && (
+                      <p className="text-sm text-muted-foreground">{av.comentario}</p>
+                    )}
                   </div>
                 ))}
               </div>

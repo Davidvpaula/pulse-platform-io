@@ -1,19 +1,26 @@
 
-## Problema
+# Adicionar avaliações no perfil público do médico
 
-O botão "Iniciar" na página `/app/medico/consultas` tem duas condições extras que a página `/app/medico/agenda` não tem:
+## O que será feito
 
-1. **Requer `c.link_sala`** — se por algum motivo a sala não estiver preenchida, o botão não aparece
-2. **Requer estar a menos de 30 minutos do horário** — se a consulta é mais adiante, o botão some
+Na página pública do médico (`/medicos/:slug` - componente `MedicoDetalhe` em `PublicPages.tsx`), será adicionada uma seção **"Avaliações de pacientes"** exibindo as avaliações que o médico marcou como visíveis no site.
 
-Na Agenda, o botão aparece sempre que o status é `agendada` ou `confirmada`, sem essas restrições.
+## Detalhes
 
-## Correção
+### 1. Carregar avaliações visíveis (PublicPages.tsx - MedicoDetalhe)
+- No `useEffect` existente, após carregar planos, buscar da tabela `avaliacoes_medicas` onde:
+  - `medico_id = med.id`
+  - `avaliacao_publica = true`
+  - `exibir_no_perfil = true`
+- Também buscar o nome do paciente (via `profiles.nome`) para exibição
+- Ordenar por `created_at` desc, limitar a 10
 
-**Arquivo:** `src/pages/app/medico/MedicoConsultas.tsx`
+### 2. Renderizar seção de avaliações
+- Após a seção "Planos deste profissional" e antes do sidebar
+- Card com titulo "Avaliações de pacientes" + badge com total
+- Cada avaliação mostra: estrelas, comentário, nome do paciente (primeiro nome), data
+- Nota média destacada no topo com estrelas preenchidas
+- Se não houver avaliações visíveis, a seção não aparece
 
-1. **Remover a restrição de 30 minutos** do `podeIniciar` (linha 155-157) — a Fila de Atendimento é a página operacional, o médico deve poder iniciar a qualquer momento.
-
-2. **Remover a exigência de `c.link_sala`** do botão Iniciar (linha 230) — o botão deve aparecer independentemente de ter link de sala. Se tiver sala, abre após iniciar; se não tiver, só muda o status.
-
-Resultado: o botão Iniciar vai se comportar igual ao da Agenda.
+### Arquivos alterados
+- `src/pages/public/PublicPages.tsx` (MedicoDetalhe) - adicionar fetch + renderização
