@@ -45,6 +45,7 @@ export default function PacienteDashboard() {
 
   // Real empresa link
   const [empresaLink, setEmpresaLink] = useState<{ empresa: string; status: string } | null>(null);
+  const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
 
   useEffect(() => {
     if (!session) { setLoading(false); return; }
