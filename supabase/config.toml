@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.criar-checkout-stripe]
 verify_jwt = false
+
+[functions.criar-checkout-plano]
+verify_jwt = false
