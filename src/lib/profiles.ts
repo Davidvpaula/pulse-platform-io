@@ -147,6 +147,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Repasse e comissões", to: "/app/admin/financeiro/repasse", requiresCapability: "financeiro.editar_comissao" },
           { label: "Prévia de repasse", to: "/app/admin/financeiro/previa-repasse", requiresCapability: "financeiro.editar_comissao" },
           { label: "Saques médicos", to: "/app/admin/financeiro/saques-medicos", requiresCapability: "financeiro.saques.ver" },
+          { label: "Reembolsos", to: "/app/admin/financeiro/reembolsos", requiresCapability: "financeiro.ver" },
         ],
       },
       {
