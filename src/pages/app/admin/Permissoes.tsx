@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminLoading, AdminError, AdminEmpty } from "@/components/admin/AdminStates";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, ShieldCheck, BadgeCheck, MessageSquare, Wallet, Activity, Loader2, Search, ChevronRight, History } from "lucide-react";
+import { Users, ShieldCheck, BadgeCheck, MessageSquare, Wallet, Activity, Search, ChevronRight, History } from "lucide-react";
 import { ColaboradorPermissoesDrawer } from "@/components/permissions/ColaboradorPermissoesDrawer";
 import { MatrizPermissoes } from "@/components/permissions/MatrizPermissoes";
 import { FUNCOES, ROLES, STATUS_BADGE } from "@/lib/permissions/constants";
@@ -28,10 +30,33 @@ interface Colab {
   funcao_interna: string; status_conta: string; ultimo_acesso_em: string | null;
 }
 
+function usePermissoesData() {
+  return useQuery({
+    queryKey: ["admin", "permissoes-page"],
+    queryFn: async () => {
+      const [kpiRes, colabRes, audRes] = await Promise.all([
+        supabase.rpc("permissoes_dashboard" as never),
+        supabase.from("colaboradores")
+          .select("id,user_id,nome_completo,email,funcao_interna,status_conta,ultimo_acesso_em")
+          .neq("status_conta", "removido")
+          .order("nome_completo"),
+        supabase.from("permission_audit_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
+      return {
+        kpis: kpiRes.data as KPIs | null,
+        colabs: (colabRes.data as Colab[]) || [],
+        auditoria: audRes.data || [],
+      };
+    },
+    staleTime: 60_000,
+  });
+}
+
 export default function Permissoes() {
-  const [kpis, setKpis] = useState<KPIs | null>(null);
-  const [colabs, setColabs] = useState<Colab[]>([]);
-  const [loadingColab, setLoadingColab] = useState(true);
+  const { data, isLoading, error, refetch } = usePermissoesData();
   const [busca, setBusca] = useState("");
   const [filtroFuncao, setFiltroFuncao] = useState<string>("todos");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -39,30 +64,13 @@ export default function Permissoes() {
   const [funcaoSel, setFuncaoSel] = useState<string>("secretaria");
   const [drawerColab, setDrawerColab] = useState<Colab | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [auditoria, setAuditoria] = useState<any[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const { data: k } = await supabase.rpc("permissoes_dashboard");
-      setKpis(k as any);
+  if (isLoading) return <AdminLoading cards={5} rows={6} />;
+  if (error) return <AdminError message={(error as Error).message} onRetry={() => refetch()} />;
 
-      setLoadingColab(true);
-      const { data: cs } = await supabase
-        .from("colaboradores")
-        .select("id,user_id,nome_completo,email,funcao_interna,status_conta,ultimo_acesso_em")
-        .neq("status_conta", "removido")
-        .order("nome_completo");
-      setColabs((cs as Colab[]) || []);
-      setLoadingColab(false);
-
-      const { data: aud } = await supabase
-        .from("permission_audit_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(30);
-      setAuditoria(aud || []);
-    })();
-  }, []);
+  const kpis = data?.kpis;
+  const colabs = data?.colabs ?? [];
+  const auditoria = data?.auditoria ?? [];
 
   const colabsFiltrados = colabs.filter(c => {
     if (busca && !`${c.nome_completo} ${c.email}`.toLowerCase().includes(busca.toLowerCase())) return false;
@@ -70,11 +78,6 @@ export default function Permissoes() {
     if (filtroStatus !== "todos" && c.status_conta !== filtroStatus) return false;
     return true;
   });
-
-  function abrirColab(c: Colab) {
-    setDrawerColab(c);
-    setDrawerOpen(true);
-  }
 
   return (
     <div className="space-y-6">
@@ -89,7 +92,7 @@ export default function Permissoes() {
           </Link>
         </Button>
       </div>
-      {/* KPIs */}
+
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
         <KpiMini icon={Users} label="Colaboradores ativos" value={kpis?.colaboradores_ativos ?? "—"} />
         <KpiMini icon={BadgeCheck} label="Com supervisão" value={kpis?.com_supervisor ?? "—"} />
@@ -106,17 +109,11 @@ export default function Permissoes() {
           <TabsTrigger value="auditoria">Histórico</TabsTrigger>
         </TabsList>
 
-        {/* === COLABORADORES === */}
         <TabsContent value="colaboradores" className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="w-72 pl-8"
-                placeholder="Buscar por nome ou e-mail..."
-                value={busca}
-                onChange={e => setBusca(e.target.value)}
-              />
+              <Input className="w-72 pl-8" placeholder="Buscar por nome ou e-mail..." value={busca} onChange={e => setBusca(e.target.value)} />
             </div>
             <Select value={filtroFuncao} onValueChange={setFiltroFuncao}>
               <SelectTrigger className="w-44"><SelectValue placeholder="Função" /></SelectTrigger>
@@ -138,12 +135,8 @@ export default function Permissoes() {
           </div>
 
           <div className="card-elevated overflow-hidden">
-            {loadingColab ? (
-              <div className="flex items-center justify-center p-12 text-muted-foreground">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
-              </div>
-            ) : colabsFiltrados.length === 0 ? (
-              <div className="p-12 text-center text-sm text-muted-foreground">Nenhum colaborador encontrado</div>
+            {colabsFiltrados.length === 0 ? (
+              <AdminEmpty title="Nenhum colaborador encontrado" />
             ) : (
               <table className="min-w-full text-sm">
                 <thead className="bg-muted/40">
@@ -171,7 +164,7 @@ export default function Permissoes() {
                         {c.ultimo_acesso_em ? new Date(c.ultimo_acesso_em).toLocaleString("pt-BR") : "—"}
                       </td>
                       <td className="p-3 text-right">
-                        <Button size="sm" variant="outline" onClick={() => abrirColab(c)}>
+                        <Button size="sm" variant="outline" onClick={() => { setDrawerColab(c); setDrawerOpen(true); }}>
                           Permissões <ChevronRight className="ml-1 h-3 w-3" />
                         </Button>
                       </td>
@@ -183,7 +176,6 @@ export default function Permissoes() {
           </div>
         </TabsContent>
 
-        {/* === FUNÇÃO INTERNA === */}
         <TabsContent value="funcao" className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Função:</span>
@@ -200,7 +192,6 @@ export default function Permissoes() {
           <MatrizPermissoes scope="funcao" scopeValue={funcaoSel} />
         </TabsContent>
 
-        {/* === PERFIL === */}
         <TabsContent value="perfil" className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Perfil:</span>
@@ -217,7 +208,6 @@ export default function Permissoes() {
           <MatrizPermissoes scope="perfil" scopeValue={perfilSel} />
         </TabsContent>
 
-        {/* === AUDITORIA === */}
         <TabsContent value="auditoria" className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">Mostrando as 30 alterações mais recentes.</p>
@@ -242,20 +232,20 @@ export default function Permissoes() {
               <tbody>
                 {auditoria.length === 0 ? (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Sem alterações registradas</td></tr>
-                ) : auditoria.map(a => (
-                  <tr key={a.id} className="border-t border-border">
-                    <td className="p-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-BR")}</td>
-                    <td className="p-3 capitalize">{a.scope}</td>
-                    <td className="p-3 text-xs">{a.target_role || a.target_funcao || a.target_user_id?.slice(0, 8)}</td>
-                    <td className="p-3 font-mono text-xs">{a.permission_key}</td>
+                ) : auditoria.map((a: Record<string, unknown>) => (
+                  <tr key={a.id as string} className="border-t border-border">
+                    <td className="p-3 text-xs text-muted-foreground">{new Date(a.created_at as string).toLocaleString("pt-BR")}</td>
+                    <td className="p-3 capitalize">{a.scope as string}</td>
+                    <td className="p-3 text-xs">{(a.target_role || a.target_funcao || (a.target_user_id as string)?.slice(0, 8)) as string}</td>
+                    <td className="p-3 font-mono text-xs">{a.permission_key as string}</td>
                     <td className="p-3">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                         a.acao === "concedida" ? "bg-success/15 text-success"
                         : a.acao === "revogada" ? "bg-destructive/15 text-destructive"
                         : "bg-muted text-muted-foreground"
-                      }`}>{a.acao}</span>
+                      }`}>{a.acao as string}</span>
                     </td>
-                    <td className="p-3 text-xs text-muted-foreground">{a.motivo || "—"}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{(a.motivo as string) || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -273,7 +263,7 @@ export default function Permissoes() {
   );
 }
 
-function KpiMini({ icon: Icon, label, value }: { icon: any; label: string; value: any }) {
+function KpiMini({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number }) {
   return (
     <div className="card-elevated p-4">
       <div className="flex items-center justify-between">
