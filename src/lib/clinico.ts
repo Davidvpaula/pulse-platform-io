@@ -1285,7 +1285,7 @@ export type ReservaUnificadaResult = {
 export async function reservarSlotUnificado(
   input: ReservaUnificadaInput,
 ): Promise<ReservaUnificadaResult> {
-  const { data, error } = await supabase.rpc("reservar_slot_unificado" as any, {
+  const { data, error } = await supabase.rpc("reservar_slot_unificado", {
     _slot_id: input.slot_id,
     _tipo: input.tipo,
     _referencia_id: input.referencia_id,
