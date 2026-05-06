@@ -24,6 +24,7 @@ interface Props {
  */
 export function RequireRoutePermission({ perm, all, children }: Props) {
   const { session } = useSession();
+  const { profileKey } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { loading, hasAny, hasAll } = usePermission(perm);
 
