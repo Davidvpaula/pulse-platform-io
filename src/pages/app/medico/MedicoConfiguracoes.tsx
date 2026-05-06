@@ -59,6 +59,8 @@ const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
 };
 
 export default function MedicoConfiguracoes() {
+  const { medico: medicoAtualHook } = useMedicoAtual();
+  const hookMedicoId = medicoAtualHook?.id ?? null;
   // ── Google Meet & Calendar ──
   const [googleStatus, setGoogleStatus] = useState<{
     connected: boolean;
