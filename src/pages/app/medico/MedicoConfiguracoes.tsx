@@ -99,7 +99,7 @@ export default function MedicoConfiguracoes() {
       const { data, error } = await supabase.functions.invoke("google-oauth", {
         body: { action: "status" },
       });
-      if (!error && data && !data.error) {
+      if (!error && data && !data.error && !data.not_configured) {
         setGoogleStatus({
           connected: data.connected,
           google_email: data.google_email,
