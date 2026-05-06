@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { useSession } from "@/lib/session";
+import { useAuth } from "@/lib/auth";
+import { profiles } from "@/lib/profiles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
@@ -22,6 +24,7 @@ interface Props {
  */
 export function RequireRoutePermission({ perm, all, children }: Props) {
   const { session } = useSession();
+  const { profileKey } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { loading, hasAny, hasAll } = usePermission(perm);
 
@@ -62,7 +65,7 @@ export function RequireRoutePermission({ perm, all, children }: Props) {
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link to="/app/admin/dashboard">Voltar ao início</Link>
+            <Link to={`${profiles[profileKey].basePath}/dashboard`}>Voltar ao início</Link>
           </Button>
         </CardContent>
       </Card>
