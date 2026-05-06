@@ -39,13 +39,13 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
         const { data } = await supabase
           .from("permissoes_perfil")
           .select("permission_key,ativo")
-          .eq("role", scopeValue as any);
+          .eq("role", scopeValue as AppRole);
         setAtivos(new Set((data || []).filter(d => d.ativo).map(d => d.permission_key)));
       } else {
         const { data } = await supabase
           .from("function_permissions")
           .select("permission_key,ativo")
-          .eq("funcao_interna", scopeValue as any);
+          .eq("funcao_interna", scopeValue as FuncaoInterna);
         setAtivos(new Set((data || []).filter(d => d.ativo).map(d => d.permission_key)));
       }
       setLoading(false);
