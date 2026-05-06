@@ -53,6 +53,7 @@ export default function MedicoFinanceiro() {
   const [rows, setRows] = useState<FinRow[]>([]);
   const [periodo, setPeriodo] = useState<typeof periodos[number]["key"]>("30d");
   const [medicoId, setMedicoId] = useState<string | null>(null);
+  const { medico: medicoAtual } = useMedicoAtual();
 
   // Saque state
   const [saqueConfig, setSaqueConfig] = useState<SaqueConfig | null>(null);
