@@ -5,6 +5,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
+type PacienteUpdate = Database["public"]["Tables"]["pacientes"]["Update"];
+type PacienteInsert = Database["public"]["Tables"]["pacientes"]["Insert"];
+type DocumentoPacienteInsert = Database["public"]["Tables"]["documentos_paciente"]["Insert"];
+type ServicosFinanceirosUpdate = Database["public"]["Tables"]["servicos_financeiros"]["Update"];
+
 export type Consulta = Database["public"]["Tables"]["consultas"]["Row"];
 export type ConsultaStatus = Database["public"]["Enums"]["consulta_status"];
 export type ConsultaModalidade = Database["public"]["Enums"]["consulta_modalidade"];
