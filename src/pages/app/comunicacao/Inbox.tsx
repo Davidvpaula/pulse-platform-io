@@ -206,7 +206,7 @@ export default function ComunicacaoInbox() {
       .in("id", consultaIds);
     if (data) {
       const m: Record<string, ConsultaJanela> = {};
-      (data as any[]).forEach(c => { m[c.id] = c; });
+      (data).forEach(c => { m[c.id] = c; });
       setConsultasMap(m);
     }
   }, [isMedico, medicoUserId]);
