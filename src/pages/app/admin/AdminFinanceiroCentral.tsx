@@ -24,7 +24,7 @@ export default function AdminFinanceiroCentral() {
   const hoje = new Date();
   const [inicio, setInicio] = useState(new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10));
   const [fim, setFim] = useState(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10));
-  const [dash, setDash] = useState<FinanceiroCentralDashboard | Record<string, number> | null>(null);
+  const [dash, setDash] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(false);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [reembolsos, setReembolsos] = useState<any[]>([]);
