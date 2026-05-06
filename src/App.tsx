@@ -25,6 +25,7 @@ import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
 import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
 import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
 import MedicoGuard from "@/components/MedicoGuard";
+import PacienteGuard from "@/components/PacienteGuard";
 
 import Placeholder from "@/pages/app/_Placeholder";
 import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";
@@ -209,26 +210,28 @@ const App = () => (
               <Route index element={<SmartRedirect />} />
 
               {/* Paciente */}
-              <Route path="paciente/dashboard" element={<PacienteDashboard />} />
-              <Route path="paciente/agendamentos" element={<PacienteAgendamentos />} />
-              <Route path="paciente/documentos" element={<PacienteDocumentos />} />
-              <Route path="paciente/plano" element={<PacientePlano />} />
-              <Route path="paciente/montar-plano" element={<PacienteMontarPlano />} />
-              <Route path="paciente/plano-checkout-retorno" element={<PlanoCheckoutRetorno />} />
-              <Route path="paciente/assinar-plano/:planoId" element={<PacienteAssinarPlano />} />
-              <Route path="paciente/financeiro" element={<PacienteFinanceiro />} />
-              <Route path="paciente/perfil" element={<PacientePerfilPage />} />
-              <Route path="paciente/mensagens" element={<PacienteMensagens />} />
+              <Route path="paciente/dashboard" element={<PacienteGuard><PacienteDashboard /></PacienteGuard>} />
+              <Route path="paciente/agendamentos" element={<PacienteGuard><PacienteAgendamentos /></PacienteGuard>} />
+              <Route path="paciente/documentos" element={<PacienteGuard><PacienteDocumentos /></PacienteGuard>} />
+              <Route path="paciente/plano" element={<PacienteGuard><PacientePlano /></PacienteGuard>} />
+              <Route path="paciente/montar-plano" element={<PacienteGuard><PacienteMontarPlano /></PacienteGuard>} />
+              <Route path="paciente/plano-checkout-retorno" element={<PacienteGuard><PlanoCheckoutRetorno /></PacienteGuard>} />
+              <Route path="paciente/assinar-plano/:planoId" element={<PacienteGuard><PacienteAssinarPlano /></PacienteGuard>} />
+              <Route path="paciente/financeiro" element={<PacienteGuard><PacienteFinanceiro /></PacienteGuard>} />
+              <Route path="paciente/perfil" element={<PacienteGuard><PacientePerfilPage /></PacienteGuard>} />
+              <Route path="paciente/mensagens" element={<PacienteGuard><PacienteMensagens /></PacienteGuard>} />
               <Route
                 path="paciente/checkout/:sessionId"
                 element={
-                  <PacienteParamGuard param="sessionId" pattern={CHECKOUT_SESSION_RE}>
-                    <PacienteCheckout />
-                  </PacienteParamGuard>
+                  <PacienteGuard>
+                    <PacienteParamGuard param="sessionId" pattern={CHECKOUT_SESSION_RE}>
+                      <PacienteCheckout />
+                    </PacienteParamGuard>
+                  </PacienteGuard>
                 }
               />
-              <Route path="paciente/pagamento/sucesso" element={<PacientePagamentoSucesso />} />
-              <Route path="paciente/pagamento/cancelado" element={<PacientePagamentoCancelado />} />
+              <Route path="paciente/pagamento/sucesso" element={<PacienteGuard><PacientePagamentoSucesso /></PacienteGuard>} />
+              <Route path="paciente/pagamento/cancelado" element={<PacienteGuard><PacientePagamentoCancelado /></PacienteGuard>} />
               {/* Rota legada → redirect para rota unificada */}
               <Route
                 path="paciente/agendar/confirmar/:slotId"

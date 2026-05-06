@@ -13,6 +13,8 @@ import AvaliacaoPendenteBanner from "@/components/paciente/AvaliacaoPendenteBann
 import HistoricoCancelamentos from "@/components/paciente/HistoricoCancelamentos";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
+import { usePacienteAtual } from "@/lib/usePacienteAtual";
+import { PacienteLoading } from "@/components/paciente/PacienteStates";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge, listRetornosDisponiveis, type RetornoComContexto } from "@/lib/clinico";
 import { brl } from "@/lib/format";
@@ -34,6 +36,7 @@ type ConsultaItem = {
 export default function PacienteDashboard() {
   const { user } = useAuth();
   const { session } = useSession();
+  const { paciente: pacienteAtual } = usePacienteAtual();
 
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<ConsultaItem[]>([]);
@@ -49,7 +52,7 @@ export default function PacienteDashboard() {
   const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
 
   useEffect(() => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !pacienteAtual) { setLoading(false); return; }
 
     async function load() {
       setLoading(true);
@@ -74,15 +77,10 @@ export default function PacienteDashboard() {
         const consultasMes = rows.filter(c => new Date(c.inicio) >= inicioMes);
         setStatsConsultas(consultasMes.length);
 
-        // Stats: docs (prescrições)
-        const uid = session.user.id;
-        const { data: paciente } = await supabase
-          .from("pacientes")
-          .select("id")
-          .eq("user_id", uid)
-          .maybeSingle();
+        // Stats: docs (prescrições) — usa pacienteAtual do hook
+        const pacienteId = pacienteAtual!.id;
 
-        if (paciente) {
+        {
           // Documentos count
           const consIds = rows.map(c => c.id);
           if (consIds.length > 0) {
@@ -97,7 +95,7 @@ export default function PacienteDashboard() {
           const { data: assinatura } = await supabase
             .from("assinaturas")
             .select("plano_id, status, planos(nome)")
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .in("status", ["ativa", "trial"])
             .order("created_at", { ascending: false })
             .limit(1)
@@ -111,7 +109,7 @@ export default function PacienteDashboard() {
           const { count: pendCount } = await supabase
             .from("pagamentos")
             .select("id", { count: "exact", head: true })
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .in("status", ["pendente", "processando"]);
           setPendenciasFinanceiras(pendCount ?? 0);
 
@@ -119,7 +117,7 @@ export default function PacienteDashboard() {
           const { data: funcRow } = await supabase
             .from("empresas_funcionarios")
             .select("empresa_id, status, empresas(nome_fantasia)")
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .eq("status", "ativo")
             .limit(1)
             .maybeSingle();
@@ -141,7 +139,7 @@ export default function PacienteDashboard() {
       }
     }
     load();
-  }, [session]);
+  }, [session, pacienteAtual]);
 
   // Only future consultations for hero and list
   const now = new Date();
@@ -159,11 +157,7 @@ export default function PacienteDashboard() {
   const empresarial = !!empresaLink;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-20 text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando seu painel...
-      </div>
-    );
+    return <PacienteLoading message="Carregando seu painel..." />;
   }
 
   return (
