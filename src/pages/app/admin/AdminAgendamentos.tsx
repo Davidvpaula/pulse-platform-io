@@ -143,7 +143,7 @@ export default function AdminAgendamentos() {
   // Auditoria drawer
   const [auditOpen, setAuditOpen] = useState(false);
   const [auditConsulta, setAuditConsulta] = useState<ConsultaRow | null>(null);
-  const [auditLogs, setAuditLogs] = useState<Record<string, unknown>[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: adminKeys.agendamentos(filtroData) });
