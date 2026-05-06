@@ -50,12 +50,13 @@ Deno.serve(async (req) => {
     if (!FEEGOW_TOKEN) return json({ error: "FEEGOW_API_TOKEN não configurado" }, 500);
 
     // Auth: aceitar user logado OU service key via header x-service-key
+    const auth = req.headers.get("Authorization") ?? "";
     const serviceKey = req.headers.get("x-service-key") ?? "";
     let userId: string | null = null;
-    const isServiceCall = serviceKey === SERVICE_KEY;
+    const token = auth.replace("Bearer ", "");
+    const isServiceCall = serviceKey === SERVICE_KEY || token === SERVICE_KEY;
 
     if (!isServiceCall) {
-      const auth = req.headers.get("Authorization") ?? "";
       if (!auth.startsWith("Bearer ")) return json({ error: "Não autenticado" }, 401);
       const userClient = createClient(SUPABASE_URL, ANON_KEY, {
         global: { headers: { Authorization: auth } },
