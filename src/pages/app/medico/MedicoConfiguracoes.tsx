@@ -209,11 +209,11 @@ export default function MedicoConfiguracoes() {
   useEffect(() => {
     (async () => {
       setLoadingAt(true);
-      const [esps, paDur, medicoId] = await Promise.all([
+      const [esps, paDur] = await Promise.all([
         listEspecialidades(),
         getProntoAtendimentoDuracao(),
-        getMedicoAtualId(),
       ]);
+      const medicoId = hookMedicoId;
       setEspecialidades(esps);
       setPaDuracao(paDur);
 
