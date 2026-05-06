@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import type { Database } from "@/integrations/supabase/types";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
