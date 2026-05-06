@@ -313,7 +313,7 @@ const App = () => (
               <Route path="colaborador/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
 
               {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
-              <Route path="admin/dashboard" element={<AdminDashboard />} />
+              <Route path="admin/dashboard" element={<G perm="admin.dashboard"><AdminDashboard /></G>} />
               <Route path="admin/pacientes" element={<G perm="pacientes.ver"><AdminUsuarios /></G>} />
               <Route path="admin/usuarios" element={<Navigate to="/app/admin/pacientes" replace />} />
               <Route path="admin/medicos" element={<G perm={["medicos.ver","medicos.aprovar"]}><MedicosAprovacao /></G>} />
@@ -345,7 +345,7 @@ const App = () => (
               <Route path="admin/integracoes" element={<G perm="integracoes.ver"><AdminIntegracoes /></G>} />
               
               <Route path="admin/configuracoes" element={<G perm="configuracoes.ver"><AdminConfiguracoes /></G>} />
-              <Route path="admin/perfil" element={<AdminPerfil />} />
+              <Route path="admin/perfil" element={<G perm="admin.dashboard"><AdminPerfil /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
@@ -368,8 +368,8 @@ const App = () => (
               <Route path="admin/relatorios/auditoria" element={<Navigate to="/app/admin/auditoria?tab=painel" replace />} />
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
-              <Route path="admin/comunicacao-interna" element={<ComunicacaoInterna />} />
-              <Route path="admin/faq" element={<AdminFaq />} />
+              <Route path="admin/comunicacao-interna" element={<G perm="admin.dashboard"><ComunicacaoInterna /></G>} />
+              <Route path="admin/faq" element={<G perm="admin.dashboard"><AdminFaq /></G>} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
               <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />
