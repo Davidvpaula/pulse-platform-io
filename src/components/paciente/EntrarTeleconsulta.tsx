@@ -65,7 +65,7 @@ export default function EntrarTeleconsulta({
     if (!linkSala || !podeEntrar) return;
 
     // Audit log async — não bloqueia a entrada
-    obs.info("teleconsulta", "Paciente acessou sala", {
+    obs.info("auth", "Paciente acessou sala de teleconsulta", {
       module: "paciente",
       meta: { consultaId },
     });
