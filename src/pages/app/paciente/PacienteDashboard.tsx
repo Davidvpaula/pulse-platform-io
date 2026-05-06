@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   Video, FileText, Wallet, MessageSquare, Calendar, BadgeCheck,
-  ChevronRight, Building2, User, MessageCircle, Repeat, Stethoscope, Loader2, Bell, Gift,
+  ChevronRight, Building2, User, MessageCircle, Repeat, Stethoscope, Bell, Gift,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -14,11 +14,13 @@ import HistoricoCancelamentos from "@/components/paciente/HistoricoCancelamentos
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
-import { PacienteLoading } from "@/components/paciente/PacienteStates";
+import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
+import ConsultaCountdown from "@/components/paciente/ConsultaCountdown";
 import { useSession } from "@/lib/session";
-import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge, listRetornosDisponiveis, type RetornoComContexto } from "@/lib/clinico";
+import { formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { usePacienteConsultas, usePacienteRetornos, usePacienteDashboardStats } from "@/lib/paciente/queries";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Status type used by StatusBadge */
@@ -30,7 +32,7 @@ type BadgeStatus =
 type ConsultaItem = {
   id: string; medico: string; esp: string; data: string; hora: string;
   modalidade: string; status: BadgeStatus; linkSala?: string | null;
-  inicio: string; // ISO original for filtering
+  inicio: string;
 };
 
 export default function PacienteDashboard() {
@@ -38,108 +40,39 @@ export default function PacienteDashboard() {
   const { session } = useSession();
   const { paciente: pacienteAtual } = usePacienteAtual();
 
-  const [loading, setLoading] = useState(true);
-  const [consultas, setConsultas] = useState<ConsultaItem[]>([]);
-  const [statsConsultas, setStatsConsultas] = useState(0);
-  const [statsDocs, setStatsDocs] = useState(0);
+  const hasSession = !!session;
+  const pacienteId = pacienteAtual?.id ?? null;
 
-  // Real stats
-  const [planoNome, setPlanoNome] = useState<string | null>(null);
-  const [pendenciasFinanceiras, setPendenciasFinanceiras] = useState(0);
+  const { data: rawConsultas, isLoading: loadingConsultas, error: errorConsultas, refetch } = usePacienteConsultas(hasSession);
+  const { data: vouchers = [] } = usePacienteRetornos(hasSession);
+  const { data: dashStats } = usePacienteDashboardStats(pacienteId, hasSession && !!pacienteId);
 
-  // Real empresa link
-  const [empresaLink, setEmpresaLink] = useState<{ empresa: string; status: string } | null>(null);
-  const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
+  const planoNome = dashStats?.planoNome ?? null;
+  const pendenciasFinanceiras = dashStats?.pendenciasFinanceiras ?? 0;
+  const empresaLink = dashStats?.empresaLink ?? null;
 
-  useEffect(() => {
-    if (!session || !pacienteAtual) { setLoading(false); return; }
+  const consultas: ConsultaItem[] = useMemo(() =>
+    (rawConsultas ?? []).map((c) => ({
+      id: c.id,
+      medico: c.medico_nome ?? "Médico",
+      esp: c.especialidade_nome ?? "—",
+      data: formatDataBR(c.inicio),
+      hora: formatHora(c.inicio),
+      modalidade: c.modalidade,
+      status: toStatusBadge(c.status),
+      linkSala: c.link_sala,
+      inicio: c.inicio,
+    })),
+    [rawConsultas],
+  );
 
-    async function load() {
-      setLoading(true);
-      try {
-        const rows = await listConsultasDoPaciente();
-        const mapped = rows.map((c) => ({
-          id: c.id,
-          medico: c.medico_nome ?? "Médico",
-          esp: c.especialidade_nome ?? "—",
-          data: formatDataBR(c.inicio),
-          hora: formatHora(c.inicio),
-          modalidade: c.modalidade,
-          status: toStatusBadge(c.status),
-          linkSala: c.link_sala,
-          inicio: c.inicio,
-        }));
-        setConsultas(mapped);
+  const statsConsultas = useMemo(() => {
+    const now = new Date();
+    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+    return (rawConsultas ?? []).filter(c => new Date(c.inicio) >= inicioMes).length;
+  }, [rawConsultas]);
 
-        // Stats: consultas neste mês
-        const now = new Date();
-        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-        const consultasMes = rows.filter(c => new Date(c.inicio) >= inicioMes);
-        setStatsConsultas(consultasMes.length);
-
-        // Stats: docs (prescrições) — usa pacienteAtual do hook
-        const pacienteId = pacienteAtual!.id;
-
-        {
-          // Documentos count
-          const consIds = rows.map(c => c.id);
-          if (consIds.length > 0) {
-            const { count } = await supabase
-              .from("prescricoes")
-              .select("id", { count: "exact", head: true })
-              .in("consulta_id", consIds);
-            setStatsDocs(count ?? 0);
-          }
-
-          // Real: plano ativo
-          const { data: assinatura } = await supabase
-            .from("assinaturas")
-            .select("plano_id, status, planos(nome)")
-            .eq("paciente_id", pacienteId)
-            .in("status", ["ativa", "trial"])
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (assinatura) {
-            const nome = (assinatura as any).planos?.nome;
-            setPlanoNome(nome ?? "Plano ativo");
-          }
-
-          // Real: pendências financeiras
-          const { count: pendCount } = await supabase
-            .from("pagamentos")
-            .select("id", { count: "exact", head: true })
-            .eq("paciente_id", pacienteId)
-            .in("status", ["pendente", "processando"]);
-          setPendenciasFinanceiras(pendCount ?? 0);
-
-          // Real: vínculo empresarial
-          const { data: funcRow } = await supabase
-            .from("empresas_funcionarios")
-            .select("empresa_id, status, empresas(nome_fantasia)")
-            .eq("paciente_id", pacienteId)
-            .eq("status", "ativo")
-            .limit(1)
-            .maybeSingle();
-          if (funcRow) {
-            setEmpresaLink({
-              empresa: (funcRow as any).empresas?.nome_fantasia ?? "Empresa",
-              status: funcRow.status,
-            });
-        }
-
-        // Retornos gratuitos disponíveis
-        const vs = await listRetornosDisponiveis();
-        setVouchers(vs);
-        }
-      } catch (e) {
-        console.error("[PacienteDashboard] load:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [session, pacienteAtual]);
+  const loading = loadingConsultas;
 
   // Only future consultations for hero and list
   const now = new Date();
@@ -239,6 +172,7 @@ export default function PacienteDashboard() {
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 border border-border">
                     <Calendar className="h-3.5 w-3.5 text-primary" /> {proxima.data} · {proxima.hora}
                   </span>
+                  <ConsultaCountdown targetIso={proxima.inicio} />
                   <StatusBadge status={proxima.status} />
                 </div>
               </>
@@ -290,7 +224,7 @@ export default function PacienteDashboard() {
           <StatCard label="Consultas no mês" value={String(statsConsultas)} icon={Calendar} hint={`${futuras.length} agendada(s)`} />
         </Link>
         <Link to="/app/paciente/documentos" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Documentos" value={String(statsDocs)} icon={FileText} hint="Receitas e atestados" />
+          <StatCard label="Documentos" value="—" icon={FileText} hint="Receitas e atestados" />
         </Link>
         <Link to="/app/paciente/plano" className="block transition hover:-translate-y-0.5">
           <StatCard label="Plano" value={planoNome ?? "—"} icon={BadgeCheck} hint={planoNome ? "Plano ativo" : "Nenhum plano ativo"} />
