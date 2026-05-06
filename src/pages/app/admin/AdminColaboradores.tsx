@@ -219,7 +219,8 @@ function funcaoLabel(f: FuncaoInterna) {
 // ============= COMPONENT =============
 export default function AdminColaboradores() {
   const { toast } = useToast();
-  const { data: rows = [], isLoading: loading, refetch: load } = useColaboradores();
+  const { data: rawRows = [], isLoading: loading, refetch: load } = useColaboradores();
+  const rows = rawRows as unknown as ColabRow[];
   const [filtro, setFiltro] = useState<typeof FILTROS[number]["key"]>("todos");
   const [busca, setBusca] = useState("");
 
