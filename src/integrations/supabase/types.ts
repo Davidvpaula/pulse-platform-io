@@ -8258,7 +8258,7 @@ export type Database = {
             Returns: Json
           }
       relatorios_financeiro_snapshot: {
-        Args: { p_fim?: string; p_inicio?: string; p_medico?: string }
+        Args: { p_compare_mode?: string; p_fim?: string; p_inicio?: string }
         Returns: Json
       }
       relatorios_marketing_funil: {
