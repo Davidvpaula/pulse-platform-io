@@ -95,20 +95,87 @@ Deno.serve(async (req) => {
           nome_completo: pac.nome_completo,
           cpf_mascarado: cpfLimpo.slice(0, 3) + "***" + cpfLimpo.slice(-2),
         },
-        payload_enviado: { ...payload, cpf: cpfLimpo.slice(0, 3) + "***" + cpfLimpo.slice(-2) },
         passos: [],
       };
       const passos = relatorio.passos as Record<string, unknown>[];
 
-      // Passo 1: Criar paciente na Feegow
-      const createResp = await fetch(`${FEEGOW_URL}/patient/store`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-access-token": FEEGOW_TOKEN,
+      // Passo 0: Listar origens disponíveis
+      let origensResp: Response | null = null;
+      try {
+        origensResp = await fetch(`${FEEGOW_URL}/patient/list-origins`, {
+          method: "GET",
+          headers: { "x-access-token": FEEGOW_TOKEN },
+        });
+        const origensData = await origensResp.json().catch(() => null);
+        passos.push({
+          passo: 0,
+          descricao: "Listar origens de paciente na Feegow",
+          endpoint: `GET ${FEEGOW_URL}/patient/list-origins`,
+          http_status: origensResp.status,
+          resposta_resumo: origensData ? JSON.stringify(origensData).slice(0, 500) : "sem body",
+        });
+      } catch (e) {
+        passos.push({ passo: 0, descricao: "Listar origens", erro: (e as Error).message });
+      }
+
+      // Tentar 3 variações de endpoint/payload
+      const tentativas = [
+        {
+          label: "/patient/store com nome + cpf + origem_id",
+          endpoint: "/patient/store",
+          body: payload,
         },
-        body: JSON.stringify(payload),
-      });
+        {
+          label: "/patient/store com nome_completo + cpf",
+          endpoint: "/patient/store",
+          body: { ...payload, nome: undefined, nome_completo: pac.nome_completo },
+        },
+        {
+          label: "/patient/new-patient com nome + cpf",
+          endpoint: "/patient/new-patient",
+          body: payload,
+        },
+      ];
+
+      let feegowId: string | number | null = null;
+      let tentativaOk: string | null = null;
+
+      for (let i = 0; i < tentativas.length; i++) {
+        const t = tentativas[i];
+        const createResp = await fetch(`${FEEGOW_URL}${t.endpoint}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": FEEGOW_TOKEN,
+          },
+          body: JSON.stringify(t.body),
+        });
+        const createData = await createResp.json().catch(() => null);
+        const createText = createData ? JSON.stringify(createData).slice(0, 500) : "sem body";
+
+        const id = createData?.content?.paciente_id
+          ?? createData?.content?.id
+          ?? createData?.paciente_id
+          ?? createData?.id
+          ?? null;
+
+        passos.push({
+          passo: i + 1,
+          descricao: `Tentativa: ${t.label}`,
+          endpoint: `POST ${FEEGOW_URL}${t.endpoint}`,
+          http_status: createResp.status,
+          sucesso: createResp.ok,
+          feegow_paciente_id: id,
+          resposta_resumo: createText,
+          payload_mascarado: { ...t.body, cpf: cpfLimpo.slice(0, 3) + "***" + cpfLimpo.slice(-2) },
+        });
+
+        if (createResp.ok && id) {
+          feegowId = id;
+          tentativaOk = t.label;
+          break; // Parar no primeiro sucesso
+        }
+      }
       const createData = await createResp.json().catch(() => null);
       const createText = createData ? JSON.stringify(createData).slice(0, 500) : "sem body";
 
