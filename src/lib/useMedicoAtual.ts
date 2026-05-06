@@ -60,21 +60,26 @@ export function useMedicoAtual(): UseMedicoAtualReturn {
     setLoading(true);
 
     (async () => {
+      const start = performance.now();
       const { data, error: err } = await supabase
         .from("medicos")
         .select("id, user_id, nome, email, crm, crm_estado, especialidade, status, link_sala_padrao, foto_url, telefone, bio, suspenso_ate, suspenso_indeterminado, suspensao_motivo, bloqueio_motivo, prioridade_atendimento, tipo_sala")
         .eq("user_id", uid)
         .maybeSingle();
+      const durationMs = Math.round(performance.now() - start);
 
       if (!active) return;
 
       if (err) {
+        obs.error("auth", "useMedicoAtual — falha ao buscar médico", { module: "medico", durationMs, meta: { error: err.message } });
         setError(err.message);
         setMedico(null);
       } else if (!data) {
+        obs.info("auth", "useMedicoAtual — registro não encontrado", { module: "medico", durationMs });
         setError(null);
         setMedico(null);
       } else {
+        obs.info("auth", "useMedicoAtual — carregado", { module: "medico", durationMs, meta: { medicoId: data.id, status: data.status } });
         setError(null);
         setMedico({
           id: data.id,
