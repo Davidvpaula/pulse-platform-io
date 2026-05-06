@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
