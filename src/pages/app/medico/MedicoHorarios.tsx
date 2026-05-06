@@ -43,11 +43,11 @@ import {
   excluirSlotsDoDia,
   excluirTodosSlots,
   getDuracaoSlotMedico,
-  getMedicoAtual,
   type AgendaSlot,
   type FaixaHorario,
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -105,6 +105,7 @@ type EspecialidadeInfo = {
 
 export default function MedicoHorarios() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
@@ -137,14 +138,14 @@ export default function MedicoHorarios() {
 
   async function refresh() {
     setLoading(true);
-    const [list, dur, med] = await Promise.all([
+    const [list, dur] = await Promise.all([
       listSlotsDoMedico(),
       getDuracaoSlotMedico(),
-      getMedicoAtual(),
     ]);
     setSlots(list);
     setDuracao(dur);
-    setLinkSala(med?.link_sala_padrao ?? null);
+    setLinkSala(medicoAtual?.link_sala_padrao ?? null);
+    const med = medicoAtual;
     // Especialidade do médico
     if (med?.id) {
       const { data: espRows } = await supabase
