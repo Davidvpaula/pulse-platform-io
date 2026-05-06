@@ -156,7 +156,7 @@ export async function uploadDocumentoPaciente(input: {
   if (up.error) return { ok: false, error: up.error.message };
 
   const { data, error } = await supabase
-    .from("documentos_paciente" as any)
+    .from("documentos_paciente")
     .insert({
       paciente_id: paciente.id,
       user_id: uid,
@@ -166,14 +166,14 @@ export async function uploadDocumentoPaciente(input: {
       storage_path: path,
       mime_type: input.file.type || null,
       tamanho_bytes: input.file.size,
-    } as any)
+    } as DocumentoPacienteInsert)
     .select("*")
     .single();
   if (error) {
     await supabase.storage.from("paciente-docs").remove([path]);
     return { ok: false, error: error.message };
   }
-  return { ok: true, doc: data as any };
+  return { ok: true, doc: data as DocumentoPaciente };
 }
 
 export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): Promise<string | null> {
