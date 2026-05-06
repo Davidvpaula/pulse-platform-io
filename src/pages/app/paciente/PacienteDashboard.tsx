@@ -94,7 +94,7 @@ export default function PacienteDashboard() {
           const { data: assinatura } = await supabase
             .from("assinaturas")
             .select("plano_id, status, planos(nome)")
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .in("status", ["ativa", "trial"])
             .order("created_at", { ascending: false })
             .limit(1)
@@ -108,7 +108,7 @@ export default function PacienteDashboard() {
           const { count: pendCount } = await supabase
             .from("pagamentos")
             .select("id", { count: "exact", head: true })
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .in("status", ["pendente", "processando"]);
           setPendenciasFinanceiras(pendCount ?? 0);
 
@@ -116,7 +116,7 @@ export default function PacienteDashboard() {
           const { data: funcRow } = await supabase
             .from("empresas_funcionarios")
             .select("empresa_id, status, empresas(nome_fantasia)")
-            .eq("paciente_id", paciente.id)
+            .eq("paciente_id", pacienteId)
             .eq("status", "ativo")
             .limit(1)
             .maybeSingle();
