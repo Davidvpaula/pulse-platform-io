@@ -205,8 +205,8 @@ export default function PacientePerfil() {
       .eq("id", id)
       .maybeSingle();
     if (!p) { setLoading(false); return; }
-    setPac(p as any);
-    setObsEdit((p as any).observacoes_internas ?? "");
+    setPac(p);
+    setObsEdit(p.observacoes_internas ?? "");
 
     // 2. Email from profiles
     if (p.user_id) {
