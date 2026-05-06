@@ -185,17 +185,16 @@ export default function PacienteDashboard() {
           </div>
           {proxima && (
             <div className="grid gap-2 md:justify-items-end">
-              {proxima.linkSala ? (
-                <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 w-full md:w-auto">
-                  <a href={proxima.linkSala} target="_blank" rel="noopener noreferrer">
-                    <Video className="mr-2 h-4 w-4" /> Entrar na consulta
-                  </a>
-                </Button>
-              ) : (
-                <Button size="lg" disabled className="w-full md:w-auto" title="Sala ainda não disponível">
-                  <Video className="mr-2 h-4 w-4" /> Sala em preparação
-                </Button>
-              )}
+              <EntrarTeleconsulta
+                consultaId={proxima.id}
+                linkSala={proxima.linkSala}
+                inicio={proxima.inicio}
+                fim={proxima.inicio} /* approximation — uses inicio + default tolerance */
+                status={proxima.status}
+                modalidade={proxima.modalidade}
+                size="default"
+                variant="gradient"
+              />
               <div className="flex gap-2 w-full md:w-auto">
                 <Tooltip>
                   <TooltipTrigger asChild>
