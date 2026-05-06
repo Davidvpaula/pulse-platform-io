@@ -51,7 +51,7 @@ export default function PacienteDashboard() {
   const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
 
   useEffect(() => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !pacienteAtual) { setLoading(false); return; }
 
     async function load() {
       setLoading(true);
