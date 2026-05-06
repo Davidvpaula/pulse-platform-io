@@ -68,6 +68,7 @@ const PLANOS = [
 
 export default function MedicoPremiumPage() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [premium, setPremium] = useState<MedicoPremium | null>(null);
