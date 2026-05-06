@@ -65,9 +65,11 @@ Deno.serve(async (req) => {
     if (!v.ok) return json({ error: v.motivo }, 400);
 
     const FEEGOW_API_TOKEN = Deno.env.get("FEEGOW_API_TOKEN");
-    let FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ??
-      "https://api.feegow.com/v1/api";
-    if (FEEGOW_BASE && !FEEGOW_BASE.startsWith("http")) FEEGOW_BASE = `https://${FEEGOW_BASE}`;
+    let FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ?? "https://api.feegow.com/v1/api";
+    if (!FEEGOW_BASE.startsWith("http")) FEEGOW_BASE = `https://${FEEGOW_BASE}`;
+    FEEGOW_BASE = FEEGOW_BASE.replace("://www.api.feegow.com", "://api.feegow.com");
+    if (FEEGOW_BASE.endsWith("/")) FEEGOW_BASE = FEEGOW_BASE.slice(0, -1);
+    if (!FEEGOW_BASE.endsWith("/api")) FEEGOW_BASE = FEEGOW_BASE + "/api";
 
     // Marca como pendente antes de chamar
     await callRpc(userClient, "feegow_marcar_liberacao", {
