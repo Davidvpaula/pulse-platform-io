@@ -243,9 +243,9 @@ export default function MedicoConfiguracoes() {
             ativo: v?.ativo ?? false,
             duracao_minutos: v?.duracao_minutos ?? 30,
             preco_centavos: v?.preco_centavos ?? 0,
-            pronto_atendimento: (v as any)?.pronto_atendimento ?? false,
-            especialista: (v as any)?.especialista ?? false,
-            rqe: (v as any)?.rqe ?? "",
+            pronto_atendimento: v?.pronto_atendimento ?? false,
+            especialista: v?.especialista ?? false,
+            rqe: v?.rqe ?? "",
           };
         }
         setLinhas(mapa);
@@ -328,15 +328,15 @@ export default function MedicoConfiguracoes() {
       const mid = hookMedicoId;
       if (!mid) { setNotifLoading(false); return; }
       const { data } = await supabase
-        .from("medico_notificacao_prefs" as any)
+        .from("medico_notificacao_prefs")
         .select("*")
         .eq("medico_id", mid)
         .maybeSingle();
       if (data) {
         setNotif({
-          lembretes: (data as any).lembretes_consulta ?? true,
-          alertas: (data as any).alertas_operacionais ?? true,
-          resumoDiario: (data as any).resumo_diario_email ?? false,
+          lembretes: data.lembretes_consulta ?? true,
+          alertas: data.alertas_operacionais ?? true,
+          resumoDiario: data.resumo_diario_email ?? false,
         });
       }
       setNotifLoading(false);
@@ -347,13 +347,13 @@ export default function MedicoConfiguracoes() {
     const mid = hookMedicoId;
     if (!mid) { toast.error("Cadastro médico não encontrado."); return; }
     setSavingNotif(true);
-    const { error } = await supabase.from("medico_notificacao_prefs" as any).upsert({
+    const { error } = await supabase.from("medico_notificacao_prefs").upsert({
       medico_id: mid,
       lembretes_consulta: notif.lembretes,
       alertas_operacionais: notif.alertas,
       resumo_diario_email: notif.resumoDiario,
       updated_at: new Date().toISOString(),
-    } as any, { onConflict: "medico_id" });
+    }, { onConflict: "medico_id" });
     setSavingNotif(false);
     if (error) {
       toast.error("Erro ao salvar notificações.");
@@ -604,7 +604,7 @@ export default function MedicoConfiguracoes() {
                         <div className="grid grid-cols-12 items-center gap-2">
                           <div className="col-span-5">
                             <p className="font-medium">{e.nome}</p>
-                            {(e as any).descricao && <p className="text-[11px] text-muted-foreground">{(e as any).descricao}</p>}
+                            {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
                             {cg && (
                               <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                 CFM: não exige RQE

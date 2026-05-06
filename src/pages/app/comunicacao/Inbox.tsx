@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useSession } from "@/lib/session";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { PageHeader } from "@/components/PageHeader";
@@ -92,12 +93,12 @@ async function registrarAuditoria(
 ) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  await (supabase.from("comunicacao_auditoria") as any).insert({
+  await supabase.from("comunicacao_auditoria").insert({
     actor_id: user.id,
     action,
     entity_type: "conversation",
     entity_id: entityId,
-    metadata,
+    metadata: metadata as Json,
   });
 }
 
@@ -205,7 +206,7 @@ export default function ComunicacaoInbox() {
       .in("id", consultaIds);
     if (data) {
       const m: Record<string, ConsultaJanela> = {};
-      (data as any[]).forEach(c => { m[c.id] = c; });
+      (data).forEach(c => { m[c.id] = c; });
       setConsultasMap(m);
     }
   }, [isMedico, medicoUserId]);
@@ -278,7 +279,7 @@ export default function ComunicacaoInbox() {
         .select("nome, email")
         .eq("id", conv.assigned_to)
         .maybeSingle();
-      setAssignedName((data as any)?.nome || (data as any)?.email || "—");
+      setAssignedName(data?.nome || data?.email || "—");
     }
 
     if (conv.medico_id) {
@@ -287,7 +288,7 @@ export default function ComunicacaoInbox() {
         .select("nome")
         .eq("id", conv.medico_id)
         .maybeSingle();
-      setMedicoName((data as any)?.nome || null);
+      setMedicoName(data?.nome || null);
     }
 
     if (conv.consulta_id) {
@@ -296,7 +297,7 @@ export default function ComunicacaoInbox() {
         .select("inicio, status")
         .eq("id", conv.consulta_id)
         .maybeSingle();
-      if (data) setConsultaInfo(data as any);
+      if (data) setConsultaInfo(data as ConsultaJanela);
     }
   }
 
@@ -455,6 +456,7 @@ export default function ComunicacaoInbox() {
     if (!active || !acessoMedicoId || !acessoMotivo.trim()) return;
     setAcessoLoading(true);
     const expiraEm = new Date(Date.now() + acessoHoras * 3600000).toISOString();
+    // TODO: inbox_acesso_temporario table pending migration
     const { error } = await (supabase as any).from("inbox_acesso_temporario").insert({
       conversa_id: active.id,
       medico_id: acessoMedicoId,

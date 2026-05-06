@@ -5,6 +5,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
+type PacienteUpdate = Database["public"]["Tables"]["pacientes"]["Update"];
+type PacienteInsert = Database["public"]["Tables"]["pacientes"]["Insert"];
+type DocumentoPacienteInsert = Database["public"]["Tables"]["documentos_paciente"]["Insert"];
+type ServicosFinanceirosUpdate = Database["public"]["Tables"]["servicos_financeiros"]["Update"];
+
 export type Consulta = Database["public"]["Tables"]["consultas"]["Row"];
 export type ConsultaStatus = Database["public"]["Enums"]["consulta_status"];
 export type ConsultaModalidade = Database["public"]["Enums"]["consulta_modalidade"];
@@ -85,11 +90,11 @@ export async function updatePacientePerfil(patch: {
 
   const existing = await getPacienteAtual();
   if (existing) {
-    const { error } = await supabase.from("pacientes").update(patch as any).eq("id", existing.id);
+    const { error } = await supabase.from("pacientes").update(patch as PacienteUpdate).eq("id", existing.id);
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
-  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch } as any);
+  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch } as PacienteInsert);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
@@ -118,12 +123,12 @@ export async function listDocumentosDoPaciente(): Promise<DocumentoPaciente[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
   const { data, error } = await supabase
-    .from("documentos_paciente" as any)
+    .from("documentos_paciente")
     .select("*")
     .eq("paciente_id", p.id)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
-  return (data ?? []) as any;
+  return (data ?? []) as DocumentoPaciente[];
 }
 
 export async function uploadDocumentoPaciente(input: {
@@ -151,7 +156,7 @@ export async function uploadDocumentoPaciente(input: {
   if (up.error) return { ok: false, error: up.error.message };
 
   const { data, error } = await supabase
-    .from("documentos_paciente" as any)
+    .from("documentos_paciente")
     .insert({
       paciente_id: paciente.id,
       user_id: uid,
@@ -161,14 +166,14 @@ export async function uploadDocumentoPaciente(input: {
       storage_path: path,
       mime_type: input.file.type || null,
       tamanho_bytes: input.file.size,
-    } as any)
+    } as DocumentoPacienteInsert)
     .select("*")
     .single();
   if (error) {
     await supabase.storage.from("paciente-docs").remove([path]);
     return { ok: false, error: error.message };
   }
-  return { ok: true, doc: data as any };
+  return { ok: true, doc: data as DocumentoPaciente };
 }
 
 export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): Promise<string | null> {
@@ -181,7 +186,7 @@ export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): 
 
 export async function deletarDocumentoPaciente(doc: DocumentoPaciente): Promise<boolean> {
   await supabase.storage.from("paciente-docs").remove([doc.storage_path]);
-  const { error } = await supabase.from("documentos_paciente" as any).delete().eq("id", doc.id);
+  const { error } = await supabase.from("documentos_paciente").delete().eq("id", doc.id);
   if (error) { console.error("[clinico] deletar doc:", error); return false; }
   return true;
 }
@@ -212,7 +217,7 @@ export async function listAnexosConsultaDoPaciente(): Promise<AnexoConsulta[]> {
     .in("consulta_id", ids)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listAnexosConsultaDoPaciente:", error); return []; }
-  return (data ?? []) as any;
+  return (data ?? []) as AnexoConsulta[];
 }
 
 export async function getAnexoConsultaUrl(path: string, expiresInSec = 60): Promise<string | null> {
@@ -395,10 +400,10 @@ export async function listPacientesDoMedico(): Promise<PacienteDoMedico[]> {
   let empresaNomePorId: Record<string, string> = {};
   if (empresaIds.length) {
     const { data: emps } = await supabase
-      .from("empresas" as any)
-      .select("id, nome")
+      .from("empresas")
+      .select("id, nome_fantasia, razao_social")
       .in("id", empresaIds);
-    empresaNomePorId = Object.fromEntries(((emps ?? []) as any[]).map((e) => [e.id, e.nome]));
+    empresaNomePorId = Object.fromEntries(((emps ?? []) as { id: string; nome_fantasia: string | null; razao_social: string }[]).map((e) => [e.id, e.nome_fantasia || e.razao_social]));
   }
 
   const agora = Date.now();
@@ -1079,7 +1084,13 @@ export async function trocarMedicoConsulta(input: {
     _motivo: input.motivo ?? null,
   });
   if (error) throw error;
-  return data as any;
+  return data as unknown as {
+    consulta_id: string;
+    novo_medico_id: string;
+    novo_slot_id: string;
+    novo_valor_centavos: number;
+    novo_link_sala: string | null;
+  };
 }
 
 export function formatDataBR(iso: string): string {
@@ -1274,7 +1285,7 @@ export type ReservaUnificadaResult = {
 export async function reservarSlotUnificado(
   input: ReservaUnificadaInput,
 ): Promise<ReservaUnificadaResult> {
-  const { data, error } = await supabase.rpc("reservar_slot_unificado" as any, {
+  const { data, error } = await supabase.rpc("reservar_slot_unificado", {
     _slot_id: input.slot_id,
     _tipo: input.tipo,
     _referencia_id: input.referencia_id,
@@ -1497,7 +1508,7 @@ export async function updateServicoAtendimentoImediato(
 ): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase
     .from("servicos_financeiros")
-    .update(patch as any)
+    .update(patch as ServicosFinanceirosUpdate)
     .eq("id", servicoId);
   if (error) return { ok: false, error: error.message };
   return { ok: true };

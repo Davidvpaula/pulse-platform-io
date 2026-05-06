@@ -205,8 +205,8 @@ export default function PacientePerfil() {
       .eq("id", id)
       .maybeSingle();
     if (!p) { setLoading(false); return; }
-    setPac(p as any);
-    setObsEdit((p as any).observacoes_internas ?? "");
+    setPac(p);
+    setObsEdit(p.observacoes_internas ?? "");
 
     // 2. Email from profiles
     if (p.user_id) {
@@ -319,7 +319,7 @@ export default function PacientePerfil() {
         acao: "observacao_editada",
         motivo: "Edição de observações internas",
         payload: { texto: obsEdit.trim() },
-      } as any);
+      });
     }
     setObsSalvando(false);
   }
@@ -350,7 +350,7 @@ export default function PacientePerfil() {
       tipo: reembolsoForm.tipo,
       status: "solicitado",
       actor_id: (await supabase.auth.getUser()).data.user?.id,
-    } as any).select("id").single();
+    }).select("id").single();
     setReembolsoCriando(false);
     if (error) {
       toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
@@ -383,9 +383,9 @@ export default function PacientePerfil() {
       return;
     }
     setStatusSalvando(true);
-    const { error } = await supabase.rpc("alterar_status_conta_paciente" as any, {
+    const { error } = await supabase.rpc("alterar_status_conta_paciente", {
       _paciente_id: pac.id,
-      _novo_status: statusAction.novoStatus,
+      _novo_status: statusAction.novoStatus as "ativo" | "banido" | "bloqueado" | "pendente" | "suspenso",
       _motivo: statusMotivo.trim(),
       _observacao: statusObs.trim() || null,
       _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? statusBloqueadoAte : null,

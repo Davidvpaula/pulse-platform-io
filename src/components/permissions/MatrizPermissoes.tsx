@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useSession } from "@/lib/session";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +15,9 @@ interface Props {
   scope: "perfil" | "funcao";
   scopeValue: string;
 }
+
+type AppRole = Database["public"]["Enums"]["app_role"];
+type FuncaoInterna = Database["public"]["Enums"]["funcao_interna"];
 
 export function MatrizPermissoes({ scope, scopeValue }: Props) {
   const { session } = useSession();
@@ -35,13 +39,13 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
         const { data } = await supabase
           .from("permissoes_perfil")
           .select("permission_key,ativo")
-          .eq("role", scopeValue as any);
+          .eq("role", scopeValue as AppRole);
         setAtivos(new Set((data || []).filter(d => d.ativo).map(d => d.permission_key)));
       } else {
         const { data } = await supabase
           .from("function_permissions")
           .select("permission_key,ativo")
-          .eq("funcao_interna", scopeValue as any);
+          .eq("funcao_interna", scopeValue as FuncaoInterna);
         setAtivos(new Set((data || []).filter(d => d.ativo).map(d => d.permission_key)));
       }
       setLoading(false);
@@ -57,28 +61,28 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
       if (scope === "perfil") {
         if (value) {
           await supabase.from("permissoes_perfil").upsert(
-            { role: scopeValue as any, permission_key: key, ativo: true },
+            { role: scopeValue as AppRole, permission_key: key, ativo: true },
             { onConflict: "role,permission_key" },
           );
         } else {
           await supabase.from("permissoes_perfil")
-            .delete().eq("role", scopeValue as any).eq("permission_key", key);
+            .delete().eq("role", scopeValue as AppRole).eq("permission_key", key);
         }
       } else {
         if (value) {
           await supabase.from("function_permissions").upsert(
-            { funcao_interna: scopeValue as any, permission_key: key, ativo: true },
+            { funcao_interna: scopeValue as FuncaoInterna, permission_key: key, ativo: true },
             { onConflict: "funcao_interna,permission_key" },
           );
         } else {
           await supabase.from("function_permissions")
-            .delete().eq("funcao_interna", scopeValue as any).eq("permission_key", key);
+            .delete().eq("funcao_interna", scopeValue as FuncaoInterna).eq("permission_key", key);
         }
       }
       await supabase.from("permission_audit_logs").insert({
         scope,
-        target_role: scope === "perfil" ? (scopeValue as any) : null,
-        target_funcao: scope === "funcao" ? (scopeValue as any) : null,
+        target_role: scope === "perfil" ? (scopeValue as AppRole) : null,
+        target_funcao: scope === "funcao" ? (scopeValue as FuncaoInterna) : null,
         permission_key: key,
         acao: value ? "concedida" : "revogada",
         valor_antes: { ativo: !value },
