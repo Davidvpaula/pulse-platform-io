@@ -17,7 +17,8 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const FEEGOW_TOKEN = Deno.env.get("FEEGOW_API_TOKEN");
-    const FEEGOW_URL = Deno.env.get("FEEGOW_BASE_URL") ?? "https://api.feegow.com/v1/api";
+    let FEEGOW_URL = Deno.env.get("FEEGOW_BASE_URL") ?? "https://api.feegow.com/v1/api";
+    if (FEEGOW_URL && !FEEGOW_URL.startsWith("http")) FEEGOW_URL = `https://${FEEGOW_URL}`;
 
     // Auth
     const auth = req.headers.get("Authorization") ?? "";
