@@ -27,6 +27,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAdminAgendamentos, useAgendamentosOverview, type ConsultaAdminRow } from "@/lib/admin/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { adminKeys } from "@/lib/admin/queries";
 import { brl } from "@/lib/relatorios/utils";
 
 type Status =
