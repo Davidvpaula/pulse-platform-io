@@ -222,7 +222,7 @@ export default function PacienteDashboard() {
           <StatCard label="Consultas no mês" value={String(statsConsultas)} icon={Calendar} hint={`${futuras.length} agendada(s)`} />
         </Link>
         <Link to="/app/paciente/documentos" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Documentos" value={String(statsDocs)} icon={FileText} hint="Receitas e atestados" />
+          <StatCard label="Documentos" value="—" icon={FileText} hint="Receitas e atestados" />
         </Link>
         <Link to="/app/paciente/plano" className="block transition hover:-translate-y-0.5">
           <StatCard label="Plano" value={planoNome ?? "—"} icon={BadgeCheck} hint={planoNome ? "Plano ativo" : "Nenhum plano ativo"} />
