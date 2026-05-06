@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
 
           passos.push({
             bloco: 4,
-            descricao: `POST /patient/store — ${p.label}`,
+            descricao: `POST ${p.ep} — ${p.label}`,
             content_type: "application/json",
             payload_enviado: p.data,
             http_status: r.status,
