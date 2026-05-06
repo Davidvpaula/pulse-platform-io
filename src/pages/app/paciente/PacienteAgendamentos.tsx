@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/select";
 import { useSession } from "@/lib/session";
 import {
-  listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge,
-  updateConsultaStatus, listRetornosDisponiveis,
+  formatDataBR, formatHora, toStatusBadge,
+  updateConsultaStatus,
   type ConsultaDetalhada, type RetornoComContexto,
 } from "@/lib/clinico";
 
@@ -26,47 +26,37 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
-import { consultasAvaliadasIds } from "@/lib/gamificacao";
 import { Gift } from "lucide-react";
 import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
 import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
 import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
+import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacienteKeys } from "@/lib/paciente/queries";
+import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
 export default function PacienteAgendamentos() {
   const { session } = useSession();
-  const [loading, setLoading] = useState(false);
-  const [rows, setRows] = useState<ConsultaDetalhada[] | null>(null);
+  const queryClient = useQueryClient();
+  const hasSession = !!session;
+
+  const { data: rows, isLoading: loading, error: queryError, refetch } = usePacienteConsultas(hasSession);
+  const { data: vouchers = [] } = usePacienteRetornos(hasSession);
+
+  const concluidasIds = useMemo(
+    () => (rows ?? []).filter(c => c.status === "concluida").map(c => c.id),
+    [rows],
+  );
+  const { data: avaliadas = new Set<string>() } = usePacienteAvaliadas(concluidasIds, hasSession);
+
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("futuras");
   const [cancelando, setCancelando] = useState<string | null>(null);
-  const [vouchers, setVouchers] = useState<RetornoComContexto[]>([]);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
-  const [avaliadas, setAvaliadas] = useState<Set<string>>(new Set());
   const [expandedPag, setExpandedPag] = useState<string | null>(null);
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
   const [cancelarConsulta, setCancelarConsulta] = useState<ConsultaDetalhada | null>(null);
 
-  const carregar = async () => {
-    if (!session) { setRows(null); setVouchers([]); setAvaliadas(new Set()); return; }
-    setLoading(true);
-    const [data, vs] = await Promise.all([
-      listConsultasDoPaciente(),
-      listRetornosDisponiveis(),
-    ]);
-    setRows(data);
-    setVouchers(vs);
-    // Check which completed consultations have already been evaluated
-    const concluidas = (data ?? []).filter((c) => c.status === "concluida");
-    if (concluidas.length) {
-      const ids = await consultasAvaliadasIds(concluidas.map((c) => c.id));
-      setAvaliadas(ids);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session]);
 
   const lista = useMemo(() => {
     const agora = new Date();
