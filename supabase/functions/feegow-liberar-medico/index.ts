@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const v = validarPreRequisitos(medico);
     if (!v.ok) return json({ error: v.motivo }, 400);
 
-    const FEEGOW_API_KEY = Deno.env.get("FEEGOW_API_KEY");
+    const FEEGOW_API_TOKEN = Deno.env.get("FEEGOW_API_TOKEN");
     const FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ??
       "https://api.feegow.com/v1/api";
 
