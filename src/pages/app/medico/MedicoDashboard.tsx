@@ -218,7 +218,7 @@ export default function MedicoDashboard() {
     setLoading(false);
   };
 
-  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session]);
+  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session, medicoAtual]);
 
   const proxima = proximas[0];
   const minutosProx = useMemo(() => proxima ? diffMin(proxima.inicio) : null, [proxima]);
