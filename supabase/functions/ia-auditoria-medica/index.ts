@@ -76,67 +76,58 @@ async function analiseCompleta(supabase: any, medicoId: string, apiKey: string) 
   // 2. Buscar nome do médico
   const { data: medico } = await supabase.from("medicos").select("nome").eq("id", medicoId).single();
 
-  // 3. Enviar para IA
+  // 3. Buscar restrições atuais
+  const { data: restricoes } = await supabase.from("medico_restricoes").select("*").eq("medico_id", medicoId).maybeSingle();
+
+  // 4. Buscar histórico de ações admin recentes
+  const { data: acoesRecentes } = await supabase.from("admin_acoes_medico")
+    .select("tipo_acao, motivo, created_at")
+    .eq("medico_id", medicoId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  // 5. Enviar para IA
   const systemPrompt = `Você é um auditor operacional interno de uma plataforma de saúde digital.
-Sua função é analisar métricas operacionais de médicos e gerar:
-1. Um score operacional interno (0-100) com breakdown em 6 dimensões: pontualidade, cancelamento, no_show, resposta, uso_sistema, documentacao
-2. Um score de compliance/confiança (0-100) com 4 dimensões: confianca, padrao_comportamento, avaliacoes_integridade, campanhas_integridade
-3. Nível de risco: baixo, medio, alto ou critico
-4. Lista de alertas (pode ser vazia) com: tipo, severidade (info/atencao/alerta/critico), titulo, descricao, justificativa, recomendacao_ia
-5. Lista de anomalias detectadas (pode ser vazia) com: tipo_anomalia, descricao, severidade, score_confianca (0-1), dados_evidencia
-6. Recomendações estratégicas (lista de strings)
+Sua função é analisar métricas operacionais de médicos e gerar um relatório completo.
 
-Use linguagem profissional. Nunca use termos como "médico ruim". Use "atenção necessária", "risco operacional", "acompanhamento recomendado".
+REGRAS FUNDAMENTAIS:
+- A IA NÃO toma decisões. Apenas analisa, sugere e alerta. Toda decisão é HUMANA.
+- Premium NÃO pode apagar falhas, reclamações, atrasos ou problemas operacionais.
+- Separar CLARAMENTE: crescimento pago externo vs reputação orgânica vs qualidade operacional.
+- Usar linguagem profissional. Nunca "médico ruim". Usar "atenção necessária", "risco operacional", "acompanhamento recomendado".
 
-IMPORTANTE: A IA NÃO toma decisões. Apenas analisa, sugere e alerta. Toda decisão é humana.
+INDICADORES A AVALIAR:
+1. Pontualidade nas consultas (atrasos recorrentes)
+2. Faltas ou no-show DO MÉDICO (não do paciente)
+3. Reclamações de pacientes
+4. Retrabalho de documentos (receitas, atestados, pedidos)
+5. Erro ou demora no envio de receitas/atestados/pedidos
+6. Necessidade de intervenção da equipe
+7. Excesso de cancelamentos pelo médico
+8. Problemas de comunicação
+9. Baixa taxa de resposta
+10. Conflitos operacionais
+11. Reincidência de falhas já sinalizadas
+12. Qualidade do atendimento conforme dados internos
+13. Aderência às regras da plataforma
+14. Padrões suspeitos de avaliações (possível manipulação)
 
-Responda EXCLUSIVAMENTE no formato JSON especificado.`;
+IMPORTANTE: Se os dados forem insuficientes para avaliar um indicador, informe explicitamente ao invés de inventar.
+
+Responda EXCLUSIVAMENTE no formato JSON especificado pela ferramenta.`;
 
   const userPrompt = `Analise as métricas do médico "${medico?.nome ?? 'Desconhecido'}" (ID: ${medicoId}):
 
+MÉTRICAS OPERACIONAIS:
 ${JSON.stringify(metricas, null, 2)}
 
-Retorne um JSON com esta estrutura exata:
-{
-  "score_operacional": {
-    "pontualidade": number,
-    "cancelamento": number,
-    "no_show": number,
-    "resposta": number,
-    "uso_sistema": number,
-    "documentacao": number,
-    "total": number
-  },
-  "score_compliance": {
-    "confianca": number,
-    "padrao_comportamento": number,
-    "avaliacoes_integridade": number,
-    "campanhas_integridade": number,
-    "total": number,
-    "nivel_risco": "baixo"|"medio"|"alto"|"critico"
-  },
-  "alertas": [
-    {
-      "tipo": string,
-      "severidade": "info"|"atencao"|"alerta"|"critico",
-      "titulo": string,
-      "descricao": string,
-      "justificativa": string,
-      "recomendacao_ia": string
-    }
-  ],
-  "anomalias": [
-    {
-      "tipo_anomalia": string,
-      "descricao": string,
-      "severidade": "info"|"atencao"|"alerta"|"critico",
-      "score_confianca": number,
-      "dados_evidencia": object
-    }
-  ],
-  "recomendacoes": [string],
-  "resumo": string
-}`;
+RESTRIÇÕES ATUAIS:
+${JSON.stringify(restricoes ?? { nenhuma: true }, null, 2)}
+
+AÇÕES ADMIN RECENTES:
+${JSON.stringify(acoesRecentes ?? [], null, 2)}
+
+Gere a análise completa com scores, alertas, anomalias, pontos positivos/críticos e recomendações.`;
 
   const aiResponse = await fetch(GATEWAY, {
     method: "POST",
@@ -178,6 +169,10 @@ Retorne um JSON com esta estrutura exata:
                 },
                 required: ["confianca", "padrao_comportamento", "avaliacoes_integridade", "campanhas_integridade", "total", "nivel_risco"],
               },
+              risco_reputacional: {
+                type: "number",
+                description: "Score de risco reputacional de 0 (sem risco) a 100 (risco máximo)",
+              },
               alertas: {
                 type: "array",
                 items: {
@@ -203,10 +198,34 @@ Retorne um JSON com esta estrutura exata:
                   required: ["tipo_anomalia", "descricao", "severidade", "score_confianca"],
                 },
               },
+              pontos_positivos: {
+                type: "array",
+                items: { type: "string" },
+                description: "Lista de aspectos positivos do médico baseados nos dados",
+              },
+              pontos_criticos: {
+                type: "array",
+                items: { type: "string" },
+                description: "Lista de problemas identificados que requerem atenção",
+              },
+              sugestao_acao: {
+                type: "string",
+                enum: ["promover", "manter", "reduzir_destaque", "acompanhar"],
+                description: "Sugestão da IA para ação administrativa (NÃO é decisão final)",
+              },
+              evolucao_tendencia: {
+                type: "string",
+                enum: ["melhorando", "estavel", "piorando"],
+                description: "Tendência geral do médico com base nos dados disponíveis",
+              },
               recomendacoes: { type: "array", items: { type: "string" } },
               resumo: { type: "string" },
             },
-            required: ["score_operacional", "score_compliance", "alertas", "anomalias", "recomendacoes", "resumo"],
+            required: [
+              "score_operacional", "score_compliance", "risco_reputacional",
+              "alertas", "anomalias", "pontos_positivos", "pontos_criticos",
+              "sugestao_acao", "evolucao_tendencia", "recomendacoes", "resumo",
+            ],
           },
         },
       }],
@@ -236,7 +255,7 @@ Retorne um JSON com esta estrutura exata:
 
   const result = JSON.parse(toolCall.function.arguments);
 
-  // 4. Persistir resultados
+  // 6. Persistir resultados
   // Score operacional
   await supabase.from("medico_score_operacional").upsert({
     medico_id: medicoId,
@@ -247,7 +266,14 @@ Retorne um JSON com esta estrutura exata:
     score_uso_sistema: result.score_operacional.uso_sistema,
     score_documentacao: result.score_operacional.documentacao,
     score_total: result.score_operacional.total,
-    detalhes: metricas,
+    detalhes: {
+      ...metricas,
+      pontos_positivos: result.pontos_positivos,
+      pontos_criticos: result.pontos_criticos,
+      sugestao_acao: result.sugestao_acao,
+      evolucao_tendencia: result.evolucao_tendencia,
+      risco_reputacional: result.risco_reputacional,
+    },
     updated_at: new Date().toISOString(),
   }, { onConflict: "medico_id" });
 
@@ -260,7 +286,12 @@ Retorne um JSON com esta estrutura exata:
     score_campanhas_integridade: result.score_compliance.campanhas_integridade,
     score_total: result.score_compliance.total,
     nivel_risco: result.score_compliance.nivel_risco,
-    detalhes: result.score_compliance,
+    detalhes: {
+      ...result.score_compliance,
+      risco_reputacional: result.risco_reputacional,
+      sugestao_acao: result.sugestao_acao,
+      evolucao_tendencia: result.evolucao_tendencia,
+    },
     updated_at: new Date().toISOString(),
   }, { onConflict: "medico_id" });
 
@@ -271,7 +302,9 @@ Retorne um JSON com esta estrutura exata:
       'correcoes_receita', 'crescimento_suspeito_avaliacoes', 'conversoes_incompativeis',
       'comportamento_fora_padrao', 'queda_atividade', 'risco_churn',
       'possivel_manipulacao', 'abuso_campanha', 'no_show_recorrente',
-      'conflito_operacional', 'anomalia_generica',
+      'conflito_operacional', 'anomalia_generica', 'atraso_recorrente',
+      'falha_comunicacao', 'baixa_resposta', 'reincidencia_falha',
+      'intervencao_equipe', 'demora_documentos',
     ];
     for (const alerta of result.alertas) {
       const tipo = alertTypes.includes(alerta.tipo) ? alerta.tipo : 'anomalia_generica';
@@ -305,21 +338,28 @@ Retorne um JSON com esta estrutura exata:
   // Log de auditoria imutável
   await supabase.from("medico_auditoria_ia").insert({
     medico_id: medicoId,
-    tipo_analise: "analise_completa",
+    tipo_analise: "analise_completa_v2",
     resultado: result.resumo,
     dados_entrada: metricas,
     dados_saida: result,
     modelo_ia: "google/gemini-3-flash-preview",
-    versao_prompt: "v1",
+    versao_prompt: "v2",
   });
 
   // Log de confiança
   await supabase.from("medico_logs_confianca").insert({
     medico_id: medicoId,
-    evento: "analise_ia_completa",
+    evento: "analise_ia_completa_v2",
     score_depois: result.score_compliance.total,
     motivo: "Análise periódica de compliance por IA",
-    detalhes: { nivel_risco: result.score_compliance.nivel_risco },
+    detalhes: {
+      nivel_risco: result.score_compliance.nivel_risco,
+      risco_reputacional: result.risco_reputacional,
+      sugestao_acao: result.sugestao_acao,
+      evolucao_tendencia: result.evolucao_tendencia,
+      pontos_positivos: result.pontos_positivos?.length ?? 0,
+      pontos_criticos: result.pontos_criticos?.length ?? 0,
+    },
   });
 
   return new Response(JSON.stringify({ success: true, result }), {
@@ -342,7 +382,6 @@ async function analiseBatch(supabase: any, apiKey: string) {
       const resp = await analiseCompleta(supabase, m.id, apiKey);
       const body = await resp.json();
       resultados.push({ medico_id: m.id, nome: m.nome, status: body.success ? "ok" : "erro" });
-      // Small delay to avoid rate limiting
       await new Promise((r) => setTimeout(r, 2000));
     } catch (e) {
       resultados.push({ medico_id: m.id, nome: m.nome, status: "erro" });
@@ -355,18 +394,16 @@ async function analiseBatch(supabase: any, apiKey: string) {
 }
 
 // ── Detecção de anomalias global ──
-async function detectarAnomalias(supabase: any, apiKey: string) {
-  // Detectar padrões suspeitos de avaliações
-  const { data: avalSuspeitas } = await supabase.rpc("coletar_metricas_medico" as any);
-  // Simplified: check for unusual rating patterns per medico
+async function detectarAnomalias(supabase: any, _apiKey: string) {
   const { data: medicos } = await supabase
     .from("medicos")
     .select("id")
     .eq("ativo", true);
 
   let anomaliasDetectadas = 0;
+
   for (const m of medicos ?? []) {
-    // Check: many 5-star ratings in short time
+    // 1. Check: many 5-star ratings in short time
     const { data: avalRecentes } = await supabase
       .from("avaliacoes_medicas")
       .select("nota, created_at")
@@ -387,6 +424,46 @@ async function detectarAnomalias(supabase: any, apiKey: string) {
         });
         anomaliasDetectadas++;
       }
+    }
+
+    // 2. Check: excessive cancellations by doctor in last 30 days
+    const { count: cancelCount } = await supabase
+      .from("consultas")
+      .select("id", { count: "exact", head: true })
+      .eq("medico_id", m.id)
+      .eq("status", "cancelada")
+      .gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString());
+
+    if (cancelCount && cancelCount >= 10) {
+      await supabase.from("medico_anomalias").insert({
+        medico_id: m.id,
+        tipo_anomalia: "excesso_cancelamentos",
+        descricao: `${cancelCount} consultas canceladas nos últimos 30 dias`,
+        severidade: cancelCount >= 20 ? "critico" : "alerta",
+        score_confianca: 0.8,
+        dados_evidencia: { cancelamentos_30d: cancelCount },
+      });
+      anomaliasDetectadas++;
+    }
+
+    // 3. Check: high no-show rate by doctor
+    const { count: noShowCount } = await supabase
+      .from("consultas")
+      .select("id", { count: "exact", head: true })
+      .eq("medico_id", m.id)
+      .eq("status", "no_show")
+      .gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString());
+
+    if (noShowCount && noShowCount >= 5) {
+      await supabase.from("medico_anomalias").insert({
+        medico_id: m.id,
+        tipo_anomalia: "no_show_recorrente_medico",
+        descricao: `${noShowCount} no-shows nos últimos 30 dias`,
+        severidade: "alerta",
+        score_confianca: 0.75,
+        dados_evidencia: { no_shows_30d: noShowCount },
+      });
+      anomaliasDetectadas++;
     }
   }
 

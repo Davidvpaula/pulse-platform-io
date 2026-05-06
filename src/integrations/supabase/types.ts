@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_acoes_medico: {
+        Row: {
+          admin_id: string
+          alerta_vinculado_id: string | null
+          anomalia_vinculada_id: string | null
+          created_at: string
+          dados_antes: Json | null
+          dados_depois: Json | null
+          id: string
+          medico_id: string
+          motivo: string
+          tipo_acao: string
+        }
+        Insert: {
+          admin_id: string
+          alerta_vinculado_id?: string | null
+          anomalia_vinculada_id?: string | null
+          created_at?: string
+          dados_antes?: Json | null
+          dados_depois?: Json | null
+          id?: string
+          medico_id: string
+          motivo: string
+          tipo_acao: string
+        }
+        Update: {
+          admin_id?: string
+          alerta_vinculado_id?: string | null
+          anomalia_vinculada_id?: string | null
+          created_at?: string
+          dados_antes?: Json | null
+          dados_depois?: Json | null
+          id?: string
+          medico_id?: string
+          motivo?: string
+          tipo_acao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_acoes_medico_alerta_vinculado_id_fkey"
+            columns: ["alerta_vinculado_id"]
+            isOneToOne: false
+            referencedRelation: "medico_alertas_ia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_acoes_medico_anomalia_vinculada_id_fkey"
+            columns: ["anomalia_vinculada_id"]
+            isOneToOne: false
+            referencedRelation: "medico_anomalias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_acoes_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_acoes_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agenda_slots: {
         Row: {
           created_at: string
@@ -4291,6 +4359,63 @@ export type Database = {
           },
         ]
       }
+      medico_restricoes: {
+        Row: {
+          aplicado_em: string | null
+          aplicado_por: string | null
+          beneficios_bloqueados: boolean
+          em_acompanhamento: boolean
+          expira_em: string | null
+          impulsionamento_pausado: boolean
+          medico_id: string
+          motivo: string | null
+          ranking_congelado: boolean
+          selo_removido: boolean
+          updated_at: string
+        }
+        Insert: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          beneficios_bloqueados?: boolean
+          em_acompanhamento?: boolean
+          expira_em?: string | null
+          impulsionamento_pausado?: boolean
+          medico_id: string
+          motivo?: string | null
+          ranking_congelado?: boolean
+          selo_removido?: boolean
+          updated_at?: string
+        }
+        Update: {
+          aplicado_em?: string | null
+          aplicado_por?: string | null
+          beneficios_bloqueados?: boolean
+          em_acompanhamento?: boolean
+          expira_em?: string | null
+          impulsionamento_pausado?: boolean
+          medico_id?: string
+          motivo?: string | null
+          ranking_congelado?: boolean
+          selo_removido?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_restricoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_restricoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medico_saldo_crescimento: {
         Row: {
           created_at: string
@@ -7471,6 +7596,15 @@ export type Database = {
       analytics_overview: { Args: { _dias?: number }; Returns: Json }
       analytics_tempo_real: { Args: never; Returns: Json }
       analytics_trafego: { Args: { _dias?: number }; Returns: Json }
+      aplicar_restricao_medico: {
+        Args: {
+          p_ativo: boolean
+          p_medico_id: string
+          p_motivo?: string
+          p_tipo: string
+        }
+        Returns: undefined
+      }
       ativar_premium_conquistado: { Args: never; Returns: boolean }
       auditoria_dashboard: {
         Args: { p_fim?: string; p_inicio?: string }
