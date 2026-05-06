@@ -383,7 +383,7 @@ export default function PacientePerfil() {
       return;
     }
     setStatusSalvando(true);
-    const { error } = await supabase.rpc("alterar_status_conta_paciente" as any, {
+    const { error } = await supabase.rpc("alterar_status_conta_paciente", {
       _paciente_id: pac.id,
       _novo_status: statusAction.novoStatus,
       _motivo: statusMotivo.trim(),
