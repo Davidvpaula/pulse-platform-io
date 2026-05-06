@@ -105,7 +105,7 @@ export default function PacienteMontarPlano() {
             nome: p.nome,
             descricao_comercial: p.descricao_comercial,
             valor_mensal_centavos: p.valor_mensal_centavos,
-            medico_user_id: p.medico_id,
+            medico_user_id: med.user_id,
             medico_nome: med.nome,
             medico_foto: med.foto_url,
             medico_especialidade: med.especialidade,
