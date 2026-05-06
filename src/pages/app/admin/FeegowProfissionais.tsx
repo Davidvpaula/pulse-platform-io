@@ -410,9 +410,9 @@ export default function FeegowProfissionais() {
                       <div>
                         <p className="text-muted-foreground mb-1">Especialidades Feegow:</p>
                         <div className="flex flex-wrap gap-1">
-                          {meta.especialidades.map((e: { especialidade_id: number; nome: string }) => (
+                          {meta.especialidades.map((e: { especialidade_id: number; nome_especialidade?: string; nome?: string }) => (
                             <span key={e.especialidade_id} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-xs text-primary">
-                              {e.nome}
+                              {e.nome_especialidade || e.nome}
                             </span>
                           ))}
                         </div>
