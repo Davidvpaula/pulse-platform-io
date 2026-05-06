@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import {
   listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
   getSaldoAtual, getMedicoPremium, getAssinaturaPremium,
@@ -32,6 +32,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default function MedicoCampanhasPage() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [medicoId, setMedicoId] = useState<string | null>(null);
   const [campanhas, setCampanhas] = useState<ImpulsionamentoCampanha[]>([]);
@@ -56,7 +57,7 @@ export default function MedicoCampanhasPage() {
     if (!session) return;
     (async () => {
       setLoading(true);
-      const medico = await getMedicoAtual();
+      const medico = medicoAtual;
       if (!medico) { setLoading(false); return; }
       setMedicoId(medico.id);
       const [camps, s, p, a, conv] = await Promise.all([

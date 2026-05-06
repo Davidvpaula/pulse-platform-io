@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import type { Database } from "@/integrations/supabase/types";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
@@ -38,7 +39,9 @@ const COBRANCA_MAP: Record<string, string> = { mensal: "mensal", pacote: "valor_
 
 export default function MedicoPropostas() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const uid = session?.user?.id;
+  const medicoId = medicoAtual?.id ?? null;
   const termsProposta = useTermsCheck("proposta_medico");
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string })[]>([]);
@@ -51,7 +54,7 @@ export default function MedicoPropostas() {
   const [termoConteudo, setTermoConteudo] = useState<string | null>(null);
   const [termoVersao, setTermoVersao] = useState<number | null>(null);
 
-  useEffect(() => { if (uid) carregar(); }, [uid]);
+  useEffect(() => { if (medicoId) carregar(); }, [medicoId]);
 
   async function carregar() {
     setLoading(true);
@@ -60,7 +63,7 @@ export default function MedicoPropostas() {
         supabase
           .from("propostas_empresa_medico")
           .select("*, empresa:empresas(razao_social), especialidade:especialidades(nome)")
-          .eq("medico_id", uid!)
+          .eq("medico_id", medicoId!)
           .in("status", ["enviada_medico", "aceita", "recusada", "convertida"])
           .order("created_at", { ascending: false }),
         supabase

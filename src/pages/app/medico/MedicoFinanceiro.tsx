@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
-import { getMedicoAtualId } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
@@ -53,6 +53,7 @@ export default function MedicoFinanceiro() {
   const [rows, setRows] = useState<FinRow[]>([]);
   const [periodo, setPeriodo] = useState<typeof periodos[number]["key"]>("30d");
   const [medicoId, setMedicoId] = useState<string | null>(null);
+  const { medico: medicoAtual } = useMedicoAtual();
 
   // Saque state
   const [saqueConfig, setSaqueConfig] = useState<SaqueConfig | null>(null);
@@ -70,7 +71,7 @@ export default function MedicoFinanceiro() {
   async function carregar() {
     if (!session) { setLoading(false); return; }
     setLoading(true);
-    const mid = await getMedicoAtualId();
+    const mid = medicoAtual?.id ?? null;
     setMedicoId(mid);
     if (!mid) { setRows([]); setLoading(false); return; }
 

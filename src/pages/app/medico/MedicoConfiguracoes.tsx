@@ -11,10 +11,10 @@ import {
   listVinculosDoMedico,
   upsertVinculoEspecialidade,
   getProntoAtendimentoDuracao,
-  getMedicoAtualId,
   type Especialidade,
   type MedicoEspecialidade,
 } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -59,6 +59,8 @@ const isClinicaGeral = (e: { slug?: string | null; nome: string }) => {
 };
 
 export default function MedicoConfiguracoes() {
+  const { medico: medicoAtualHook } = useMedicoAtual();
+  const hookMedicoId = medicoAtualHook?.id ?? null;
   // ── Google Meet & Calendar ──
   const [googleStatus, setGoogleStatus] = useState<{
     connected: boolean;
@@ -76,7 +78,7 @@ export default function MedicoConfiguracoes() {
   // Load medico config + Google status
   const fetchConfig = useCallback(async () => {
     setGoogleLoading(true);
-    const mid = await getMedicoAtualId();
+    const mid = hookMedicoId;
     setMedicoIdRef(mid);
 
     if (mid) {
@@ -207,11 +209,11 @@ export default function MedicoConfiguracoes() {
   useEffect(() => {
     (async () => {
       setLoadingAt(true);
-      const [esps, paDur, medicoId] = await Promise.all([
+      const [esps, paDur] = await Promise.all([
         listEspecialidades(),
         getProntoAtendimentoDuracao(),
-        getMedicoAtualId(),
       ]);
+      const medicoId = hookMedicoId;
       setEspecialidades(esps);
       setPaDuracao(paDur);
 
@@ -323,7 +325,7 @@ export default function MedicoConfiguracoes() {
 
   useEffect(() => {
     (async () => {
-      const mid = await getMedicoAtualId();
+      const mid = hookMedicoId;
       if (!mid) { setNotifLoading(false); return; }
       const { data } = await supabase
         .from("medico_notificacao_prefs" as any)
@@ -342,7 +344,7 @@ export default function MedicoConfiguracoes() {
   }, []);
 
   const salvarNotificacoes = async () => {
-    const mid = await getMedicoAtualId();
+    const mid = hookMedicoId;
     if (!mid) { toast.error("Cadastro médico não encontrado."); return; }
     setSavingNotif(true);
     const { error } = await supabase.from("medico_notificacao_prefs" as any).upsert({

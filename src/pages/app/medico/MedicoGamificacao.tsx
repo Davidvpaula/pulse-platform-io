@@ -21,7 +21,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import {
   getRankingMedico, listarAvaliacoesMedico, toggleExibirNoPerfil, getSaldoAtual,
   getMedicoPremium, listarCampanhasMedico, criarCampanha, atualizarStatusCampanha,
@@ -121,6 +121,7 @@ function ScoreRadar({ scores }: { scores: { label: string; value: number; max: n
 
 export default function MedicoGamificacao() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [medicoId, setMedicoId] = useState<string | null>(null);
   const [ranking, setRanking] = useState<MedicoRanking | null>(null);
@@ -145,10 +146,9 @@ export default function MedicoGamificacao() {
   const [aceitandoTermo, setAceitandoTermo] = useState(false);
 
   const carregar = async () => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !medicoAtual) { setLoading(false); return; }
     setLoading(true);
-    const medico = await getMedicoAtual();
-    if (!medico) { setLoading(false); return; }
+    const medico = medicoAtual;
     setMedicoId(medico.id);
     const [r, a, saldo, hist, prem, camps, cfg, sd, bdg, str, rec] = await Promise.all([
       getRankingMedico(medico.id),
@@ -177,7 +177,7 @@ export default function MedicoGamificacao() {
     setLoading(false);
   };
 
-  useEffect(() => { void carregar(); }, [session]);
+  useEffect(() => { void carregar(); }, [session, medicoAtual]);
 
   const handleToggle = async (av: AvaliacaoMedica) => {
     setToggling(av.id);

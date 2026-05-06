@@ -21,7 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { cn } from "@/lib/utils";
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -49,6 +49,7 @@ type VinculoStatus = "todos" | "ativo" | "inativo" | "afastado" | "desligado";
 
 export default function MedicoCorporativo() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<any[]>([]);
@@ -63,10 +64,9 @@ export default function MedicoCorporativo() {
 
   useEffect(() => {
     (async () => {
-      if (!session) { setLoading(false); return; }
+      if (!session || !medicoAtual) { setLoading(false); return; }
       try {
-        const med = await getMedicoAtual();
-        if (!med) { setLoading(false); return; }
+        const med = medicoAtual;
 
         // All consultas for this doctor — both corporate and private
         const { data: cons } = await supabase
@@ -139,7 +139,7 @@ export default function MedicoCorporativo() {
         setLoading(false);
       }
     })();
-  }, [session]);
+  }, [session, medicoAtual]);
 
   const empresas = useMemo(() => {
     const set = new Map<string, string>();

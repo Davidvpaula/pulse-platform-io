@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/lib/session";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { brl } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -28,23 +28,20 @@ type Adesao = {
 };
 
 export default function MedicoServicos() {
-  const { user } = useSession();
-  const [medicoId, setMedicoId] = useState<string | null>(null);
+  const { medico: medicoAtual } = useMedicoAtual();
+  const medicoId = medicoAtual?.id ?? null;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [adesoes, setAdesoes] = useState<Record<string, Adesao>>({});
   const [recebe, setRecebe] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   async function load() {
-    if (!user) return;
+    if (!medicoId) return;
     setLoading(true);
-    const { data: med } = await supabase.from("medicos").select("id").eq("user_id", user.id).maybeSingle();
-    if (!med) { setLoading(false); return; }
-    setMedicoId(med.id);
 
     const [{ data: s }, { data: a }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").eq("ativo", true).order("prioridade"),
-      supabase.from("medico_servicos").select("servico_id,status,ativo").eq("medico_id", med.id),
+      supabase.from("medico_servicos").select("servico_id,status,ativo").eq("medico_id", medicoId),
     ]);
     setServicos((s ?? []) as Servico[]);
     const m: Record<string, Adesao> = {};
@@ -55,7 +52,7 @@ export default function MedicoServicos() {
     const re: Record<string, number> = {};
     await Promise.all((s ?? []).map(async (sv: any) => {
       const { data } = await supabase.rpc("fn_resolver_comissao", {
-        _medico_id: med.id,
+        _medico_id: medicoId,
         _servico_id: sv.id,
         _valor_bruto_centavos: sv.valor_paciente_centavos,
       });
@@ -65,7 +62,7 @@ export default function MedicoServicos() {
     setRecebe(re);
     setLoading(false);
   }
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [medicoId]);
 
   async function toggle(s: Servico, on: boolean) {
     if (!medicoId) return;

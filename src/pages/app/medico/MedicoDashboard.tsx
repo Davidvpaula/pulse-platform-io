@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  getMedicoAtual,
   listConsultasDoMedico,
   type ConsultaDetalhada,
 } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
 import { usePermission } from "@/lib/permissions/usePermission";
@@ -53,6 +53,7 @@ type Onboarding = {
 
 export default function MedicoDashboard() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const { profileKey } = useAuth();
   const can = useCan();
   const { has: hasPerm } = usePermission("financeiro.ver");
@@ -88,11 +89,10 @@ export default function MedicoDashboard() {
   const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !medicoAtual) { setLoading(false); return; }
     setLoading(true);
 
-    const medico = await getMedicoAtual();
-    if (!medico) { setMedicoNaoExiste(true); setLoading(false); return; }
+    const medico = medicoAtual;
     setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
 
@@ -218,7 +218,7 @@ export default function MedicoDashboard() {
     setLoading(false);
   };
 
-  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session]);
+  useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session, medicoAtual]);
 
   const proxima = proximas[0];
   const minutosProx = useMemo(() => proxima ? diffMin(proxima.inicio) : null, [proxima]);

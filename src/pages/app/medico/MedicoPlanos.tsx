@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,8 +29,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function MedicoPlanos() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const termsPlano = useTermsCheck("criacao_plano_medico");
   const uid = session?.user?.id;
+  const medicoId = medicoAtual?.id ?? null;
   const [planos, setPlanos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -45,12 +48,12 @@ export default function MedicoPlanos() {
   const [termosCancelamento, setTermosCancelamento] = useState("");
 
   async function load() {
-    if (!uid) return;
+    if (!medicoId) return;
     setLoading(true);
     const { data } = await supabase
       .from("planos")
       .select("*")
-      .eq("medico_id", uid)
+      .eq("medico_id", medicoId)
       .eq("nivel", "medico" as any)
       .order("created_at", { ascending: false });
     setPlanos(data ?? []);
@@ -71,7 +74,7 @@ export default function MedicoPlanos() {
     );
   }
 
-  useEffect(() => { load(); loadTermos(); }, [uid]);
+  useEffect(() => { load(); loadTermos(); }, [medicoId]);
 
   function novoPlano() {
     if (termsPlano.needsAcceptance) {
@@ -99,13 +102,13 @@ export default function MedicoPlanos() {
   }
 
   async function confirmarCancelamento() {
-    if (!cancelTarget || !uid) return;
+    if (!cancelTarget || !medicoId) return;
     setCancelLoading(true);
     try {
       // Create cancellation event
       const { error: evtErr } = await supabase.from("plano_cancelamento_evento").insert({
         plano_id: cancelTarget.id,
-        medico_id: uid,
+        medico_id: medicoId,
         total_pacientes: cancelInfo?.pacientes ?? 0,
         valor_total_comprometido_centavos: cancelInfo?.valor ?? 0,
         tipo_encerramento: "cumprir_ciclo",

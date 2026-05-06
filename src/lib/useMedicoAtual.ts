@@ -110,3 +110,13 @@ export function useMedicoAtual(): UseMedicoAtualReturn {
 
   return { medico, loading, error, situacao, refetch: () => setTick(t => t + 1) };
 }
+
+/**
+ * Convenience: inside MedicoGuard, medico is guaranteed to exist and be approved.
+ * Throws if used outside guard context (medico is null).
+ */
+export function useMedicoId(): string {
+  const { medico } = useMedicoAtual();
+  if (!medico) throw new Error("useMedicoId must be used inside MedicoGuard (medico is null)");
+  return medico.id;
+}
