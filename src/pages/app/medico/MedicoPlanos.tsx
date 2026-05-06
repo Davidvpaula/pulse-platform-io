@@ -102,13 +102,13 @@ export default function MedicoPlanos() {
   }
 
   async function confirmarCancelamento() {
-    if (!cancelTarget || !uid) return;
+    if (!cancelTarget || !medicoId) return;
     setCancelLoading(true);
     try {
       // Create cancellation event
       const { error: evtErr } = await supabase.from("plano_cancelamento_evento").insert({
         plano_id: cancelTarget.id,
-        medico_id: uid,
+        medico_id: medicoId,
         total_pacientes: cancelInfo?.pacientes ?? 0,
         valor_total_comprometido_centavos: cancelInfo?.valor ?? 0,
         tipo_encerramento: "cumprir_ciclo",
