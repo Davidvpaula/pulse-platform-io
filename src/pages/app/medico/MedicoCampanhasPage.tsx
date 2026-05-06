@@ -32,6 +32,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default function MedicoCampanhasPage() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [medicoId, setMedicoId] = useState<string | null>(null);
   const [campanhas, setCampanhas] = useState<ImpulsionamentoCampanha[]>([]);

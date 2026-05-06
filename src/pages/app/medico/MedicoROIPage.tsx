@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 export default function MedicoROIPage() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [premium, setPremium] = useState<MedicoPremium | null>(null);
   const [assinatura, setAssinatura] = useState<PremiumAssinatura | null>(null);
