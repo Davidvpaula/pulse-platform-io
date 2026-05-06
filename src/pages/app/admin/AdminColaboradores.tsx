@@ -36,19 +36,9 @@ type FuncaoInterna =
   | "secretaria" | "supervisor" | "financeiro" | "comercial"
   | "atendimento" | "suporte" | "gestor_operacional" | "outro";
 
-type ColabRow = {
-  id: string;
-  user_id: string;
-  nome_completo: string;
-  email: string;
-  cpf: string | null;
-  telefone: string | null;
+type ColabRow = ColabRowImported & {
   funcao_interna: FuncaoInterna;
-  cargo_descricao: string | null;
-  setor: string | null;
   status_conta: StatusConta;
-  ultimo_acesso_em: string | null;
-  created_at: string;
 };
 
 const FUNCOES: { value: FuncaoInterna; label: string }[] = [
