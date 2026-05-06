@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminLoading, AdminError, AdminEmpty } from "@/components/admin/AdminStates";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ShieldOff, RefreshCw, Search } from "lucide-react";
+import { ShieldOff, RefreshCw, Search } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type SessionRow = {
+interface SessionRow {
   id: string;
   user_id: string;
   ip_address: string | null;
@@ -23,7 +25,7 @@ type SessionRow = {
   revoked_at: string | null;
   email?: string;
   nome?: string;
-};
+}
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -36,50 +38,48 @@ function timeAgo(iso: string) {
   return `${d} d atrás`;
 }
 
+function useSessoes(showRevoked: boolean) {
+  return useQuery<SessionRow[]>({
+    queryKey: ["admin", "sessoes", showRevoked],
+    queryFn: async () => {
+      let q = supabase
+        .from("user_sessions")
+        .select("id,user_id,ip_address,user_agent,device_label,created_at,last_seen_at,revoked_at")
+        .order("last_seen_at", { ascending: false })
+        .limit(200);
+      if (!showRevoked) q = q.is("revoked_at", null);
+      const { data, error } = await q;
+      if (error) throw error;
+      const ids = Array.from(new Set((data ?? []).map((r: Record<string, unknown>) => r.user_id as string)));
+      const { data: cols } = await supabase
+        .from("colaboradores")
+        .select("user_id,nome_completo,email")
+        .in("user_id", ids);
+      const map = new Map((cols ?? []).map((c: Record<string, unknown>) => [c.user_id as string, c]));
+      return (data ?? []).map((r: Record<string, unknown>) => ({
+        ...r,
+        nome: (map.get(r.user_id as string) as Record<string, string> | undefined)?.nome_completo,
+        email: (map.get(r.user_id as string) as Record<string, string> | undefined)?.email,
+      })) as SessionRow[];
+    },
+    staleTime: 30_000,
+    retry: 2,
+  });
+}
+
 export default function AdminSessoes() {
-  const [rows, setRows] = useState<SessionRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showRevoked, setShowRevoked] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: rows = [], isLoading, error, refetch } = useSessoes(showRevoked);
 
-  async function load() {
-    setLoading(true);
-    let q = supabase
-      .from("user_sessions")
-      .select("id,user_id,ip_address,user_agent,device_label,created_at,last_seen_at,revoked_at")
-      .order("last_seen_at", { ascending: false })
-      .limit(200);
-    if (!showRevoked) q = q.is("revoked_at", null);
-    const { data, error } = await q;
-    if (error) {
-      toast({ title: "Erro ao carregar sessões", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-    const ids = Array.from(new Set((data ?? []).map((r: any) => r.user_id)));
-    const { data: cols } = await supabase
-      .from("colaboradores")
-      .select("user_id,nome,email")
-      .in("user_id", ids);
-    const map = new Map((cols ?? []).map((c: any) => [c.user_id, c]));
-    setRows((data ?? []).map((r: any) => ({
-      ...r,
-      nome: map.get(r.user_id)?.nome,
-      email: map.get(r.user_id)?.email,
-    })));
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, [showRevoked]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin", "sessoes"] });
 
   async function revoke(id: string) {
-    const { error } = await supabase.rpc("session_revoke", { _session_id: id, _reason: "Revogado pelo admin" });
-    if (error) {
-      toast({ title: "Erro ao revogar", description: error.message, variant: "destructive" });
-      return;
-    }
+    const { error } = await supabase.rpc("session_revoke" as never, { _session_id: id, _reason: "Revogado pelo admin" } as never);
+    if (error) { toast({ title: "Erro ao revogar", description: (error as Error).message, variant: "destructive" }); return; }
     toast({ title: "Sessão revogada" });
-    load();
+    invalidate();
   }
 
   async function revokeAll() {
@@ -87,11 +87,11 @@ export default function AdminSessoes() {
     if (ativas.length === 0) return;
     let ok = 0;
     for (const r of ativas) {
-      const { error } = await supabase.rpc("session_revoke", { _session_id: r.id, _reason: "Revogação em massa pelo admin" });
+      const { error } = await supabase.rpc("session_revoke" as never, { _session_id: r.id, _reason: "Revogação em massa pelo admin" } as never);
       if (!error) ok++;
     }
     toast({ title: `${ok} sessão(ões) revogada(s)` });
-    load();
+    invalidate();
   }
 
   const filtered = useMemo(() => {
@@ -104,6 +104,8 @@ export default function AdminSessoes() {
       (r.device_label ?? "").toLowerCase().includes(t),
     );
   }, [rows, search]);
+
+  if (error) return <AdminError message={(error as Error).message} onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -121,12 +123,7 @@ export default function AdminSessoes() {
           <div className="flex gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por usuário, IP, dispositivo"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 w-72"
-              />
+              <Input placeholder="Buscar por usuário, IP, dispositivo" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-72" />
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowRevoked((v) => !v)}>
               {showRevoked ? "Esconder revogadas" : "Mostrar revogadas"}
@@ -150,15 +147,13 @@ export default function AdminSessoes() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button variant="outline" size="sm" onClick={load}>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : (
+          {isLoading ? <AdminLoading rows={6} /> : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
