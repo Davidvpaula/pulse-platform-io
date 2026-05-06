@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ShieldCheck, Sparkles } from "lucide-react";
@@ -7,95 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { ResumoFinanceiro } from "@/components/paciente/plano-helpers";
 import PlanoPlataformaTab from "@/components/paciente/PlanoPlataformaTab";
 import PlanoPersonalizadoTab from "@/components/paciente/PlanoPersonalizadoTab";
 import PlanoEmpresaTab from "@/components/paciente/PlanoEmpresaTab";
+import { usePacienteAtual } from "@/lib/usePacienteAtual";
+import { usePacientePlanos } from "@/lib/paciente/queries";
+import { PacienteLoading } from "@/components/paciente/PacienteStates";
 
 export default function PacientePlano() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
-  const [pacienteId, setPacienteId] = useState<string | null>(null);
-  const [todasAssinaturas, setTodasAssinaturas] = useState<any[]>([]);
-  const [beneficiosMap, setBeneficiosMap] = useState<Record<string, any[]>>({});
-  const [planosDisponiveis, setPlanosDisponiveis] = useState<any[]>([]);
-  const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const { paciente } = usePacienteAtual();
+  const pacienteId = paciente?.id ?? null;
+
+  const { data: planoData, isLoading: loading } = usePacientePlanos(pacienteId, !!pacienteId);
+
+  const todasAssinaturas = planoData?.assinaturas ?? [];
+  const beneficiosMap = planoData?.beneficiosMap ?? {};
+  const planosDisponiveis = planoData?.planosDisponiveis ?? [];
+  const pagamentos = planoData?.pagamentos ?? [];
 
   const defaultTab = searchParams.get("tab") || "plataforma";
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: paciente } = await supabase
-        .from("pacientes")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!paciente) { setLoading(false); return; }
-      setPacienteId(paciente.id);
-
-      // All subscriptions with plan data
-      const { data: assinaturas } = await supabase
-        .from("assinaturas")
-        .select("*, planos(*)")
-        .eq("paciente_id", paciente.id)
-        .order("created_at", { ascending: false });
-
-      setTodasAssinaturas(assinaturas || []);
-
-      // Benefits for all plans
-      const planoIds = [...new Set((assinaturas || []).map(a => a.plano_id))];
-      if (planoIds.length > 0) {
-        const { data: bens } = await supabase
-          .from("plano_beneficios")
-          .select("*")
-          .in("plano_id", planoIds)
-          .order("ordem");
-
-        const map: Record<string, any[]> = {};
-        for (const b of (bens || [])) {
-          if (!map[b.plano_id]) map[b.plano_id] = [];
-          map[b.plano_id].push(b);
-        }
-        setBeneficiosMap(map);
-      }
-
-      // Payments (last 12 months)
-      const dozeAtras = new Date();
-      dozeAtras.setFullYear(dozeAtras.getFullYear() - 1);
-      const { data: pags } = await supabase
-        .from("pagamentos")
-        .select("*")
-        .eq("paciente_id", paciente.id)
-        .gte("created_at", dozeAtras.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setPagamentos(pags || []);
-
-      // Available plans (site)
-      const { data: disponiveis } = await supabase
-        .from("planos")
-        .select("*, plano_beneficios(nome)")
-        .eq("publicado_site", true)
-        .eq("status", "ativo")
-        .order("ordem_exibicao");
-      setPlanosDisponiveis(disponiveis || []);
-
-    } catch (err) {
-      console.error("Erro ao carregar planos:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   // Group subscriptions by type
   const { plataforma, personalizado, empresa } = useMemo(() => {
