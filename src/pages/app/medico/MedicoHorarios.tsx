@@ -495,14 +495,14 @@ export default function MedicoHorarios() {
             {espInfo.preco_centavos != null && <> · Valor: <b>R$ {(espInfo.preco_centavos / 100).toFixed(2)}</b></>}
           </div>
         )}
-        {tipoSlot === "particular" && !espInfo && !loading && (
+        {tipoSlot === "particular" && !espInfo && dadosCarregados && (
           <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning-foreground">
             Nenhuma especialidade ativa configurada. <Link to="/app/medico/configuracoes" className="font-semibold text-primary hover:underline">Configurar agora →</Link>
           </div>
         )}
       </div>
 
-      {session && modalidade === "online" && !linkSala && !loading && (
+      {session && modalidade === "online" && !linkSala && dadosCarregados && (
         <div className="card-elevated border-warning/40 bg-warning/5 p-4">
           <div className="flex items-start gap-3">
             <Video className="mt-0.5 h-5 w-5 text-warning shrink-0" />
