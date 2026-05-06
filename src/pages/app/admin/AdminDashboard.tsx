@@ -7,7 +7,7 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import type { Status } from "@/lib/mock";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";

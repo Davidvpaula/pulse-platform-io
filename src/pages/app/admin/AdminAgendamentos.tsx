@@ -137,7 +137,6 @@ export default function AdminAgendamentos() {
     setOverviewLoading(false);
     if (error) {
       // silencioso — usuário pode não ter permissão
-      console.warn("overview indisponível", error.message);
       return;
     }
     setOverview(data);
