@@ -76,15 +76,10 @@ export default function PacienteDashboard() {
         const consultasMes = rows.filter(c => new Date(c.inicio) >= inicioMes);
         setStatsConsultas(consultasMes.length);
 
-        // Stats: docs (prescrições)
-        const uid = session.user.id;
-        const { data: paciente } = await supabase
-          .from("pacientes")
-          .select("id")
-          .eq("user_id", uid)
-          .maybeSingle();
+        // Stats: docs (prescrições) — usa pacienteAtual do hook
+        const pacienteId = pacienteAtual!.id;
 
-        if (paciente) {
+        {
           // Documentos count
           const consIds = rows.map(c => c.id);
           if (consIds.length > 0) {
