@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import {
   getMedicoPremium, getAssinaturaPremium, getRankingMedico, getRankingConfig,
   type MedicoPremium, type PremiumAssinatura, type MedicoRanking, type RankingConfig,
@@ -83,7 +83,7 @@ export default function MedicoPremiumPage() {
     if (!session) return;
     (async () => {
       setLoading(true);
-      const medico = await getMedicoAtual();
+      const medico = medicoAtual;
       if (!medico) { setLoading(false); return; }
       const [p, a, r, c] = await Promise.all([
         getMedicoPremium(medico.id),
