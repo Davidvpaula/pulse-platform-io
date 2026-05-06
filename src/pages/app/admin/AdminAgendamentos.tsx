@@ -266,8 +266,7 @@ export default function AdminAgendamentos() {
     toast({ title: "Status atualizado" });
     setStatusDialog({ open: false });
     setMotivoStatus("");
-    carregar();
-    carregarOverview();
+    invalidateAll();
   }
 
   async function cancelarConsulta() {
