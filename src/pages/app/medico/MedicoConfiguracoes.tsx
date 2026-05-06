@@ -325,7 +325,7 @@ export default function MedicoConfiguracoes() {
 
   useEffect(() => {
     (async () => {
-      const mid = await getMedicoAtualId();
+      const mid = hookMedicoId;
       if (!mid) { setNotifLoading(false); return; }
       const { data } = await supabase
         .from("medico_notificacao_prefs" as any)
