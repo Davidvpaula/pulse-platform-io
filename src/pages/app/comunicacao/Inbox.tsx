@@ -288,7 +288,7 @@ export default function ComunicacaoInbox() {
         .select("nome")
         .eq("id", conv.medico_id)
         .maybeSingle();
-      setMedicoName((data as any)?.nome || null);
+      setMedicoName(data?.nome || null);
     }
 
     if (conv.consulta_id) {
