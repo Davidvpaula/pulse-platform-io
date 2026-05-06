@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { FinanceiroCentralDashboard } from "@/lib/admin/types";
+import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
 import { DollarSign, RefreshCw, Loader2, Download, AlertTriangle, CheckCircle2, XCircle, Link2, FileText, Wallet, ChevronDown, ChevronRight, Clock, User, Shield } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
