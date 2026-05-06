@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { FinanceiroCentralDashboard } from "@/lib/admin/types";
+import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
 import { DollarSign, RefreshCw, Loader2, Download, AlertTriangle, CheckCircle2, XCircle, Link2, FileText, Wallet, ChevronDown, ChevronRight, Clock, User, Shield } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -21,7 +24,7 @@ export default function AdminFinanceiroCentral() {
   const hoje = new Date();
   const [inicio, setInicio] = useState(new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10));
   const [fim, setFim] = useState(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10));
-  const [dash, setDash] = useState<any>(null);
+  const [dash, setDash] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(false);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [reembolsos, setReembolsos] = useState<any[]>([]);
