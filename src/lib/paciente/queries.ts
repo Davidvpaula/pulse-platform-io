@@ -86,9 +86,12 @@ export function usePacienteAnexos(enabled = true) {
 
 /* ─── Conversas / Mensagens ─── */
 export function usePacienteConversas(enabled = true) {
-  return useQuery<ConversaPaciente[]>({
+  return useQuery({
     queryKey: pacienteKeys.conversas(),
-    queryFn: listConversasPaciente,
+    queryFn: async () => {
+      const result = await listConversasPaciente();
+      return result.data;
+    },
     enabled,
     ...QUERY_REALTIME,
   });
