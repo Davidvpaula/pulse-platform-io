@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  getMedicoAtual,
   listConsultasDoMedico,
   type ConsultaDetalhada,
 } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
 import { usePermission } from "@/lib/permissions/usePermission";
