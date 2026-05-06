@@ -16,6 +16,9 @@ interface Props {
   scopeValue: string;
 }
 
+type AppRole = Database["public"]["Enums"]["app_role"];
+type FuncaoInterna = Database["public"]["Enums"]["funcao_interna"];
+
 export function MatrizPermissoes({ scope, scopeValue }: Props) {
   const { session } = useSession();
   const [catalog, setCatalog] = useState<Perm[]>([]);
