@@ -67,12 +67,51 @@ async function runFeegowTest(
   }
 }
 
+async function persistTestResult(
+  supabaseUrl: string,
+  serviceKey: string,
+  ok: boolean,
+  erro: string | null,
+  userId: string,
+  detailPayload: unknown,
+) {
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
+  // Update integracoes_config
+  await adminClient
+    .from("integracoes_config")
+    .update({
+      ultimo_teste_at: new Date().toISOString(),
+      ultimo_teste_ok: ok,
+      ultimo_erro: erro,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("tipo", "feegow");
+
+  // Insert log
+  await adminClient.from("integracoes_logs").insert({
+    integracao: "feegow",
+    acao: "teste_conexao",
+    entidade_tipo: null,
+    entidade_id_interno: null,
+    entidade_id_externo: null,
+    payload_envio: null,
+    payload_resposta: detailPayload as Record<string, unknown>,
+    status: ok ? "sucesso" : "erro",
+    erro: erro,
+    origem: "admin_ui",
+    user_id: userId,
+    duracao_ms: null,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) return json({ error: "Não autenticado" }, 401);
@@ -97,24 +136,19 @@ Deno.serve(async (req) => {
       );
 
       if (!FEEGOW_TOKEN) {
+        await persistTestResult(SUPABASE_URL, SERVICE_KEY, false, "FEEGOW_API_TOKEN não configurado", u.user.id, null);
         return json({ ok: false, integration: "feegow", error: "FEEGOW_API_TOKEN não configurado" });
       }
 
-      // --- Modo diagnóstico: testa 4 variações ---
+      // --- Modo diagnóstico: testa 6 variações ---
       if (mode === "diagnostico") {
         const results: TestResult[] = [];
 
-        // Teste 1: x-access-token + GET + /specialties/list
         results.push(await runFeegowTest(1, FEEGOW_URL, "/specialties/list", "GET", "x-access-token", FEEGOW_TOKEN));
-        // Teste 2: x-access-token + POST + /specialties/list
         results.push(await runFeegowTest(2, FEEGOW_URL, "/specialties/list", "POST", "x-access-token", FEEGOW_TOKEN));
-        // Teste 3: Authorization: Bearer + GET + /specialties/list
         results.push(await runFeegowTest(3, FEEGOW_URL, "/specialties/list", "GET", "Authorization: Bearer", FEEGOW_TOKEN));
-        // Teste 4: x-access-token + GET + /professional/list?ativo=1
         results.push(await runFeegowTest(4, FEEGOW_URL, "/professional/list?ativo=1", "GET", "x-access-token", FEEGOW_TOKEN));
-        // Teste 5: GET /patient/list (verificar se endpoints de paciente funcionam)
         results.push(await runFeegowTest(5, FEEGOW_URL, "/patient/list?limit=1", "GET", "x-access-token", FEEGOW_TOKEN));
-        // Teste 6: GET /patient/list-origins
         results.push(await runFeegowTest(6, FEEGOW_URL, "/patient/list-origins", "GET", "x-access-token", FEEGOW_TOKEN));
 
         const algumOk = results.some(r => r.http_status !== null && r.http_status >= 200 && r.http_status < 300);
@@ -133,14 +167,24 @@ Deno.serve(async (req) => {
           recomendacao = "Resultados mistos. Analise os status individuais para identificar o padrão correto.";
         }
 
-        return json({
+        const responsePayload = {
           ok: algumOk,
           integration: "feegow",
           token_mascarado: maskToken(FEEGOW_TOKEN),
           url_base: FEEGOW_URL,
           testes: results,
           recomendacao,
-        });
+        };
+
+        // Persist result
+        await persistTestResult(
+          SUPABASE_URL, SERVICE_KEY, algumOk,
+          algumOk ? null : recomendacao,
+          u.user.id,
+          { mode: "diagnostico", testes_count: results.length, algum_ok: algumOk },
+        );
+
+        return json(responsePayload);
       }
 
       // --- Modo padrão (fluxo original) ---
@@ -150,7 +194,7 @@ Deno.serve(async (req) => {
       });
       const data = await resp.json().catch(() => null);
 
-      return json({
+      const responsePayload = {
         ok: resp.ok,
         integration: "feegow",
         http_status: resp.status,
@@ -159,7 +203,17 @@ Deno.serve(async (req) => {
         resposta_resumo: resp.ok
           ? { total_especialidades: Array.isArray(data?.content) ? data.content.length : "formato inesperado" }
           : { erro: data?.message ?? data?.error ?? JSON.stringify(data).slice(0, 300) },
-      });
+      };
+
+      // Persist result
+      await persistTestResult(
+        SUPABASE_URL, SERVICE_KEY, resp.ok,
+        resp.ok ? null : JSON.stringify(responsePayload.resposta_resumo).slice(0, 500),
+        u.user.id,
+        { mode: "padrao", http_status: resp.status },
+      );
+
+      return json(responsePayload);
     }
 
     return json({ error: `Integração '${integration}' não suportada para teste` }, 400);
