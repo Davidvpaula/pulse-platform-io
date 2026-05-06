@@ -43,11 +43,11 @@ import {
   excluirSlotsDoDia,
   excluirTodosSlots,
   getDuracaoSlotMedico,
-  getMedicoAtual,
   type AgendaSlot,
   type FaixaHorario,
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
