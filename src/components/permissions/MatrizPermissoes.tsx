@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useSession } from "@/lib/session";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
