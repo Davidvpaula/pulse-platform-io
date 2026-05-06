@@ -243,9 +243,9 @@ export default function MedicoConfiguracoes() {
             ativo: v?.ativo ?? false,
             duracao_minutos: v?.duracao_minutos ?? 30,
             preco_centavos: v?.preco_centavos ?? 0,
-            pronto_atendimento: (v as any)?.pronto_atendimento ?? false,
-            especialista: (v as any)?.especialista ?? false,
-            rqe: (v as any)?.rqe ?? "",
+            pronto_atendimento: v?.pronto_atendimento ?? false,
+            especialista: v?.especialista ?? false,
+            rqe: v?.rqe ?? "",
           };
         }
         setLinhas(mapa);
