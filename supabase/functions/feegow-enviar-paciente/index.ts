@@ -308,16 +308,19 @@ Deno.serve(async (req) => {
     }
 
     // ── MODO PADRÃO ──
+    const nomeCompleto = pac.nome_completo ?? "";
+    const nomePaciente = nomeCompleto.split(" ")[0];
     const payload = {
-      nome: pac.nome_completo ?? "",
+      nome_completo: nomeCompleto,
+      nome_paciente: nomePaciente,
       cpf: cpfLimpo,
       data_nascimento: pac.data_nascimento ?? "",
       genero,
       celular,
-      origem_id: 1,
+      sexo_id: pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0,
     };
 
-    const resp = await fetch(`${FEEGOW_URL}/patient/store`, {
+    const resp = await fetch(`${FEEGOW_URL}/patient/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
