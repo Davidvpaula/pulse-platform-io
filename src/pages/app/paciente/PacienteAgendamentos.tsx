@@ -100,7 +100,7 @@ export default function PacienteAgendamentos() {
       body: { action: "consulta.cancelada", entity_type: "consulta", entity_id: id },
     }).catch(() => {});
     toast.success("Consulta cancelada.");
-    void carregar();
+    void refetch();
   };
 
 
@@ -314,7 +314,7 @@ export default function PacienteAgendamentos() {
         open={!!voucherSelecionado}
         onOpenChange={(v) => { if (!v) setVoucherSelecionado(null); }}
         voucher={voucherSelecionado}
-        onAgendado={() => { setVoucherSelecionado(null); void carregar(); }}
+        onAgendado={() => { setVoucherSelecionado(null); void refetch(); }}
       />
 
       {avaliarConsulta && (
@@ -327,7 +327,7 @@ export default function PacienteAgendamentos() {
             medico_id: avaliarConsulta.medico_id,
             medico_nome: avaliarConsulta.medico_nome,
           }}
-          onAvaliado={() => { setAvaliarConsulta(null); void carregar(); }}
+          onAvaliado={() => { setAvaliarConsulta(null); void refetch(); }}
         />
       )}
 
