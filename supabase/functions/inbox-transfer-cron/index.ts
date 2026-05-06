@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,33 +6,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * inbox-transfer-cron
+ *
+ * Previously called a non-existent RPC `vincular_medico_conversa_pre_consulta`.
+ * That RPC was never created, so this function now returns a no-op success
+ * to stop the recurring error logs.
+ *
+ * When the inbox/conversation linking feature is implemented,
+ * the proper logic should be added here.
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Call the database function that handles the logic
-    const { error } = await sb.rpc("vincular_medico_conversa_pre_consulta");
-
-    if (error) {
-      console.error("Error running vincular_medico_conversa_pre_consulta:", error);
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ ok: true, timestamp: new Date().toISOString() }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("inbox-transfer-cron error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  return new Response(
+    JSON.stringify({ ok: true, status: "noop", message: "inbox-transfer-cron: awaiting implementation", timestamp: new Date().toISOString() }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });
