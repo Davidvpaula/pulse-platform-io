@@ -110,7 +110,7 @@ export default function AdminRelatoriosB2B() {
           .order("competencia_mes", { ascending: false })
           .limit(500),
         supabase.from("propostas_empresa_medico")
-          .select("id, empresa_id, medico_id, valor_mensal_centavos, valor_ajustado_centavos, taxa_plataforma_pct, tipo_contrato, status, created_at, empresa:empresas(razao_social), medico:profiles!propostas_empresa_medico_medico_id_fkey(nome)")
+          .select("id, empresa_id, medico_id, valor_mensal_centavos, valor_ajustado_centavos, taxa_plataforma_pct, tipo_contrato, status, created_at, empresa:empresas(razao_social), medico:medicos!propostas_empresa_medico_medico_id_fkey(nome)")
           .order("created_at", { ascending: false })
           .limit(500),
       ]);

@@ -1,32 +1,59 @@
-## Erro 1 — Relatório Financeiro
 
-**Causa:** O frontend chama `relatorios_financeiro_snapshot(p_compare_mode, p_fim, p_inicio)` mas a função no banco aceita `(p_inicio, p_fim, p_medico)` — não tem `p_compare_mode`. Além disso, a função ainda referencia `cf.data_consulta` que foi renomeada para `n`.
+# Correção Crítica: `propostas_empresa_medico.medico_id`
 
-**Correção (migração SQL):**
-- Recriar `relatorios_financeiro_snapshot` adicionando o parâmetro `p_compare_mode` e substituindo `cf.data_consulta` por `cf.n` em todas as ocorrências.
-- Manter `p_medico` como parâmetro opcional (já existe).
+## BLOCO 1 — Estado Atual Confirmado
 
-**OU** ajustar o frontend para não enviar `p_compare_mode` e usar os parâmetros que a função já aceita. Depende se a lógica de comparação é necessária.
+| Item | Valor |
+|------|-------|
+| **FK atual** | `medico_id → profiles(id) ON DELETE CASCADE` |
+| **RLS** | Já correta — usa `medicos.id` via `EXISTS(SELECT 1 FROM medicos m WHERE m.id = propostas_empresa_medico.medico_id AND m.user_id = auth.uid())` |
+| **Registros** | **0 (tabela vazia)** — migração segura |
+| **Conflito** | FK aponta para `profiles.id`, RLS compara com `medicos.id` — incompatível |
 
-Recomendo: **corrigir a função SQL** para aceitar `p_compare_mode` e trocar `data_consulta` → `n`.
+### Frontend — quem envia o quê hoje
+
+| Arquivo | O que envia como `medico_id` | Correto? |
+|---------|------------------------------|----------|
+| `MedicoPropostas.tsx` (queries) | `medicoAtual.id` (medicos.id) | ✅ |
+| `MedicoDashboard.tsx:143` | `session.user.id` (auth.uid) | ❌ |
+| `EmpresaPropostas.tsx:124,162` | `m.user_id` (auth.uid) via select dropdown | ❌ |
+| `EmpresaPropostas.tsx:94` | join `profiles!...fkey(nome)` | ❌ (FK vai mudar) |
+| `AdminPropostasB2B.tsx:93` | join `profiles!...fkey(nome)` | ❌ (FK vai mudar) |
+| `AdminRelatoriosB2B.tsx:113` | join `profiles!...fkey(nome)` | ❌ (FK vai mudar) |
+| `MedicoCorporativo.tsx` | `med.id` (medicos.id) | ✅ |
+
+### Bug colateral detectado (NÃO será corrigido nesta etapa)
+
+- `MedicoPropostas.tsx` função `aceitar()`: insere em `planos` e `plano_medicos` com `medico_id: uid` (auth.uid) em vez de `medicos.id`. Isso é bug na tabela **planos**, não em propostas — será apenas reportado.
 
 ---
 
-## Erro 2 — Auditoria
+## BLOCO 2 — Migration Mínima
 
-**Causa:** Existem **duas funções** `auditoria_listar` com assinaturas quase idênticas (uma tem `p_revisado text`, a outra não; uma usa defaults `'todos'`, a outra `NULL`). O PostgREST não consegue escolher qual usar.
+Uma única migration:
 
-**Correção (migração SQL):**
-- Dropar a versão que NÃO tem `p_revisado` (a mais limitada).
-- Manter a versão completa com `p_revisado`.
-- Ajustar defaults para compatibilidade com o frontend (que envia `'todos'` para filtros vazios).
+1. `DROP` FK antiga `propostas_empresa_medico_medico_id_fkey` (profiles)
+2. `ADD` FK nova `propostas_empresa_medico_medico_id_fkey` (medicos) com `ON DELETE CASCADE`
+
+Nenhuma outra alteração de schema/RLS/trigger.
 
 ---
 
-## Resumo de alterações
+## BLOCO 3 — Frontend Mínimo (5 arquivos)
 
-| Item | Tipo | Arquivo |
-|------|------|---------|
-| Recriar `relatorios_financeiro_snapshot` | Migração SQL | Nova migração |
-| Dropar `auditoria_listar` duplicada | Migração SQL | Mesma migração |
-| Nenhuma alteração de frontend necessária | — | — |
+| Arquivo | Alteração |
+|---------|-----------|
+| `EmpresaPropostas.tsx:99` | Adicionar `id` ao select de medicos |
+| `EmpresaPropostas.tsx:124` | Trocar `id: m.user_id` → `id: m.id` |
+| `EmpresaPropostas.tsx:94` | Trocar join `profiles!...fkey(nome)` → `medico:medicos!propostas_empresa_medico_medico_id_fkey(nome)` |
+| `AdminPropostasB2B.tsx:93` | Mesma troca de join |
+| `AdminRelatoriosB2B.tsx:113` | Mesma troca de join |
+| `MedicoDashboard.tsx:143` | Trocar `session.user.id` → `medico.id` (já disponível no escopo) |
+
+Nenhum outro arquivo será alterado.
+
+---
+
+## BLOCO 4-6 — Validação
+
+Após implementação: build limpo, verificação de TypeScript, e relatório final com todos os itens solicitados.
