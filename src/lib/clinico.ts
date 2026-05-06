@@ -186,7 +186,7 @@ export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): 
 
 export async function deletarDocumentoPaciente(doc: DocumentoPaciente): Promise<boolean> {
   await supabase.storage.from("paciente-docs").remove([doc.storage_path]);
-  const { error } = await supabase.from("documentos_paciente" as any).delete().eq("id", doc.id);
+  const { error } = await supabase.from("documentos_paciente").delete().eq("id", doc.id);
   if (error) { console.error("[clinico] deletar doc:", error); return false; }
   return true;
 }
