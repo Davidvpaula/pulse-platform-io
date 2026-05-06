@@ -200,13 +200,12 @@ export default function MedicoHorarios() {
   const duracaoEfetiva = tipoSlot === "particular" ? duracao : null;
 
   useEffect(() => {
-    if (!session) {
-      setLoading(false);
+    if (!session || medicoCarregando || !medicoAtual?.id) {
       return;
     }
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, [session, medicoAtual?.id, medicoCarregando]);
 
   function toggleDia(idx: number) {
     setDiasSel((prev) =>
