@@ -73,7 +73,7 @@ export default function EmpresaFinanceiro() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Financeiro</p>
           <h1 className="font-display text-2xl font-bold">Faturas e consumo</h1>
-          {empresaNome && <p className="text-sm text-muted-foreground">{empresaNome}</p>}
+          {empresa && <p className="text-sm text-muted-foreground">{empresa.nomeFantasia || empresa.razaoSocial}</p>}
         </div>
         <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Atualizar
