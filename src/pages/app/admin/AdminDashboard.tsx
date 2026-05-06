@@ -7,6 +7,7 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
+import type { Status } from "@/lib/mock";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
@@ -189,7 +190,7 @@ export default function AdminDashboard() {
                       <td className="font-medium">{a.paciente ?? "—"}</td>
                       <td className="text-muted-foreground">{a.medico ?? "—"}</td>
                       <td className="text-xs"><span className="rounded bg-muted px-1.5 py-0.5">{a.canal}</span></td>
-                      <td><StatusBadge status={a.status} /></td>
+                      <td><StatusBadge status={a.status as Status} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -254,7 +255,7 @@ export default function AdminDashboard() {
                     <tr key={pa.id} className="border-t border-border">
                       <td className="py-2.5 font-medium">{pa.nome ?? "—"}</td>
                       <td className="text-muted-foreground">{pa.empresa ?? "Particular"}</td>
-                      <td><StatusBadge status={pa.status} /></td>
+                      <td><StatusBadge status={pa.status as Status} /></td>
                       <td className="text-muted-foreground">{fmtData(pa.created_at)}</td>
                       <td className="text-right">
                         <Button asChild size="sm" variant="ghost">
