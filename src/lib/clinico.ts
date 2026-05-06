@@ -1,9 +1,6 @@
 /**
  * Camada de serviço para o núcleo clínico.
  * Encapsula chamadas ao Supabase e converte para os tipos usados pelas telas.
- *
- * Regra: só usar quando houver sessão real. Sem sessão (modo demo) as telas
- * continuam com o mock antigo.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
