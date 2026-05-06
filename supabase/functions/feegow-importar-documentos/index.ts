@@ -50,27 +50,24 @@ Deno.serve(async (req) => {
     if (!FEEGOW_TOKEN) return json({ error: "FEEGOW_API_TOKEN não configurado" }, 500);
 
     // Auth: aceitar user logado OU service key via header x-service-key
-    const auth = req.headers.get("Authorization") ?? "";
     const serviceKey = req.headers.get("x-service-key") ?? "";
     let userId: string | null = null;
+    const isServiceCall = serviceKey === SERVICE_KEY;
 
-    if (serviceKey === SERVICE_KEY) {
-      // Service-level access para diagnóstico
-    } else if (auth.startsWith("Bearer ")) {
+    if (!isServiceCall) {
+      const auth = req.headers.get("Authorization") ?? "";
+      if (!auth.startsWith("Bearer ")) return json({ error: "Não autenticado" }, 401);
       const userClient = createClient(SUPABASE_URL, ANON_KEY, {
         global: { headers: { Authorization: auth } },
       });
       const { data: u } = await userClient.auth.getUser();
       if (!u?.user) return json({ error: "Usuário inválido" }, 401);
       userId = u.user.id;
-
       const { data: isAdmin } = await userClient.rpc("has_role", { _user_id: userId, _role: "admin" });
       if (!isAdmin) {
         const { data: isSec } = await userClient.rpc("has_role", { _user_id: userId, _role: "secretaria" });
         if (!isSec) return json({ error: "Sem permissão" }, 403);
       }
-    } else {
-      return json({ error: "Não autenticado" }, 401);
     }
 
     const body = await req.json();
