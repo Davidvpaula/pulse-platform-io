@@ -21,6 +21,7 @@ import { useSession } from "@/lib/session";
 import type { Database } from "@/integrations/supabase/types";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
 
 type PropostaRow = Database["public"]["Tables"]["propostas_empresa_medico"]["Row"];
 type PropostaStatus = Database["public"]["Enums"]["proposta_empresa_status"];
