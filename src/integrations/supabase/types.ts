@@ -6398,7 +6398,14 @@ export type Database = {
             foreignKeyName: "propostas_empresa_medico_medico_id_fkey"
             columns: ["medico_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propostas_empresa_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
           {
