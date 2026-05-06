@@ -11,10 +11,10 @@ import {
   listVinculosDoMedico,
   upsertVinculoEspecialidade,
   getProntoAtendimentoDuracao,
-  getMedicoAtualId,
   type Especialidade,
   type MedicoEspecialidade,
 } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
