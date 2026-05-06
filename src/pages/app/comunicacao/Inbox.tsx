@@ -297,7 +297,7 @@ export default function ComunicacaoInbox() {
         .select("inicio, status")
         .eq("id", conv.consulta_id)
         .maybeSingle();
-      if (data) setConsultaInfo(data as any);
+      if (data) setConsultaInfo(data as ConsultaJanela);
     }
   }
 
