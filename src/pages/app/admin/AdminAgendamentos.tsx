@@ -320,7 +320,7 @@ export default function AdminAgendamentos() {
         description="Monitoramento, auditoria e otimização — não é uma agenda manual."
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={carregar}>
+            <Button variant="outline" onClick={() => carregar()}>
               <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
             </Button>
             <Button onClick={carregarInsights} disabled={insightsLoading}>
