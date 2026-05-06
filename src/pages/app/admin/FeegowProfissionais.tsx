@@ -347,7 +347,7 @@ export default function FeegowProfissionais() {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {p.conselho} {p.documento_conselho}/{p.uf_conselho}
-                        {p.especialidades?.length > 0 && ` · ${p.especialidades.map(e => e.nome).join(", ")}`}
+                        {p.especialidades?.length > 0 && ` · ${p.especialidades.map(e => e.nome_especialidade || e.nome || "").join(", ")}`}
                       </p>
                     </div>
                     <div className="shrink-0">
