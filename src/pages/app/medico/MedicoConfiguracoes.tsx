@@ -604,7 +604,7 @@ export default function MedicoConfiguracoes() {
                         <div className="grid grid-cols-12 items-center gap-2">
                           <div className="col-span-5">
                             <p className="font-medium">{e.nome}</p>
-                            {(e as any).descricao && <p className="text-[11px] text-muted-foreground">{(e as any).descricao}</p>}
+                            {e.descricao && <p className="text-[11px] text-muted-foreground">{e.descricao}</p>}
                             {cg && (
                               <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                 CFM: não exige RQE
