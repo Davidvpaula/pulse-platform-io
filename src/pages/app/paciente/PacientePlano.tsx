@@ -21,7 +21,7 @@ export default function PacientePlano() {
   const { paciente } = usePacienteAtual();
   const pacienteId = paciente?.id ?? null;
 
-  const { data: planoData, isLoading: loading } = usePacientePlanos(pacienteId, !!pacienteId);
+  const { data: planoData, isLoading: loading, refetch } = usePacientePlanos(pacienteId, !!pacienteId);
 
   const todasAssinaturas = planoData?.assinaturas ?? [];
   const beneficiosMap = planoData?.beneficiosMap ?? {};
