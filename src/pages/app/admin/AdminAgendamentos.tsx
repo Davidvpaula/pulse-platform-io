@@ -284,8 +284,7 @@ export default function AdminAgendamentos() {
     toast({ title: "Consulta cancelada", description: "Slot liberado e auditoria registrada." });
     setCancelDialog({ open: false });
     setObsCancel("");
-    carregar();
-    carregarOverview();
+    invalidateAll();
   }
 
   async function reenviarLink(c: ConsultaRow) {
