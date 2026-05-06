@@ -1,15 +1,20 @@
 ## Problema
 
-A página `MedicoConfiguracoes` usa `hookMedicoId` (vindo de `useMedicoAtual`) em vários `useEffect` e `useCallback`, mas todos têm dependency arrays vazios `[]`. Como o hook carrega assíncronamente, na primeira execução `hookMedicoId` é `null`, e os effects nunca re-rodam quando o valor real chega.
+No `PlanoBuilder.tsx`, ao salvar um plano em `medicoMode`, a linha 324 faz:
+```ts
+payload.medico_id = uid; // uid = session.user.id (auth UUID)
+```
 
-Resultado: a página entra em "devMode", mostra "Visualização (sem login)" e o toast "Cadastro médico não encontrado" ao tentar salvar.
+Porém a política RLS exige que `planos.medico_id` corresponda a `medicos.id` (PK da tabela medicos), não ao `user_id` de auth. Resultado: "new row violates row-level security policy for table planos".
 
 ## Correção
 
-No arquivo `src/pages/app/medico/MedicoConfiguracoes.tsx`:
+Em `src/components/planos/PlanoBuilder.tsx`:
 
-1. **`fetchConfig` (useCallback, linha ~113)**: Adicionar `hookMedicoId` no dependency array.
-2. **useEffect de atendimento (linha ~255)**: Adicionar `hookMedicoId` no dependency array.
-3. **useEffect de notificações (linha ~344)**: Adicionar `hookMedicoId` no dependency array.
+1. Adicionar um estado `medicoId` (PK da tabela medicos) que já é buscado em `loadMedicoAndSetBenefit` (variável `med.id`).
+2. Na função `loadMedicoAndSetBenefit`, salvar `med.id` num estado.
+3. Na lógica de save (linha 324), usar esse estado ao invés de `uid`:
+   - `payload.medico_id = medicoId` (PK medicos)
+   - `payload.created_by = uid` (auth uid — permanece correto)
 
-Isso garante que quando `useMedicoAtual` termina de carregar e popula o ID do médico, todos os effects re-executam com o valor correto.
+Impacto: apenas 1 arquivo, ~5 linhas alteradas.

@@ -142,6 +142,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [medicoNome, setMedicoNome] = useState("");
+  const [medicoPk, setMedicoPk] = useState<string | null>(null);
 
   const [hasActiveSubscribers, setHasActiveSubscribers] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
@@ -190,6 +191,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       .maybeSingle();
     if (med) {
       setMedicoNome(med.nome);
+      setMedicoPk(med.id);
       // Only set default benefit on new plan (no planoId)
       if (!planoId) {
         setBeneficios([{
@@ -237,7 +239,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
         .select("id, nome")
         .eq("user_id", uid)
         .maybeSingle();
-      if (med) setMedicoNome(med.nome);
+      if (med) { setMedicoNome(med.nome); setMedicoPk(med.id); }
     }
   }
 
@@ -321,7 +323,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       if (medicoMode) {
         payload.nivel = "medico";
         payload.termos_aceitos = true;
-        payload.medico_id = uid;
+        payload.medico_id = medicoPk;
         payload.created_by = uid;
         if (!planoId) {
           payload.status = "rascunho";
