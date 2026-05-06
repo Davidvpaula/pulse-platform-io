@@ -24,40 +24,11 @@ export function ReceitaPorOrigem({ periodo, medicoId }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-
-    (async () => {
-      // Build date filter
-      const now = new Date();
-      let cutoff: string | null = null;
-      if (periodo === "hoje") cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      else if (periodo === "semana") { const d = new Date(); d.setDate(d.getDate() - 7); cutoff = d.toISOString(); }
-      else if (periodo === "mes" || periodo === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); cutoff = d.toISOString(); }
-      else if (periodo === "90d") { const d = new Date(); d.setDate(d.getDate() - 90); cutoff = d.toISOString(); }
-      else if (periodo === "ano") cutoff = new Date(now.getFullYear(), 0, 1).toISOString();
-
-      // Query consultas_financeiro grouped by origem_receita
-      let q = supabase
-        .from("consultas_financeiro")
-        .select("origem_receita,valor_bruto_centavos");
-
-      if (cutoff) q = q.gte("data_consulta", cutoff);
-      if (medicoId) q = q.eq("medico_id", medicoId);
-
-      const { data: rows } = await q;
-      if (!active) return;
-
-      const grouped: Record<string, number> = {};
-      for (const r of (rows ?? []) as any[]) {
-        const key = r.origem_receita ?? "consulta";
-        grouped[key] = (grouped[key] ?? 0) + (r.valor_bruto_centavos ?? 0);
-      }
-      setData(grouped);
-      setLoading(false);
-    })();
-
-    return () => { active = false; };
+    // NOTE: coluna `origem_receita` não existe em `consultas_financeiro`.
+    // Componente desabilitado até que o schema seja atualizado com a coluna correta.
+    // Dados futuros devem vir de `receitas_assinatura.origem` ou nova coluna em consultas_financeiro.
+    setData({});
+    setLoading(false);
   }, [periodo, medicoId]);
 
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);

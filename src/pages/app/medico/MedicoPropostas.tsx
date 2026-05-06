@@ -141,7 +141,7 @@ export default function MedicoPropostas() {
           status: "ativo",
           valor_mensal_centavos: valorFinal,
           empresa_id: selected.empresa_id,
-          medico_id: uid,
+          medico_id: medicoId!,
           especialidade_id: selected.especialidade_id,
           aprovado_admin: true,
           termos_aceitos: true,
@@ -156,7 +156,7 @@ export default function MedicoPropostas() {
       // 3. Link doctor to plan
       await supabase.from("plano_medicos").insert({
         plano_id: plano.id,
-        medico_id: uid,
+        medico_id: medicoId!,
         aceite_medico: true,
         aceite_em: new Date().toISOString(),
       });
