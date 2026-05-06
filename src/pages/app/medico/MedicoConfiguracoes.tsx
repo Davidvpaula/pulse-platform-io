@@ -233,6 +233,7 @@ export default function MedicoConfiguracoes() {
         }
         setLinhas(mapa);
       } else {
+        setDevMode(false);
         const vinculos: MedicoEspecialidade[] = await listVinculosDoMedico();
         const vMap = new Map(vinculos.map((v) => [v.especialidade_id, v]));
         const mapa: Record<string, LinhaEsp> = {};
