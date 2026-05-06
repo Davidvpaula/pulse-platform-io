@@ -92,7 +92,7 @@ export default function EmpresaPropostas() {
         supabase
           .from("propostas_empresa_medico")
           .select("*, medico:profiles!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
-          .eq("empresa_id", finalEid)
+          .eq("empresa_id", empresaId)
           .order("created_at", { ascending: false }),
         supabase
           .from("medicos")
