@@ -152,6 +152,9 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/medico/treinamento":     [medico(), { label: "Treinamento" }],
   "/app/medico/planos":          [medico(), { label: "Meus Planos" }],
   ...medicoGamificacao,
+  "/app/medico/premium":         [medico(), { label: "Premium" }],
+  "/app/medico/campanhas":       [medico(), { label: "Premium", to: "/app/medico/premium" }, { label: "Campanhas" }],
+  "/app/medico/roi":             [medico(), { label: "Premium", to: "/app/medico/premium" }, { label: "ROI" }],
   "/app/medico/configuracoes":   [medico(), { label: "Configurações" }],
   "/app/medico/perfil":          [medico(), { label: "Perfil" }],
 
