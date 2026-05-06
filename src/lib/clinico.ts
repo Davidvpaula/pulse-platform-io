@@ -1239,33 +1239,7 @@ export type CriarConsultaInput = DadosPaciente & {
   motivo?: string;
 };
 
-export type CriarConsultaResult = {
-  consulta_id: string;
-  paciente_id: string;
-  valor_centavos: number;
-  reserva_expira_em: string;
-};
-
-/**
- * @deprecated Use reservarSlotUnificado. Mantida apenas para compatibilidade.
- */
-export async function criarConsultaComReserva(
-  input: CriarConsultaInput,
-): Promise<CriarConsultaResult> {
-  const { data, error } = await supabase.rpc("criar_consulta_com_reserva" as any, {
-    _slot_id: input.slot_id,
-    _especialidade_id: input.especialidade_id,
-    _motivo: input.motivo ?? null,
-    _nome_completo: input.nome_completo,
-    _cpf: input.cpf,
-    _telefone: input.telefone,
-    _data_nascimento: input.data_nascimento,
-    _sexo: input.sexo,
-    _cep: input.cep,
-  });
-  if (error) throw error;
-  return data as unknown as CriarConsultaResult;
-}
+// criarConsultaComReserva removida — deprecated, usar reservarSlotUnificado
 
 /* ─────────────────────────────────────────────────────────────────────────
  * RESERVA UNIFICADA (sem criação de consulta)
