@@ -217,7 +217,7 @@ export async function listAnexosConsultaDoPaciente(): Promise<AnexoConsulta[]> {
     .in("consulta_id", ids)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listAnexosConsultaDoPaciente:", error); return []; }
-  return (data ?? []) as any;
+  return (data ?? []) as AnexoConsulta[];
 }
 
 export async function getAnexoConsultaUrl(path: string, expiresInSec = 60): Promise<string | null> {
