@@ -90,7 +90,7 @@ export default function AdminPropostasB2B() {
     try {
       const { data, error } = await supabase
         .from("propostas_empresa_medico")
-        .select("*, empresa:empresas(razao_social), medico:profiles!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
+        .select("*, empresa:empresas(razao_social), medico:medicos!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

@@ -140,7 +140,7 @@ export default function MedicoDashboard() {
     const { count: propPend } = await supabase
       .from("propostas_empresa_medico")
       .select("id", { count: "exact", head: true })
-      .eq("medico_id", session.user.id)
+      .eq("medico_id", medico.id)
       .eq("status", "enviada_medico");
     setPropostasPendentes(propPend ?? 0);
 

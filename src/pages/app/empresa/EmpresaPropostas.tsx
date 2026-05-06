@@ -91,12 +91,12 @@ export default function EmpresaPropostas() {
       const [{ data: props }, { data: meds }, { data: esps }, { data: termo }] = await Promise.all([
         supabase
           .from("propostas_empresa_medico")
-          .select("*, medico:profiles!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
+          .select("*, medico:medicos!propostas_empresa_medico_medico_id_fkey(nome), especialidade:especialidades(nome)")
           .eq("empresa_id", empresaId)
           .order("created_at", { ascending: false }),
         supabase
           .from("medicos")
-          .select("user_id, nome")
+          .select("id, user_id, nome")
           .eq("status", "aprovado")
           .order("nome"),
         supabase
@@ -121,7 +121,7 @@ export default function EmpresaPropostas() {
           especialidade_nome: p.especialidade?.nome ?? null,
         }))
       );
-      setMedicos((meds ?? []).map((m: any) => ({ id: m.user_id, nome: m.nome })));
+      setMedicos((meds ?? []).map((m: any) => ({ id: m.id, nome: m.nome })));
       setEspecialidades(esps ?? []);
       setTermoConteudo(termo?.conteudo ?? null);
       setTermoVersao(termo?.versao ?? null);
