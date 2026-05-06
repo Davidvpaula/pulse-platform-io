@@ -142,6 +142,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [medicoNome, setMedicoNome] = useState("");
+  const [medicoPk, setMedicoPk] = useState<string | null>(null);
 
   const [hasActiveSubscribers, setHasActiveSubscribers] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
