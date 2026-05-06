@@ -62,7 +62,7 @@ export default function MedicoServicos() {
     setRecebe(re);
     setLoading(false);
   }
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [medicoId]);
 
   async function toggle(s: Servico, on: boolean) {
     if (!medicoId) return;
