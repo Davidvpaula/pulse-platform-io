@@ -350,7 +350,7 @@ export default function PacientePerfil() {
       tipo: reembolsoForm.tipo,
       status: "solicitado",
       actor_id: (await supabase.auth.getUser()).data.user?.id,
-    } as any).select("id").single();
+    }).select("id").single();
     setReembolsoCriando(false);
     if (error) {
       toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
