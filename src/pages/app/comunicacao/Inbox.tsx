@@ -97,7 +97,7 @@ async function registrarAuditoria(
     action,
     entity_type: "conversation",
     entity_id: entityId,
-    metadata,
+    metadata: metadata as Database["public"]["Tables"]["comunicacao_auditoria"]["Insert"]["metadata"],
   });
 }
 
