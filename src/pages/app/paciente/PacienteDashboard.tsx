@@ -262,17 +262,14 @@ export default function PacienteDashboard() {
                 </div>
                 <StatusBadge status={c.status} />
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  {c.linkSala ? (
-                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
-                      <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
-                        <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                      </a>
-                    </Button>
-                  ) : (
-                    <Button size="sm" disabled title="Sala em preparação" className="flex-1 sm:flex-none">
-                      <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                    </Button>
-                  )}
+                  <EntrarTeleconsulta
+                    consultaId={c.id}
+                    linkSala={c.linkSala}
+                    inicio={c.inicio}
+                    fim={c.inicio}
+                    status={c.status}
+                    modalidade={c.modalidade}
+                  />
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex-1 sm:flex-none">
