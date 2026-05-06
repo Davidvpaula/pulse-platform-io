@@ -5907,7 +5907,14 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "planos_plano_base_id_fkey"
