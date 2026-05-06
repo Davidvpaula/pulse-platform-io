@@ -328,15 +328,15 @@ export default function MedicoConfiguracoes() {
       const mid = hookMedicoId;
       if (!mid) { setNotifLoading(false); return; }
       const { data } = await supabase
-        .from("medico_notificacao_prefs" as any)
+        .from("medico_notificacao_prefs")
         .select("*")
         .eq("medico_id", mid)
         .maybeSingle();
       if (data) {
         setNotif({
-          lembretes: (data as any).lembretes_consulta ?? true,
-          alertas: (data as any).alertas_operacionais ?? true,
-          resumoDiario: (data as any).resumo_diario_email ?? false,
+          lembretes: data.lembretes_consulta ?? true,
+          alertas: data.alertas_operacionais ?? true,
+          resumoDiario: data.resumo_diario_email ?? false,
         });
       }
       setNotifLoading(false);
