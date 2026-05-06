@@ -78,7 +78,7 @@ export default function MedicoConfiguracoes() {
   // Load medico config + Google status
   const fetchConfig = useCallback(async () => {
     setGoogleLoading(true);
-    const mid = await getMedicoAtualId();
+    const mid = hookMedicoId;
     setMedicoIdRef(mid);
 
     if (mid) {
