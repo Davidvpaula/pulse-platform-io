@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
-  FileText, Download, Lock, Search, Eye, Loader2, File,
+  FileText, Download, Lock, Search, Eye, Loader2, File, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
 
 type DocCompartilhado = {
   id: string;
@@ -23,27 +24,45 @@ type DocCompartilhado = {
 };
 
 export default function EmpresaDocumentos() {
+  const { empresa } = useEmpresaAtual();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocCompartilhado[]>([]);
   const [busca, setBusca] = useState("");
   const [previewDoc, setPreviewDoc] = useState<DocCompartilhado | null>(null);
 
-  useEffect(() => {
-    carregar();
-  }, []);
-
-  async function carregar() {
+  const carregar = useCallback(async () => {
+    if (!empresa) return;
     setLoading(true);
+    setError(null);
     try {
-      // Query documents marked as visible to empresa
-      const { data, error } = await supabase
+      // 1. Get paciente_ids of this empresa's employees
+      const { data: funcs, error: funcErr } = await supabase
+        .from("empresas_funcionarios")
+        .select("paciente_id")
+        .eq("empresa_id", empresa.empresaId)
+        .not("paciente_id", "is", null);
+
+      if (funcErr) throw funcErr;
+
+      const pacienteIds = (funcs ?? []).map((f: any) => f.paciente_id).filter(Boolean);
+
+      if (pacienteIds.length === 0) {
+        setDocs([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Query only documents for these patients, marked as visible to empresa
+      const { data, error: docErr } = await supabase
         .from("documentos_paciente")
         .select("id, titulo, tipo, created_at, descricao, arquivo_url, paciente:pacientes(nome_completo), medico:medicos(nome)")
         .eq("visibilidade_empresa", true)
+        .in("paciente_id", pacienteIds)
         .order("created_at", { ascending: false })
         .limit(200);
 
-      if (error) throw error;
+      if (docErr) throw docErr;
 
       setDocs(
         (data ?? []).map((d: any) => ({
@@ -58,12 +77,14 @@ export default function EmpresaDocumentos() {
         }))
       );
     } catch (e: any) {
-      toast.error("Erro ao carregar documentos", { description: e.message });
+      setError(e.message ?? "Erro ao carregar documentos");
       setDocs([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [empresa]);
+
+  useEffect(() => { carregar(); }, [carregar]);
 
   const filtered = docs.filter(d => {
     const q = busca.toLowerCase();
@@ -75,12 +96,39 @@ export default function EmpresaDocumentos() {
     receita: "Receita", laudo: "Laudo", geral: "Geral",
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 gap-3">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <span className="text-sm text-muted-foreground">Carregando documentos…</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <h2 className="font-display text-xl font-bold">Erro ao carregar documentos</h2>
+        <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+        <Button onClick={carregar} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" /> Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Documentos</p>
-        <h1 className="font-display text-2xl font-bold">Documentos compartilhados</h1>
-        <p className="text-sm text-muted-foreground">Documentos liberados pelos médicos para visualização da empresa.</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Documentos</p>
+          <h1 className="font-display text-2xl font-bold">Documentos compartilhados</h1>
+          <p className="text-sm text-muted-foreground">Documentos liberados pelos médicos para visualização da empresa.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={carregar}>
+          <RefreshCw className="mr-2 h-4 w-4" /> Atualizar
+        </Button>
       </header>
 
       <div className="card-elevated flex items-start gap-3 border-warning/30 bg-warning/5 p-4">
@@ -96,14 +144,11 @@ export default function EmpresaDocumentos() {
           <Input className="pl-9" placeholder="Buscar por título, funcionário ou médico…" value={busca} onChange={e => setBusca(e.target.value)} />
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="py-10 text-center text-muted-foreground">
             <FileText className="mx-auto h-8 w-8 mb-2 opacity-40" />
             <p>Nenhum documento compartilhado encontrado.</p>
+            <p className="text-xs mt-1">Documentos aparecem quando médicos os compartilham com a empresa.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
