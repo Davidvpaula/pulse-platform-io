@@ -92,7 +92,7 @@ async function registrarAuditoria(
 ) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  await (supabase.from("comunicacao_auditoria") as any).insert({
+  await supabase.from("comunicacao_auditoria").insert({
     actor_id: user.id,
     action,
     entity_type: "conversation",
