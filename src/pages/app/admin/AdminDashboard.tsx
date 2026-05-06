@@ -1,18 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, Stethoscope, Building2, Calendar, Wallet, Plug, ShieldCheck, TrendingUp,
-  AlertTriangle, Clock, Download, Activity, ArrowRight, Loader2,
+  AlertTriangle, Clock, Download, Activity, ArrowRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
+import { useAdminVisaoGeral, useServicosResumo, useIntegracoesResumo } from "@/lib/admin/queries";
+import { AdminLoading, AdminError, AdminEmpty } from "@/components/admin/AdminStates";
 
 const periodos = [
   { key: "hoje", label: "Hoje" },
@@ -21,17 +20,6 @@ const periodos = [
 ] as const;
 
 type PeriodoKey = typeof periodos[number]["key"];
-
-interface Alerta { tone: "destructive" | "warning" | "info"; titulo: string; desc: string }
-interface AgendaRow { id: string; inicio: string; status: string; canal: string; paciente: string | null; medico: string | null }
-interface PacienteRow { id: string; nome: string | null; status: string; created_at: string; empresa: string | null }
-interface VisaoGeral {
-  kpis: Record<string, number>;
-  pendencias: Record<string, number>;
-  alertas: Alerta[];
-  ultimos_agendamentos: AgendaRow[];
-  ultimos_pacientes: PacienteRow[];
-}
 
 const fmtBRL = (centavos: number) =>
   (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -44,94 +32,15 @@ const fmtHora = (iso: string) =>
 const fmtData = (iso: string) =>
   new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
-interface ServicosResumo {
-  total_ativos: number;
-  total_inativos: number;
-  medicos_vinculados: number;
-  overrides_pendentes: number;
-  ticket_medio_centavos: number;
-}
-
 export default function AdminDashboard() {
   const [periodo, setPeriodo] = useState<PeriodoKey>("mes");
-  const [data, setData] = useState<VisaoGeral | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [servicos, setServicos] = useState<ServicosResumo | null>(null);
-  const [integracoes, setIntegracoes] = useState<{ nome: string; desc: string; status: string; cor: string }[]>([]);
 
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    (async () => {
-      const { data: rpcData, error } = await supabase.rpc("admin_visao_geral" as any, { _periodo: periodo });
-      if (!active) return;
-      if (error) {
-        toast.error("Não foi possível carregar a visão geral", { description: error.message });
-        setData(null);
-      } else {
-        setData(rpcData as unknown as VisaoGeral);
-      }
-      setLoading(false);
-    })();
-    return () => { active = false; };
-  }, [periodo]);
+  const { data, isLoading, isError, error, refetch } = useAdminVisaoGeral(periodo);
+  const { data: servicos } = useServicosResumo();
+  const { data: integracoes } = useIntegracoesResumo();
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const [{ data: srv }, { count: vinc }, { count: pend }] = await Promise.all([
-        supabase.from("servicos_financeiros").select("ativo,valor_paciente_centavos"),
-        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "ativo"),
-        supabase.from("medico_servicos").select("*", { count: "exact", head: true }).eq("status", "pendente"),
-      ]);
-      if (!active) return;
-      const ativos = (srv ?? []).filter((s: any) => s.ativo);
-      const inativos = (srv ?? []).filter((s: any) => !s.ativo);
-      const valores = ativos.map((s: any) => s.valor_paciente_centavos ?? 0).filter((v: number) => v > 0);
-      const ticket = valores.length ? Math.round(valores.reduce((a: number, b: number) => a + b, 0) / valores.length) : 0;
-      setServicos({
-        total_ativos: ativos.length,
-        total_inativos: inativos.length,
-        medicos_vinculados: vinc ?? 0,
-        overrides_pendentes: pend ?? 0,
-        ticket_medio_centavos: ticket,
-      });
-    })();
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: rows } = await supabase
-        .from("integracoes_config")
-        .select("nome,descricao,status,modo_simulado")
-        .eq("ativo", true)
-        .order("nome");
-      if (!active) return;
-      const STATUS_MAP: Record<string, { label: string; cor: string }> = {
-        conectado: { label: "Conectado", cor: "info" },
-        simulado: { label: "Modo simulado", cor: "warning" },
-        erro: { label: "Erro", cor: "destructive" },
-        nao_configurado: { label: "Não configurado", cor: "muted" },
-        aguardando_configuracao: { label: "Aguardando configuração", cor: "warning" },
-        manutencao: { label: "Manutenção", cor: "muted" },
-      };
-      setIntegracoes(
-        (rows ?? []).map((r: any) => {
-          const s = r.modo_simulado
-            ? { label: "Modo simulado", cor: "warning" }
-            : STATUS_MAP[r.status] ?? { label: r.status, cor: "muted" };
-          return { nome: r.nome, desc: r.descricao ?? "", status: s.label, cor: s.cor };
-        })
-      );
-    })();
-    return () => { active = false; };
-  }, []);
-
-
-  const k = data?.kpis ?? {};
-  const p = data?.pendencias ?? {};
+  const k = data?.kpis ?? ({} as Record<string, number>);
+  const p = data?.pendencias ?? ({} as Record<string, number>);
   const periodoLabel = periodos.find(x => x.key === periodo)?.label ?? "";
 
   return (
@@ -159,231 +68,235 @@ export default function AdminDashboard() {
         }
       />
 
-      {loading && !data && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Carregando dados…
-        </div>
-      )}
+      {isLoading && <AdminLoading cards={4} rows={3} />}
+      {isError && <AdminError message={(error as Error)?.message} onRetry={() => refetch()} />}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Pacientes" value={fmtNum(k.pacientes_total ?? 0)} icon={Users}
-          hint={`${fmtNum(k.pacientes_periodo ?? 0)} novos no período`} />
-        <StatCard label="Médicos ativos" value={fmtNum(k.medicos_ativos ?? 0)} icon={Stethoscope}
-          hint={k.medicos_pendentes ? `${k.medicos_pendentes} pendentes` : "Nenhum pendente"} />
-        <StatCard label="Empresas" value={fmtNum(k.empresas_total ?? 0)} icon={Building2} />
-        <StatCard label="Agendamentos" value={fmtNum(k.agendamentos_periodo ?? 0)} icon={Calendar} hint={periodoLabel} />
-      </div>
+      {!isLoading && !isError && (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Pacientes" value={fmtNum(k.pacientes_total ?? 0)} icon={Users}
+              hint={`${fmtNum(k.pacientes_periodo ?? 0)} novos no período`} />
+            <StatCard label="Médicos ativos" value={fmtNum(k.medicos_ativos ?? 0)} icon={Stethoscope}
+              hint={k.medicos_pendentes ? `${k.medicos_pendentes} pendentes` : "Nenhum pendente"} />
+            <StatCard label="Empresas" value={fmtNum(k.empresas_total ?? 0)} icon={Building2} />
+            <StatCard label="Agendamentos" value={fmtNum(k.agendamentos_periodo ?? 0)} icon={Calendar} hint={periodoLabel} />
+          </div>
 
-      {/* Serviços da plataforma */}
-      <div className="card-elevated p-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Stethoscope className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-lg font-semibold">Serviços da plataforma</h3>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link to="/app/admin/servicos">Gerenciar serviços <ArrowRight className="ml-1 h-3 w-3" /></Link>
-            </Button>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">Serviços ativos</p>
-            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.total_ativos ?? 0)}</p>
-            <p className="text-xs text-muted-foreground">{fmtNum(servicos?.total_inativos ?? 0)} inativos</p>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">Vínculos médico↔serviço</p>
-            <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.medicos_vinculados ?? 0)}</p>
-            <p className="text-xs text-muted-foreground">ativos na vitrine</p>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">Overrides pendentes</p>
-            <p className={cn("mt-1 text-2xl font-semibold", (servicos?.overrides_pendentes ?? 0) > 0 && "text-warning")}>
-              {fmtNum(servicos?.overrides_pendentes ?? 0)}
-            </p>
-            <p className="text-xs text-muted-foreground">aguardando aprovação</p>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">Ticket médio do catálogo</p>
-            <p className="mt-1 text-2xl font-semibold">{fmtBRL(servicos?.ticket_medio_centavos ?? 0)}</p>
-            <p className="text-xs text-muted-foreground">por atendimento</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Faturamento" value={fmtBRL(k.faturamento_periodo_centavos ?? 0)} icon={Wallet} hint={periodoLabel} />
-        <StatCard label="Consultas hoje" value={fmtNum(k.consultas_hoje ?? 0)} icon={Calendar}
-          hint={`${k.consultas_em_andamento ?? 0} em andamento`} />
-        <StatCard label="Confirmadas hoje" value={fmtNum(k.consultas_confirmadas_hoje ?? 0)} icon={ShieldCheck}
-          hint={`${k.consultas_concluidas_hoje ?? 0} concluídas · ${k.consultas_canceladas_hoje ?? 0} canceladas`} />
-      </div>
-
-      {/* Receita por origem */}
-      <ReceitaPorOrigem periodo={periodo} />
-
-      {/* Alertas do sistema */}
-      {data && data.alertas.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-3">
-          {data.alertas.map((a, i) => (
-            <div
-              key={i}
-              className={cn(
-                "card-elevated flex gap-3 p-4 border-l-4",
-                a.tone === "destructive" && "border-l-destructive",
-                a.tone === "warning" && "border-l-warning",
-                a.tone === "info" && "border-l-info",
-              )}
-            >
-              <AlertTriangle className={cn(
-                "h-5 w-5 shrink-0",
-                a.tone === "destructive" && "text-destructive",
-                a.tone === "warning" && "text-warning",
-                a.tone === "info" && "text-info",
-              )} />
-              <div>
-                <p className="text-sm font-semibold">{a.titulo}</p>
-                <p className="text-xs text-muted-foreground">{a.desc}</p>
+          {/* Serviços da plataforma */}
+          <div className="card-elevated p-6">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-lg font-semibold">Serviços da plataforma</h3>
+              </div>
+              <div className="flex gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/app/admin/servicos">Gerenciar serviços <ArrowRight className="ml-1 h-3 w-3" /></Link>
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Últimos agendamentos */}
-        <div className="card-elevated p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Últimos agendamentos</h3>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/app/admin/agendamentos">Ver todos</Link>
-            </Button>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Serviços ativos</p>
+                <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.total_ativos ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">{fmtNum(servicos?.total_inativos ?? 0)} inativos</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Vínculos médico↔serviço</p>
+                <p className="mt-1 text-2xl font-semibold">{fmtNum(servicos?.medicos_vinculados ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">ativos na vitrine</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Overrides pendentes</p>
+                <p className={cn("mt-1 text-2xl font-semibold", (servicos?.overrides_pendentes ?? 0) > 0 && "text-warning")}>
+                  {fmtNum(servicos?.overrides_pendentes ?? 0)}
+                </p>
+                <p className="text-xs text-muted-foreground">aguardando aprovação</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Ticket médio do catálogo</p>
+                <p className="mt-1 text-2xl font-semibold">{fmtBRL(servicos?.ticket_medio_centavos ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">por atendimento</p>
+              </div>
+            </div>
           </div>
-          <table className="mt-4 w-full text-sm">
-            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left py-2">Hora</th>
-                <th className="text-left">Paciente</th>
-                <th className="text-left">Médico</th>
-                <th className="text-left">Canal</th>
-                <th className="text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data?.ultimos_agendamentos ?? []).length === 0 && !loading && (
-                <tr><td colSpan={5} className="py-6 text-center text-xs text-muted-foreground">Nenhum agendamento ainda.</td></tr>
-              )}
-              {(data?.ultimos_agendamentos ?? []).map(a => (
-                <tr key={a.id} className="border-t border-border">
-                  <td className="py-2.5 font-mono text-xs">{fmtHora(a.inicio)}</td>
-                  <td className="font-medium">{a.paciente ?? "—"}</td>
-                  <td className="text-muted-foreground">{a.medico ?? "—"}</td>
-                  <td className="text-xs"><span className="rounded bg-muted px-1.5 py-0.5">{a.canal}</span></td>
-                  <td><StatusBadge status={a.status as any} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Pendências */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-warning" />
-            <h3 className="font-display text-lg font-semibold">Pendências operacionais</h3>
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard label="Faturamento" value={fmtBRL(k.faturamento_periodo_centavos ?? 0)} icon={Wallet} hint={periodoLabel} />
+            <StatCard label="Consultas hoje" value={fmtNum(k.consultas_hoje ?? 0)} icon={Calendar}
+              hint={`${k.consultas_em_andamento ?? 0} em andamento`} />
+            <StatCard label="Confirmadas hoje" value={fmtNum(k.consultas_confirmadas_hoje ?? 0)} icon={ShieldCheck}
+              hint={`${k.consultas_concluidas_hoje ?? 0} concluídas · ${k.consultas_canceladas_hoje ?? 0} canceladas`} />
           </div>
-          <ul className="mt-4 space-y-2 text-sm">
-            <li className="flex justify-between rounded-lg border border-border p-2.5">
-              <span>Confirmar consultas amanhã</span>
-              <strong className={cn((p.confirmar_amanha ?? 0) > 0 && "text-warning")}>{fmtNum(p.confirmar_amanha ?? 0)}</strong>
-            </li>
-            <li className="flex justify-between rounded-lg border border-border p-2.5">
-              <span>Aguardando pagamento</span>
-              <strong className={cn((p.aguardando_pagamento ?? 0) > 0 && "text-warning")}>{fmtNum(p.aguardando_pagamento ?? 0)}</strong>
-            </li>
-            <li className="flex justify-between rounded-lg border border-border p-2.5">
-              <span>Médicos sem sala padrão</span>
-              <strong className={cn((p.medicos_sem_sala ?? 0) > 0 && "text-destructive")}>{fmtNum(p.medicos_sem_sala ?? 0)}</strong>
-            </li>
-            <li className="flex justify-between rounded-lg border border-border p-2.5">
-              <span>Médicos aguardando aprovação</span>
-              <strong className={cn((p.medicos_pendentes ?? 0) > 0 && "text-warning")}>{fmtNum(p.medicos_pendentes ?? 0)}</strong>
-            </li>
-            <li className="flex justify-between rounded-lg border border-border p-2.5">
-              <span>Colaboradores não convidados</span>
-              <strong className={cn((p.colaboradores_pendentes ?? 0) > 0 && "text-info")}>{fmtNum(p.colaboradores_pendentes ?? 0)}</strong>
-            </li>
-          </ul>
-        </div>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Últimos pacientes */}
-        <div className="card-elevated p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Últimos pacientes cadastrados</h3>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/app/admin/fluxo"><Activity className="mr-1 h-3.5 w-3.5" />Ver fluxo</Link>
-            </Button>
-          </div>
-          <table className="mt-4 w-full text-sm">
-            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left py-2">Nome</th>
-                <th className="text-left">Vínculo</th>
-                <th className="text-left">Status</th>
-                <th className="text-left">Criado</th>
-                <th className="text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data?.ultimos_pacientes ?? []).length === 0 && !loading && (
-                <tr><td colSpan={5} className="py-6 text-center text-xs text-muted-foreground">Nenhum paciente cadastrado ainda.</td></tr>
-              )}
-              {(data?.ultimos_pacientes ?? []).map(pa => (
-                <tr key={pa.id} className="border-t border-border">
-                  <td className="py-2.5 font-medium">{pa.nome ?? "—"}</td>
-                  <td className="text-muted-foreground">{pa.empresa ?? "Particular"}</td>
-                  <td><StatusBadge status={pa.status as any} /></td>
-                  <td className="text-muted-foreground">{fmtData(pa.created_at)}</td>
-                  <td className="text-right">
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/app/admin/pacientes/${pa.id}`}>Abrir <ArrowRight className="ml-1 h-3 w-3" /></Link>
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          {/* Receita por origem */}
+          <ReceitaPorOrigem periodo={periodo} />
 
-        {/* Integrações */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center gap-2">
-            <Plug className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-lg font-semibold">Integrações</h3>
-          </div>
-          <ul className="mt-4 space-y-3">
-            {integracoes.map(i => (
-              <li key={i.nome} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{i.nome}</p>
-                  <p className="text-xs text-muted-foreground">{i.desc}</p>
+          {/* Alertas do sistema */}
+          {data && data.alertas && data.alertas.length > 0 && (
+            <div className="grid gap-3 md:grid-cols-3">
+              {data.alertas.map((a, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "card-elevated flex gap-3 p-4 border-l-4",
+                    a.tone === "destructive" && "border-l-destructive",
+                    a.tone === "warning" && "border-l-warning",
+                    a.tone === "info" && "border-l-info",
+                  )}
+                >
+                  <AlertTriangle className={cn(
+                    "h-5 w-5 shrink-0",
+                    a.tone === "destructive" && "text-destructive",
+                    a.tone === "warning" && "text-warning",
+                    a.tone === "info" && "text-info",
+                  )} />
+                  <div>
+                    <p className="text-sm font-semibold">{a.titulo}</p>
+                    <p className="text-xs text-muted-foreground">{a.desc}</p>
+                  </div>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  i.cor === "destructive" ? "bg-destructive/10 text-destructive" :
-                  i.cor === "warning" ? "bg-warning/10 text-warning" :
-                  i.cor === "info" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"
-                }`}>
-                  {i.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+              ))}
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Últimos agendamentos */}
+            <div className="card-elevated p-6 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-lg font-semibold">Últimos agendamentos</h3>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/app/admin/agendamentos">Ver todos</Link>
+                </Button>
+              </div>
+              <table className="mt-4 w-full text-sm">
+                <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left py-2">Hora</th>
+                    <th className="text-left">Paciente</th>
+                    <th className="text-left">Médico</th>
+                    <th className="text-left">Canal</th>
+                    <th className="text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(!data?.ultimos_agendamentos || data.ultimos_agendamentos.length === 0) && (
+                    <tr><td colSpan={5} className="py-6 text-center text-xs text-muted-foreground">Nenhum agendamento ainda.</td></tr>
+                  )}
+                  {(data?.ultimos_agendamentos ?? []).map(a => (
+                    <tr key={a.id} className="border-t border-border">
+                      <td className="py-2.5 font-mono text-xs">{fmtHora(a.inicio)}</td>
+                      <td className="font-medium">{a.paciente ?? "—"}</td>
+                      <td className="text-muted-foreground">{a.medico ?? "—"}</td>
+                      <td className="text-xs"><span className="rounded bg-muted px-1.5 py-0.5">{a.canal}</span></td>
+                      <td><StatusBadge status={a.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pendências */}
+            <div className="card-elevated p-6">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-warning" />
+                <h3 className="font-display text-lg font-semibold">Pendências operacionais</h3>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li className="flex justify-between rounded-lg border border-border p-2.5">
+                  <span>Confirmar consultas amanhã</span>
+                  <strong className={cn((p.confirmar_amanha ?? 0) > 0 && "text-warning")}>{fmtNum(p.confirmar_amanha ?? 0)}</strong>
+                </li>
+                <li className="flex justify-between rounded-lg border border-border p-2.5">
+                  <span>Aguardando pagamento</span>
+                  <strong className={cn((p.aguardando_pagamento ?? 0) > 0 && "text-warning")}>{fmtNum(p.aguardando_pagamento ?? 0)}</strong>
+                </li>
+                <li className="flex justify-between rounded-lg border border-border p-2.5">
+                  <span>Médicos sem sala padrão</span>
+                  <strong className={cn((p.medicos_sem_sala ?? 0) > 0 && "text-destructive")}>{fmtNum(p.medicos_sem_sala ?? 0)}</strong>
+                </li>
+                <li className="flex justify-between rounded-lg border border-border p-2.5">
+                  <span>Médicos aguardando aprovação</span>
+                  <strong className={cn((p.medicos_pendentes ?? 0) > 0 && "text-warning")}>{fmtNum(p.medicos_pendentes ?? 0)}</strong>
+                </li>
+                <li className="flex justify-between rounded-lg border border-border p-2.5">
+                  <span>Colaboradores não convidados</span>
+                  <strong className={cn((p.colaboradores_pendentes ?? 0) > 0 && "text-info")}>{fmtNum(p.colaboradores_pendentes ?? 0)}</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Últimos pacientes */}
+            <div className="card-elevated p-6 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-lg font-semibold">Últimos pacientes cadastrados</h3>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/app/admin/fluxo"><Activity className="mr-1 h-3.5 w-3.5" />Ver fluxo</Link>
+                </Button>
+              </div>
+              <table className="mt-4 w-full text-sm">
+                <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left py-2">Nome</th>
+                    <th className="text-left">Vínculo</th>
+                    <th className="text-left">Status</th>
+                    <th className="text-left">Criado</th>
+                    <th className="text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(!data?.ultimos_pacientes || data.ultimos_pacientes.length === 0) && (
+                    <tr><td colSpan={5} className="py-6 text-center text-xs text-muted-foreground">Nenhum paciente cadastrado ainda.</td></tr>
+                  )}
+                  {(data?.ultimos_pacientes ?? []).map(pa => (
+                    <tr key={pa.id} className="border-t border-border">
+                      <td className="py-2.5 font-medium">{pa.nome ?? "—"}</td>
+                      <td className="text-muted-foreground">{pa.empresa ?? "Particular"}</td>
+                      <td><StatusBadge status={pa.status} /></td>
+                      <td className="text-muted-foreground">{fmtData(pa.created_at)}</td>
+                      <td className="text-right">
+                        <Button asChild size="sm" variant="ghost">
+                          <Link to={`/app/admin/pacientes/${pa.id}`}>Abrir <ArrowRight className="ml-1 h-3 w-3" /></Link>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Integrações */}
+            <div className="card-elevated p-6">
+              <div className="flex items-center gap-2">
+                <Plug className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-lg font-semibold">Integrações</h3>
+              </div>
+              <ul className="mt-4 space-y-3">
+                {(integracoes ?? []).map(i => (
+                  <li key={i.nome} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{i.nome}</p>
+                      <p className="text-xs text-muted-foreground">{i.desc}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      i.cor === "destructive" ? "bg-destructive/10 text-destructive" :
+                      i.cor === "warning" ? "bg-warning/10 text-warning" :
+                      i.cor === "info" ? "bg-info/10 text-info" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {i.status}
+                    </span>
+                  </li>
+                ))}
+                {(!integracoes || integracoes.length === 0) && (
+                  <li className="py-4 text-center text-xs text-muted-foreground">Nenhuma integração configurada.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
