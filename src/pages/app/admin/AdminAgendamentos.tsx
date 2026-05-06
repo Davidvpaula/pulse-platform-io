@@ -296,7 +296,7 @@ export default function AdminAgendamentos() {
       return;
     }
     toast({ title: "Link reenviado", description: "Registrado na auditoria. Entrega via WhatsApp será disparada quando integração estiver ativa." });
-    carregar();
+    invalidateAll();
   }
 
   async function abrirAuditoria(c: ConsultaRow) {
