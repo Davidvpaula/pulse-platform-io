@@ -138,6 +138,8 @@ import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
 import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
 import MedicoPremiumPage from "@/pages/app/medico/MedicoPremiumPage";
+import MedicoCampanhasPage from "@/pages/app/medico/MedicoCampanhasPage";
+import MedicoROIPage from "@/pages/app/medico/MedicoROIPage";
 import AdminGamificacao from "@/pages/app/admin/AdminGamificacao";
 import AdminGamificacaoFinanceiro from "@/pages/app/admin/AdminGamificacaoFinanceiro";
 import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
@@ -264,6 +266,8 @@ const App = () => (
               <Route path="medico/planos" element={<MedicoGuard><MedicoPlanos /></MedicoGuard>} />
               <Route path="medico/gamificacao" element={<MedicoGuard><MedicoGamificacao /></MedicoGuard>} />
               <Route path="medico/premium" element={<MedicoGuard><MedicoPremiumPage /></MedicoGuard>} />
+              <Route path="medico/campanhas" element={<MedicoGuard><MedicoCampanhasPage /></MedicoGuard>} />
+              <Route path="medico/roi" element={<MedicoGuard><MedicoROIPage /></MedicoGuard>} />
 
               <Route path="medico/corporativo" element={<MedicoGuard><MedicoCorporativo /></MedicoGuard>} />
               <Route path="medico/propostas" element={<MedicoGuard><MedicoPropostas /></MedicoGuard>} />
