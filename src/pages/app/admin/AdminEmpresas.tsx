@@ -183,8 +183,8 @@ export default function AdminEmpresas() {
       limite_consultas_mes: form.limite_consultas_mes || null,
     };
     const { error } = editingId
-      ? await supabase.from("empresas").update(payload).eq("id", editingId)
-      : await supabase.from("empresas").insert(payload);
+      ? await supabase.from("empresas").update(payload as never).eq("id", editingId)
+      : await supabase.from("empresas").insert(payload as never);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar", { description: error.message }); return; }
     toast.success(editingId ? "Empresa atualizada" : "Empresa criada");
