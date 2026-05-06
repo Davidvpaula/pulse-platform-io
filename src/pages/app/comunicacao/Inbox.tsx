@@ -279,7 +279,7 @@ export default function ComunicacaoInbox() {
         .select("nome, email")
         .eq("id", conv.assigned_to)
         .maybeSingle();
-      setAssignedName((data as any)?.nome || (data as any)?.email || "—");
+      setAssignedName(data?.nome || data?.email || "—");
     }
 
     if (conv.medico_id) {
