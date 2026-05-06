@@ -123,12 +123,12 @@ export async function listDocumentosDoPaciente(): Promise<DocumentoPaciente[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
   const { data, error } = await supabase
-    .from("documentos_paciente" as any)
+    .from("documentos_paciente")
     .select("*")
     .eq("paciente_id", p.id)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
-  return (data ?? []) as any;
+  return (data ?? []) as DocumentoPaciente[];
 }
 
 export async function uploadDocumentoPaciente(input: {
