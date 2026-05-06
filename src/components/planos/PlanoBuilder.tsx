@@ -239,7 +239,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
         .select("id, nome")
         .eq("user_id", uid)
         .maybeSingle();
-      if (med) setMedicoNome(med.nome);
+      if (med) { setMedicoNome(med.nome); setMedicoPk(med.id); }
     }
   }
 
