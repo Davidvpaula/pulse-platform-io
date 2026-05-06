@@ -41,7 +41,7 @@ export default function MedicoServicos() {
 
     const [{ data: s }, { data: a }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").eq("ativo", true).order("prioridade"),
-      supabase.from("medico_servicos").select("servico_id,status,ativo").eq("medico_id", med.id),
+      supabase.from("medico_servicos").select("servico_id,status,ativo").eq("medico_id", medicoId),
     ]);
     setServicos((s ?? []) as Servico[]);
     const m: Record<string, Adesao> = {};
