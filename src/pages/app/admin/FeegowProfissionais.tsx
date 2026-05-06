@@ -39,7 +39,7 @@ type FeegowProf = {
   uf_conselho: string;
   rqe: string;
   foto: string;
-  especialidades: Array<{ especialidade_id: number; nome: string }>;
+  especialidades: Array<{ especialidade_id: number; nome_especialidade?: string; nome?: string }>;
 };
 
 /* ── Helpers ── */
