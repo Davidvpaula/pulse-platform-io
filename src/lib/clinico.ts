@@ -90,7 +90,7 @@ export async function updatePacientePerfil(patch: {
 
   const existing = await getPacienteAtual();
   if (existing) {
-    const { error } = await supabase.from("pacientes").update(patch as any).eq("id", existing.id);
+    const { error } = await supabase.from("pacientes").update(patch as PacienteUpdate).eq("id", existing.id);
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
