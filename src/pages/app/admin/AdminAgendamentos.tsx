@@ -129,7 +129,8 @@ export default function AdminAgendamentos() {
   // React Query para dados principais
   const { data: rawRows = [], isLoading: loading, refetch: carregar } = useAdminAgendamentos(filtroData);
   const rows = rawRows as unknown as ConsultaRow[];
-  const { data: overview, isLoading: overviewLoading } = useAgendamentosOverview();
+  const { data: overviewRaw, isLoading: overviewLoading } = useAgendamentosOverview();
+  const overview = overviewRaw as Record<string, any> | undefined;
 
   // Modais
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; consulta?: ConsultaRow; novoStatus?: Status }>({ open: false });
