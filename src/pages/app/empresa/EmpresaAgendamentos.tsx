@@ -25,38 +25,16 @@ type ConsultaEmpresa = {
 };
 
 export default function EmpresaAgendamentos() {
+  const { empresa } = useEmpresaAtual();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ConsultaEmpresa[]>([]);
-  const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
 
   const carregar = useCallback(async () => {
+    if (!empresa) return;
     setLoading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-
-      // Resolver empresa_id (mesmo padrão do EmpresaFinanceiro)
-      let eid: string | null = null;
-      const { data: empFunc } = await supabase
-        .from("empresas_funcionarios")
-        .select("empresa_id")
-        .eq("paciente_id", u.user.id)
-        .limit(1)
-        .maybeSingle();
-      eid = empFunc?.empresa_id ?? null;
-
-      if (!eid) {
-        const { data: pac } = await supabase
-          .from("pacientes")
-          .select("empresa_id")
-          .eq("user_id", u.user.id)
-          .maybeSingle();
-        eid = pac?.empresa_id ?? null;
-      }
-
-      if (!eid) { setLoading(false); return; }
-      setEmpresaId(eid);
+      const eid = empresa.empresaId;
 
       // Buscar consultas da empresa
       const { data: consultas, error } = await supabase
