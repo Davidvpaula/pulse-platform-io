@@ -27,6 +27,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useColaboradores, type ColabRow as ColabRowImported } from "@/lib/admin/queries";
+import { useEffect } from "react";
 
 // ----- tipos -----
 type StatusConta = "ativo" | "pendente_convite" | "suspenso" | "bloqueado" | "removido";
