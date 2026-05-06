@@ -45,7 +45,7 @@ export type CupomInput = {
 /* ── CRUD ── */
 
 export async function listCupons(): Promise<CupomDetalhado[]> {
-  const { data, error } = await (supabase.from as any)("cupons")
+  const { data, error } = await supabase.from("cupons")
     .select("*")
     .order("created_at", { ascending: false });
   if (error) { console.error("[cupons] listCupons:", error); return []; }
@@ -53,11 +53,11 @@ export async function listCupons(): Promise<CupomDetalhado[]> {
   const medIds = Array.from(new Set(rows.map((r) => r.medico_id).filter((v): v is string => !!v)));
   const espIds = Array.from(new Set(rows.map((r) => r.especialidade_id).filter((v): v is string => !!v)));
   const [medRes, espRes] = await Promise.all([
-    medIds.length ? supabase.from("medicos").select("id, nome").in("id", medIds) : Promise.resolve({ data: [] as any[] } as any),
-    espIds.length ? supabase.from("especialidades").select("id, nome").in("id", espIds) : Promise.resolve({ data: [] as any[] } as any),
+    medIds.length ? supabase.from("medicos").select("id, nome").in("id", medIds) : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }),
+    espIds.length ? supabase.from("especialidades").select("id, nome").in("id", espIds) : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }),
   ]);
-  const med = new Map<string, string>((medRes.data ?? []).map((m: any) => [m.id, m.nome]));
-  const esp = new Map<string, string>((espRes.data ?? []).map((e: any) => [e.id, e.nome]));
+  const med = new Map<string, string>((medRes.data ?? []).map((m) => [m.id, m.nome]));
+  const esp = new Map<string, string>((espRes.data ?? []).map((e) => [e.id, e.nome]));
   return rows.map((r) => ({
     ...r,
     medico_nome: r.medico_id ? med.get(r.medico_id) ?? null : null,
@@ -65,9 +65,11 @@ export async function listCupons(): Promise<CupomDetalhado[]> {
   }));
 }
 
+type CupomInsert = Database["public"]["Tables"]["cupons"]["Insert"];
+
 export async function createCupom(input: CupomInput): Promise<Cupom> {
   const { data: s } = await supabase.auth.getSession();
-  const payload: any = {
+  const payload: CupomInsert = {
     ...input,
     descricao: input.descricao ?? null,
     medico_id: input.escopo === "medico" ? input.medico_id ?? null : null,
@@ -78,36 +80,36 @@ export async function createCupom(input: CupomInput): Promise<Cupom> {
     ativo: input.ativo ?? true,
     created_by: s.session?.user.id ?? null,
   };
-  const { data, error } = await (supabase.from as any)("cupons").insert(payload).select("*").single();
+  const { data, error } = await supabase.from("cupons").insert(payload).select("*").single();
   if (error) throw error;
   return data as Cupom;
 }
 
 export async function updateCupom(id: string, input: Partial<CupomInput>): Promise<void> {
-  const patch: any = { ...input };
+  const patch: Database["public"]["Tables"]["cupons"]["Update"] = { ...input };
   if (input.escopo === "global") { patch.medico_id = null; patch.especialidade_id = null; }
-  const { error } = await (supabase.from as any)("cupons").update(patch).eq("id", id);
+  const { error } = await supabase.from("cupons").update(patch).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteCupom(id: string): Promise<void> {
-  const { error } = await (supabase.from as any)("cupons").delete().eq("id", id);
+  const { error } = await supabase.from("cupons").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function toggleCupomAtivo(id: string, ativo: boolean): Promise<void> {
-  const { error } = await (supabase.from as any)("cupons").update({ ativo }).eq("id", id);
+  const { error } = await supabase.from("cupons").update({ ativo }).eq("id", id);
   if (error) throw error;
 }
 
 export async function listMedicosResumo(): Promise<{ id: string; nome: string }[]> {
   const { data } = await supabase.from("medicos").select("id, nome").order("nome");
-  return (data ?? []) as any;
+  return (data ?? []) as { id: string; nome: string }[];
 }
 
 export async function listEspecialidadesResumo(): Promise<{ id: string; nome: string }[]> {
   const { data } = await supabase.from("especialidades").select("id, nome").eq("ativo", true).order("nome");
-  return (data ?? []) as any;
+  return (data ?? []) as { id: string; nome: string }[];
 }
 
 export type CupomAplicado = {
