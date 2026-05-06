@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { brl } from "@/lib/relatorios/utils";
 import ContaSeguranca from "@/components/shared/ContaSeguranca";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
 
 type EmpresaRow = {
   id: string;
