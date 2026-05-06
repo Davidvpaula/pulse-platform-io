@@ -71,7 +71,7 @@ export default function MedicoFinanceiro() {
   async function carregar() {
     if (!session) { setLoading(false); return; }
     setLoading(true);
-    const mid = await getMedicoAtualId();
+    const mid = medicoAtual?.id ?? null;
     setMedicoId(mid);
     if (!mid) { setRows([]); setLoading(false); return; }
 
