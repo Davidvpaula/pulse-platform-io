@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "./session";
+import { obs } from "./observability";
 
 export type MedicoStatus = "pendente" | "em_analise" | "aprovado" | "reprovado" | "suspenso" | "bloqueado";
 
