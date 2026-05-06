@@ -383,15 +383,15 @@ const App = () => (
               
 
               {/* Empresa */}
-              <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
-              <Route path="empresa/funcionarios" element={<EmpresaFuncionarios />} />
-              <Route path="empresa/agendamentos" element={<EmpresaAgendamentos />} />
-              <Route path="empresa/relatorios" element={<EmpresaRelatorios />} />
-              <Route path="empresa/financeiro" element={<EmpresaFinanceiro />} />
-              <Route path="empresa/documentos" element={<EmpresaDocumentos />} />
-              <Route path="empresa/termos" element={<EmpresaTermos />} />
-              <Route path="empresa/propostas" element={<EmpresaPropostas />} />
-              <Route path="empresa/perfil" element={<EmpresaPerfilPage />} />
+              <Route path="empresa/dashboard" element={<EmpresaGuard><EmpresaDashboard /></EmpresaGuard>} />
+              <Route path="empresa/funcionarios" element={<EmpresaGuard><EmpresaFuncionarios /></EmpresaGuard>} />
+              <Route path="empresa/agendamentos" element={<EmpresaGuard><EmpresaAgendamentos /></EmpresaGuard>} />
+              <Route path="empresa/relatorios" element={<EmpresaGuard><EmpresaRelatorios /></EmpresaGuard>} />
+              <Route path="empresa/financeiro" element={<EmpresaGuard><EmpresaFinanceiro /></EmpresaGuard>} />
+              <Route path="empresa/documentos" element={<EmpresaGuard><EmpresaDocumentos /></EmpresaGuard>} />
+              <Route path="empresa/termos" element={<EmpresaGuard><EmpresaTermos /></EmpresaGuard>} />
+              <Route path="empresa/propostas" element={<EmpresaGuard><EmpresaPropostas /></EmpresaGuard>} />
+              <Route path="empresa/perfil" element={<EmpresaGuard><EmpresaPerfilPage /></EmpresaGuard>} />
 
               {/* Comunicação */}
               <Route path="comunicacao/dashboard" element={<ComunicacaoDashboard />} />
