@@ -39,8 +39,9 @@ const COBRANCA_MAP: Record<string, string> = { mensal: "mensal", pacote: "valor_
 
 export default function MedicoPropostas() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const uid = session?.user?.id;
-  const termsProposta = useTermsCheck("proposta_medico");
+  const medicoId = medicoAtual?.id ?? null;
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string })[]>([]);
   const [selected, setSelected] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string }) | null>(null);
