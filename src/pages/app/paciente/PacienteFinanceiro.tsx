@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
   Wallet, Search, Filter, CheckCircle2, Clock, XCircle, AlertTriangle,
   CreditCard, Receipt, ChevronRight, Download, ExternalLink, Loader2,
   Calendar, Stethoscope, Tag, Copy, RefreshCw, FileText, FileDown,
