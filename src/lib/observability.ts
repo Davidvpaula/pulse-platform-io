@@ -1,5 +1,5 @@
 /**
- * Observabilidade — Módulo Médico
+ * Observabilidade — Plataforma Enterprise
  * Logger estruturado para tracing de fluxos, erros, mutations, RPCs e edge functions.
  * Não envia dados externamente; prepara a base para integração futura (Sentry, DataDog, etc).
  */
@@ -15,6 +15,14 @@ type LogCategory =
   | "navigation"
   | "financeiro"
   | "gamificacao"
+  | "webhook"
+  | "health_check"
+  | "antifraude"
+  | "auditoria"
+  | "b2b"
+  | "stripe"
+  | "comunicacao"
+  | "admin"
   | "generic";
 
 interface LogEntry {
