@@ -39,7 +39,8 @@ export default function EmpresaRelatorios() {
   }, [empAtual, de, ate]);
 
   async function carregarDados() {
-    if (!empresaId) return;
+    if (!empAtual) return;
+    const empresaId = empAtual.empresaId;
     setLoading(true);
     try {
       const deISO = de.toISOString();
@@ -154,7 +155,7 @@ export default function EmpresaRelatorios() {
     );
   }
 
-  if (!empresaId) {
+  if (!empAtual) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2">
         <Lock className="h-8 w-8 text-muted-foreground" />
@@ -167,7 +168,7 @@ export default function EmpresaRelatorios() {
     <div className="space-y-6">
       <PageHeader
         title="Relatórios corporativos"
-        description={`Indicadores agregados · ${razaoSocial}`}
+        description={`Indicadores agregados · ${empAtual.nomeFantasia || empAtual.razaoSocial}`}
         actions={
           <Button onClick={exportCsv} variant="outline">
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
