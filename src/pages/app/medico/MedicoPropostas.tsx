@@ -54,7 +54,7 @@ export default function MedicoPropostas() {
   const [termoConteudo, setTermoConteudo] = useState<string | null>(null);
   const [termoVersao, setTermoVersao] = useState<number | null>(null);
 
-  useEffect(() => { if (uid) carregar(); }, [uid]);
+  useEffect(() => { if (medicoId) carregar(); }, [medicoId]);
 
   async function carregar() {
     setLoading(true);
