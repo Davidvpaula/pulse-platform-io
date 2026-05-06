@@ -138,14 +138,14 @@ export default function MedicoHorarios() {
 
   async function refresh() {
     setLoading(true);
-    const [list, dur, med] = await Promise.all([
+    const [list, dur] = await Promise.all([
       listSlotsDoMedico(),
       getDuracaoSlotMedico(),
-      getMedicoAtual(),
     ]);
     setSlots(list);
     setDuracao(dur);
-    setLinkSala(med?.link_sala_padrao ?? null);
+    setLinkSala(medicoAtual?.link_sala_padrao ?? null);
+    const med = medicoAtual;
     // Especialidade do médico
     if (med?.id) {
       const { data: espRows } = await supabase
