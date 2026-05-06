@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useSession } from "@/lib/session";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { PageHeader } from "@/components/PageHeader";
