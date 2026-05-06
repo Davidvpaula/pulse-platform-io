@@ -21,7 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { cn } from "@/lib/utils";
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
