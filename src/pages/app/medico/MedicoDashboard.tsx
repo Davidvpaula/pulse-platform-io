@@ -53,6 +53,7 @@ type Onboarding = {
 
 export default function MedicoDashboard() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const { profileKey } = useAuth();
   const can = useCan();
   const { has: hasPerm } = usePermission("financeiro.ver");
