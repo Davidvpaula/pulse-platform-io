@@ -1508,7 +1508,7 @@ export async function updateServicoAtendimentoImediato(
 ): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase
     .from("servicos_financeiros")
-    .update(patch as any)
+    .update(patch as ServicosFinanceirosUpdate)
     .eq("id", servicoId);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
