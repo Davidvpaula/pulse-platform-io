@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
 import ConsultaCountdown from "@/components/paciente/ConsultaCountdown";
+import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 import { useSession } from "@/lib/session";
 import { formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { brl } from "@/lib/format";
@@ -185,17 +186,16 @@ export default function PacienteDashboard() {
           </div>
           {proxima && (
             <div className="grid gap-2 md:justify-items-end">
-              {proxima.linkSala ? (
-                <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 w-full md:w-auto">
-                  <a href={proxima.linkSala} target="_blank" rel="noopener noreferrer">
-                    <Video className="mr-2 h-4 w-4" /> Entrar na consulta
-                  </a>
-                </Button>
-              ) : (
-                <Button size="lg" disabled className="w-full md:w-auto" title="Sala ainda não disponível">
-                  <Video className="mr-2 h-4 w-4" /> Sala em preparação
-                </Button>
-              )}
+              <EntrarTeleconsulta
+                consultaId={proxima.id}
+                linkSala={proxima.linkSala}
+                inicio={proxima.inicio}
+                fim={proxima.inicio} /* approximation — uses inicio + default tolerance */
+                status={proxima.status}
+                modalidade={proxima.modalidade}
+                size="default"
+                variant="gradient"
+              />
               <div className="flex gap-2 w-full md:w-auto">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -262,17 +262,14 @@ export default function PacienteDashboard() {
                 </div>
                 <StatusBadge status={c.status} />
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  {c.linkSala ? (
-                    <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
-                      <a href={c.linkSala} target="_blank" rel="noopener noreferrer">
-                        <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                      </a>
-                    </Button>
-                  ) : (
-                    <Button size="sm" disabled title="Sala em preparação" className="flex-1 sm:flex-none">
-                      <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                    </Button>
-                  )}
+                  <EntrarTeleconsulta
+                    consultaId={c.id}
+                    linkSala={c.linkSala}
+                    inicio={c.inicio}
+                    fim={c.inicio}
+                    status={c.status}
+                    modalidade={c.modalidade}
+                  />
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex-1 sm:flex-none">

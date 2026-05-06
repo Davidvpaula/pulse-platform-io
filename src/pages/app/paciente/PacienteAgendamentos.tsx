@@ -32,6 +32,7 @@ import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano
 import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacienteKeys } from "@/lib/paciente/queries";
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
+import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
@@ -206,7 +207,7 @@ export default function PacienteAgendamentos() {
                 c.status !== "cancelada" &&
                 c.status !== "concluida" &&
                 fim > agora;
-              const podeEntrar = isOnline && !!c.link_sala && c.status !== "cancelada";
+               const podeEntrar = isOnline && !!c.link_sala && c.status !== "cancelada";
               return (
                 <li key={c.id} className="flex flex-wrap items-center gap-3 p-4">
                   <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
@@ -230,17 +231,14 @@ export default function PacienteAgendamentos() {
                   </div>
                   <StatusBadge status={toStatusBadge(c.status)} />
                   <div className="flex flex-wrap gap-2">
-                    {podeEntrar ? (
-                      <Button asChild size="sm" className="bg-gradient-primary hover:opacity-90">
-                        <a href={c.link_sala!} target="_blank" rel="noopener noreferrer">
-                          <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                        </a>
-                      </Button>
-                    ) : isOnline && c.status !== "cancelada" && c.status !== "concluida" ? (
-                      <Button size="sm" disabled title="Sala em preparação">
-                        <Video className="mr-1.5 h-3.5 w-3.5" /> Entrar
-                      </Button>
-                    ) : null}
+                    <EntrarTeleconsulta
+                      consultaId={c.id}
+                      linkSala={c.link_sala}
+                      inicio={c.inicio}
+                      fim={c.fim}
+                      status={c.status}
+                      modalidade={c.modalidade}
+                    />
                     <Button asChild size="sm" variant="outline">
                       <a
                         href={whatsappUrl(`Olá, sobre minha consulta ${c.id}`)}
