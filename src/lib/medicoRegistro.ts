@@ -45,6 +45,10 @@ export type MedicoRow = {
   feegow_professional_id: string | null;
   feegow_liberado_em: string | null;
   feegow_erro: string | null;
+  feegow_vinculado_por: string | null;
+  feegow_vinculado_em: string | null;
+  feegow_especialidade_id: number | null;
+  feegow_metadata: Record<string, unknown> | null;
   // Suspensão
   suspenso_ate: string | null;
   suspenso_indeterminado: boolean;

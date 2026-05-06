@@ -4745,10 +4745,14 @@ export type Database = {
           email: string
           especialidade: string
           feegow_erro: string | null
+          feegow_especialidade_id: number | null
           feegow_liberado_em: string | null
+          feegow_metadata: Json | null
           feegow_payload: Json | null
           feegow_professional_id: string | null
           feegow_status: Database["public"]["Enums"]["feegow_status"]
+          feegow_vinculado_em: string | null
+          feegow_vinculado_por: string | null
           foto_url: string | null
           id: string
           link_sala_padrao: string | null
@@ -4789,10 +4793,14 @@ export type Database = {
           email: string
           especialidade: string
           feegow_erro?: string | null
+          feegow_especialidade_id?: number | null
           feegow_liberado_em?: string | null
+          feegow_metadata?: Json | null
           feegow_payload?: Json | null
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          feegow_vinculado_em?: string | null
+          feegow_vinculado_por?: string | null
           foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null
@@ -4833,10 +4841,14 @@ export type Database = {
           email?: string
           especialidade?: string
           feegow_erro?: string | null
+          feegow_especialidade_id?: number | null
           feegow_liberado_em?: string | null
+          feegow_metadata?: Json | null
           feegow_payload?: Json | null
           feegow_professional_id?: string | null
           feegow_status?: Database["public"]["Enums"]["feegow_status"]
+          feegow_vinculado_em?: string | null
+          feegow_vinculado_por?: string | null
           foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null

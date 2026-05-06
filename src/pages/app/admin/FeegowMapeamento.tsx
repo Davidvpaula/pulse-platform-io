@@ -24,10 +24,11 @@ export default function FeegowMapeamento() {
   const [loading, setLoading] = useState(true);
   const [pacientesCount, setPacientesCount] = useState(0);
   const [docsCount, setDocsCount] = useState(0);
+  const [profsCount, setProfsCount] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [mapRes, pacRes, docRes] = await Promise.all([
+      const [mapRes, pacRes, docRes, profRes] = await Promise.all([
         supabase
           .from("integracoes_status_mapping")
           .select("id, status_interno, status_externo, descricao, ativo")
@@ -41,10 +42,15 @@ export default function FeegowMapeamento() {
           .from("documentos_paciente")
           .select("id", { count: "exact", head: true })
           .ilike("storage_path", "feegow%"),
+        supabase
+          .from("medicos")
+          .select("id", { count: "exact", head: true })
+          .not("feegow_professional_id", "is", null),
       ]);
       setMappings((mapRes.data ?? []) as unknown as Mapping[]);
       setPacientesCount(pacRes.count ?? 0);
       setDocsCount(docRes.count ?? 0);
+      setProfsCount(profRes.count ?? 0);
       setLoading(false);
     })();
   }, []);
@@ -73,10 +79,10 @@ export default function FeegowMapeamento() {
     },
     {
       label: "Profissionais",
-      local: "medicos",
+      local: "medicos.feegow_professional_id",
       feegow: "/professional/list",
-      status: "pendente",
-      detail: "Mapeamento futuro — profissionais Feegow ↔ médicos Lasmar",
+      status: profsCount > 0 ? "validado" : "pendente",
+      detail: profsCount > 0 ? `${profsCount} profissional(is) vinculado(s)` : "Nenhum profissional vinculado ainda — use a aba Profissionais",
     },
     {
       label: "Especialidades",

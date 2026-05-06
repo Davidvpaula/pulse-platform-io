@@ -136,6 +136,7 @@ import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
+import FeegowProfissionais from "@/pages/app/admin/FeegowProfissionais";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
 import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
@@ -380,6 +381,7 @@ const App = () => (
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
               <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />
               <Route path="admin/feegow/schema" element={<G perm="integracoes.configurar_feegow"><FeegowSchema /></G>} />
+              <Route path="admin/feegow/profissionais" element={<G perm="integracoes.configurar_feegow"><FeegowProfissionais /></G>} />
               <Route path="admin/cupons" element={<G perm="financeiro.servicos_gerenciar"><SecretariaCupons /></G>} />
               <Route path="admin/cupons/log" element={<G perm="financeiro.servicos_gerenciar"><CuponsUsoLog /></G>} />
               <Route path="admin/pendencias-integracao" element={<G perm="integracoes.ver_logs"><PendenciasIntegracao /></G>} />
