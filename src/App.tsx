@@ -77,6 +77,7 @@ import EmpresaFinanceiro from "@/pages/app/empresa/EmpresaFinanceiro";
 import EmpresaPerfilPage from "@/pages/app/empresa/EmpresaPerfilPage";
 import EmpresaDocumentos from "@/pages/app/empresa/EmpresaDocumentos";
 import EmpresaTermos from "@/pages/app/empresa/EmpresaTermos";
+import { EmpresaGuard } from "@/components/empresa/EmpresaGuard";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
 import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
