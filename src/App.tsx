@@ -136,6 +136,7 @@ import PacientePerfil from "@/pages/app/shared/PacientePerfil";
 import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
 import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
 import FeegowSchema from "@/pages/app/admin/FeegowSchema";
+import FeegowProfissionais from "@/pages/app/admin/FeegowProfissionais";
 import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
 import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
 import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
