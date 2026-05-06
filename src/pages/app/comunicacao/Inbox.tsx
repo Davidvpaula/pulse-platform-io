@@ -456,8 +456,8 @@ export default function ComunicacaoInbox() {
     if (!active || !acessoMedicoId || !acessoMotivo.trim()) return;
     setAcessoLoading(true);
     const expiraEm = new Date(Date.now() + acessoHoras * 3600000).toISOString();
-    // NOTE: inbox_acesso_temporario table not yet in schema — keep cast until migration
-    const { error } = await (supabase as unknown as { from: (t: string) => ReturnType<typeof supabase.from> }).from("inbox_acesso_temporario").insert({
+    // TODO: inbox_acesso_temporario table pending migration
+    const { error } = await (supabase as any).from("inbox_acesso_temporario").insert({
       conversa_id: active.id,
       medico_id: acessoMedicoId,
       concedido_por: user?.id,
