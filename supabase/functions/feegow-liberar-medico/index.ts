@@ -1,5 +1,5 @@
 // Edge function: libera acesso do médico na Feegow.
-// Por enquanto roda em MODO SIMULADO se FEEGOW_API_KEY não estiver configurada.
+// Por enquanto roda em MODO SIMULADO se FEEGOW_API_TOKEN não estiver configurada.
 // Quando a chave for adicionada, o bloco real de chamada à API Feegow é ativado.
 //
 // Apenas administradores podem invocar.

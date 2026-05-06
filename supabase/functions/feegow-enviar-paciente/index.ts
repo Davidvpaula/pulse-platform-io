@@ -1,5 +1,5 @@
 // Edge function preparada para enviar paciente à API Feegow
-// Secrets necessários (adiados): FEEGOW_API_TOKEN, FEEGOW_BASE_URL
+// Secrets necessários: FEEGOW_API_TOKEN, FEEGOW_BASE_URL
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
