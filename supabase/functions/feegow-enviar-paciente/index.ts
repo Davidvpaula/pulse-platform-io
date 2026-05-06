@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     const genero = pac.sexo === "masculino" ? "M" : pac.sexo === "feminino" ? "F" : "";
     const celular = pac.telefone?.replace(/\D/g, "") ?? "";
 
-    // ── MODO TESTE UNITÁRIO ──
+    // ── MODO TESTE UNITÁRIO — DIAGNÓSTICO COMPLETO ──
     if (mode === "teste_unitario") {
       const passos: Record<string, unknown>[] = [];
       const relatorio: Record<string, unknown> = {
@@ -94,159 +94,215 @@ Deno.serve(async (req) => {
         passos,
       };
 
-      // Passo 0: Listar origens disponíveis
-      try {
-        const origResp = await fetch(`${FEEGOW_URL}/patient/list-origins`, {
-          method: "GET",
-          headers: { "x-access-token": FEEGOW_TOKEN },
-        });
-        const origData = await origResp.json().catch(() => null);
-        passos.push({
-          passo: 0,
-          descricao: "Listar origens de paciente",
-          endpoint: `GET /patient/list-origins`,
-          http_status: origResp.status,
-          resposta_resumo: origData ? JSON.stringify(origData).slice(0, 400) : "sem body",
-        });
-      } catch (e) {
-        passos.push({ passo: 0, descricao: "Listar origens", erro: (e as Error).message });
+      // Helper: fetch com captura completa
+      async function feegowReq(
+        label: string,
+        method: string,
+        endpoint: string,
+        contentType?: string,
+        bodyStr?: string,
+      ): Promise<{ status: number; ok: boolean; body: unknown; headers: Record<string, string>; bodyRaw: string }> {
+        const hdrs: Record<string, string> = { "x-access-token": FEEGOW_TOKEN! };
+        if (contentType) hdrs["Content-Type"] = contentType;
+        const opts: RequestInit = { method, headers: hdrs };
+        if (bodyStr) opts.body = bodyStr;
+
+        const resp = await fetch(`${FEEGOW_URL}${endpoint}`, opts);
+        const respHeaders: Record<string, string> = {};
+        resp.headers.forEach((v, k) => { respHeaders[k] = v; });
+        const bodyRaw = await resp.text();
+        let bodyParsed: unknown = bodyRaw;
+        try { bodyParsed = JSON.parse(bodyRaw); } catch { /* keep raw */ }
+
+        return { status: resp.status, ok: resp.ok, body: bodyParsed, headers: respHeaders, bodyRaw };
       }
 
-      // Tentativas de criação com variações
-      const sexoId = pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0;
+      // ═══ BLOCO 1 — Auditoria da resposta 422 ═══
+      {
+        const payloadAtual = { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", sexo_id: pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0, celular };
+        const bodyStr = JSON.stringify(payloadAtual);
 
-      // Payload baseado nos campos que /patient/list retorna
-      const payloadA = { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", sexo_id: sexoId, celular };
-      // Payload com mais campos
-      const payloadB = { nome: pac.nome_completo, cpf: cpfLimpo, nascimento: pac.data_nascimento ?? "", sexo_id: sexoId, celular, tabela_id: 0 };
-
-      const tentativas = [
-        {
-          label: "/patient/store — sexo_id + data_nascimento",
-          endpoint: "/patient/store",
-          contentType: "application/json",
-          bodyStr: JSON.stringify(payloadA),
-        },
-        {
-          label: "/patient/store — sexo_id + nascimento + tabela_id",
-          endpoint: "/patient/store",
-          contentType: "application/json",
-          bodyStr: JSON.stringify(payloadB),
-        },
-        {
-          label: "/patient/store — form-urlencoded + sexo_id",
-          endpoint: "/patient/store",
-          contentType: "application/x-www-form-urlencoded",
-          bodyStr: new URLSearchParams(payloadA as unknown as Record<string, string>).toString(),
-        },
-      ];
-
-      let feegowId: string | null = null;
-      let tentativaOk: string | null = null;
-
-      for (let i = 0; i < tentativas.length; i++) {
-        const t = tentativas[i];
-        const resp = await fetch(`${FEEGOW_URL}${t.endpoint}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": t.contentType,
-            "x-access-token": FEEGOW_TOKEN,
-          },
-          body: t.bodyStr,
-        });
-        const data = await resp.json().catch(() => null);
-        const id = extractFeegowId(data);
-
-        passos.push({
-          passo: i + 1,
-          descricao: `Tentativa: ${t.label}`,
-          endpoint: `POST ${t.endpoint}`,
-          http_status: resp.status,
-          sucesso: resp.ok,
-          feegow_paciente_id: id,
-          resposta_resumo: data ? JSON.stringify(data).slice(0, 500) : "sem body",
-          payload_enviado: t.bodyStr.slice(0, 200),
-          content_type: t.contentType,
-        });
-
-        if (resp.ok && id) {
-          feegowId = id;
-          tentativaOk = t.label;
-          break;
-        }
-        // Se deu 200 sem id, talvez criou mas com formato diferente
-        if (resp.ok && !id) {
-          // Tentar buscar por CPF para pegar o ID
-          const searchResp = await fetch(`${FEEGOW_URL}/patient/list?cpf=${cpfLimpo}&limit=1`, {
-            method: "GET",
-            headers: { "x-access-token": FEEGOW_TOKEN },
+        for (const ep of ["/patient/store", "/patient/new-patient"]) {
+          const r = await feegowReq(`BLOCO1: POST ${ep}`, "POST", ep, "application/json", bodyStr);
+          passos.push({
+            bloco: 1,
+            descricao: `Auditoria POST ${ep} com payload atual`,
+            endpoint: `POST ${ep}`,
+            payload_enviado: payloadAtual,
+            http_status: r.status,
+            response_headers: r.headers,
+            response_body_raw: r.bodyRaw,
+            response_body_parsed: r.body,
+            content_type_resposta: r.headers["content-type"] ?? null,
           });
-          const searchData = await searchResp.json().catch(() => null);
-          if (searchResp.ok && Array.isArray(searchData?.content) && searchData.content.length > 0) {
-            const found = searchData.content[0];
-            feegowId = String(found.paciente_id ?? found.id);
-            tentativaOk = t.label + " (ID via busca CPF)";
-            passos.push({
-              passo: i + 1.5,
-              descricao: "Busca CPF fallback para obter ID",
-              http_status: searchResp.status,
-              feegow_paciente_id: feegowId,
-            });
-            break;
+        }
+      }
+
+      // ═══ BLOCO 2 — Descobrir endpoint oficial REAL ═══
+      {
+        const endpoints = ["/patient/store", "/patient/new-patient", "/patient/create", "/patient/insert"];
+        const minPayload = JSON.stringify({ nome: "TESTE API", cpf: "00000000000" });
+
+        for (const ep of endpoints) {
+          const r = await feegowReq(`BLOCO2: POST ${ep}`, "POST", ep, "application/json", minPayload);
+          passos.push({
+            bloco: 2,
+            descricao: `Teste endpoint POST ${ep} (payload mínimo)`,
+            endpoint: `POST ${ep}`,
+            http_status: r.status,
+            response_body: r.body,
+            response_body_raw: r.bodyRaw,
+          });
+        }
+      }
+
+      // ═══ BLOCO 3 — Campos obrigatórios da instância ═══
+      {
+        const discoveryEndpoints = [
+          { label: "Origens de paciente", ep: "/patient/list-origins" },
+          { label: "Tabelas particulares (patient)", ep: "/patient/list-private-tables" },
+          { label: "Tabelas particulares (financial)", ep: "/financial/list-private-tables" },
+          { label: "Paciente existente (amostra)", ep: "/patient/list?limit=1" },
+        ];
+
+        for (const d of discoveryEndpoints) {
+          const r = await feegowReq(`BLOCO3: GET ${d.ep}`, "GET", d.ep);
+          passos.push({
+            bloco: 3,
+            descricao: d.label,
+            endpoint: `GET ${d.ep}`,
+            http_status: r.status,
+            response_body: r.body,
+            response_body_raw: r.bodyRaw,
+          });
+        }
+      }
+
+      // ═══ BLOCO 4 — Payload progressivo ═══
+      {
+        const nome = pac.nome_completo ?? "TESTE DIAGNOSTICO";
+        const sexoId = pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0;
+
+        const payloads = [
+          { label: "Mínimo: nome + cpf", data: { nome, cpf: cpfLimpo } },
+          { label: "nome_completo + cpf", data: { nome_completo: nome, cpf: cpfLimpo } },
+          { label: "+ data_nascimento", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01" } },
+          { label: "+ genero", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero } },
+          { label: "+ celular", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular } },
+          { label: "+ sexo_id", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId, celular } },
+          { label: "Completo com tabela_id e origem_id", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, tabela_id: 0, origem_id: 1, sexo_id: sexoId } },
+          { label: "nome_completo completo", data: { nome_completo: nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, tabela_id: 0, origem_id: 1, sexo_id: sexoId } },
+        ];
+
+        // Testar cada payload em /patient/store com JSON
+        let feegowId: string | null = null;
+        let payloadVencedor: string | null = null;
+
+        for (const p of payloads) {
+          if (feegowId) break; // já encontrou
+          const bodyStr = JSON.stringify(p.data);
+          const r = await feegowReq(`BLOCO4: ${p.label}`, "POST", "/patient/store", "application/json", bodyStr);
+          const id = extractFeegowId(r.body as Record<string, unknown> | null);
+
+          passos.push({
+            bloco: 4,
+            descricao: `POST /patient/store — ${p.label}`,
+            content_type: "application/json",
+            payload_enviado: p.data,
+            http_status: r.status,
+            sucesso: r.ok,
+            feegow_id: id,
+            response_body: r.body,
+            response_body_raw: r.bodyRaw,
+          });
+
+          if (r.ok && id) {
+            feegowId = id;
+            payloadVencedor = p.label;
           }
         }
+
+        // Se nenhum JSON funcionou, tentar form-urlencoded com payload completo
+        if (!feegowId) {
+          const formData = { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, sexo_id: String(pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0), tabela_id: "0", origem_id: "1" };
+          const bodyStr = new URLSearchParams(formData).toString();
+          const r = await feegowReq("BLOCO4: form-urlencoded completo", "POST", "/patient/store", "application/x-www-form-urlencoded", bodyStr);
+          const id = extractFeegowId(r.body as Record<string, unknown> | null);
+
+          passos.push({
+            bloco: 4,
+            descricao: "POST /patient/store — form-urlencoded completo",
+            content_type: "application/x-www-form-urlencoded",
+            payload_enviado: formData,
+            http_status: r.status,
+            sucesso: r.ok,
+            feegow_id: id,
+            response_body: r.body,
+            response_body_raw: r.bodyRaw,
+          });
+
+          if (r.ok && id) {
+            feegowId = id;
+            payloadVencedor = "form-urlencoded completo";
+          }
+        }
+
+        relatorio.bloco4_resultado = feegowId
+          ? { sucesso: true, feegow_paciente_id: feegowId, payload_vencedor: payloadVencedor }
+          : { sucesso: false, mensagem: "Nenhum payload criou o paciente" };
+
+        // ═══ BLOCO 5 — Teste unitário: busca + persistência ═══
+        if (feegowId) {
+          // Buscar por CPF
+          const searchR = await feegowReq("BLOCO5: Busca CPF", "GET", `/patient/list?cpf=${cpfLimpo}&limit=5`);
+          const searchData = searchR.body as Record<string, unknown> | null;
+          const encontrado = searchR.ok && Array.isArray((searchData as Record<string, unknown>)?.content)
+            ? ((searchData as Record<string, unknown>).content as Record<string, unknown>[]).find(
+                (p) => String(p.paciente_id) === feegowId || String(p.id) === feegowId
+              )
+            : null;
+
+          passos.push({
+            bloco: 5,
+            descricao: "Busca paciente por CPF para confirmação",
+            endpoint: "GET /patient/list?cpf=***",
+            http_status: searchR.status,
+            paciente_encontrado: !!encontrado,
+            feegow_paciente_id_confirmado: encontrado ? ((encontrado as Record<string, unknown>).paciente_id ?? (encontrado as Record<string, unknown>).id) : null,
+            response_body: searchR.body,
+          });
+
+          // Persistir no banco local
+          const { error: upErr } = await admin.from("pacientes").update({
+            feegow_status: "liberado",
+            feegow_paciente_id: feegowId,
+            feegow_ultimo_envio_em: new Date().toISOString(),
+            feegow_erro: null,
+          }).eq("id", paciente_id);
+
+          passos.push({
+            bloco: 5,
+            descricao: "Salvar feegow_paciente_id no banco local",
+            sucesso: !upErr,
+            feegow_paciente_id_salvo: feegowId,
+            erro: upErr?.message ?? null,
+          });
+
+          relatorio.ok = !upErr;
+          relatorio.feegow_paciente_id = feegowId;
+        } else {
+          relatorio.ok = false;
+          relatorio.erro = "Nenhuma combinação de endpoint + payload criou o paciente. Analise os blocos 1-4.";
+        }
+
+        // ═══ BLOCO 6 — Relatório final ═══
+        relatorio.bloco6_resumo = {
+          endpoint_testados: ["/patient/store", "/patient/new-patient", "/patient/create", "/patient/insert"],
+          payload_vencedor: payloadVencedor,
+          feegow_paciente_id: feegowId,
+          total_passos: passos.length,
+        };
       }
-
-      // Se nenhuma tentativa funcionou
-      if (!feegowId) {
-        relatorio.ok = false;
-        relatorio.erro = "Nenhuma variação criou o paciente. Analise os passos.";
-        return json(relatorio);
-      }
-
-      relatorio.tentativa_que_funcionou = tentativaOk;
-
-      // Busca de confirmação
-      const searchResp = await fetch(`${FEEGOW_URL}/patient/list?cpf=${cpfLimpo}&limit=5`, {
-        method: "GET",
-        headers: { "x-access-token": FEEGOW_TOKEN },
-      });
-      const searchData = await searchResp.json().catch(() => null);
-
-      const encontrado = searchResp.ok && Array.isArray(searchData?.content)
-        ? searchData.content.find((p: Record<string, unknown>) =>
-            String(p.paciente_id) === feegowId || String(p.id) === feegowId
-          )
-        : null;
-
-      passos.push({
-        passo: tentativas.length + 1,
-        descricao: "Confirmar paciente por CPF na Feegow",
-        endpoint: `GET /patient/list?cpf=***`,
-        http_status: searchResp.status,
-        paciente_encontrado: !!encontrado,
-        feegow_paciente_id_confirmado: encontrado ? (encontrado as Record<string, unknown>).paciente_id ?? (encontrado as Record<string, unknown>).id : null,
-        resposta_resumo: searchData ? JSON.stringify(searchData).slice(0, 500) : "sem body",
-      });
-
-      // Persistência local
-      const { error: upErr } = await admin.from("pacientes").update({
-        feegow_status: "liberado",
-        feegow_paciente_id: feegowId,
-        feegow_ultimo_envio_em: new Date().toISOString(),
-        feegow_erro: null,
-      }).eq("id", paciente_id);
-
-      passos.push({
-        passo: tentativas.length + 2,
-        descricao: "Salvar feegow_paciente_id no banco local",
-        sucesso: !upErr,
-        feegow_paciente_id_salvo: feegowId,
-        erro: upErr?.message ?? null,
-      });
-
-      relatorio.ok = !upErr;
-      relatorio.feegow_paciente_id = feegowId;
 
       return json(relatorio);
     }
