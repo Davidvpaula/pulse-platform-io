@@ -49,6 +49,7 @@ type VinculoStatus = "todos" | "ativo" | "inativo" | "afastado" | "desligado";
 
 export default function MedicoCorporativo() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<any[]>([]);
@@ -63,10 +64,9 @@ export default function MedicoCorporativo() {
 
   useEffect(() => {
     (async () => {
-      if (!session) { setLoading(false); return; }
+      if (!session || !medicoAtual) { setLoading(false); return; }
       try {
-        const med = await getMedicoAtual();
-        if (!med) { setLoading(false); return; }
+        const med = medicoAtual;
 
         // All consultas for this doctor — both corporate and private
         const { data: cons } = await supabase
