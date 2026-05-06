@@ -362,6 +362,7 @@ export default function MedicoHorarios() {
   }
 
   const devMode = !session;
+  const dadosCarregados = !loading && !medicoCarregando && !!medicoAtual?.id;
 
   // Filter slots by calendar type
   const filteredSlots = useMemo(() => {
