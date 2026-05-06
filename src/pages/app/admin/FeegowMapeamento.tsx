@@ -24,10 +24,11 @@ export default function FeegowMapeamento() {
   const [loading, setLoading] = useState(true);
   const [pacientesCount, setPacientesCount] = useState(0);
   const [docsCount, setDocsCount] = useState(0);
+  const [profsCount, setProfsCount] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [mapRes, pacRes, docRes] = await Promise.all([
+      const [mapRes, pacRes, docRes, profRes] = await Promise.all([
         supabase
           .from("integracoes_status_mapping")
           .select("id, status_interno, status_externo, descricao, ativo")
@@ -41,10 +42,15 @@ export default function FeegowMapeamento() {
           .from("documentos_paciente")
           .select("id", { count: "exact", head: true })
           .ilike("storage_path", "feegow%"),
+        supabase
+          .from("medicos")
+          .select("id", { count: "exact", head: true })
+          .not("feegow_professional_id", "is", null),
       ]);
       setMappings((mapRes.data ?? []) as unknown as Mapping[]);
       setPacientesCount(pacRes.count ?? 0);
       setDocsCount(docRes.count ?? 0);
+      setProfsCount(profRes.count ?? 0);
       setLoading(false);
     })();
   }, []);
