@@ -33,6 +33,7 @@ const EMPTY_FORMACAO = (ordem: number): Formacao => ({
 
 export default function MedicoPerfil() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [medico, setMedico] = useState<MedicoRow | null>(null);
@@ -49,21 +50,25 @@ export default function MedicoPerfil() {
   const [savingFormacoes, setSavingFormacoes] = useState(false);
 
   useEffect(() => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !medicoAtual) { setLoading(false); return; }
     (async () => {
       setLoading(true);
-      const m = await getMedicoAtual();
+      // Fetch full MedicoRow via supabase for fields not in useMedicoAtual
+      const { data: m } = await supabase
+        .from("medicos")
+        .select("*")
+        .eq("id", medicoAtual.id)
+        .maybeSingle();
       if (m) {
-        setMedico(m);
+        setMedico(m as MedicoRow);
         setNome(m.nome ?? "");
-        // telefone is managed in Dados Pessoais
         setBio(m.bio ?? "");
-        setFotoUrl((m as any).foto_url ?? null);
+        setFotoUrl(m.foto_url ?? null);
         loadFormacoes(m.id);
       }
       setLoading(false);
     })();
-  }, [session]);
+  }, [session, medicoAtual]);
 
   async function loadFormacoes(medicoId: string) {
     const { data } = await supabase
