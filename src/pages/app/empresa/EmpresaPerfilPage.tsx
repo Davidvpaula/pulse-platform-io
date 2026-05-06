@@ -27,6 +27,7 @@ type EmpresaRow = {
 };
 
 export default function EmpresaPerfilPage() {
+  const { empresa: empAtual } = useEmpresaAtual();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [empresa, setEmpresa] = useState<EmpresaRow | null>(null);
@@ -43,35 +44,13 @@ export default function EmpresaPerfilPage() {
   const [segmento, setSegmento] = useState("");
 
   const carregar = useCallback(async () => {
+    if (!empAtual) return;
     setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      setEmail(u.user.email ?? "");
+      if (u.user) setEmail(u.user.email ?? "");
 
-      // Find empresa via pacientes or empresas_funcionarios
-      let eid: string | null = null;
-      const { data: pac } = await supabase
-        .from("pacientes")
-        .select("empresa_id")
-        .eq("user_id", u.user.id)
-        .maybeSingle();
-      eid = pac?.empresa_id ?? null;
-
-      if (!eid) {
-        const { data: ef } = await supabase
-          .from("empresas_funcionarios")
-          .select("empresa_id")
-          .eq("paciente_id", u.user.id)
-          .limit(1)
-          .maybeSingle();
-        eid = ef?.empresa_id ?? null;
-      }
-
-      if (!eid) {
-        setLoading(false);
-        return;
-      }
+      const eid = empAtual.empresaId;
 
       const { data: emp, error } = await supabase
         .from("empresas")
@@ -102,7 +81,7 @@ export default function EmpresaPerfilPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [empAtual]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
