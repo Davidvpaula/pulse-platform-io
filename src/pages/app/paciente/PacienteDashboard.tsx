@@ -171,6 +171,7 @@ export default function PacienteDashboard() {
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 border border-border">
                     <Calendar className="h-3.5 w-3.5 text-primary" /> {proxima.data} · {proxima.hora}
                   </span>
+                  <ConsultaCountdown targetIso={proxima.inicio} />
                   <StatusBadge status={proxima.status} />
                 </div>
               </>
