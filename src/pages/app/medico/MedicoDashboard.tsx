@@ -89,11 +89,10 @@ export default function MedicoDashboard() {
   const [saldoCrescimento, setSaldoCrescimento] = useState<number>(0);
 
   const carregar = async () => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !medicoAtual) { setLoading(false); return; }
     setLoading(true);
 
-    const medico = await getMedicoAtual();
-    if (!medico) { setMedicoNaoExiste(true); setLoading(false); return; }
+    const medico = medicoAtual;
     setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
 
