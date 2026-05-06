@@ -105,7 +105,7 @@ type EspecialidadeInfo = {
 
 export default function MedicoHorarios() {
   const { session } = useSession();
-  const { medico: medicoAtual } = useMedicoAtual();
+  const { medico: medicoAtual, loading: medicoCarregando } = useMedicoAtual();
   const [slots, setSlots] = useState<AgendaSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<AgendaSlot | null>(null);
