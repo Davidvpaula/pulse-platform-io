@@ -295,21 +295,12 @@ export const MedicoDetalhe = () => {
           }))
         );
 
-        // Get user_id from medicos (planos.medico_id stores user_id, not medicos.id)
-        const { data: medicoFull } = await supabase
-          .from("medicos")
-          .select("user_id")
-          .eq("id", med.id)
-          .maybeSingle();
-
-        const medicoUserId = medicoFull?.user_id;
-
-        // Load doctor's published plans using user_id
-        if (medicoUserId) {
+        // Load doctor's published plans (planos.medico_id = medicos.id)
+        {
           const { data: planos } = await supabase
             .from("planos")
             .select("id, nome, descricao_comercial, valor_mensal_centavos, plano_beneficios(nome)")
-            .eq("medico_id", medicoUserId)
+            .eq("medico_id", med.id)
             .eq("nivel", "medico" as any)
             .eq("status", "ativo" as any)
             .eq("aprovado_admin", true)
