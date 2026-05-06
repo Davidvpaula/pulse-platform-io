@@ -65,7 +65,7 @@ export function RequireRoutePermission({ perm, all, children }: Props) {
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link to="/app/admin/dashboard">Voltar ao início</Link>
+            <Link to={`${profiles[profileKey].basePath}/dashboard`}>Voltar ao início</Link>
           </Button>
         </CardContent>
       </Card>
