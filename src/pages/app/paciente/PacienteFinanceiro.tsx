@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import { usePacienteFinanceiro } from "@/lib/paciente/queries";
 import { formatBRL, abrirCheckout, criarCheckoutSession, type PagamentoStatus, type PagamentoMetodo } from "@/lib/pagamentos";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
