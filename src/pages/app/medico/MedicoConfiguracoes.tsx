@@ -347,13 +347,13 @@ export default function MedicoConfiguracoes() {
     const mid = hookMedicoId;
     if (!mid) { toast.error("Cadastro médico não encontrado."); return; }
     setSavingNotif(true);
-    const { error } = await supabase.from("medico_notificacao_prefs" as any).upsert({
+    const { error } = await supabase.from("medico_notificacao_prefs").upsert({
       medico_id: mid,
       lembretes_consulta: notif.lembretes,
       alertas_operacionais: notif.alertas,
       resumo_diario_email: notif.resumoDiario,
       updated_at: new Date().toISOString(),
-    } as any, { onConflict: "medico_id" });
+    }, { onConflict: "medico_id" });
     setSavingNotif(false);
     if (error) {
       toast.error("Erro ao salvar notificações.");
