@@ -150,6 +150,7 @@ import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
 import PlanoCheckoutRetorno from "@/pages/app/paciente/PlanoCheckoutRetorno";
 import PacienteAssinarPlano from "@/pages/app/paciente/PacienteAssinarPlano";
 import AdminPerfil from "@/pages/app/admin/AdminPerfil";
+import AdminSaude from "@/pages/app/admin/AdminSaude";
 import ColaboradorPerfil from "@/pages/app/colaborador/ColaboradorPerfil";
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
@@ -370,6 +371,7 @@ const App = () => (
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<G perm="admin.dashboard"><ComunicacaoInterna /></G>} />
               <Route path="admin/faq" element={<G perm="admin.dashboard"><AdminFaq /></G>} />
+              <Route path="admin/saude" element={<G perm="admin.dashboard"><AdminSaude /></G>} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />
               <Route path="admin/feegow/mapeamento" element={<G perm="integracoes.configurar_feegow"><FeegowMapeamento /></G>} />
