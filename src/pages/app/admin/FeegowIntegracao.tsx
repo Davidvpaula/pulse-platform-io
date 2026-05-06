@@ -347,6 +347,11 @@ export default function FeegowIntegracao() {
             Endpoints reais testados e seu status atual.
           </p>
         </Link>
+        <Link to="/app/admin/feegow/profissionais" className="card-elevated p-5 hover:border-primary/40 transition">
+          <p className="font-semibold flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Profissionais</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Vincular médicos locais a profissionais Feegow.
+          </p>
         <Link to="/app/admin/pendencias-integracao" className="card-elevated p-5 hover:border-primary/40 transition">
           <p className="font-semibold flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-warning" /> Pendências</p>
           <p className="mt-1 text-xs text-muted-foreground">
