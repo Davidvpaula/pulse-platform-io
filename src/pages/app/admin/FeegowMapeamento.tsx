@@ -79,10 +79,10 @@ export default function FeegowMapeamento() {
     },
     {
       label: "Profissionais",
-      local: "medicos",
+      local: "medicos.feegow_professional_id",
       feegow: "/professional/list",
-      status: "pendente",
-      detail: "Mapeamento futuro — profissionais Feegow ↔ médicos Lasmar",
+      status: profsCount > 0 ? "validado" : "pendente",
+      detail: profsCount > 0 ? `${profsCount} profissional(is) vinculado(s)` : "Nenhum profissional vinculado ainda — use a aba Profissionais",
     },
     {
       label: "Especialidades",
