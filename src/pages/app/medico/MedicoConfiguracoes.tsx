@@ -110,7 +110,7 @@ export default function MedicoConfiguracoes() {
       // silently fail — secrets may not be configured yet
     }
     setGoogleLoading(false);
-  }, []);
+  }, [hookMedicoId]);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
@@ -252,7 +252,7 @@ export default function MedicoConfiguracoes() {
       }
       setLoadingAt(false);
     })();
-  }, []);
+  }, [hookMedicoId]);
 
   const ativasCount = useMemo(
     () => Object.values(linhas).filter((l) => l.ativo).length,
@@ -341,7 +341,7 @@ export default function MedicoConfiguracoes() {
       }
       setNotifLoading(false);
     })();
-  }, []);
+  }, [hookMedicoId]);
 
   const salvarNotificacoes = async () => {
     const mid = hookMedicoId;
