@@ -400,10 +400,10 @@ export async function listPacientesDoMedico(): Promise<PacienteDoMedico[]> {
   let empresaNomePorId: Record<string, string> = {};
   if (empresaIds.length) {
     const { data: emps } = await supabase
-      .from("empresas" as any)
+      .from("empresas")
       .select("id, nome")
       .in("id", empresaIds);
-    empresaNomePorId = Object.fromEntries(((emps ?? []) as any[]).map((e) => [e.id, e.nome]));
+    empresaNomePorId = Object.fromEntries(((emps ?? []) as { id: string; nome: string }[]).map((e) => [e.id, e.nome]));
   }
 
   const agora = Date.now();
