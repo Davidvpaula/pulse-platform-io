@@ -319,7 +319,7 @@ export default function PacientePerfil() {
         acao: "observacao_editada",
         motivo: "Edição de observações internas",
         payload: { texto: obsEdit.trim() },
-      } as any);
+      } as { paciente_id: string; actor_id: string | undefined; acao: string; motivo: string; payload: Json });
     }
     setObsSalvando(false);
   }
