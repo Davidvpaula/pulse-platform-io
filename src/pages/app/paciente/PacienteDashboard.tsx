@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
 import ConsultaCountdown from "@/components/paciente/ConsultaCountdown";
+import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 import { useSession } from "@/lib/session";
 import { formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { brl } from "@/lib/format";
