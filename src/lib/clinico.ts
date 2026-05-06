@@ -1084,7 +1084,7 @@ export async function trocarMedicoConsulta(input: {
     _motivo: input.motivo ?? null,
   });
   if (error) throw error;
-  return data as any;
+  return data as Record<string, unknown>;
 }
 
 export function formatDataBR(iso: string): string {
