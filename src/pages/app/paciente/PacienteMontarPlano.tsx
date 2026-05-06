@@ -79,7 +79,7 @@ export default function PacienteMontarPlano() {
         .eq("status", "aprovado");
 
       const medicoMap = new Map<string, any>();
-      for (const m of (medicos ?? [])) medicoMap.set(m.user_id, m);
+      for (const m of (medicos ?? [])) medicoMap.set(m.id, m);
 
       const { data: r } = await supabase
         .from("desconto_progressivo_regras")
