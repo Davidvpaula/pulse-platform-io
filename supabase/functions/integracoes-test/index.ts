@@ -35,7 +35,11 @@ Deno.serve(async (req) => {
 
     if (integration === "feegow") {
       const FEEGOW_TOKEN = Deno.env.get("FEEGOW_API_TOKEN");
-      const FEEGOW_URL = Deno.env.get("FEEGOW_BASE_URL") ?? "https://api.feegow.com/v1/api";
+      let FEEGOW_URL = Deno.env.get("FEEGOW_BASE_URL") ?? "https://api.feegow.com/v1/api";
+      // Ensure URL has protocol
+      if (FEEGOW_URL && !FEEGOW_URL.startsWith("http")) {
+        FEEGOW_URL = `https://${FEEGOW_URL}`;
+      }
 
       if (!FEEGOW_TOKEN) {
         return json({ ok: false, integration: "feegow", error: "FEEGOW_API_TOKEN não configurado" });
