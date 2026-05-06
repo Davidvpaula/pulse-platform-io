@@ -74,7 +74,7 @@ export default function MedicoPlanos() {
     );
   }
 
-  useEffect(() => { load(); loadTermos(); }, [uid]);
+  useEffect(() => { load(); loadTermos(); }, [medicoId]);
 
   function novoPlano() {
     if (termsPlano.needsAcceptance) {
