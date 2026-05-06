@@ -139,7 +139,7 @@ export default function MedicoCorporativo() {
         setLoading(false);
       }
     })();
-  }, [session]);
+  }, [session, medicoAtual]);
 
   const empresas = useMemo(() => {
     const set = new Map<string, string>();
