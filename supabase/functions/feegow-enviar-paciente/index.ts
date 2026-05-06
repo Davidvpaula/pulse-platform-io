@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
           sucesso: resp.ok,
           feegow_paciente_id: id,
           resposta_resumo: data ? JSON.stringify(data).slice(0, 500) : "sem body",
-          payload_mascarado: { ...basePayload, cpf: cpfLimpo.slice(0, 3) + "***" + cpfLimpo.slice(-2) },
+          payload_enviado: t.bodyStr.slice(0, 200),
           content_type: t.contentType,
         });
 
