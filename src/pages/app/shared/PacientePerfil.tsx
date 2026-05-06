@@ -385,7 +385,7 @@ export default function PacientePerfil() {
     setStatusSalvando(true);
     const { error } = await supabase.rpc("alterar_status_conta_paciente", {
       _paciente_id: pac.id,
-      _novo_status: statusAction.novoStatus,
+      _novo_status: statusAction.novoStatus as "ativo" | "banido" | "bloqueado" | "pendente" | "suspenso",
       _motivo: statusMotivo.trim(),
       _observacao: statusObs.trim() || null,
       _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? statusBloqueadoAte : null,
