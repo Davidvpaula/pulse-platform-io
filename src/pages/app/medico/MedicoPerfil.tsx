@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
-import { getMedicoAtual, updateMedicoPerfil, type MedicoRow } from "@/lib/clinico";
+import { useMedicoAtual } from "@/lib/useMedicoAtual";
+import { updateMedicoPerfil, type MedicoRow } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
