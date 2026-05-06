@@ -136,7 +136,7 @@ export default function PacientePlano() {
             assinaturas={plataforma}
             beneficiosMap={beneficiosMap}
             planosDisponiveis={planosDisponiveis}
-            onReload={loadData}
+            onReload={() => void refetch()}
           />
         </TabsContent>
 
@@ -145,7 +145,7 @@ export default function PacientePlano() {
             assinaturas={personalizado}
             beneficiosMap={beneficiosMap}
             pacienteId={pacienteId || ""}
-            onReload={loadData}
+            onReload={() => void refetch()}
           />
         </TabsContent>
 
@@ -153,7 +153,7 @@ export default function PacientePlano() {
           <PlanoEmpresaTab
             assinaturas={empresa}
             beneficiosMap={beneficiosMap}
-            onReload={loadData}
+            onReload={() => void refetch()}
           />
         </TabsContent>
       </Tabs>
