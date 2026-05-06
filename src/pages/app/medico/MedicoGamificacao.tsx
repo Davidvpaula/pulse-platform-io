@@ -121,6 +121,7 @@ function ScoreRadar({ scores }: { scores: { label: string; value: number; max: n
 
 export default function MedicoGamificacao() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const [loading, setLoading] = useState(true);
   const [medicoId, setMedicoId] = useState<string | null>(null);
   const [ranking, setRanking] = useState<MedicoRanking | null>(null);
