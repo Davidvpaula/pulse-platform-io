@@ -86,7 +86,7 @@ export default function AdminSaude() {
     try {
       const tables = ["consultas", "pacientes", "medicos", "pagamentos", "audit_log", "user_roles"];
       const tableResults = await Promise.allSettled(
-        tables.map((t) => supabase.from(t).select("id", { count: "exact", head: true }))
+        tables.map((t) => supabase.from(t as never).select("id", { count: "exact", head: true }))
       );
       const ok = tableResults.filter(
         (r) => r.status === "fulfilled" && !(r.value as { error: unknown }).error
