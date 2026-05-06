@@ -183,25 +183,25 @@ Deno.serve(async (req) => {
         const nome = pac.nome_completo ?? "TESTE DIAGNOSTICO";
         const sexoId = pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0;
 
+        // /patient/create exige nome_completo + nome_paciente
+        const nomePaciente = nome.split(" ")[0]; // primeiro nome
+
         const payloads = [
-          { label: "Mínimo: nome + cpf", data: { nome, cpf: cpfLimpo } },
-          { label: "nome_completo + cpf", data: { nome_completo: nome, cpf: cpfLimpo } },
-          { label: "+ data_nascimento", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01" } },
-          { label: "+ genero", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero } },
-          { label: "+ celular", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular } },
-          { label: "+ sexo_id", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId, celular } },
-          { label: "Completo com tabela_id e origem_id", data: { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, tabela_id: 0, origem_id: 1, sexo_id: sexoId } },
-          { label: "nome_completo completo", data: { nome_completo: nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, tabela_id: 0, origem_id: 1, sexo_id: sexoId } },
+          { label: "create: nome_completo + nome_paciente", ep: "/patient/create", data: { nome_completo: nome, nome_paciente: nomePaciente, cpf: cpfLimpo } },
+          { label: "create: + nascimento + sexo_id", ep: "/patient/create", data: { nome_completo: nome, nome_paciente: nomePaciente, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId } },
+          { label: "create: + celular + genero", ep: "/patient/create", data: { nome_completo: nome, nome_paciente: nomePaciente, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId, celular, genero } },
+          { label: "create: completo com tabela_id e origem_id", ep: "/patient/create", data: { nome_completo: nome, nome_paciente: nomePaciente, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId, celular, genero, tabela_id: 0, origem_id: 1 } },
+          { label: "store: nome_completo + nome_paciente", ep: "/patient/store", data: { nome_completo: nome, nome_paciente: nomePaciente, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", sexo_id: sexoId, celular, genero } },
         ];
 
-        // Testar cada payload em /patient/store com JSON
+        // Testar cada payload
         let feegowId: string | null = null;
         let payloadVencedor: string | null = null;
 
         for (const p of payloads) {
-          if (feegowId) break; // já encontrou
+          if (feegowId) break;
           const bodyStr = JSON.stringify(p.data);
-          const r = await feegowReq(`BLOCO4: ${p.label}`, "POST", "/patient/store", "application/json", bodyStr);
+          const r = await feegowReq(`BLOCO4: ${p.label}`, "POST", p.ep, "application/json", bodyStr);
           const id = extractFeegowId(r.body as Record<string, unknown> | null);
 
           passos.push({
