@@ -52,7 +52,7 @@ export default function MedicoServicos() {
     const re: Record<string, number> = {};
     await Promise.all((s ?? []).map(async (sv: any) => {
       const { data } = await supabase.rpc("fn_resolver_comissao", {
-        _medico_id: med.id,
+        _medico_id: medicoId,
         _servico_id: sv.id,
         _valor_bruto_centavos: sv.valor_paciente_centavos,
       });
