@@ -75,41 +75,18 @@ export default function EmpresaPropostas() {
   const [termoConteudo, setTermoConteudo] = useState<string | null>(null);
   const [termoVersao, setTermoVersao] = useState<number | null>(null);
 
-  // Empresa id from user's profile link
-  const [empresaId, setEmpresaId] = useState<string | null>(null);
+  // Empresa id from centralized hook
+  const { empresa: empAtual } = useEmpresaAtual();
+  const empresaId = empAtual?.empresaId ?? null;
 
   useEffect(() => {
     carregarDados();
-  }, [session]);
+  }, [session, empAtual]);
 
   async function carregarDados() {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || !empresaId) return;
     setLoading(true);
     try {
-      const { data: empFunc } = await supabase
-        .from("empresas_funcionarios")
-        .select("empresa_id")
-        .eq("paciente_id", session.user.id)
-        .limit(1)
-        .maybeSingle();
-
-      const eid = empFunc?.empresa_id;
-      if (!eid) {
-        const { data: pac } = await supabase
-          .from("pacientes")
-          .select("empresa_id")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (pac?.empresa_id) setEmpresaId(pac.empresa_id);
-      } else {
-        setEmpresaId(eid);
-      }
-
-      const finalEid = eid || empresaId;
-      if (!finalEid) {
-        setLoading(false);
-        return;
-      }
 
       const [{ data: props }, { data: meds }, { data: esps }, { data: termo }] = await Promise.all([
         supabase
