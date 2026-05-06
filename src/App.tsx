@@ -77,6 +77,7 @@ import EmpresaFinanceiro from "@/pages/app/empresa/EmpresaFinanceiro";
 import EmpresaPerfilPage from "@/pages/app/empresa/EmpresaPerfilPage";
 import EmpresaDocumentos from "@/pages/app/empresa/EmpresaDocumentos";
 import EmpresaTermos from "@/pages/app/empresa/EmpresaTermos";
+import { EmpresaGuard } from "@/components/empresa/EmpresaGuard";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
 import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
@@ -382,15 +383,15 @@ const App = () => (
               
 
               {/* Empresa */}
-              <Route path="empresa/dashboard" element={<EmpresaDashboard />} />
-              <Route path="empresa/funcionarios" element={<EmpresaFuncionarios />} />
-              <Route path="empresa/agendamentos" element={<EmpresaAgendamentos />} />
-              <Route path="empresa/relatorios" element={<EmpresaRelatorios />} />
-              <Route path="empresa/financeiro" element={<EmpresaFinanceiro />} />
-              <Route path="empresa/documentos" element={<EmpresaDocumentos />} />
-              <Route path="empresa/termos" element={<EmpresaTermos />} />
-              <Route path="empresa/propostas" element={<EmpresaPropostas />} />
-              <Route path="empresa/perfil" element={<EmpresaPerfilPage />} />
+              <Route path="empresa/dashboard" element={<EmpresaGuard><EmpresaDashboard /></EmpresaGuard>} />
+              <Route path="empresa/funcionarios" element={<EmpresaGuard><EmpresaFuncionarios /></EmpresaGuard>} />
+              <Route path="empresa/agendamentos" element={<EmpresaGuard><EmpresaAgendamentos /></EmpresaGuard>} />
+              <Route path="empresa/relatorios" element={<EmpresaGuard><EmpresaRelatorios /></EmpresaGuard>} />
+              <Route path="empresa/financeiro" element={<EmpresaGuard><EmpresaFinanceiro /></EmpresaGuard>} />
+              <Route path="empresa/documentos" element={<EmpresaGuard><EmpresaDocumentos /></EmpresaGuard>} />
+              <Route path="empresa/termos" element={<EmpresaGuard><EmpresaTermos /></EmpresaGuard>} />
+              <Route path="empresa/propostas" element={<EmpresaGuard><EmpresaPropostas /></EmpresaGuard>} />
+              <Route path="empresa/perfil" element={<EmpresaGuard><EmpresaPerfilPage /></EmpresaGuard>} />
 
               {/* Comunicação */}
               <Route path="comunicacao/dashboard" element={<ComunicacaoDashboard />} />

@@ -17,14 +17,14 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
 export default function EmpresaRelatorios() {
+  const { empresa: empAtual } = useEmpresaAtual();
   const [loading, setLoading] = useState(true);
-  const [empresaId, setEmpresaId] = useState<string | null>(null);
-  const [razaoSocial, setRazaoSocial] = useState("");
   const [consultas, setConsultas] = useState<any[]>([]);
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [faturas, setFaturas] = useState<any[]>([]);
@@ -35,40 +35,12 @@ export default function EmpresaRelatorios() {
   const [tab, setTab] = useState("consumo");
 
   useEffect(() => {
-    detectarEmpresa();
-  }, []);
-
-  useEffect(() => {
-    if (empresaId) carregarDados();
-  }, [empresaId, de, ate]);
-
-  async function detectarEmpresa() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Find empresa via paciente -> empresa_id or via empresas_funcionarios
-    const { data: paciente } = await supabase
-      .from("pacientes")
-      .select("empresa_id")
-      .eq("user_id", user.id)
-      .not("empresa_id", "is", null)
-      .maybeSingle();
-
-    if (paciente?.empresa_id) {
-      setEmpresaId(paciente.empresa_id);
-      const { data: emp } = await supabase
-        .from("empresas")
-        .select("razao_social")
-        .eq("id", paciente.empresa_id)
-        .single();
-      setRazaoSocial(emp?.razao_social ?? "");
-    } else {
-      setLoading(false);
-    }
-  }
+    if (empAtual) carregarDados();
+  }, [empAtual, de, ate]);
 
   async function carregarDados() {
-    if (!empresaId) return;
+    if (!empAtual) return;
+    const empresaId = empAtual.empresaId;
     setLoading(true);
     try {
       const deISO = de.toISOString();
@@ -183,7 +155,7 @@ export default function EmpresaRelatorios() {
     );
   }
 
-  if (!empresaId) {
+  if (!empAtual) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2">
         <Lock className="h-8 w-8 text-muted-foreground" />
@@ -196,7 +168,7 @@ export default function EmpresaRelatorios() {
     <div className="space-y-6">
       <PageHeader
         title="Relatórios corporativos"
-        description={`Indicadores agregados · ${razaoSocial}`}
+        description={`Indicadores agregados · ${empAtual.nomeFantasia || empAtual.razaoSocial}`}
         actions={
           <Button onClick={exportCsv} variant="outline">
             <Download className="mr-2 h-4 w-4" /> Exportar CSV

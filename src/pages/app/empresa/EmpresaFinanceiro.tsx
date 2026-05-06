@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl } from "@/lib/relatorios/utils";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
 
 const STATUS_LABEL: Record<string, string> = {
   paga: "Paga",
@@ -35,55 +36,18 @@ type Fatura = {
 };
 
 export default function EmpresaFinanceiro() {
+  const { empresa } = useEmpresaAtual();
   const [faturas, setFaturas] = useState<Fatura[]>([]);
   const [loading, setLoading] = useState(true);
-  const [empresaId, setEmpresaId] = useState<string | null>(null);
-  const [empresaNome, setEmpresaNome] = useState("");
 
   const carregar = useCallback(async () => {
+    if (!empresa) return;
     setLoading(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-
-      // Buscar empresa do usuário via empresas_funcionarios ou pacientes.empresa_id
-      let eid: string | null = null;
-      const { data: empFunc } = await supabase
-        .from("empresas_funcionarios")
-        .select("empresa_id")
-        .eq("paciente_id", u.user.id)
-        .limit(1)
-        .maybeSingle();
-      eid = empFunc?.empresa_id ?? null;
-
-      if (!eid) {
-        const { data: pac } = await supabase
-          .from("pacientes")
-          .select("empresa_id")
-          .eq("user_id", u.user.id)
-          .maybeSingle();
-        eid = pac?.empresa_id ?? null;
-      }
-
-      if (!eid) {
-        setLoading(false);
-        return;
-      }
-
-      // Buscar nome da empresa
-      const { data: emp } = await supabase
-        .from("empresas")
-        .select("id, nome_fantasia, razao_social")
-        .eq("id", eid)
-        .maybeSingle();
-
-      setEmpresaId(eid);
-      setEmpresaNome(emp?.nome_fantasia || emp?.razao_social || "");
-
       const { data: fats, error } = await supabase
         .from("empresas_faturas")
         .select("*")
-        .eq("empresa_id", eid)
+        .eq("empresa_id", empresa.empresaId)
         .order("competencia_ano", { ascending: false })
         .order("competencia_mes", { ascending: false })
         .limit(50);
@@ -95,7 +59,7 @@ export default function EmpresaFinanceiro() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [empresa]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
@@ -109,7 +73,7 @@ export default function EmpresaFinanceiro() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Financeiro</p>
           <h1 className="font-display text-2xl font-bold">Faturas e consumo</h1>
-          {empresaNome && <p className="text-sm text-muted-foreground">{empresaNome}</p>}
+          {empresa && <p className="text-sm text-muted-foreground">{empresa.nomeFantasia || empresa.razaoSocial}</p>}
         </div>
         <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Atualizar

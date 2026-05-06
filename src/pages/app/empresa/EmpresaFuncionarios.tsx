@@ -1,18 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Plus, Upload, Search, UserMinus, UserCheck, History, X, Download,
+  Loader2, AlertTriangle, RefreshCw, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { isValidCpf, maskCpf, onlyDigits } from "@/lib/validation/cpf";
-import {
-  listFuncionarios, addFuncionario, setFuncionarioStatus, importFuncionariosCsv,
-  SETORES_PADRAO,
-  type Funcionario, type FuncionarioStatus,
-} from "@/lib/empresa";
+import { supabase } from "@/integrations/supabase/client";
+import { useEmpresaAtual } from "@/lib/useEmpresaAtual";
+
+type FuncionarioStatus = "ativo" | "inativo" | "desligado";
+
+interface Funcionario {
+  id: string;
+  nome: string;
+  cpf: string | null;
+  email: string | null;
+  setor: string | null;
+  cargo: string | null;
+  status: FuncionarioStatus;
+  data_admissao: string | null;
+  created_at: string;
+}
+
+const SETORES_PADRAO = [
+  "Administrativo", "Operações", "Comercial", "RH", "TI",
+  "Obra Centro", "Obra Sul", "Obra Norte",
+];
 
 export default function EmpresaFuncionarios() {
+  const { empresa } = useEmpresaAtual();
   const [list, setList] = useState<Funcionario[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<FuncionarioStatus | "todos">("todos");
   const [filtroSetor, setFiltroSetor] = useState<string>("todos");
@@ -20,31 +40,101 @@ export default function EmpresaFuncionarios() {
   const [historico, setHistorico] = useState<Funcionario | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const reload = () => setList(listFuncionarios());
-    reload();
-    window.addEventListener("lasmar:empresa-changed", reload);
-    return () => window.removeEventListener("lasmar:empresa-changed", reload);
-  }, []);
+  const carregar = useCallback(async () => {
+    if (!empresa) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("empresas_funcionarios")
+        .select("id, nome, cpf, email, setor, cargo, status, data_admissao, created_at")
+        .eq("empresa_id", empresa.empresaId)
+        .order("nome");
 
-  const setores = useMemo(() => Array.from(new Set(list.map(f => f.setor))).sort(), [list]);
+      if (err) throw err;
+      setList((data ?? []) as Funcionario[]);
+    } catch (e: any) {
+      setError(e.message ?? "Erro ao carregar funcionários");
+    } finally {
+      setLoading(false);
+    }
+  }, [empresa]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const setores = useMemo(() => Array.from(new Set(list.map(f => f.setor).filter(Boolean))).sort() as string[], [list]);
   const filtered = useMemo(() => list.filter(f => {
     if (filtroStatus !== "todos" && f.status !== filtroStatus) return false;
     if (filtroSetor !== "todos" && f.setor !== filtroSetor) return false;
     if (q) {
       const s = q.toLowerCase();
-      return f.nome.toLowerCase().includes(s) || f.email.toLowerCase().includes(s) || f.cpf.includes(q);
+      return f.nome.toLowerCase().includes(s) || (f.email ?? "").toLowerCase().includes(s) || (f.cpf ?? "").includes(q);
     }
     return true;
   }), [list, q, filtroStatus, filtroSetor]);
 
-  function handleImport(file: File) {
-    const r = new FileReader();
-    r.onload = () => {
-      const { ok, ignored } = importFuncionariosCsv(String(r.result));
-      toast({ title: `${ok} funcionário(s) importado(s)`, description: ignored ? `${ignored} linha(s) ignoradas.` : undefined });
-    };
-    r.readAsText(file);
+  async function toggleStatus(f: Funcionario) {
+    const novo = f.status === "ativo" ? "inativo" : "ativo";
+    const { error: err } = await supabase
+      .from("empresas_funcionarios")
+      .update({ status: novo as never })
+      .eq("id", f.id);
+    if (err) {
+      toast({ title: "Erro ao alterar status", description: err.message, variant: "destructive" });
+    } else {
+      toast({ title: novo === "ativo" ? "Funcionário reativado" : "Funcionário desativado" });
+      carregar();
+    }
+  }
+
+  async function handleImport(file: File) {
+    if (!empresa) return;
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    const start = /nome/i.test(lines[0]) ? 1 : 0;
+    let ok = 0, ignored = 0;
+    for (let i = start; i < lines.length; i++) {
+      const [nome, cpf, email, setor, cargo, admissao] = lines[i].split(",").map(s => s?.trim() ?? "");
+      if (!nome) { ignored++; continue; }
+      const { error: err } = await supabase.from("empresas_funcionarios").insert({
+        empresa_id: empresa.empresaId,
+        nome,
+        cpf: cpf || null,
+        email: email || null,
+        setor: setor || "Administrativo",
+        cargo: cargo || null,
+        data_admissao: admissao || null,
+        origem: "csv_import",
+      } as never);
+      if (err) { ignored++; } else { ok++; }
+    }
+    toast({ title: `${ok} funcionário(s) importado(s)`, description: ignored ? `${ignored} linha(s) ignoradas.` : undefined });
+    carregar();
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Carregando funcionários…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <h2 className="font-display text-xl font-bold">Erro ao carregar funcionários</h2>
+        <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+        <Button onClick={carregar} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" /> Tentar novamente
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -86,35 +176,31 @@ export default function EmpresaFuncionarios() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr><th className="pb-2 pr-3">Nome</th><th className="pb-2 pr-3">Setor</th><th className="pb-2 pr-3">Cargo</th><th className="pb-2 pr-3">Consultas</th><th className="pb-2 pr-3">Última</th><th className="pb-2 pr-3">Status</th><th className="pb-2 text-right">Ações</th></tr>
+              <tr><th className="pb-2 pr-3">Nome</th><th className="pb-2 pr-3">Setor</th><th className="pb-2 pr-3">Cargo</th><th className="pb-2 pr-3">Admissão</th><th className="pb-2 pr-3">Status</th><th className="pb-2 text-right">Ações</th></tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="py-12 text-center text-muted-foreground">Nenhum funcionário encontrado.</td></tr>
+                <tr><td colSpan={6} className="py-12 text-center">
+                  <Users className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+                  <p className="text-muted-foreground">Nenhum funcionário encontrado.</p>
+                </td></tr>
               )}
               {filtered.map(f => (
                 <tr key={f.id} className="hover:bg-muted/40">
                   <td className="py-3 pr-3">
                     <div className="font-medium">{f.nome}</div>
-                    <div className="text-xs text-muted-foreground">{f.email}</div>
+                    <div className="text-xs text-muted-foreground">{f.email ?? "—"}</div>
                   </td>
-                  <td className="py-3 pr-3 text-muted-foreground">{f.setor}</td>
+                  <td className="py-3 pr-3 text-muted-foreground">{f.setor ?? "—"}</td>
                   <td className="py-3 pr-3 text-muted-foreground">{f.cargo ?? "—"}</td>
-                  <td className="py-3 pr-3">{f.consultasTotal}</td>
-                  <td className="py-3 pr-3 text-muted-foreground">{f.ultimaConsulta ? new Date(f.ultimaConsulta).toLocaleDateString("pt-BR") : "—"}</td>
+                  <td className="py-3 pr-3 text-muted-foreground">{f.data_admissao ? new Date(f.data_admissao).toLocaleDateString("pt-BR") : "—"}</td>
                   <td className="py-3 pr-3">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${f.status === "ativo" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
                       {f.status === "ativo" ? "Ativo" : "Inativo"}
                     </span>
                   </td>
                   <td className="py-3 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => setHistorico(f)}>
-                      <History className="mr-1 h-3.5 w-3.5" /> Histórico
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => {
-                      setFuncionarioStatus(f.id, f.status === "ativo" ? "inativo" : "ativo");
-                      toast({ title: f.status === "ativo" ? "Funcionário desativado" : "Funcionário reativado" });
-                    }}>
+                    <Button size="sm" variant="ghost" onClick={() => toggleStatus(f)}>
                       {f.status === "ativo" ? <><UserMinus className="mr-1 h-3.5 w-3.5" /> Desativar</> : <><UserCheck className="mr-1 h-3.5 w-3.5" /> Ativar</>}
                     </Button>
                   </td>
@@ -129,20 +215,20 @@ export default function EmpresaFuncionarios() {
         </p>
       </div>
 
-      {showAdd && <ModalAdd onClose={() => setShowAdd(false)} />}
-      {historico && <ModalHistorico funcionario={historico} onClose={() => setHistorico(null)} />}
+      {showAdd && empresa && <ModalAdd empresaId={empresa.empresaId} onClose={() => setShowAdd(false)} onSaved={carregar} />}
     </div>
   );
 }
 
-function ModalAdd({ onClose }: { onClose: () => void }) {
+function ModalAdd({ empresaId, onClose, onSaved }: { empresaId: string; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
     nome: "", cpf: "", email: "", setor: SETORES_PADRAO[0], cargo: "",
     admissao: new Date().toISOString().slice(0, 10),
   });
+  const [saving, setSaving] = useState(false);
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.nome.trim() || !form.email.trim()) {
       toast({ title: "Nome e e-mail são obrigatórios", variant: "destructive" });
@@ -152,9 +238,25 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
       toast({ title: "CPF inválido", description: "Verifique os dígitos informados.", variant: "destructive" });
       return;
     }
-    addFuncionario({ ...form, cpf: onlyDigits(form.cpf), status: "ativo" });
-    toast({ title: "Funcionário adicionado" });
-    onClose();
+    setSaving(true);
+    const { error: err } = await supabase.from("empresas_funcionarios").insert({
+      empresa_id: empresaId,
+      nome: form.nome.trim(),
+      cpf: form.cpf ? onlyDigits(form.cpf) : null,
+      email: form.email.trim(),
+      setor: form.setor,
+      cargo: form.cargo || null,
+      data_admissao: form.admissao || null,
+      origem: "manual",
+    } as never);
+    setSaving(false);
+    if (err) {
+      toast({ title: "Erro ao adicionar", description: err.message, variant: "destructive" });
+    } else {
+      toast({ title: "Funcionário adicionado" });
+      onSaved();
+      onClose();
+    }
   }
 
   return (
@@ -178,7 +280,10 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" className="bg-gradient-primary hover:opacity-90">Adicionar</Button>
+          <Button type="submit" disabled={saving} className="bg-gradient-primary hover:opacity-90">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Adicionar
+          </Button>
         </div>
         <style>{`.input{width:100%;border:1px solid hsl(var(--input));background:hsl(var(--background));border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem}`}</style>
       </form>
@@ -186,38 +291,6 @@ function ModalAdd({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ModalHistorico({ funcionario, onClose }: { funcionario: Funcionario; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="card-elevated w-full max-w-lg p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold">{funcionario.nome}</h2>
-            <p className="text-xs text-muted-foreground">{funcionario.setor} · {funcionario.cargo ?? "—"}</p>
-          </div>
-          <button onClick={onClose} className="rounded p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-          <Stat label="Consultas" value={funcionario.consultasTotal.toString()} />
-          <Stat label="Última" value={funcionario.ultimaConsulta ? new Date(funcionario.ultimaConsulta).toLocaleDateString("pt-BR") : "—"} />
-          <Stat label="Admissão" value={new Date(funcionario.admissao).toLocaleDateString("pt-BR")} />
-        </div>
-        <div className="mt-5 rounded-md border border-warning/30 bg-warning/5 p-3 text-xs">
-          <strong>Privacidade:</strong> a empresa visualiza apenas o agregado de consultas. O conteúdo do prontuário é restrito ao paciente e à equipe médica.
-        </div>
-        <div className="mt-5 flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => toast({ title: "Em breve", description: "Exportação individual." })}>
-            <Download className="mr-2 h-4 w-4" /> Exportar resumo
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block"><span className="text-xs font-medium">{label}</span><div className="mt-1">{children}</div></label>;
-}
-function Stat({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-md bg-muted/40 p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>;
 }

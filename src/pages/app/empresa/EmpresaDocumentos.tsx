@@ -57,28 +57,9 @@ export default function EmpresaDocumentos() {
           descricao: d.descricao ?? null,
         }))
       );
-    } catch {
-      // Fallback: mock data if table doesn't have expected columns
-      setDocs([
-        {
-          id: "1", titulo: "Atestado médico", tipo: "atestado",
-          data_criacao: new Date().toISOString(),
-          medico_nome: "Dr. Carlos", funcionario_nome: "Felipe Andrade",
-          conteudo_url: null, descricao: "Atestado para afastamento de 3 dias.",
-        },
-        {
-          id: "2", titulo: "Exame laboratorial", tipo: "exame",
-          data_criacao: new Date(Date.now() - 86400000 * 3).toISOString(),
-          medico_nome: "Dra. Juliana", funcionario_nome: "Camila Souza",
-          conteudo_url: null, descricao: "Resultado de hemograma completo.",
-        },
-        {
-          id: "3", titulo: "Relatório de saúde ocupacional", tipo: "relatorio",
-          data_criacao: new Date(Date.now() - 86400000 * 7).toISOString(),
-          medico_nome: "Dr. André", funcionario_nome: "Rodrigo Lima",
-          conteudo_url: null, descricao: "Relatório periódico de saúde ocupacional.",
-        },
-      ]);
+    } catch (e: any) {
+      toast.error("Erro ao carregar documentos", { description: e.message });
+      setDocs([]);
     } finally {
       setLoading(false);
     }
