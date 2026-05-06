@@ -75,67 +75,11 @@ function formatDataHora(iso: string | null) {
 export default function PacienteFinanceiro() {
   const { session } = useSession();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [linhas, setLinhas] = useState<Linha[]>([]);
+  const { data: linhas = [], isLoading: loading } = usePacienteFinanceiro(!!session);
   const [filtroStatus, setFiltroStatus] = useState<"todos" | PagamentoStatus>("todos");
   const [busca, setBusca] = useState("");
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const [pagandoId, setPagandoId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!session) { setLoading(false); return; }
-    (async () => {
-      setLoading(true);
-      // Busca pagamentos do paciente (RLS filtra) + dados da consulta
-      const { data: pags, error } = await supabase
-        .from("pagamentos")
-        .select(`
-          id, consulta_id, valor_centavos, status, metodo, provider,
-          checkout_url, paid_at, cancelled_at, created_at, metadata,
-          consultas!inner(inicio, modalidade, medico_id, especialidade_id)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        toast.error("Não foi possível carregar pagamentos.");
-        setLoading(false);
-        return;
-      }
-
-      // Carrega nomes dos médicos / especialidades em lote (ids únicos)
-      const medicoIds = Array.from(new Set((pags ?? []).map((p: any) => p.consultas?.medico_id).filter(Boolean)));
-      const espIds    = Array.from(new Set((pags ?? []).map((p: any) => p.consultas?.especialidade_id).filter(Boolean)));
-
-      const [medRes, espRes] = await Promise.all([
-        medicoIds.length ? supabase.from("medicos").select("id, nome").in("id", medicoIds) : Promise.resolve({ data: [] as any[] }),
-        espIds.length    ? supabase.from("especialidades").select("id, nome").in("id", espIds) : Promise.resolve({ data: [] as any[] }),
-      ]);
-      const medMap = new Map((medRes.data ?? []).map((m: any) => [m.id, m.nome]));
-      const espMap = new Map((espRes.data ?? []).map((e: any) => [e.id, e.nome]));
-
-      const arr: Linha[] = (pags ?? []).map((p: any) => ({
-        id: p.id,
-        consulta_id: p.consulta_id,
-        valor_centavos: p.valor_centavos,
-        status: p.status,
-        metodo: p.metodo,
-        provider: p.provider,
-        checkout_url: p.checkout_url,
-        paid_at: p.paid_at,
-        cancelled_at: p.cancelled_at,
-        created_at: p.created_at,
-        metadata: p.metadata ?? {},
-        consulta: {
-          inicio: p.consultas?.inicio,
-          modalidade: p.consultas?.modalidade,
-          medico_nome: medMap.get(p.consultas?.medico_id) ?? "Médico",
-          especialidade_nome: espMap.get(p.consultas?.especialidade_id) ?? "—",
-        },
-      }));
-      setLinhas(arr);
-      setLoading(false);
-    })();
-  }, [session]);
 
   const filtradas = useMemo(() => {
     return linhas.filter((l) => {
