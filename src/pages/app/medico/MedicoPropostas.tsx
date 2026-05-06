@@ -63,7 +63,7 @@ export default function MedicoPropostas() {
         supabase
           .from("propostas_empresa_medico")
           .select("*, empresa:empresas(razao_social), especialidade:especialidades(nome)")
-          .eq("medico_id", uid!)
+          .eq("medico_id", medicoId!)
           .in("status", ["enviada_medico", "aceita", "recusada", "convertida"])
           .order("created_at", { ascending: false }),
         supabase
