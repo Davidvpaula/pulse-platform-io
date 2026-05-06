@@ -48,12 +48,12 @@ export default function MedicoPlanos() {
   const [termosCancelamento, setTermosCancelamento] = useState("");
 
   async function load() {
-    if (!uid) return;
+    if (!medicoId) return;
     setLoading(true);
     const { data } = await supabase
       .from("planos")
       .select("*")
-      .eq("medico_id", uid)
+      .eq("medico_id", medicoId)
       .eq("nivel", "medico" as any)
       .order("created_at", { ascending: false });
     setPlanos(data ?? []);
