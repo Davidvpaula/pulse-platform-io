@@ -74,12 +74,15 @@ Deno.serve(async (req) => {
 
     // Monta payload Feegow (nomes de campos conforme docs oficiais)
     const cpfLimpo = pac.cpf?.replace(/\D/g, "") ?? "";
-    const payload = {
-      nome_completo: pac.nome_completo ?? "",
+    // Campos conforme docs Feegow: "nome" (obrigatório), "cpf" (obrigatório)
+    // data_nascimento YYYY-MM-DD, genero M/F, celular, origem_id
+    const payload: Record<string, unknown> = {
+      nome: pac.nome_completo ?? "",
       cpf: cpfLimpo,
       data_nascimento: pac.data_nascimento ?? "",
       genero: pac.sexo === "masculino" ? "M" : pac.sexo === "feminino" ? "F" : "",
       celular: pac.telefone?.replace(/\D/g, "") ?? "",
+      origem_id: 1, // Origem padrão
     };
 
     // ── MODO TESTE UNITÁRIO ──
