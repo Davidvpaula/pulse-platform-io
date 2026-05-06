@@ -42,6 +42,7 @@ export default function MedicoPropostas() {
   const { medico: medicoAtual } = useMedicoAtual();
   const uid = session?.user?.id;
   const medicoId = medicoAtual?.id ?? null;
+  const termsProposta = useTermsCheck("proposta_medico");
   const [loading, setLoading] = useState(true);
   const [propostas, setPropostas] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string })[]>([]);
   const [selected, setSelected] = useState<(PropostaRow & { empresa_nome?: string; especialidade_nome?: string }) | null>(null);
