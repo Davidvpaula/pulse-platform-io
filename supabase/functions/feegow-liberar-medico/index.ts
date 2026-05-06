@@ -1,5 +1,5 @@
 // Edge function: libera acesso do médico na Feegow.
-// Por enquanto roda em MODO SIMULADO se FEEGOW_API_KEY não estiver configurada.
+// Por enquanto roda em MODO SIMULADO se FEEGOW_API_TOKEN não estiver configurada.
 // Quando a chave for adicionada, o bloco real de chamada à API Feegow é ativado.
 //
 // Apenas administradores podem invocar.
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const v = validarPreRequisitos(medico);
     if (!v.ok) return json({ error: v.motivo }, 400);
 
-    const FEEGOW_API_KEY = Deno.env.get("FEEGOW_API_KEY");
+    const FEEGOW_API_TOKEN = Deno.env.get("FEEGOW_API_TOKEN");
     const FEEGOW_BASE = Deno.env.get("FEEGOW_BASE_URL") ??
       "https://api.feegow.com/v1/api";
 
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     });
 
     // ====== Modo simulado (sem chave) ======
-    if (!FEEGOW_API_KEY) {
+    if (!FEEGOW_API_TOKEN) {
       const fakeId = `SIM-${crypto.randomUUID().slice(0, 8)}`;
       await callRpc(userClient, "feegow_marcar_liberacao", {
         _medico_id: medicoId,
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
         modo: "simulado",
         professional_id: fakeId,
         aviso:
-          "FEEGOW_API_KEY não configurada — liberação simulada. Configure a chave para ativar a integração real.",
+          "FEEGOW_API_TOKEN não configurada — liberação simulada. Configure a chave para ativar a integração real.",
       });
     }
 
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-access-token": FEEGOW_API_KEY,
+          "x-access-token": FEEGOW_API_TOKEN,
         },
         body: JSON.stringify({
           name: medico.nome,
