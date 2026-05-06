@@ -1407,6 +1407,9 @@ export type Database = {
           medico_id: string
           modalidade: Database["public"]["Enums"]["consulta_modalidade"]
           motivo: string | null
+          nfe_id: string | null
+          nfe_snapshot: Json | null
+          nfe_status: string | null
           paciente_id: string
           responsavel_agendamento_id: string | null
           servico_id: string | null
@@ -1438,6 +1441,9 @@ export type Database = {
           medico_id: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           motivo?: string | null
+          nfe_id?: string | null
+          nfe_snapshot?: Json | null
+          nfe_status?: string | null
           paciente_id: string
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
@@ -1469,6 +1475,9 @@ export type Database = {
           medico_id?: string
           modalidade?: Database["public"]["Enums"]["consulta_modalidade"]
           motivo?: string | null
+          nfe_id?: string | null
+          nfe_snapshot?: Json | null
+          nfe_status?: string | null
           paciente_id?: string
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
@@ -5069,6 +5078,7 @@ export type Database = {
           uf: string | null
           updated_at: string
           user_id: string
+          whatsapp_opt_in: boolean | null
         }
         Insert: {
           alergias?: string | null
@@ -5114,6 +5124,7 @@ export type Database = {
           uf?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_opt_in?: boolean | null
         }
         Update: {
           alergias?: string | null
@@ -5159,6 +5170,7 @@ export type Database = {
           uf?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_opt_in?: boolean | null
         }
         Relationships: []
       }
