@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     });
 
     // ====== Modo simulado (sem chave) ======
-    if (!FEEGOW_API_KEY) {
+    if (!FEEGOW_API_TOKEN) {
       const fakeId = `SIM-${crypto.randomUUID().slice(0, 8)}`;
       await callRpc(userClient, "feegow_marcar_liberacao", {
         _medico_id: medicoId,
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
         modo: "simulado",
         professional_id: fakeId,
         aviso:
-          "FEEGOW_API_KEY não configurada — liberação simulada. Configure a chave para ativar a integração real.",
+          "FEEGOW_API_TOKEN não configurada — liberação simulada. Configure a chave para ativar a integração real.",
       });
     }
 
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-access-token": FEEGOW_API_KEY,
+          "x-access-token": FEEGOW_API_TOKEN,
         },
         body: JSON.stringify({
           name: medico.nome,
