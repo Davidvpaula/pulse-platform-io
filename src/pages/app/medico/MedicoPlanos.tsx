@@ -29,8 +29,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function MedicoPlanos() {
   const { session } = useSession();
+  const { medico: medicoAtual } = useMedicoAtual();
   const termsPlano = useTermsCheck("criacao_plano_medico");
   const uid = session?.user?.id;
+  const medicoId = medicoAtual?.id ?? null;
   const [planos, setPlanos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [builderOpen, setBuilderOpen] = useState(false);
