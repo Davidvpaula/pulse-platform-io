@@ -323,7 +323,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       if (medicoMode) {
         payload.nivel = "medico";
         payload.termos_aceitos = true;
-        payload.medico_id = uid;
+        payload.medico_id = medicoPk;
         payload.created_by = uid;
         if (!planoId) {
           payload.status = "rascunho";
