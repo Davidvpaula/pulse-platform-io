@@ -1084,7 +1084,13 @@ export async function trocarMedicoConsulta(input: {
     _motivo: input.motivo ?? null,
   });
   if (error) throw error;
-  return data as Record<string, unknown>;
+  return data as unknown as {
+    consulta_id: string;
+    novo_medico_id: string;
+    novo_slot_id: string;
+    novo_valor_centavos: number;
+    novo_link_sala: string | null;
+  };
 }
 
 export function formatDataBR(iso: string): string {
