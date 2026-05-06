@@ -146,10 +146,9 @@ export default function MedicoGamificacao() {
   const [aceitandoTermo, setAceitandoTermo] = useState(false);
 
   const carregar = async () => {
-    if (!session) { setLoading(false); return; }
+    if (!session || !medicoAtual) { setLoading(false); return; }
     setLoading(true);
-    const medico = await getMedicoAtual();
-    if (!medico) { setLoading(false); return; }
+    const medico = medicoAtual;
     setMedicoId(medico.id);
     const [r, a, saldo, hist, prem, camps, cfg, sd, bdg, str, rec] = await Promise.all([
       getRankingMedico(medico.id),
