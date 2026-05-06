@@ -112,6 +112,10 @@ Deno.serve(async (req) => {
         results.push(await runFeegowTest(3, FEEGOW_URL, "/specialties/list", "GET", "Authorization: Bearer", FEEGOW_TOKEN));
         // Teste 4: x-access-token + GET + /professional/list?ativo=1
         results.push(await runFeegowTest(4, FEEGOW_URL, "/professional/list?ativo=1", "GET", "x-access-token", FEEGOW_TOKEN));
+        // Teste 5: GET /patient/list (verificar se endpoints de paciente funcionam)
+        results.push(await runFeegowTest(5, FEEGOW_URL, "/patient/list?limit=1", "GET", "x-access-token", FEEGOW_TOKEN));
+        // Teste 6: GET /patient/list-origins
+        results.push(await runFeegowTest(6, FEEGOW_URL, "/patient/list-origins", "GET", "x-access-token", FEEGOW_TOKEN));
 
         const algumOk = results.some(r => r.http_status !== null && r.http_status >= 200 && r.http_status < 300);
         const todos403 = results.every(r => r.http_status === 403);
