@@ -28,19 +28,16 @@ type Adesao = {
 };
 
 export default function MedicoServicos() {
-  const { user } = useSession();
-  const [medicoId, setMedicoId] = useState<string | null>(null);
+  const { medico: medicoAtual } = useMedicoAtual();
+  const medicoId = medicoAtual?.id ?? null;
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [adesoes, setAdesoes] = useState<Record<string, Adesao>>({});
   const [recebe, setRecebe] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   async function load() {
-    if (!user) return;
+    if (!medicoId) return;
     setLoading(true);
-    const { data: med } = await supabase.from("medicos").select("id").eq("user_id", user.id).maybeSingle();
-    if (!med) { setLoading(false); return; }
-    setMedicoId(med.id);
 
     const [{ data: s }, { data: a }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").eq("ativo", true).order("prioridade"),
