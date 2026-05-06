@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Save, Loader2, AlertTriangle, Copy } from "lucide-react";
+import { Trash2, Plus, Save, Loader2, AlertTriangle, Copy, Stethoscope, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SaudeFinanceiraCard } from "./SaudeFinanceiraCard";
@@ -80,6 +80,13 @@ const SLA_OPTIONS = [
   ["vip", "VIP"],
 ] as const;
 
+const REGRA_USO_PADRAO = "Consultas realizadas dentro do plano seguem a política padrão da plataforma Lasmar Telemed. " +
+  "O paciente pode agendar conforme a disponibilidade do médico. " +
+  "Consultas não utilizadas no mês não são acumuláveis. " +
+  "Cancelamento segue a política global da plataforma.";
+
+const CTA_PADRAO = "Quero esse plano";
+
 function emptyPlano(): Plano {
   return {
     nome: "",
@@ -100,7 +107,7 @@ function emptyPlano(): Plano {
     publicado_site: false,
     destacado: false,
     ordem_exibicao: 0,
-    cta_texto: "Quero esse plano",
+    cta_texto: CTA_PADRAO,
     valor_por_vida_centavos: 0,
     coparticipacao_pct: 0,
     sla_prioridade: "padrao",
@@ -134,9 +141,16 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
   const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [medicoNome, setMedicoNome] = useState("");
 
   const [hasActiveSubscribers, setHasActiveSubscribers] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
+
+  /**
+   * Simplified mode: médico creating/editing a personal individual plan.
+   * When categoria = personalizado AND medicoMode = true.
+   */
+  const isSimplified = medicoMode && plano.categoria === "personalizado";
 
   useEffect(() => {
     if (!open) return;
@@ -144,13 +158,57 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       void carregar(planoId);
       void checkSubscribers(planoId);
     } else {
-      setPlano(emptyPlano());
+      const base = emptyPlano();
+      if (medicoMode) {
+        // Force simplified defaults
+        base.categoria = "personalizado";
+        base.publico = "paciente";
+        base.modelo_cobranca = "mensal";
+        base.taxa_adesao_centavos = 0;
+        base.valor_anual_centavos = 0;
+        base.cta_texto = CTA_PADRAO;
+      }
+      setPlano(base);
       setBeneficios([]);
       setHasActiveSubscribers(false);
       setSubscriberCount(0);
+
+      // In simplified mode, auto-create the default benefit
+      if (medicoMode) {
+        void loadMedicoAndSetBenefit();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, planoId]);
+
+  async function loadMedicoAndSetBenefit() {
+    if (!uid) return;
+    const { data: med } = await supabase
+      .from("medicos")
+      .select("id, nome")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (med) {
+      setMedicoNome(med.nome);
+      // Only set default benefit on new plan (no planoId)
+      if (!planoId) {
+        setBeneficios([{
+          plano_id: undefined,
+          tipo: "medico",
+          medico_id: med.id,
+          nome: med.nome,
+          quantidade: 1,
+          ilimitado: false,
+          periodo: "mensal",
+          acumulativo: false,
+          custo_estimado_centavos: 0,
+          valor_adicional_centavos: 0,
+          desconto_pct: 0,
+          regra_uso: REGRA_USO_PADRAO,
+        }]);
+      }
+    }
+  }
 
   async function checkSubscribers(id: string) {
     const { count } = await supabase
@@ -171,6 +229,16 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
     if (p) setPlano(p);
     setBeneficios(bs ?? []);
     setLoading(false);
+
+    // Load medico name for simplified mode display
+    if (medicoMode && uid) {
+      const { data: med } = await supabase
+        .from("medicos")
+        .select("id, nome")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (med) setMedicoNome(med.nome);
+    }
   }
 
   async function criarNovaVersao() {
@@ -188,7 +256,6 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       const { data: novo, error } = await supabase.from("planos").insert(payload).select("id").single();
       if (error) throw error;
 
-      // Copy benefits
       if (beneficios.length > 0) {
         const rows = beneficios.map((b: any, idx: number) => {
           const r: any = { ...b, plano_id: novo.id, ordem: idx };
@@ -231,6 +298,19 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
       toast.error("Informe o nome do plano");
       return;
     }
+
+    // Simplified mode validations
+    if (isSimplified) {
+      if (!plano.valor_mensal_centavos || plano.valor_mensal_centavos <= 0) {
+        toast.error("Informe o valor mensal da assinatura");
+        return;
+      }
+      if (beneficios.length === 0 || !beneficios[0]?.quantidade || beneficios[0].quantidade < 1) {
+        toast.error("Informe a quantidade de consultas mensais");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let id = planoId ?? null;
@@ -243,14 +323,21 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
         payload.termos_aceitos = true;
         payload.medico_id = uid;
         payload.created_by = uid;
-        // Médico não pode se auto-aprovar — sempre rascunho na criação
         if (!planoId) {
           payload.status = "rascunho";
         }
-        // Impede médico de mudar para ativo sem aprovação admin
         if (planoId && !plano.aprovado_admin && payload.status === "ativo") {
           payload.status = "rascunho";
         }
+      }
+
+      // Simplified mode: enforce defaults at save time
+      if (isSimplified) {
+        payload.modelo_cobranca = "mensal";
+        payload.taxa_adesao_centavos = 0;
+        payload.valor_anual_centavos = 0;
+        payload.publico = "paciente";
+        payload.cta_texto = CTA_PADRAO;
       }
 
       if (id) {
@@ -262,7 +349,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
         id = data.id;
       }
 
-      // Sincroniza benefícios: apaga antigos e reinsere (simples e seguro para esta etapa)
+      // Sync benefits
       await supabase.from("plano_beneficios").delete().eq("plano_id", id!);
       if (beneficios.length > 0) {
         const rows = beneficios.map((b, idx) => {
@@ -270,6 +357,15 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
           delete r.id;
           delete r.created_at;
           delete r.updated_at;
+          // Simplified mode: enforce benefit defaults
+          if (isSimplified) {
+            r.tipo = "medico";
+            r.periodo = "mensal";
+            r.ilimitado = false;
+            r.acumulativo = false;
+            r.valor_adicional_centavos = 0;
+            r.regra_uso = REGRA_USO_PADRAO;
+          }
           return r;
         });
         const { error } = await supabase.from("plano_beneficios").insert(rows);
@@ -286,11 +382,17 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
     }
   }
 
+  // ─── RENDER ───
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{planoId ? "Editar plano" : "Novo plano"}</SheetTitle>
+          <SheetTitle>
+            {planoId ? "Editar plano" : "Novo plano"}
+            {isSimplified && (
+              <Badge variant="outline" className="ml-2 text-xs font-normal">Assinatura simplificada</Badge>
+            )}
+          </SheetTitle>
         </SheetHeader>
 
         {loading ? (
@@ -299,7 +401,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
           </div>
         ) : (
           <div className="space-y-6 mt-4">
-            {/* Aviso de assinantes ativos */}
+            {/* Active subscribers warning */}
             {hasActiveSubscribers && planoId && (
               <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
@@ -308,7 +410,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                     Este plano possui {subscriberCount} assinante{subscriberCount > 1 ? "s" : ""} ativo{subscriberCount > 1 ? "s" : ""}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Edições diretas estão bloqueadas. Crie uma nova versão para aplicar alterações — os assinantes atuais continuam na versão vigente.
+                    Edições diretas estão bloqueadas. Crie uma nova versão para aplicar alterações.
                   </p>
                   <Button size="sm" className="mt-3" onClick={criarNovaVersao} disabled={saving}>
                     {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
@@ -317,7 +419,21 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                 </div>
               </div>
             )}
-            {/* Dados básicos */}
+
+            {/* Simplified mode intro */}
+            {isSimplified && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Plano de assinatura individual</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Crie uma assinatura mensal simples para seus pacientes. Defina o nome, valor e quantidade de consultas por mês — o sistema cuida do resto.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ─── DADOS BÁSICOS ─── */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Dados básicos</CardTitle>
@@ -325,33 +441,56 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="md:col-span-2">
                   <Label>Nome do plano</Label>
-                  <Input value={plano.nome ?? ""} onChange={(e) => setField("nome", e.target.value)} />
+                  <Input
+                    value={plano.nome ?? ""}
+                    onChange={(e) => setField("nome", e.target.value)}
+                    placeholder={isSimplified ? "Ex.: Acompanhamento Mensal" : ""}
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <Label>Descrição comercial</Label>
-                  <Textarea value={plano.descricao_comercial ?? ""} onChange={(e) => setField("descricao_comercial", e.target.value)} rows={2} />
+                  <Textarea
+                    value={plano.descricao_comercial ?? ""}
+                    onChange={(e) => setField("descricao_comercial", e.target.value)}
+                    rows={2}
+                    placeholder={isSimplified ? "Breve descrição que aparecerá para o paciente" : ""}
+                  />
                 </div>
-                <div>
-                  <Label>Categoria</Label>
-                  <Select value={plano.categoria} onValueChange={(v) => setField("categoria", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{CATEGORIAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Público-alvo</Label>
-                  <Select value={plano.publico} onValueChange={(v) => setField("publico", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{PUBLICOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Modelo de cobrança</Label>
-                  <Select value={plano.modelo_cobranca} onValueChange={(v) => setField("modelo_cobranca", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{COBRANCAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+
+                {/* Categoria — hidden in simplified mode */}
+                {!isSimplified && (
+                  <div>
+                    <Label>Categoria</Label>
+                    <Select value={plano.categoria} onValueChange={(v) => setField("categoria", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{CATEGORIAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Público — hidden in simplified (auto = paciente) */}
+                {!isSimplified && (
+                  <div>
+                    <Label>Público-alvo</Label>
+                    <Select value={plano.publico} onValueChange={(v) => setField("publico", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{PUBLICOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Modelo de cobrança — hidden in simplified (auto = mensal) */}
+                {!isSimplified && (
+                  <div>
+                    <Label>Modelo de cobrança</Label>
+                    <Select value={plano.modelo_cobranca} onValueChange={(v) => setField("modelo_cobranca", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{COBRANCAS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Status */}
                 {medicoMode ? (
                   <div>
                     <Label>Status</Label>
@@ -371,27 +510,55 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                     </Select>
                   </div>
                 )}
+
+                {/* In simplified mode, show locked info */}
+                {isSimplified && (
+                  <div className="md:col-span-2 flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      <Stethoscope className="h-3 w-3 mr-1" /> {medicoNome || "Você"}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">Mensal</Badge>
+                    <Badge variant="outline" className="text-xs">Individual</Badge>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Valores e custos */}
+            {/* ─── VALORES ─── */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Valores e custos</CardTitle>
+                <CardTitle className="text-base">
+                  {isSimplified ? "Valor da assinatura" : "Valores e custos"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div>
+                <div className={isSimplified ? "col-span-2 md:col-span-3" : ""}>
                   <Label>Valor mensal (R$)</Label>
-                  <Input value={toReais(plano.valor_mensal_centavos)} onChange={(e) => setField("valor_mensal_centavos", toCentavos(e.target.value))} />
+                  <Input
+                    value={toReais(plano.valor_mensal_centavos)}
+                    onChange={(e) => setField("valor_mensal_centavos", toCentavos(e.target.value))}
+                    placeholder="Ex.: 199,90"
+                  />
+                  {isSimplified && (
+                    <p className="text-xs text-muted-foreground mt-1">Valor cobrado mensalmente do paciente</p>
+                  )}
                 </div>
-                <div>
-                  <Label>Valor anual (R$)</Label>
-                  <Input value={toReais(plano.valor_anual_centavos)} onChange={(e) => setField("valor_anual_centavos", toCentavos(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Taxa de adesão (R$)</Label>
-                  <Input value={toReais(plano.taxa_adesao_centavos)} onChange={(e) => setField("taxa_adesao_centavos", toCentavos(e.target.value))} />
-                </div>
+
+                {/* Valor anual + taxa adesão — hidden in simplified */}
+                {!isSimplified && (
+                  <>
+                    <div>
+                      <Label>Valor anual (R$)</Label>
+                      <Input value={toReais(plano.valor_anual_centavos)} onChange={(e) => setField("valor_anual_centavos", toCentavos(e.target.value))} />
+                    </div>
+                    <div>
+                      <Label>Taxa de adesão (R$)</Label>
+                      <Input value={toReais(plano.taxa_adesao_centavos)} onChange={(e) => setField("taxa_adesao_centavos", toCentavos(e.target.value))} />
+                    </div>
+                  </>
+                )}
+
+                {/* Admin-only cost fields */}
                 {!medicoMode && (
                   <>
                     <div>
@@ -415,7 +582,7 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
               </CardContent>
             </Card>
 
-            {/* Campos B2B — visíveis quando público = empresa ou ambos, ou categoria = empresarial */}
+            {/* B2B fields — hidden in simplified */}
             {(plano.publico === "empresa" || plano.publico === "ambos" || plano.categoria === "empresarial") && !medicoMode && (
               <Card>
                 <CardHeader>
@@ -453,94 +620,153 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
               </Card>
             )}
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Benefícios inclusos</CardTitle>
-                <Button size="sm" variant="outline" onClick={addBeneficio}>
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {beneficios.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhum benefício. Adicione consultas, descontos ou pacotes que compõem o plano.</p>
-                )}
-                {beneficios.map((b, i) => (
-                  <div key={i} className="rounded-lg border p-3 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <Badge variant="outline">{BENEF_TIPOS.find(([v]) => v === b.tipo)?.[1]}</Badge>
-                      <Button size="icon" variant="ghost" onClick={() => removeBen(i)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      <div>
-                        <Label>Tipo</Label>
-                        <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v, medico_id: null, especialidade_id: null, servico_id: null, nome: "" })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{BENEF_TIPOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                      {["medico", "especialidade", "servico"].includes(b.tipo) ? (
-                        <BeneficioSelector
-                          tipo={b.tipo}
-                          selectedId={b.tipo === "medico" ? b.medico_id : b.tipo === "especialidade" ? b.especialidade_id : b.servico_id}
-                          selectedLabel={b.nome ?? ""}
-                          onSelect={(id, label) => {
-                            const patch: any = { nome: label };
-                            if (b.tipo === "medico") patch.medico_id = id;
-                            else if (b.tipo === "especialidade") patch.especialidade_id = id;
-                            else if (b.tipo === "servico") patch.servico_id = id;
-                            updateBen(i, patch);
-                          }}
-                        />
-                      ) : (
-                        <div className="md:col-span-2">
-                          <Label>Nome</Label>
-                          <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
-                        </div>
-                      )}
-                      <div>
-                        <Label>Quantidade</Label>
-                        <Input type="number" value={b.quantidade ?? 0} onChange={(e) => updateBen(i, { quantidade: Number(e.target.value) })} disabled={b.ilimitado} />
-                      </div>
-                      <div>
-                        <Label>Período</Label>
-                        <Select value={b.periodo} onValueChange={(v) => updateBen(i, { periodo: v })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{PERIODOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-end gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                          <Switch checked={!!b.ilimitado} onCheckedChange={(v) => updateBen(i, { ilimitado: v })} /> Ilimitado
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                          <Switch checked={!!b.acumulativo} onCheckedChange={(v) => updateBen(i, { acumulativo: v })} /> Acumula
-                        </label>
-                      </div>
-                      <div>
-                        <Label>Custo estimado por uso (R$)</Label>
-                        <Input value={toReais(b.custo_estimado_centavos)} onChange={(e) => updateBen(i, { custo_estimado_centavos: toCentavos(e.target.value) })} />
-                      </div>
-                      <div>
-                        <Label>Valor adicional após limite (R$)</Label>
-                        <Input value={toReais(b.valor_adicional_centavos)} onChange={(e) => updateBen(i, { valor_adicional_centavos: toCentavos(e.target.value) })} />
-                      </div>
-                      <div>
-                        <Label>Desconto (%)</Label>
-                        <Input type="number" step="0.1" value={b.desconto_pct ?? 0} onChange={(e) => updateBen(i, { desconto_pct: Number(e.target.value) })} />
-                      </div>
-                      <div className="md:col-span-3">
-                        <Label>Regra de uso</Label>
-                        <Textarea rows={2} value={b.regra_uso ?? ""} onChange={(e) => updateBen(i, { regra_uso: e.target.value })} />
-                      </div>
+            {/* ─── BENEFÍCIOS ─── */}
+            {isSimplified ? (
+              /* Simplified benefit: just quantity of consultations */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Consultas inclusas</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                    <Stethoscope className="h-5 w-5 text-primary shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Consultas com {medicoNome || "você"}</p>
+                      <p className="text-xs text-muted-foreground">O paciente poderá agendar consultas mensais com você.</p>
                     </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
 
-            {/* Publicação no site */}
+                  <div className="max-w-xs">
+                    <Label>Consultas por mês</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={beneficios[0]?.quantidade ?? 1}
+                      onChange={(e) => {
+                        const qty = Math.max(1, Number(e.target.value) || 1);
+                        if (beneficios.length === 0) {
+                          // Create default benefit
+                          setBeneficios([{
+                            tipo: "medico",
+                            medico_id: null,
+                            nome: medicoNome,
+                            quantidade: qty,
+                            ilimitado: false,
+                            periodo: "mensal",
+                            acumulativo: false,
+                            custo_estimado_centavos: 0,
+                            valor_adicional_centavos: 0,
+                            desconto_pct: 0,
+                            regra_uso: REGRA_USO_PADRAO,
+                          }]);
+                        } else {
+                          updateBen(0, { quantidade: qty });
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ex.: 1 = retorno mensal, 4 = acompanhamento semanal
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground mb-1">Regras do plano</p>
+                    <p>{REGRA_USO_PADRAO}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* Full benefit editor */
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">Benefícios inclusos</CardTitle>
+                  <Button size="sm" variant="outline" onClick={addBeneficio}>
+                    <Plus className="h-4 w-4 mr-1" /> Adicionar
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {beneficios.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhum benefício. Adicione consultas, descontos ou pacotes que compõem o plano.</p>
+                  )}
+                  {beneficios.map((b, i) => (
+                    <div key={i} className="rounded-lg border p-3 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <Badge variant="outline">{BENEF_TIPOS.find(([v]) => v === b.tipo)?.[1]}</Badge>
+                        <Button size="icon" variant="ghost" onClick={() => removeBen(i)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div>
+                          <Label>Tipo</Label>
+                          <Select value={b.tipo} onValueChange={(v) => updateBen(i, { tipo: v, medico_id: null, especialidade_id: null, servico_id: null, nome: "" })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>{BENEF_TIPOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        {["medico", "especialidade", "servico"].includes(b.tipo) ? (
+                          <BeneficioSelector
+                            tipo={b.tipo}
+                            selectedId={b.tipo === "medico" ? b.medico_id : b.tipo === "especialidade" ? b.especialidade_id : b.servico_id}
+                            selectedLabel={b.nome ?? ""}
+                            onSelect={(id, label) => {
+                              const patch: any = { nome: label };
+                              if (b.tipo === "medico") patch.medico_id = id;
+                              else if (b.tipo === "especialidade") patch.especialidade_id = id;
+                              else if (b.tipo === "servico") patch.servico_id = id;
+                              updateBen(i, patch);
+                            }}
+                          />
+                        ) : (
+                          <div className="md:col-span-2">
+                            <Label>Nome</Label>
+                            <Input value={b.nome ?? ""} onChange={(e) => updateBen(i, { nome: e.target.value })} placeholder="Ex.: Consulta com nutricionista" />
+                          </div>
+                        )}
+                        <div>
+                          <Label>Quantidade</Label>
+                          <Input type="number" value={b.quantidade ?? 0} onChange={(e) => updateBen(i, { quantidade: Number(e.target.value) })} disabled={b.ilimitado} />
+                        </div>
+                        <div>
+                          <Label>Período</Label>
+                          <Select value={b.periodo} onValueChange={(v) => updateBen(i, { periodo: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>{PERIODOS.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-end gap-4">
+                          <label className="flex items-center gap-2 text-sm">
+                            <Switch checked={!!b.ilimitado} onCheckedChange={(v) => updateBen(i, { ilimitado: v })} /> Ilimitado
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <Switch checked={!!b.acumulativo} onCheckedChange={(v) => updateBen(i, { acumulativo: v })} /> Acumula
+                          </label>
+                        </div>
+                        <div>
+                          <Label>Custo estimado por uso (R$)</Label>
+                          <Input value={toReais(b.custo_estimado_centavos)} onChange={(e) => updateBen(i, { custo_estimado_centavos: toCentavos(e.target.value) })} />
+                        </div>
+                        <div>
+                          <Label>Valor adicional após limite (R$)</Label>
+                          <Input value={toReais(b.valor_adicional_centavos)} onChange={(e) => updateBen(i, { valor_adicional_centavos: toCentavos(e.target.value) })} />
+                        </div>
+                        <div>
+                          <Label>Desconto (%)</Label>
+                          <Input type="number" step="0.1" value={b.desconto_pct ?? 0} onChange={(e) => updateBen(i, { desconto_pct: Number(e.target.value) })} />
+                        </div>
+                        <div className="md:col-span-3">
+                          <Label>Regra de uso</Label>
+                          <Textarea rows={2} value={b.regra_uso ?? ""} onChange={(e) => updateBen(i, { regra_uso: e.target.value })} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ─── PUBLICAÇÃO ─── */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Publicação no site</CardTitle>
@@ -556,18 +782,24 @@ export function PlanoBuilder({ open, onClose, planoId, onSaved, medicoMode = fal
                   <Label>Ordem</Label>
                   <Input type="number" value={plano.ordem_exibicao ?? 0} onChange={(e) => setField("ordem_exibicao", Number(e.target.value))} />
                 </div>
-                <div>
-                  <Label>Texto do CTA</Label>
-                  <Input value={plano.cta_texto ?? ""} onChange={(e) => setField("cta_texto", e.target.value)} />
-                </div>
-                <div className="md:col-span-3">
+
+                {/* CTA — hidden in simplified (uses global default) */}
+                {!isSimplified && (
+                  <div>
+                    <Label>Texto do CTA</Label>
+                    <Input value={plano.cta_texto ?? ""} onChange={(e) => setField("cta_texto", e.target.value)} />
+                  </div>
+                )}
+
+                {/* Image URL — always available */}
+                <div className={isSimplified ? "md:col-span-2" : "md:col-span-3"}>
                   <Label>Imagem (URL)</Label>
                   <Input value={plano.imagem_url ?? ""} onChange={(e) => setField("imagem_url", e.target.value)} />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Saúde financeira (apenas em edição) */}
+            {/* Financial health (edit only) */}
             {planoId && <SaudeFinanceiraCard planoId={planoId} />}
 
             <div className="flex justify-end gap-2 pb-6">
