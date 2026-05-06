@@ -224,14 +224,14 @@ Deno.serve(async (req) => {
 
         // Se nenhum JSON funcionou, tentar form-urlencoded com payload completo
         if (!feegowId) {
-          const formData = { nome, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, sexo_id: String(pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0), tabela_id: "0", origem_id: "1" };
+          const formData = { nome_completo: nome, nome_paciente: nome.split(" ")[0], cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "1990-01-01", genero, celular, sexo_id: String(sexoId), tabela_id: "0", origem_id: "1" };
           const bodyStr = new URLSearchParams(formData).toString();
-          const r = await feegowReq("BLOCO4: form-urlencoded completo", "POST", "/patient/store", "application/x-www-form-urlencoded", bodyStr);
+          const r = await feegowReq("BLOCO4: form-urlencoded /patient/create", "POST", "/patient/create", "application/x-www-form-urlencoded", bodyStr);
           const id = extractFeegowId(r.body as Record<string, unknown> | null);
 
           passos.push({
             bloco: 4,
-            descricao: "POST /patient/store — form-urlencoded completo",
+            descricao: "POST /patient/create — form-urlencoded completo",
             content_type: "application/x-www-form-urlencoded",
             payload_enviado: formData,
             http_status: r.status,
