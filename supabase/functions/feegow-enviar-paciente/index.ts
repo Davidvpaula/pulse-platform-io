@@ -113,21 +113,32 @@ Deno.serve(async (req) => {
       }
 
       // Tentativas de criação com variações de endpoint/payload
+      const basePayload = { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", genero, celular, origem_id: 1 };
+
       const tentativas = [
         {
-          label: "/patient/store — nome + cpf + origem_id",
+          label: "/patient/store — JSON",
           endpoint: "/patient/store",
-          body: { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", genero, celular, origem_id: 1 },
+          contentType: "application/json",
+          bodyStr: JSON.stringify(basePayload),
         },
         {
-          label: "/patient/store — nome_completo + cpf",
+          label: "/patient/store — form-urlencoded",
           endpoint: "/patient/store",
-          body: { nome_completo: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", genero, celular },
+          contentType: "application/x-www-form-urlencoded",
+          bodyStr: new URLSearchParams(basePayload as unknown as Record<string, string>).toString(),
         },
         {
-          label: "/patient/new-patient — nome + cpf",
+          label: "/patient/new-patient — JSON",
           endpoint: "/patient/new-patient",
-          body: { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", genero, celular },
+          contentType: "application/json",
+          bodyStr: JSON.stringify(basePayload),
+        },
+        {
+          label: "/patient/new-patient — form-urlencoded",
+          endpoint: "/patient/new-patient",
+          contentType: "application/x-www-form-urlencoded",
+          bodyStr: new URLSearchParams(basePayload as unknown as Record<string, string>).toString(),
         },
       ];
 
@@ -139,10 +150,10 @@ Deno.serve(async (req) => {
         const resp = await fetch(`${FEEGOW_URL}${t.endpoint}`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": t.contentType,
             "x-access-token": FEEGOW_TOKEN,
           },
-          body: JSON.stringify(t.body),
+          body: t.bodyStr,
         });
         const data = await resp.json().catch(() => null);
         const id = extractFeegowId(data);
