@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Users, Search, Plus, MoreHorizontal, Eye, Pencil, Pause, Ban, Play, Trash2,
   Loader2, Shield, ShieldAlert, ShieldCheck, AlertCircle, Mail, ChevronDown,
@@ -27,6 +27,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useColaboradores } from "@/lib/admin/queries";
+import { useEffect } from "react";
 
 // ----- tipos -----
 type StatusConta = "ativo" | "pendente_convite" | "suspenso" | "bloqueado" | "removido";
@@ -217,8 +219,8 @@ function funcaoLabel(f: FuncaoInterna) {
 // ============= COMPONENT =============
 export default function AdminColaboradores() {
   const { toast } = useToast();
-  const [rows, setRows] = useState<ColabRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rawRows = [], isLoading: loading, refetch: load } = useColaboradores();
+  const rows = rawRows as unknown as ColabRow[];
   const [filtro, setFiltro] = useState<typeof FILTROS[number]["key"]>("todos");
   const [busca, setBusca] = useState("");
 
@@ -227,21 +229,6 @@ export default function AdminColaboradores() {
   const [statusDialog, setStatusDialog] = useState<{ row: ColabRow; novo: StatusConta } | null>(null);
   const [permsOpen, setPermsOpen] = useState<ColabRow | null>(null);
   const [editOpen, setEditOpen] = useState<ColabRow | null>(null);
-
-  async function load() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("colaboradores")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      setRows((data as ColabRow[]) ?? []);
-    }
-    setLoading(false);
-  }
-  useEffect(() => { load(); }, []);
 
   const filtrados = useMemo(() => {
     let list = rows;
