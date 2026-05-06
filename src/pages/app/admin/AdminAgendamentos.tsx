@@ -117,8 +117,7 @@ function fmtDate(iso: string) {
 
 export default function AdminAgendamentos() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<ConsultaRow[]>([]);
+  const queryClient = useQueryClient();
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("ativos");
   const [filtroData, setFiltroData] = useState<"hoje" | "7d" | "30d" | "todos">("7d");
@@ -127,23 +126,10 @@ export default function AdminAgendamentos() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
-  // Camada de inteligência (RPC admin_agendamentos_overview)
-  const [overview, setOverview] = useState<any>(null);
-  const [overviewLoading, setOverviewLoading] = useState(false);
-
-  const carregarOverview = useCallback(async () => {
-    setOverviewLoading(true);
-    const hojeStr = new Date().toISOString().slice(0, 10);
-    const { data, error } = await supabase.rpc("admin_agendamentos_overview", {
-      _data: hojeStr, _periodo: "dia",
-    });
-    setOverviewLoading(false);
-    if (error) {
-      // silencioso — usuário pode não ter permissão
-      return;
-    }
-    setOverview(data);
-  }, []);
+  // React Query para dados principais
+  const { data: rawRows = [], isLoading: loading, refetch: carregar } = useAdminAgendamentos(filtroData);
+  const rows = rawRows as unknown as ConsultaRow[];
+  const { data: overview, isLoading: overviewLoading } = useAgendamentosOverview();
 
   // Modais
   const [statusDialog, setStatusDialog] = useState<{ open: boolean; consulta?: ConsultaRow; novoStatus?: Status }>({ open: false });
@@ -156,75 +142,12 @@ export default function AdminAgendamentos() {
   // Auditoria drawer
   const [auditOpen, setAuditOpen] = useState(false);
   const [auditConsulta, setAuditConsulta] = useState<ConsultaRow | null>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<Record<string, unknown>[]>([]);
 
-  const carregar = useCallback(async () => {
-    setLoading(true);
-    const agora = new Date();
-    let from = new Date(agora); from.setHours(0, 0, 0, 0);
-    let to = new Date(agora); to.setDate(to.getDate() + 30); to.setHours(23, 59, 59, 999);
-    if (filtroData === "hoje") { to = new Date(agora); to.setHours(23, 59, 59, 999); }
-    if (filtroData === "7d") { to = new Date(agora); to.setDate(to.getDate() + 7); to.setHours(23, 59, 59, 999); }
-    if (filtroData === "todos") { from = new Date("2020-01-01"); }
-
-    let q = supabase
-      .from("consultas")
-      .select(`
-        id, inicio, fim, status, modalidade, valor_centavos,
-        link_sala, link_enviado_em, confirmada_em, canal_origem,
-        empresa_id, paciente_id, medico_id,
-        pacientes:pacientes!consultas_paciente_id_fkey ( nome_completo ),
-        medicos:medicos!consultas_medico_id_fkey ( nome ),
-        empresas:empresas ( razao_social, nome_fantasia )
-      `)
-      .gte("inicio", from.toISOString())
-      .lte("inicio", to.toISOString())
-      .order("inicio", { ascending: true })
-      .limit(500);
-
-    const { data, error } = await q;
-    if (error) {
-      // Fallback sem joins por nome (caso FKs não estejam declaradas)
-      const { data: data2, error: e2 } = await supabase
-        .from("consultas")
-        .select("id, inicio, fim, status, modalidade, valor_centavos, link_sala, link_enviado_em, confirmada_em, canal_origem, empresa_id, paciente_id, medico_id")
-        .gte("inicio", from.toISOString())
-        .lte("inicio", to.toISOString())
-        .order("inicio", { ascending: true })
-        .limit(500);
-      if (e2) {
-        toast({ title: "Erro", description: e2.message, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-      const ids = Array.from(new Set([
-        ...(data2 || []).map((r: any) => r.paciente_id),
-        ...(data2 || []).map((r: any) => r.medico_id),
-      ]));
-      const [{ data: pacs }, { data: meds }] = await Promise.all([
-        supabase.from("pacientes").select("id, nome_completo").in("id", ids),
-        supabase.from("medicos").select("id, nome").in("id", ids),
-      ]);
-      const mapPac = Object.fromEntries((pacs || []).map((p: any) => [p.id, p.nome_completo]));
-      const mapMed = Object.fromEntries((meds || []).map((m: any) => [m.id, m.nome]));
-      setRows((data2 || []).map((r: any) => ({
-        ...r,
-        paciente_nome: mapPac[r.paciente_id] || "—",
-        medico_nome: mapMed[r.medico_id] || "—",
-      })));
-    } else {
-      setRows((data || []).map((r: any) => ({
-        ...r,
-        paciente_nome: r.pacientes?.nome_completo || "—",
-        medico_nome: r.medicos?.nome || "—",
-        empresa_nome: r.empresas?.nome_fantasia || r.empresas?.razao_social,
-      })));
-    }
-    setLoading(false);
-  }, [filtroData, toast]);
-
-  useEffect(() => { carregar(); }, [carregar]);
-  useEffect(() => { carregarOverview(); }, [carregarOverview]);
+  function invalidateAll() {
+    queryClient.invalidateQueries({ queryKey: adminKeys.agendamentos(filtroData) });
+    queryClient.invalidateQueries({ queryKey: adminKeys.agendamentosOverview() });
+  }
 
   const carregarInsights = useCallback(async () => {
     setInsightsLoading(true);
