@@ -61,28 +61,28 @@ export function MatrizPermissoes({ scope, scopeValue }: Props) {
       if (scope === "perfil") {
         if (value) {
           await supabase.from("permissoes_perfil").upsert(
-            { role: scopeValue as any, permission_key: key, ativo: true },
+            { role: scopeValue as AppRole, permission_key: key, ativo: true },
             { onConflict: "role,permission_key" },
           );
         } else {
           await supabase.from("permissoes_perfil")
-            .delete().eq("role", scopeValue as any).eq("permission_key", key);
+            .delete().eq("role", scopeValue as AppRole).eq("permission_key", key);
         }
       } else {
         if (value) {
           await supabase.from("function_permissions").upsert(
-            { funcao_interna: scopeValue as any, permission_key: key, ativo: true },
+            { funcao_interna: scopeValue as FuncaoInterna, permission_key: key, ativo: true },
             { onConflict: "funcao_interna,permission_key" },
           );
         } else {
           await supabase.from("function_permissions")
-            .delete().eq("funcao_interna", scopeValue as any).eq("permission_key", key);
+            .delete().eq("funcao_interna", scopeValue as FuncaoInterna).eq("permission_key", key);
         }
       }
       await supabase.from("permission_audit_logs").insert({
         scope,
-        target_role: scope === "perfil" ? (scopeValue as any) : null,
-        target_funcao: scope === "funcao" ? (scopeValue as any) : null,
+        target_role: scope === "perfil" ? (scopeValue as AppRole) : null,
+        target_funcao: scope === "funcao" ? (scopeValue as FuncaoInterna) : null,
         permission_key: key,
         acao: value ? "concedida" : "revogada",
         valor_antes: { ativo: !value },
