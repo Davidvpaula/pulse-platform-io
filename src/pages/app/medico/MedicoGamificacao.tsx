@@ -177,7 +177,7 @@ export default function MedicoGamificacao() {
     setLoading(false);
   };
 
-  useEffect(() => { void carregar(); }, [session]);
+  useEffect(() => { void carregar(); }, [session, medicoAtual]);
 
   const handleToggle = async (av: AvaliacaoMedica) => {
     setToggling(av.id);
