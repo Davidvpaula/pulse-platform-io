@@ -112,33 +112,32 @@ Deno.serve(async (req) => {
         passos.push({ passo: 0, descricao: "Listar origens", erro: (e as Error).message });
       }
 
-      // Tentativas de criação com variações de endpoint/payload
-      const basePayload = { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", genero, celular, origem_id: 1 };
+      // Tentativas de criação com variações
+      const sexoId = pac.sexo === "masculino" ? 1 : pac.sexo === "feminino" ? 2 : 0;
+
+      // Payload baseado nos campos que /patient/list retorna
+      const payloadA = { nome: pac.nome_completo, cpf: cpfLimpo, data_nascimento: pac.data_nascimento ?? "", sexo_id: sexoId, celular };
+      // Payload com mais campos
+      const payloadB = { nome: pac.nome_completo, cpf: cpfLimpo, nascimento: pac.data_nascimento ?? "", sexo_id: sexoId, celular, tabela_id: 0 };
 
       const tentativas = [
         {
-          label: "/patient/store — JSON",
+          label: "/patient/store — sexo_id + data_nascimento",
           endpoint: "/patient/store",
           contentType: "application/json",
-          bodyStr: JSON.stringify(basePayload),
+          bodyStr: JSON.stringify(payloadA),
         },
         {
-          label: "/patient/store — form-urlencoded",
+          label: "/patient/store — sexo_id + nascimento + tabela_id",
+          endpoint: "/patient/store",
+          contentType: "application/json",
+          bodyStr: JSON.stringify(payloadB),
+        },
+        {
+          label: "/patient/store — form-urlencoded + sexo_id",
           endpoint: "/patient/store",
           contentType: "application/x-www-form-urlencoded",
-          bodyStr: new URLSearchParams(basePayload as unknown as Record<string, string>).toString(),
-        },
-        {
-          label: "/patient/new-patient — JSON",
-          endpoint: "/patient/new-patient",
-          contentType: "application/json",
-          bodyStr: JSON.stringify(basePayload),
-        },
-        {
-          label: "/patient/new-patient — form-urlencoded",
-          endpoint: "/patient/new-patient",
-          contentType: "application/x-www-form-urlencoded",
-          bodyStr: new URLSearchParams(basePayload as unknown as Record<string, string>).toString(),
+          bodyStr: new URLSearchParams(payloadA as unknown as Record<string, string>).toString(),
         },
       ];
 
