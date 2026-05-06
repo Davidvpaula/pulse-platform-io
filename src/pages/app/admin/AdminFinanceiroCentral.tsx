@@ -337,7 +337,7 @@ export default function AdminFinanceiroCentral() {
                 <div><span className="text-muted-foreground">Forma de pagamento</span><div>{detalhe.metodo || detalhe.forma || "—"}</div></div>
                 <div><span className="text-muted-foreground">Pago em</span><div>{fmtData(detalhe.data_pagamento || detalhe.paid_at)}</div></div>
                 <div><span className="text-muted-foreground">Valor bruto</span><div className="font-semibold">{brl((detalhe.valor_bruto_centavos || detalhe.valor_centavos) ?? 0)}</div></div>
-                <div><span className="text-muted-foreground">Valor líquido</span><div className="font-semibold">{brl(((detalhe.valor_bruto_centavos || detalhe.valor_centavos || 0) as number) - ((detalhe as Record<string, unknown>).valor_taxa_centavos as number || 0))}</div></div>
+                <div><span className="text-muted-foreground">Valor líquido</span><div className="font-semibold">{brl((detalhe.valor_bruto_centavos || detalhe.valor_centavos || 0) - ((detalhe as unknown as Record<string, number>).valor_taxa_centavos || 0))}</div></div>
                 {detalheSnapshot && <>
                   <div><span className="text-muted-foreground">Repasse médico</span><div>{brl(detalheSnapshot.valor_medico_centavos as number)}</div></div>
                   <div><span className="text-muted-foreground">Plataforma</span><div>{brl(detalheSnapshot.valor_plataforma_centavos as number)} ({detalheSnapshot.comissao_pct_aplicada as number}%)</div></div>
