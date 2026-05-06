@@ -94,7 +94,7 @@ export async function updatePacientePerfil(patch: {
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
-  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch } as any);
+  const { error } = await supabase.from("pacientes").insert({ user_id: uid, ...patch } as PacienteInsert);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
