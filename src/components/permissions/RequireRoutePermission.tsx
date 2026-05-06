@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { useSession } from "@/lib/session";
+import { useAuth } from "@/lib/auth";
+import { profiles } from "@/lib/profiles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
