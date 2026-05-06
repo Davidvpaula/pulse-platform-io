@@ -138,7 +138,7 @@ export default function PacienteDashboard() {
       }
     }
     load();
-  }, [session]);
+  }, [session, pacienteAtual]);
 
   // Only future consultations for hero and list
   const now = new Date();
