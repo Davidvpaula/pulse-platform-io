@@ -35,6 +35,7 @@ type ConsultaItem = {
 export default function PacienteDashboard() {
   const { user } = useAuth();
   const { session } = useSession();
+  const { paciente: pacienteAtual } = usePacienteAtual();
 
   const [loading, setLoading] = useState(true);
   const [consultas, setConsultas] = useState<ConsultaItem[]>([]);
