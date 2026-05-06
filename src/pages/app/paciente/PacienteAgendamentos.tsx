@@ -32,6 +32,7 @@ import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano
 import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacienteKeys } from "@/lib/paciente/queries";
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
+import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
 
