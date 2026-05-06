@@ -14,6 +14,7 @@ import HistoricoCancelamentos from "@/components/paciente/HistoricoCancelamentos
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
+import { PacienteLoading } from "@/components/paciente/PacienteStates";
 import { useSession } from "@/lib/session";
 import { listConsultasDoPaciente, formatDataBR, formatHora, toStatusBadge, listRetornosDisponiveis, type RetornoComContexto } from "@/lib/clinico";
 import { brl } from "@/lib/format";
