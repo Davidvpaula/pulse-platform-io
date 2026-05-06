@@ -67,7 +67,7 @@ export default function EmpresaAgendamentos() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [empresa]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
