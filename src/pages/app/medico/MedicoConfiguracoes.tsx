@@ -344,7 +344,7 @@ export default function MedicoConfiguracoes() {
   }, []);
 
   const salvarNotificacoes = async () => {
-    const mid = await getMedicoAtualId();
+    const mid = hookMedicoId;
     if (!mid) { toast.error("Cadastro médico não encontrado."); return; }
     setSavingNotif(true);
     const { error } = await supabase.from("medico_notificacao_prefs" as any).upsert({
