@@ -136,6 +136,8 @@ export interface ConsultaAdminRow {
   paciente_nome?: string;
   medico_nome?: string;
   empresa_nome?: string;
+  feegow_agendamento_id?: string | null;
+  feegow_sync_status?: string | null;
 }
 
 function getDateRange(filtroData: string) {
@@ -159,6 +161,7 @@ export function useAdminAgendamentos(filtroData: string) {
           id, inicio, fim, status, modalidade, valor_centavos,
           link_sala, link_enviado_em, confirmada_em, canal_origem,
           empresa_id, paciente_id, medico_id,
+          feegow_agendamento_id, feegow_sync_status,
           pacientes:pacientes!consultas_paciente_id_fkey ( nome_completo ),
           medicos:medicos!consultas_medico_id_fkey ( nome ),
           empresas:empresas ( razao_social, nome_fantasia )
