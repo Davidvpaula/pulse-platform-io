@@ -199,6 +199,11 @@ export default function MedicoConsultas() {
                 "{c.motivo}"
               </p>
             )}
+            {(c as any).responsavel_nome && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Resp. financeiro: {(c as any).responsavel_nome}
+              </p>
+            )}
           </div>
 
           {/* Ações */}
