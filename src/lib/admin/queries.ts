@@ -175,7 +175,7 @@ export function useAdminAgendamentos(filtroData: string) {
         // Fallback sem joins
         const { data: data2, error: e2 } = await supabase
           .from("consultas")
-          .select("id, inicio, fim, status, modalidade, valor_centavos, link_sala, link_enviado_em, confirmada_em, canal_origem, empresa_id, paciente_id, medico_id")
+          .select("id, inicio, fim, status, modalidade, valor_centavos, link_sala, link_enviado_em, confirmada_em, canal_origem, empresa_id, paciente_id, medico_id, feegow_agendamento_id, feegow_sync_status")
           .gte("inicio", from)
           .lte("inicio", to)
           .order("inicio", { ascending: true })
