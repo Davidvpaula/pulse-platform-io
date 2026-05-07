@@ -1,94 +1,150 @@
 
-# FASE 4 — Checkout, Pagamento e Fluxo Médico para Dependentes
+# FASE 5 — Integração de Dependentes com Documentos, Prontuário e Feegow
 
-## Contexto atual (pós FASE 3)
+## Diagnóstico atual
 
-- `consultas.paciente_atendido_id` existe (nullable FK)
-- O seletor "Quem será atendido?" passa `paciente_atendido_id` via metadata do pagamento
-- A RPC `criar_consulta_pos_pagamento` já salva `paciente_atendido_id` na consulta
-- A RLS já permite titular ver consultas dos dependentes
-- `listConsultasDoMedico` já resolve o nome do atendido
-- **Porém**: checkout, histórico do paciente e recibos ainda não exibem a separação titular/atendido
+### Feegow
+- `feegow-enviar-paciente` já aceita qualquer `paciente_id` e envia para a API Feegow
+- `pacientes.feegow_paciente_id` já existe — suporta dependentes nativamente
+- O edge function busca dados diretamente da tabela `pacientes` (CPF, nome, nascimento)
+- **Funciona para dependentes sem alteração** desde que o admin envie o `paciente_id` do dependente
+
+### Documentos (`documentos_paciente`)
+- RLS: `user_id = auth.uid()` — dependentes (user_id = NULL) não teriam documentos visíveis
+- Upload usa `auth.uid()` como pasta no storage: dependentes sem login não podem ter docs
+- **Precisa de ajuste**: titular deve poder gerenciar docs do dependente
+
+### Prontuários e Prescrições
+- Função `is_paciente_da_consulta()` verifica: `c.paciente_id -> p.user_id = auth.uid()`
+- Dependente agendado via `paciente_atendido_id` — a consulta tem `paciente_id` = titular
+- **Já funciona**: titular vê prontuários porque é o `paciente_id` da consulta
+- Porém: futuramente, se dependente ganhar login, precisará da função atualizada
+
+### MedicoDocumentos
+- `listDocumentosDoMedico` usa `listConsultasDoMedico` que já resolve o nome correto do dependente (FASE 4)
+- `emitirPrescricaoSimulada` insere em `prescricoes` por `consulta_id` — sem referência a paciente
+- **Já funciona**, mas a prescrição não registra o nome/CPF do paciente atendido
+
+### PacienteDocumentos
+- `listDocumentosDoPaciente` filtra `paciente_id = p.id` (titular apenas)
+- `listAnexosConsultaDoPaciente` filtra `consultas.paciente_id = p.id` — perde consultas onde paciente é `paciente_atendido_id`
+- **Precisa de ajuste**: incluir docs dos dependentes e anexos de consultas dos dependentes
 
 ## O que será feito
 
-### 1. Checkout — Exibir "quem paga" vs "quem será atendido"
+### 1. Migration — Atualizar `is_paciente_da_consulta` e RLS de documentos
 
-No `PacienteCheckout.tsx`, acima do resumo financeiro, adicionar bloco informativo:
-
+**`is_paciente_da_consulta()`**: Atualizar para também aceitar titular que agendou para dependente:
+```sql
+SELECT EXISTS (
+  SELECT 1 FROM consultas c
+  JOIN pacientes p ON p.id = c.paciente_id
+  WHERE c.id = _consulta_id
+    AND (
+      p.user_id = auth.uid()
+      OR EXISTS (
+        SELECT 1 FROM pacientes dep
+        WHERE dep.id = c.paciente_atendido_id
+          AND dep.responsavel_id = p.id
+          AND p.user_id = auth.uid()
+      )
+    )
+)
 ```
-Responsável financeiro: João Silva
-Paciente atendido: Maria Silva (Filha)
+Isto afeta automaticamente prontuários e prescrições (usam esta função).
+
+**`documentos_paciente` RLS**: Atualizar SELECT/INSERT/UPDATE/DELETE para que titular acesse docs de seus dependentes:
+```sql
+USING (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 FROM pacientes dep
+    JOIN pacientes tit ON tit.id = dep.responsavel_id
+    WHERE dep.id = documentos_paciente.paciente_id
+      AND tit.user_id = auth.uid()
+  )
+)
 ```
 
-- Ler `paciente_atendido_id` do metadata do pagamento
-- Se null, mostrar apenas "Consulta para você"
-- Se preenchido, buscar nome e parentesco do dependente na tabela `pacientes`
+**Storage `paciente-docs`**: Atualizar policies para titular acessar pasta de dependentes. Dependentes usarão path: `dep-{paciente_id}/...` em vez de `{auth.uid()}/...`.
 
-Nenhuma migration necessária — os dados já estão no metadata.
+### 2. Frontend — Documentos do dependente
 
-### 2. Histórico do paciente — Separar "minhas" vs "dos dependentes"
-
-No `PacienteAgendamentos.tsx`, em cada card de consulta:
-
-- Quando `paciente_atendido_id` existe e difere do titular, mostrar badge: **"Para: Maria Silva (Filha)"**
-- Adicionar filtro opcional: "Todas", "Minhas consultas", "Dos dependentes"
-- Permitir busca pelo nome do dependente
-
-O `listConsultasDoPaciente` (clinico.ts) já retorna `paciente_atendido_nome` e `paciente_atendido_parentesco`.
-
-### 3. Recibo PDF — Incluir paciente atendido
-
-No `reciboPdf.ts`, adicionar campo opcional `pacienteAtendidoNome`.
-Quando preenchido, o PDF mostra:
-
-```
-Responsável: João Silva
-Paciente atendido: Maria Silva
+**`listDocumentosDoPaciente()`** em `clinico.ts`: Expandir para incluir docs de dependentes ativos:
+```ts
+const allIds = [paciente.id, ...dependenteIds];
+.in("paciente_id", allIds)
 ```
 
-Atualizar o `PacienteFinanceiro.tsx` para passar esse dado ao gerar PDF.
+**`listAnexosConsultaDoPaciente()`**: Expandir consulta para incluir `paciente_atendido_id`:
+```ts
+.or(`paciente_id.eq.${p.id},paciente_atendido_id.in.(${allIds.join(",")})`)
+```
 
-### 4. Consulta médica — Garantir nome correto
+**`uploadDocumentoPaciente()`**: Adicionar parâmetro opcional `dependenteId`. Se preenchido, usar `dep-{dependenteId}` como path no storage e `paciente_id = dependenteId` na tabela.
 
-Já implementado na FASE 3: `listConsultasDoMedico` em `clinico.ts` resolve `paciente_atendido.nome_completo` quando preenchido. O `MedicoConsultas.tsx` usa `c.paciente_nome` que já reflete isso.
+**`PacienteDocumentos.tsx`**: Adicionar seletor "Visualizando docs de:" (Eu / Dependente X) para filtrar documentos por paciente. O upload também permitirá selecionar para quem é o documento.
 
-Adicional: no card de consulta do médico, quando há dependente, mostrar badge discreta "Resp.: João Silva" para contexto, sem alterar o destaque do nome do paciente atendido.
+### 3. Frontend — Prontuário e prescrições do dependente no médico
 
-### 5. Financeiro do paciente — Consultas dos dependentes
+**`listDocumentosDoMedico()`**: Já funciona (usa `listConsultasDoMedico` que resolve nome correto). Sem alteração.
 
-O `usePacienteFinanceiro` (queries de pagamentos) já filtra por `paciente_id` do titular, que continua sendo o responsável financeiro. Funcionamento mantido.
+**`emitirPrescricaoSimulada()`**: Sem alteração necessária — prescrições são vinculadas a `consulta_id`. O nome do paciente correto já vem via a consulta.
 
-Adicionar no detalhe de cada pagamento, quando a consulta tem `paciente_atendido_id`: "Paciente atendido: Maria Silva".
+**`MedicoDocumentos.tsx`**: Já mostra `paciente_nome` correto (atualizado FASE 4). Sem alteração.
 
-### 6. Compatibilidade e segurança
+### 4. Feegow — Dependentes
 
-- Consultas antigas (`paciente_atendido_id = NULL`) continuam exibindo normalmente
-- Pacientes sem dependentes não veem nenhuma mudança
-- RLS já está correta desde FASE 3
-- Nenhuma migration de schema necessária
-- Snapshots financeiros e comissões não são afetados (vinculados ao pagamento/consulta, não ao paciente atendido)
-- Relatórios admin usam joins por `consultas` → `pagamentos` e não são impactados
+**`feegow-enviar-paciente`**: Já funciona para dependentes — busca paciente por `paciente_id` direto da tabela `pacientes`, que inclui dependentes com CPF, nome e nascimento preenchidos.
+
+Única adição: no `feegow-criar-agendamento`, usar `paciente_atendido_id` da consulta (quando preenchido) para buscar o `feegow_paciente_id` correto do dependente em vez do titular.
+
+### 5. LGPD — Expandir consentimentos
+
+Adicionar novos `tipo_consentimento` na tabela `dependente_consentimentos`:
+- `compartilhamento_documental`
+- `telemedicina_menor`
+- `gravacao_consulta`
+- `acesso_prescricoes`
+- `acesso_exames`
+
+Migration simples: sem nova tabela, apenas expand do check constraint ou enum.
+
+### 6. Área do paciente — Navegação entre dependentes
+
+No `PacienteDocumentos.tsx`, adicionar abas ou dropdown de seleção:
+- "Meus documentos"
+- "Documentos de [Nome Dependente]"
+
+Cada seção mostra: exames, laudos, receitas, prescrições e anexos de consulta filtrados por aquele paciente.
 
 ## Arquivos alterados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/pages/app/paciente/PacienteCheckout.tsx` | Bloco "Responsável / Paciente atendido" |
-| `src/pages/app/paciente/PacienteAgendamentos.tsx` | Badge de dependente + filtro |
-| `src/pages/app/paciente/PacienteFinanceiro.tsx` | Info do atendido no detalhe do pagamento |
-| `src/lib/reciboPdf.ts` | Campo `pacienteAtendidoNome` no PDF |
-| `src/pages/app/medico/MedicoConsultas.tsx` | Badge "Resp.: ..." quando há dependente |
-| `src/lib/clinico.ts` | Tipo `ConsultaDetalhada` — adicionar campos opcionais |
+| Migration SQL | `is_paciente_da_consulta`, RLS documentos, storage policies, consentimentos |
+| `src/lib/clinico.ts` | `listDocumentosDoPaciente`, `listAnexosConsultaDoPaciente`, `uploadDocumentoPaciente` |
+| `src/pages/app/paciente/PacienteDocumentos.tsx` | Seletor de dependente, filtro por paciente |
+| `supabase/functions/feegow-criar-agendamento/index.ts` | Usar `paciente_atendido_id` para Feegow |
 
-## O que NÃO será feito
+## O que NÃO muda
 
-- Feegow, Memed, documentos, prontuários, receitas
-- Mudanças em pagamento/Stripe/snapshots/comissões
-- Upload documental, assinatura ICP
-- Nenhuma migration SQL
+- `MedicoDocumentos.tsx` — já funciona
+- `emitirPrescricaoSimulada` — já vinculado por consulta
+- `feegow-enviar-paciente` — já suporta qualquer paciente_id
+- Checkout, financeiro, agendamento — FASE 4 resolveu
+- Prontuários RLS — atualizados via `is_paciente_da_consulta`
 
 ## Riscos
 
-- O `usePacienteFinanceiro` em `src/lib/paciente/queries.ts` faz `.select(... consultas!inner(...))` que não inclui `paciente_atendido_id` — precisa adicionar na query
-- Recibos gerados antes desta fase não terão o campo `pacienteAtendidoNome` — fallback seguro com "—"
+- Storage path migration: docs antigos usam `{auth.uid()}/...`. Docs de dependentes usarão `dep-{paciente_id}/...`. Sem conflito, mas a policy precisa cobrir ambos patterns.
+- Se o dependente ganhar login futuro, precisará de migration para transferir `user_id` e ajustar storage paths.
+- `documentos_paciente.user_id` é NOT NULL hoje — docs de dependentes precisarão usar o `user_id` do titular como uploader.
+
+## Ordem de execução
+
+1. Migration SQL (RLS + storage + consentimentos)
+2. Feegow agendamento (edge function)
+3. Frontend clinico.ts (queries)
+4. Frontend PacienteDocumentos (UI)
+5. Validação e testes
