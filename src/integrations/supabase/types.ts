@@ -8097,6 +8097,10 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      is_titular_do_paciente: {
+        Args: { _paciente_id: string }
+        Returns: boolean
+      }
       liberar_reservas_expiradas: { Args: never; Returns: number }
       login_attempt_check: {
         Args: { _email: string; _ip?: string }
