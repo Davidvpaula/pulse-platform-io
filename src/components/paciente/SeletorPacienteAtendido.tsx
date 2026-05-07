@@ -177,148 +177,183 @@ export function SeletorPacienteAtendido({ titularId, onChange, value, onNovoDepe
   }
 
 
+  const isSelfSelected = value === null || value === "titular";
+
   return (
-    <div className="rounded-lg border border-border p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <Users className="h-4 w-4 text-primary" />
-        <p className="text-sm font-medium">Quem será atendido?</p>
-      </div>
-
-      <RadioGroup
-        value={value ?? "titular"}
-        onValueChange={(v) => {
-          onChange(v === "titular" ? null : v);
-          if (v !== "novo") setFormExpanded(false);
-        }}
-      >
-        {/* Eu mesmo */}
-        <div className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-muted/50 transition-colors">
-          <RadioGroupItem value="titular" id="pac-titular" />
-          <Label htmlFor="pac-titular" className="flex items-center gap-2 cursor-pointer flex-1">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span>Eu mesmo</span>
-          </Label>
+    <div className="space-y-3">
+      {/* When self is selected: compact row with toggle link */}
+      {isSelfSelected && !isNovoSelected && (
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <p className="text-sm font-medium">Quem será atendido?</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (dependentes.length > 0) {
+                // If there are existing dependents, show picker
+                onChange("novo"); // temporarily switch to show options
+              } else {
+                onChange("novo");
+              }
+            }}
+            className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+          >
+            <UserPlus className="h-4 w-4" />
+            Agendar para outra pessoa
+          </button>
         </div>
+      )}
 
-        {/* Dependentes existentes */}
-        {dependentes.map((d) => (
-          <div key={d.id} className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-muted/50 transition-colors">
-            <RadioGroupItem value={d.id} id={`pac-${d.id}`} />
-            <Label htmlFor={`pac-${d.id}`} className="cursor-pointer flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-sm">{d.nome_completo || "Sem nome"}</span>
-                {d.parentesco && (
-                  <Badge variant="outline" className="text-[10px]">{d.parentesco}</Badge>
+      {/* When a dependent or "novo" is selected: show full picker */}
+      {!isSelfSelected && (
+        <div className="rounded-lg border border-border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <p className="text-sm font-medium">Quem será atendido?</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setFormExpanded(false);
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+            >
+              ← Eu mesmo
+            </button>
+          </div>
+
+          <RadioGroup
+            value={value!}
+            onValueChange={(v) => {
+              onChange(v);
+              if (v !== "novo") setFormExpanded(false);
+            }}
+          >
+            {/* Dependentes existentes */}
+            {dependentes.map((d) => (
+              <div key={d.id} className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-muted/50 transition-colors">
+                <RadioGroupItem value={d.id} id={`pac-${d.id}`} />
+                <Label htmlFor={`pac-${d.id}`} className="cursor-pointer flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm">{d.nome_completo || "Sem nome"}</span>
+                    {d.parentesco && (
+                      <Badge variant="outline" className="text-[10px]">{d.parentesco}</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {d.data_nascimento
+                      ? `Nasc.: ${new Date(d.data_nascimento + "T12:00:00").toLocaleDateString("pt-BR")}`
+                      : ""
+                    }
+                    {d.cpf ? ` · CPF: ${maskCpf(d.cpf)}` : ""}
+                  </p>
+                </Label>
+              </div>
+            ))}
+
+            {/* Cadastrar nova pessoa */}
+            <div className={`rounded-md border transition-colors ${isNovoSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+              <div className="flex items-center gap-3 p-3">
+                <RadioGroupItem value="novo" id="pac-novo" />
+                <Label htmlFor="pac-novo" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm">Cadastrar nova pessoa</span>
+                </Label>
+                {isNovoSelected && (
+                  <button
+                    type="button"
+                    onClick={() => setFormExpanded((v) => !v)}
+                    className="p-1 rounded hover:bg-muted"
+                  >
+                    {formExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {d.data_nascimento
-                  ? `Nasc.: ${new Date(d.data_nascimento + "T12:00:00").toLocaleDateString("pt-BR")}`
-                  : ""
-                }
-                {d.cpf ? ` · CPF: ${maskCpf(d.cpf)}` : ""}
-              </p>
-            </Label>
-          </div>
-        ))}
 
-        {/* Cadastrar nova pessoa */}
-        <div className={`rounded-md border transition-colors ${isNovoSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
-          <div className="flex items-center gap-3 p-3">
-            <RadioGroupItem value="novo" id="pac-novo" />
-            <Label htmlFor="pac-novo" className="flex items-center gap-2 cursor-pointer flex-1">
-              <UserPlus className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Agendar para outra pessoa</span>
-            </Label>
-            {isNovoSelected && (
-              <button
-                type="button"
-                onClick={() => setFormExpanded((v) => !v)}
-                className="p-1 rounded hover:bg-muted"
-              >
-                {formExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-            )}
-          </div>
+              {/* Inline form */}
+              {isNovoSelected && formExpanded && (
+                <div className="px-3 pb-4 pt-1 space-y-3 border-t border-border/50">
+                  <p className="text-xs text-muted-foreground">
+                    Preencha os dados da pessoa que será atendida. O cadastro será salvo automaticamente.
+                  </p>
 
-          {/* Inline form */}
-          {isNovoSelected && formExpanded && (
-            <div className="px-3 pb-4 pt-1 space-y-3 border-t border-border/50">
-              <p className="text-xs text-muted-foreground">
-                Preencha os dados da pessoa que será atendida. O cadastro será salvo automaticamente.
-              </p>
+                  <div>
+                    <Label className="text-xs">Nome completo *</Label>
+                    <Input
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      placeholder="Nome e sobrenome"
+                      maxLength={120}
+                    />
+                  </div>
 
-              <div>
-                <Label className="text-xs">Nome completo *</Label>
-                <Input
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Nome e sobrenome"
-                  maxLength={120}
-                />
-              </div>
+                  <div className="grid gap-3 grid-cols-2">
+                    <div>
+                      <Label className="text-xs">CPF *</Label>
+                      <Input
+                        value={cpf}
+                        onChange={(e) => setCpf(maskCpf(e.target.value))}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Nascimento *</Label>
+                      <Input
+                        type="date"
+                        value={nascimento}
+                        onChange={(e) => setNascimento(e.target.value)}
+                        max={new Date().toISOString().slice(0, 10)}
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid gap-3 grid-cols-2">
-                <div>
-                  <Label className="text-xs">CPF *</Label>
-                  <Input
-                    value={cpf}
-                    onChange={(e) => setCpf(maskCpf(e.target.value))}
-                    placeholder="000.000.000-00"
-                    inputMode="numeric"
-                  />
+                  <div className="grid gap-3 grid-cols-2">
+                    <div>
+                      <Label className="text-xs">Sexo biológico</Label>
+                      <Select value={sexo} onValueChange={setSexo}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SEXOS.map((s) => (
+                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Parentesco *</Label>
+                      <Select value={parentesco} onValueChange={setParentesco}>
+                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                        <SelectContent>
+                          {PARENTESCOS.map((p) => (
+                            <SelectItem key={p} value={p}>{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 pt-1">
+                    <Checkbox
+                      id="aceite-dep"
+                      checked={aceiteTermos}
+                      onCheckedChange={(v) => setAceiteTermos(v === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="aceite-dep" className="text-xs text-muted-foreground leading-snug cursor-pointer">
+                      {TERMO_TEXTO}
+                    </label>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs">Nascimento *</Label>
-                  <Input
-                    type="date"
-                    value={nascimento}
-                    onChange={(e) => setNascimento(e.target.value)}
-                    max={new Date().toISOString().slice(0, 10)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-3 grid-cols-2">
-                <div>
-                  <Label className="text-xs">Sexo biológico</Label>
-                  <Select value={sexo} onValueChange={setSexo}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {SEXOS.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Parentesco *</Label>
-                  <Select value={parentesco} onValueChange={setParentesco}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {PARENTESCOS.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 pt-1">
-                <Checkbox
-                  id="aceite-dep"
-                  checked={aceiteTermos}
-                  onCheckedChange={(v) => setAceiteTermos(v === true)}
-                  className="mt-0.5"
-                />
-                <label htmlFor="aceite-dep" className="text-xs text-muted-foreground leading-snug cursor-pointer">
-                  {TERMO_TEXTO}
-                </label>
-              </div>
+              )}
             </div>
-          )}
+          </RadioGroup>
         </div>
-      </RadioGroup>
+      )}
     </div>
   );
 }
