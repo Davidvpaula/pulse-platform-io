@@ -1,17 +1,43 @@
 ## Objetivo
-Adicionar um botão na área de ações de cada card de consulta (ao lado dos botões existentes como Continuar, Finalizar, etc.) que abre a página do dashboard Feegow em uma nova aba.
+Adicionar campo **Tratamento** (prefixo) configurável pelo médico no perfil (ex: Dr., Dra., Prof., Prof.ª, ou nenhum). O prefixo será usado automaticamente em toda a plataforma ao exibir o nome do médico.
 
-## Implementação
+## 1. Migração — coluna `tratamento` na tabela `medicos`
 
-**Arquivo:** `src/pages/app/medico/MedicoConsultas.tsx`
+```sql
+ALTER TABLE public.medicos ADD COLUMN tratamento TEXT DEFAULT NULL;
+```
 
-1. Importar `ExternalLink` do lucide-react
-2. Adicionar um botão `variant="ghost"` com ícone e título "Abrir Feegow" na área de ações do card (junto com os botões de chat, histórico, reagendar, cancelar)
-3. O botão abrirá a URL do dashboard Feegow (`https://app.feegow.com`) em nova aba via `window.open`
-4. A URL da Feegow pode vir de uma variável de ambiente (`FEEGOW_BASE_URL`) ou ser fixa — como é apenas um link para o dashboard, usaremos a URL padrão `https://app.feegow.com`
+Valores esperados: `Dr.`, `Dra.`, `Prof.`, `Prof.ª`, ou `NULL` (sem prefixo). Sem enum — campo texto livre limitado no frontend.
+
+## 2. Perfil do Médico (`MedicoPerfil.tsx`)
+
+- Adicionar um **Select** acima do campo "Nome completo" com opções: *Nenhum*, *Dr.*, *Dra.*, *Prof.*, *Prof.ª*
+- Carregar o valor de `medico.tratamento` no state
+- Incluir o campo no `salvarPerfilPublico()` via `updateMedicoPerfil`
+- Atualizar a **prévia lateral** para mostrar o prefixo antes do nome (ex: "Dra. Nágila Lasmar")
+
+## 3. Helper `formatNomeMedico`
+
+Criar uma função utilitária reutilizável:
+
+```ts
+export function formatNomeMedico(tratamento: string | null, nome: string): string {
+  return tratamento ? `${tratamento} ${nome}` : nome;
+}
+```
+
+## 4. Uso em toda a plataforma
+
+Substituir exibições diretas de `nome` / `paciente_nome` (quando se trata de médico) pelo helper nos componentes principais:
+- **Fila de atendimento** (MedicoConsultas) — nome do médico no header/breadcrumb se aplicável
+- **Página pública do médico** (MedicoSlotsPanel, cards de destaque)
+- **Dashboard do médico** — saudação
+- **Cards de consulta do paciente** — nome do médico
+
+Onde o `tratamento` não estiver disponível via query, adicionar o campo ao select.
 
 ## Detalhes técnicos
-- Botão com `variant="ghost"`, `size="sm"`, ícone `ExternalLink` com cor indicativa
-- Título (tooltip nativo): "Abrir dashboard Feegow"
-- `window.open(url, "_blank", "noopener,noreferrer")`
-- Sem dependência de backend, apenas um link externo
+- Coluna nullable TEXT, sem enum (flexibilidade futura)
+- Sem RLS adicional — mesma policy da tabela `medicos`
+- `updateMedicoPerfil` já faz update genérico, basta passar `tratamento`
+- Impacto mínimo: adição de coluna + select no perfil + helper nos componentes de exibição
