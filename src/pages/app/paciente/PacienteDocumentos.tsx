@@ -77,6 +77,8 @@ function formatBytes(b?: number | null) {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
+type DependenteInfo = { id: string; nome: string; parentesco: string | null };
+
 export default function PacienteDocumentos() {
   const { session } = useSession();
   const [tab, setTab] = useState<"meus" | "prescricoes" | "consultas">("meus");
@@ -94,6 +96,10 @@ export default function PacienteDocumentos() {
   const [consultas, setConsultas] = useState<ConsultaDetalhada[]>([]);
   const [consultasMap, setConsultasMap] = useState<Record<string, ConsultaDetalhada>>({});
   const [loadingPresc, setLoadingPresc] = useState(false);
+
+  // Dependentes
+  const [dependentes, setDependentes] = useState<DependenteInfo[]>([]);
+  const [filtroPaciente, setFiltroPaciente] = useState<string>("todos"); // "todos" | paciente_id
 
   const carregar = async () => {
     if (!session) return;
