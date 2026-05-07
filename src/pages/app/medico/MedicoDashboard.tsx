@@ -375,7 +375,7 @@ export default function MedicoDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${saudacao()}${medicoNome ? `, Dr(a). ${medicoNome.split(" ")[0]}` : ""}`}
+        title={`${saudacao()}${medicoNome ? `, ${medicoTratamento ?? "Dr(a)."} ${medicoNome.split(" ")[0]}` : ""}`}
         description="O que você precisa fazer agora — atendimentos, fila e alertas."
         actions={
           !podeAtuar ? (
