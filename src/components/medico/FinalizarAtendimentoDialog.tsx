@@ -70,12 +70,7 @@ async function uploadDocPaciente(
 export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFinalizado }: Props) {
   const [salvando, setSalvando] = useState(false);
 
-  // Prontuário
-  const [criarProntuario, setCriarProntuario] = useState(true);
-  const [queixa, setQueixa] = useState("");
-  const [conduta, setConduta] = useState("");
-  const [hipotese, setHipotese] = useState("");
-  const [cidStr, setCidStr] = useState("");
+  // Prescrição (PDF)
 
   // Prescrição (PDF)
   const [criarPrescricao, setCriarPrescricao] = useState(false);
@@ -91,8 +86,6 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
 
   useEffect(() => {
     if (!open || !consulta) return;
-    setCriarProntuario(true);
-    setQueixa(""); setConduta(""); setHipotese(""); setCidStr("");
     setCriarPrescricao(false); setPrescricaoFile(null);
     setCriarAtestado(false); setAtestadoFile(null);
     setMarcarPago(false);
@@ -124,26 +117,7 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Sessão expirada — faça login novamente.");
 
-      // 1) Prontuário
-      if (criarProntuario && (queixa || conduta || hipotese || cidStr)) {
-        const cid10 = cidStr
-          .split(/[,\s]+/)
-          .map((s) => s.trim().toUpperCase())
-          .filter(Boolean);
-        const { error: errProntuario } = await supabase
-          .from("prontuarios")
-          .upsert(
-            {
-              consulta_id: consulta.id,
-              queixa_principal: queixa || null,
-              conduta: conduta || null,
-              hipotese_diagnostica: hipotese || null,
-              cid10: cid10.length ? cid10 : null,
-            },
-            { onConflict: "consulta_id" },
-          );
-        if (errProntuario) throw errProntuario;
-      }
+      // 1) Prescrição (PDF upload)
 
       // 2) Prescrição (PDF upload)
       if (criarPrescricao && prescricaoFile) {
@@ -212,41 +186,6 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Prontuário */}
-          <section className="rounded-lg border border-border p-4">
-            <header className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <p className="font-semibold">Registro do prontuário</p>
-              </div>
-              <Switch checked={criarProntuario} onCheckedChange={setCriarProntuario} />
-            </header>
-            {criarProntuario && (
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <Label>Queixa principal</Label>
-                  <Textarea value={queixa} onChange={(e) => setQueixa(e.target.value)} rows={2} />
-                </div>
-                <div>
-                  <Label>Hipótese diagnóstica</Label>
-                  <Textarea value={hipotese} onChange={(e) => setHipotese(e.target.value)} rows={2} />
-                </div>
-                <div>
-                  <Label>Conduta</Label>
-                  <Textarea value={conduta} onChange={(e) => setConduta(e.target.value)} rows={2} />
-                </div>
-                <div>
-                  <Label>CID-10 (separe por vírgula)</Label>
-                  <Input
-                    value={cidStr}
-                    onChange={(e) => setCidStr(e.target.value)}
-                    placeholder="Ex.: I10, E11.9"
-                  />
-                </div>
-              </div>
-            )}
-          </section>
-
           {/* Prescrição */}
           <section className="rounded-lg border border-border p-4">
             <header className="flex items-center justify-between gap-2">
