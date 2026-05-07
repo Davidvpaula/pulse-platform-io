@@ -555,7 +555,7 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
     .from("consultas")
     .select(`
       *,
-      medicos:medico_id ( nome ),
+      medicos:medico_id ( nome, tratamento ),
       especialidades:especialidade_id ( nome ),
       paciente_atendido:paciente_atendido_id ( nome_completo, parentesco )
     `)
@@ -571,7 +571,7 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
 
   return (data ?? []).map((c: any) => ({
     ...c,
-    medico_nome: c.medicos?.nome ?? null,
+    medico_nome: formatNomeMedico(c.medicos?.tratamento, c.medicos?.nome ?? ""),
     especialidade_nome: c.especialidades?.nome ?? null,
     // Expose dependente info for display
     paciente_atendido_nome: c.paciente_atendido?.nome_completo ?? null,
