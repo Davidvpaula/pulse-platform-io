@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type MedicoDestaque = {
   id: string;
   nome: string;
+  tratamento: string | null;
   especialidade: string | null;
   crm: string;
   bio: string | null;
