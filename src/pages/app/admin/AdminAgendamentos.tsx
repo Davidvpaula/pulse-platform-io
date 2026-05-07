@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import {
   Calendar, Search, Filter, MoreHorizontal, AlertTriangle, Loader2,
   CheckCircle2, XCircle, Clock, Send, RefreshCw, UserCog, Sparkles,
-  History, Video, Eye, ChevronDown,
+  History, Video, Eye, ChevronDown, Upload,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { FeegowSyncConsulta } from "@/components/admin/FeegowSyncConsulta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,8 @@ type ConsultaRow = {
   paciente_nome?: string;
   medico_nome?: string;
   empresa_nome?: string;
+  feegow_agendamento_id?: string | null;
+  feegow_sync_status?: string | null;
 };
 
 type Insight = {
@@ -139,6 +142,7 @@ export default function AdminAgendamentos() {
   const [obsCancel, setObsCancel] = useState("");
   const [motivoStatus, setMotivoStatus] = useState("");
   const [acting, setActing] = useState(false);
+  const [feegowConsulta, setFeegowConsulta] = useState<ConsultaRow | null>(null);
 
   // Auditoria drawer
   const [auditOpen, setAuditOpen] = useState(false);
@@ -597,6 +601,10 @@ export default function AdminAgendamentos() {
                           <AlertTriangle className="h-4 w-4 mr-2" /> Marcar no-show
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setFeegowConsulta(r)} disabled={!!r.feegow_agendamento_id}>
+                          <Upload className="h-4 w-4 mr-2" /> {r.feegow_agendamento_id ? "Já enviado Feegow" : "Enviar p/ Feegow"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => setCancelDialog({ open: true, consulta: r })}
@@ -726,6 +734,21 @@ export default function AdminAgendamentos() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Feegow sync dialog */}
+      {feegowConsulta && (
+        <FeegowSyncConsulta
+          autoOpen
+          consultaId={feegowConsulta.id}
+          pacienteNome={feegowConsulta.paciente_nome}
+          medicoNome={feegowConsulta.medico_nome}
+          inicio={feegowConsulta.inicio}
+          feegowAgendamentoId={feegowConsulta.feegow_agendamento_id}
+          feegowSyncStatus={feegowConsulta.feegow_sync_status}
+          onSuccess={() => { invalidateAll(); }}
+          onClose={() => setFeegowConsulta(null)}
+        />
+      )}
     </div>
   );
 }

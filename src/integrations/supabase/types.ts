@@ -1398,6 +1398,10 @@ export type Database = {
           created_at: string
           empresa_id: string | null
           especialidade_id: string | null
+          feegow_agendamento_id: string | null
+          feegow_sync_at: string | null
+          feegow_sync_error: string | null
+          feegow_sync_status: string | null
           fim: string
           id: string
           inicio: string
@@ -1432,6 +1436,10 @@ export type Database = {
           created_at?: string
           empresa_id?: string | null
           especialidade_id?: string | null
+          feegow_agendamento_id?: string | null
+          feegow_sync_at?: string | null
+          feegow_sync_error?: string | null
+          feegow_sync_status?: string | null
           fim: string
           id?: string
           inicio: string
@@ -1466,6 +1474,10 @@ export type Database = {
           created_at?: string
           empresa_id?: string | null
           especialidade_id?: string | null
+          feegow_agendamento_id?: string | null
+          feegow_sync_at?: string | null
+          feegow_sync_error?: string | null
+          feegow_sync_status?: string | null
           fim?: string
           id?: string
           inicio?: string
