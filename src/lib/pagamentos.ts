@@ -96,6 +96,9 @@ const mockProvider = {
       metadata.motivo = input.reserva.motivo ?? null;
       metadata.paciente_id = input.reserva.paciente_id;
       metadata.medico_id = input.reserva.medico_id;
+      if (input.reserva.paciente_atendido_id) {
+        metadata.paciente_atendido_id = input.reserva.paciente_atendido_id;
+      }
     }
     // Snapshot financeiro imutável
     if (input.snapshot) {
