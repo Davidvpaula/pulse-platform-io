@@ -3,7 +3,7 @@ import {
   FileText, Upload, Loader2, Download, Trash2, Search, Filter,
   FilePlus, Pill, FileCheck2, IdCard, Syringe, FileQuestion, Image as ImageIcon,
   Database as DbIcon, Eye, AlertCircle, CheckCircle2, Paperclip, CalendarDays,
-  ClipboardList,
+  ClipboardList, Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { useSession } from "@/lib/session";
 import {
   listDocumentosDoPaciente, uploadDocumentoPaciente, deletarDocumentoPaciente,
   getDocumentoPacienteUrl, listConsultasDoPaciente, formatDataBR,
-  listAnexosConsultaDoPaciente, getAnexoConsultaUrl,
+  listAnexosConsultaDoPaciente, getAnexoConsultaUrl, getPacienteAtual,
   type DocumentoPaciente, type DocumentoPacienteTipo, type ConsultaDetalhada,
   type AnexoConsulta,
 } from "@/lib/clinico";
@@ -77,6 +77,8 @@ function formatBytes(b?: number | null) {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
+type DependenteInfo = { id: string; nome: string; parentesco: string | null };
+
 export default function PacienteDocumentos() {
   const { session } = useSession();
   const [tab, setTab] = useState<"meus" | "prescricoes" | "consultas">("meus");
@@ -95,10 +97,31 @@ export default function PacienteDocumentos() {
   const [consultasMap, setConsultasMap] = useState<Record<string, ConsultaDetalhada>>({});
   const [loadingPresc, setLoadingPresc] = useState(false);
 
+  // Dependentes
+  const [dependentes, setDependentes] = useState<DependenteInfo[]>([]);
+  const [filtroPaciente, setFiltroPaciente] = useState<string>("todos"); // "todos" | paciente_id
+
   const carregar = async () => {
     if (!session) return;
     setLoadingDocs(true);
     setLoadingPresc(true);
+
+    // Load dependentes list
+    const pac = await getPacienteAtual();
+    if (pac) {
+      const { data: deps } = await supabase
+        .from("pacientes")
+        .select("id, nome_completo, parentesco")
+        .eq("responsavel_id", pac.id)
+        .eq("tipo_paciente", "dependente")
+        .eq("status_conta", "ativo");
+      setDependentes((deps ?? []).map((d: any) => ({
+        id: d.id,
+        nome: d.nome_completo ?? "Dependente",
+        parentesco: d.parentesco,
+      })));
+    }
+
     const [d, cs, an] = await Promise.all([
       listDocumentosDoPaciente(),
       listConsultasDoPaciente(),
@@ -143,6 +166,7 @@ export default function PacienteDocumentos() {
 
   const docsFiltrados = useMemo(() => {
     let arr = docs;
+    if (filtroPaciente !== "todos") arr = arr.filter((d) => d.paciente_id === filtroPaciente);
     if (filtroTipo !== "todos") arr = arr.filter((d) => d.tipo === filtroTipo);
     const q = busca.trim().toLowerCase();
     if (q) arr = arr.filter((d) => d.titulo.toLowerCase().includes(q) || (d.descricao ?? "").toLowerCase().includes(q));
@@ -287,6 +311,61 @@ export default function PacienteDocumentos() {
           );
         })}
       </div>
+
+      {/* Seletor de paciente (titular ou dependente) */}
+      {dependentes.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Visualizando:</span>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setFiltroPaciente("todos")}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition",
+                filtroPaciente === "todos"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const fetchTitularId = async () => {
+                  const pac = await getPacienteAtual();
+                  if (pac) setFiltroPaciente(pac.id);
+                };
+                void fetchTitularId();
+              }}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition",
+                filtroPaciente !== "todos" && !dependentes.some(d => d.id === filtroPaciente)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              Eu mesmo
+            </button>
+            {dependentes.map((dep) => (
+              <button
+                key={dep.id}
+                type="button"
+                onClick={() => setFiltroPaciente(dep.id)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition",
+                  filtroPaciente === dep.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {dep.nome}{dep.parentesco ? ` (${dep.parentesco})` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList className="grid w-full max-w-2xl grid-cols-3">

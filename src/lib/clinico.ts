@@ -125,13 +125,29 @@ export type DocumentoPaciente = {
   created_at: string;
 };
 
-export async function listDocumentosDoPaciente(): Promise<DocumentoPaciente[]> {
+/** Retorna IDs dos dependentes ativos do paciente atual. */
+export async function getDependenteIds(): Promise<string[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
+  const { data } = await supabase
+    .from("pacientes")
+    .select("id")
+    .eq("responsavel_id", p.id)
+    .eq("tipo_paciente", "dependente")
+    .eq("status_conta", "ativo");
+  return (data ?? []).map((d: any) => d.id);
+}
+
+export async function listDocumentosDoPaciente(filtroId?: string | null): Promise<DocumentoPaciente[]> {
+  const p = await getPacienteAtual();
+  if (!p) return [];
+  const depIds = await getDependenteIds();
+  const allIds = [p.id, ...depIds];
+  const targetIds = filtroId ? [filtroId] : allIds;
   const { data, error } = await supabase
     .from("documentos_paciente")
     .select("*")
-    .eq("paciente_id", p.id)
+    .in("paciente_id", targetIds)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
   return (data ?? []) as DocumentoPaciente[];
@@ -142,6 +158,7 @@ export async function uploadDocumentoPaciente(input: {
   tipo: DocumentoPacienteTipo;
   titulo: string;
   descricao?: string | null;
+  dependenteId?: string | null;
 }): Promise<{ ok: boolean; error?: string; doc?: DocumentoPaciente }> {
   const { data: s } = await supabase.auth.getSession();
   const uid = s.session?.user.id;
@@ -149,11 +166,15 @@ export async function uploadDocumentoPaciente(input: {
   const paciente = await ensurePaciente();
   if (!paciente) return { ok: false, error: "Cadastro de paciente não encontrado." };
 
+  const targetPacienteId = input.dependenteId || paciente.id;
+
   if (input.file.size > 20 * 1024 * 1024) {
     return { ok: false, error: "Arquivo muito grande (máx. 20 MB)." };
   }
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
-  const path = `${uid}/${Date.now()}-${safeName}`;
+  // Dependentes usam pasta dep-{id}, titular usa auth.uid()
+  const folder = input.dependenteId ? `dep-${input.dependenteId}` : uid;
+  const path = `${folder}/${Date.now()}-${safeName}`;
   const up = await supabase.storage.from("paciente-docs").upload(path, input.file, {
     cacheControl: "3600",
     upsert: false,
@@ -164,7 +185,7 @@ export async function uploadDocumentoPaciente(input: {
   const { data, error } = await supabase
     .from("documentos_paciente")
     .insert({
-      paciente_id: paciente.id,
+      paciente_id: targetPacienteId,
       user_id: uid,
       tipo: input.tipo,
       titulo: input.titulo.trim() || input.file.name,
@@ -213,8 +234,13 @@ export type AnexoConsulta = {
 export async function listAnexosConsultaDoPaciente(): Promise<AnexoConsulta[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
-  // Pega ids das consultas do paciente e busca anexos respeitando RLS
-  const { data: cs } = await supabase.from("consultas").select("id").eq("paciente_id", p.id);
+  const depIds = await getDependenteIds();
+  const allIds = [p.id, ...depIds];
+  // Get consultas where titular is paciente_id OR dependente is paciente_atendido_id
+  const { data: cs } = await supabase
+    .from("consultas")
+    .select("id")
+    .or(`paciente_id.in.(${allIds.join(",")}),paciente_atendido_id.in.(${allIds.join(",")})`);
   const ids = (cs ?? []).map((c: any) => c.id);
   if (ids.length === 0) return [];
   const { data, error } = await supabase
