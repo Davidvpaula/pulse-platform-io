@@ -113,11 +113,11 @@ export default function PacienteDependentes() {
     if (!editId && !aceiteTermos) { toast.error("É necessário aceitar o termo de responsabilidade"); return; }
 
     setSaving(true);
-    const payload = {
+    const payload: any = {
       nome_completo: nome.trim(),
       cpf: onlyDigits(cpf),
       data_nascimento: nascimento,
-      sexo,
+      sexo: sexo as any,
       parentesco,
       tipo_paciente: "dependente" as const,
       responsavel_id: titularId,
@@ -178,8 +178,7 @@ export default function PacienteDependentes() {
       <PageHeader
         title="Dependentes"
         description="Gerencie pessoas sob sua responsabilidade para agendamentos futuros."
-        icon={Users}
-        action={
+        actions={
           <Button onClick={openAdd} size="sm">
             <Plus className="h-4 w-4 mr-1" /> Adicionar dependente
           </Button>
