@@ -501,14 +501,25 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
   const paciente = await getPacienteAtual();
   if (!paciente) return [];
 
+  // Fetch own consultations + those where a dependente is the patient
+  const { data: depIds } = await supabase
+    .from("pacientes")
+    .select("id")
+    .eq("responsavel_id", paciente.id)
+    .eq("tipo_paciente", "dependente");
+  const allIds = [paciente.id, ...(depIds ?? []).map((d: any) => d.id)];
+
   const { data, error } = await supabase
     .from("consultas")
     .select(`
       *,
       medicos:medico_id ( nome ),
-      especialidades:especialidade_id ( nome )
+      especialidades:especialidade_id ( nome ),
+      paciente_atendido:paciente_atendido_id ( nome_completo, parentesco )
     `)
-    .eq("paciente_id", paciente.id)
+    .or(
+      `paciente_id.eq.${paciente.id},paciente_atendido_id.in.(${allIds.join(",")})`
+    )
     .order("inicio", { ascending: true });
 
   if (error) {
