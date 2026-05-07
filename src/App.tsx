@@ -83,6 +83,7 @@ import { EmpresaGuard } from "@/components/empresa/EmpresaGuard";
 import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
 import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
+import MedicoNotificacoes from "@/pages/app/medico/MedicoNotificacoes";
 import Templates from "@/pages/app/comunicacao/Templates";
 import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
