@@ -247,6 +247,15 @@ export default function PacienteAgendamentos() {
                         Motivo: {c.motivo}
                       </p>
                     )}
+                    {(c as any).paciente_atendido_nome && (
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-primary">
+                        <Users className="h-3 w-3" />
+                        Para: {(c as any).paciente_atendido_nome}
+                        {(c as any).paciente_atendido_parentesco && (
+                          <span className="text-muted-foreground">({(c as any).paciente_atendido_parentesco})</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <StatusBadge status={toStatusBadge(c.status)} />
                   <div className="flex flex-wrap gap-2">
