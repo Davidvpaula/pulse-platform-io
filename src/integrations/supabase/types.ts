@@ -3781,7 +3781,36 @@ export type Database = {
           servico_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_medico_comissao_override_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_medico_comissao_override_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_medico_comissao_override_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_financeiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_medico_comissao_override_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_publicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medico_dados_bancarios: {
         Row: {
