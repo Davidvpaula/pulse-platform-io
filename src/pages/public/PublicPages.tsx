@@ -274,7 +274,7 @@ export const MedicoDetalhe = () => {
       // Find medico by slug
       const { data } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, created_at");
+        .select("id, nome, tratamento, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, created_at");
 
       const found = (data ?? []).find((m: any) => medicoSlug(m.nome) === slug);
       const med = found ?? null;
