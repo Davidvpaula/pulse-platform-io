@@ -302,6 +302,28 @@ export default function PacienteCheckout() {
         </div>
       </div>
 
+      {/* Bloco responsável / paciente atendido */}
+      {atendidoInfo && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+          <Users className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div className="space-y-1">
+            <p>
+              <span className="text-muted-foreground">Responsável financeiro:</span>{" "}
+              <strong>{titularNome}</strong>
+            </p>
+            <p>
+              <span className="text-muted-foreground">Paciente atendido:</span>{" "}
+              <strong>{atendidoInfo.nome}</strong>
+              {atendidoInfo.parentesco && (
+                <span className="ml-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {atendidoInfo.parentesco}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Coluna principal */}
         <div className="space-y-6">
