@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
-import { SeletorPacienteAtendido } from "@/components/paciente/SeletorPacienteAtendido";
+import { SeletorPacienteAtendido, type NovoDependenteData } from "@/components/paciente/SeletorPacienteAtendido";
 
 /* ─── Tipos de agendamento suportados ─── */
 export type TipoAgendamento = "especialidade" | "servico" | "pa" | "retorno" | "empresa" | "plano";
@@ -191,6 +191,7 @@ export default function AgendamentoConfirmar() {
   const [submitting, setSubmitting] = useState(false);
   const [titularPacienteId, setTitularPacienteId] = useState<string | null>(null);
   const [pacienteAtendidoId, setPacienteAtendidoId] = useState<string | null>(null);
+  const [novoDependenteRef, setNovoDependenteRef] = useState<{ validate: () => NovoDependenteData | null; save: () => Promise<string | null> } | null>(null);
 
   // Terms acceptance state
   const [termoConsulta, setTermoConsulta] = useState<TermoRow | null>(null);
@@ -272,6 +273,15 @@ export default function AgendamentoConfirmar() {
     if (!slotInfo) return;
     setSubmitting(true);
     try {
+      // 0) If "novo" dependente selected, validate and save first
+      let resolvedAtendidoId = pacienteAtendidoId;
+      if (pacienteAtendidoId === "novo" && novoDependenteRef) {
+        const valid = novoDependenteRef.validate();
+        if (!valid) { setSubmitting(false); return; }
+        const newId = await novoDependenteRef.save();
+        if (!newId) { setSubmitting(false); return; }
+        resolvedAtendidoId = newId;
+      }
       // 1) Reserva o slot SEM criar consulta
       const reserva = await reservarSlotUnificado({
         slot_id: slotInfo.id,
@@ -297,7 +307,7 @@ export default function AgendamentoConfirmar() {
           motivo: reserva.motivo,
           paciente_id: reserva.paciente_id,
           medico_id: reserva.medico_id,
-          paciente_atendido_id: pacienteAtendidoId ?? undefined,
+          paciente_atendido_id: (resolvedAtendidoId && resolvedAtendidoId !== "novo") ? resolvedAtendidoId : undefined,
         },
         snapshot: {
           valor_bruto_centavos: reserva.valor_centavos,
@@ -332,7 +342,7 @@ export default function AgendamentoConfirmar() {
     } finally {
       setSubmitting(false);
     }
-  }, [slotInfo, navigate, tipo, ref, pacienteAtendidoId]);
+  }, [slotInfo, navigate, tipo, ref, pacienteAtendidoId, novoDependenteRef]);
 
   // Determine if terms need acceptance
   const needsConsulta = !!termoConsulta && !aceitouConsulta;
@@ -396,6 +406,7 @@ export default function AgendamentoConfirmar() {
               titularId={titularPacienteId}
               value={pacienteAtendidoId}
               onChange={setPacienteAtendidoId}
+              onNovoDependenteRef={setNovoDependenteRef}
             />
           )}
 
