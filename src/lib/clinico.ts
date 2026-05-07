@@ -134,7 +134,7 @@ export async function getDependenteIds(): Promise<string[]> {
     .select("id")
     .eq("responsavel_id", p.id)
     .eq("tipo_paciente", "dependente")
-    .eq("ativo", true);
+    .eq("status_conta", "ativo");
   return (data ?? []).map((d: any) => d.id);
 }
 
