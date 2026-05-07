@@ -342,7 +342,7 @@ export default function AgendamentoConfirmar() {
     } finally {
       setSubmitting(false);
     }
-  }, [slotInfo, navigate, tipo, ref, pacienteAtendidoId]);
+  }, [slotInfo, navigate, tipo, ref, pacienteAtendidoId, novoDependenteRef]);
 
   // Determine if terms need acceptance
   const needsConsulta = !!termoConsulta && !aceitouConsulta;
