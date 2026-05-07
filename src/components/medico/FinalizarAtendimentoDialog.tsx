@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, FileText, Pill, Wallet, AlertCircle, Plus, Trash2 } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, ClipboardList, Pill, Wallet, AlertCircle } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -10,9 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import DropzonePdf from "@/components/shared/DropzonePdf";
 import type { ConsultaDetalhada } from "@/lib/clinico";
-
-type Medicamento = { nome: string; dose: string; instrucoes: string };
 
 type Props = {
   consulta: ConsultaDetalhada | null;
@@ -25,6 +24,49 @@ function formatBRL(c: number) {
   return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+async function uploadDocPaciente(
+  file: File,
+  tipo: "prescricao" | "atestado",
+  consulta: ConsultaDetalhada,
+  userId: string,
+) {
+  // Storage path uses paciente's user_id as folder (matches existing RLS)
+  // We need paciente's user_id — fetch it
+  const { data: pac } = await supabase
+    .from("pacientes")
+    .select("user_id")
+    .eq("id", consulta.paciente_id)
+    .single();
+
+  if (!pac?.user_id) throw new Error("Paciente sem vínculo de usuário — não é possível salvar o documento.");
+
+  const ts = Date.now();
+  const storagePath = `${pac.user_id}/${consulta.id}/${tipo}_${ts}.pdf`;
+
+  const { error: errUpload } = await supabase.storage
+    .from("paciente-docs")
+    .upload(storagePath, file, { contentType: "application/pdf", upsert: false });
+
+  if (errUpload) throw new Error(`Erro ao enviar ${tipo}: ${errUpload.message}`);
+
+  const titulo = tipo === "prescricao" ? "Prescrição médica" : "Atestado médico";
+
+  const { error: errDoc } = await supabase.from("documentos_paciente").insert({
+    paciente_id: consulta.paciente_id,
+    user_id: pac.user_id,
+    tipo: tipo as any,
+    titulo,
+    descricao: `${consulta.especialidade_nome ?? "Consulta"} — ${new Date(consulta.inicio).toLocaleDateString("pt-BR")}`,
+    storage_path: storagePath,
+    mime_type: "application/pdf",
+    tamanho_bytes: file.size,
+    consulta_id: consulta.id,
+    uploaded_by: userId,
+  });
+
+  if (errDoc) throw new Error(`Erro ao registrar ${tipo}: ${errDoc.message}`);
+}
+
 export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFinalizado }: Props) {
   const [salvando, setSalvando] = useState(false);
 
@@ -35,11 +77,13 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
   const [hipotese, setHipotese] = useState("");
   const [cidStr, setCidStr] = useState("");
 
-  // Prescrição
+  // Prescrição (PDF)
   const [criarPrescricao, setCriarPrescricao] = useState(false);
-  const [meds, setMeds] = useState<Medicamento[]>([{ nome: "", dose: "", instrucoes: "" }]);
-  const [orientacoes, setOrientacoes] = useState("");
-  const [validadeDias, setValidadeDias] = useState(30);
+  const [prescricaoFile, setPrescricaoFile] = useState<File | null>(null);
+
+  // Atestado (PDF)
+  const [criarAtestado, setCriarAtestado] = useState(false);
+  const [atestadoFile, setAtestadoFile] = useState<File | null>(null);
 
   // Pagamento
   const [pagamentoStatus, setPagamentoStatus] = useState<string | null>(null);
@@ -49,13 +93,11 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
     if (!open || !consulta) return;
     setCriarProntuario(true);
     setQueixa(""); setConduta(""); setHipotese(""); setCidStr("");
-    setCriarPrescricao(false);
-    setMeds([{ nome: "", dose: "", instrucoes: "" }]);
-    setOrientacoes(""); setValidadeDias(30);
+    setCriarPrescricao(false); setPrescricaoFile(null);
+    setCriarAtestado(false); setAtestadoFile(null);
     setMarcarPago(false);
     setPagamentoStatus(null);
 
-    // Verifica se já existe pagamento associado
     supabase
       .from("pagamentos")
       .select("status")
@@ -75,21 +117,14 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
     pagamentoStatus === "processando" ||
     consulta.status === "aguardando_pagamento";
 
-  function addMed() {
-    setMeds((m) => [...m, { nome: "", dose: "", instrucoes: "" }]);
-  }
-  function rmMed(i: number) {
-    setMeds((m) => m.filter((_, idx) => idx !== i));
-  }
-  function setMed(i: number, patch: Partial<Medicamento>) {
-    setMeds((m) => m.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
-  }
-
   async function finalizar() {
     if (!consulta) return;
     setSalvando(true);
     try {
-      // 1) Prontuário (upsert por consulta_id — relação 1:1)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sessão expirada — faça login novamente.");
+
+      // 1) Prontuário
       if (criarProntuario && (queixa || conduta || hipotese || cidStr)) {
         const cid10 = cidStr
           .split(/[,\s]+/)
@@ -110,25 +145,19 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
         if (errProntuario) throw errProntuario;
       }
 
-      // 2) Prescrição
-      if (criarPrescricao) {
-        const medsLimpos = meds.filter((m) => m.nome.trim().length > 0);
-        if (medsLimpos.length === 0 && !orientacoes.trim()) {
-          throw new Error("Adicione pelo menos um medicamento ou orientações para gerar a prescrição.");
-        }
-        const { error: errPresc } = await supabase.from("prescricoes").insert({
-          consulta_id: consulta.id,
-          medicamentos: medsLimpos as any,
-          orientacoes: orientacoes.trim() || null,
-          validade_dias: validadeDias,
-        });
-        if (errPresc) throw errPresc;
+      // 2) Prescrição (PDF upload)
+      if (criarPrescricao && prescricaoFile) {
+        await uploadDocPaciente(prescricaoFile, "prescricao", consulta, user.id);
       }
 
-      // 3) Pagamento simulado (se solicitado)
+      // 3) Atestado (PDF upload)
+      if (criarAtestado && atestadoFile) {
+        await uploadDocPaciente(atestadoFile, "atestado", consulta, user.id);
+      }
+
+      // 4) Pagamento simulado
       if (marcarPago && valor > 0) {
         if (semPagamento) {
-          // Cria pagamento já pago (registro simulado pós-atendimento)
           const { error: errPag } = await supabase.from("pagamentos").insert({
             consulta_id: consulta.id,
             valor_centavos: valor,
@@ -154,7 +183,7 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
         }
       }
 
-      // 4) Atualiza status da consulta
+      // 5) Atualiza status da consulta
       const { error: errCon } = await supabase
         .from("consultas")
         .update({ status: "concluida" })
@@ -223,38 +252,39 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
             <header className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Pill className="h-4 w-4 text-primary" />
-                <p className="font-semibold">Prescrição / documento</p>
+                <p className="font-semibold">Prescrição</p>
               </div>
               <Switch checked={criarPrescricao} onCheckedChange={setCriarPrescricao} />
             </header>
             {criarPrescricao && (
-              <div className="mt-4 space-y-3">
-                {meds.map((m, i) => (
-                  <div key={i} className="grid gap-2 rounded-md border border-border/60 p-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-                    <Input placeholder="Medicamento" value={m.nome} onChange={(e) => setMed(i, { nome: e.target.value })} />
-                    <Input placeholder="Dose (ex.: 500mg)" value={m.dose} onChange={(e) => setMed(i, { dose: e.target.value })} />
-                    <Input placeholder="Instruções (ex.: 8/8h por 7 dias)" value={m.instrucoes} onChange={(e) => setMed(i, { instrucoes: e.target.value })} />
-                    <Button type="button" size="icon" variant="ghost" onClick={() => rmMed(i)} disabled={meds.length === 1}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" size="sm" variant="outline" onClick={addMed}>
-                  <Plus className="mr-1.5 h-3.5 w-3.5" /> Adicionar medicamento
-                </Button>
-                <div>
-                  <Label>Orientações gerais</Label>
-                  <Textarea value={orientacoes} onChange={(e) => setOrientacoes(e.target.value)} rows={2} />
-                </div>
-                <div className="max-w-[200px]">
-                  <Label>Validade (dias)</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={validadeDias}
-                    onChange={(e) => setValidadeDias(Number(e.target.value) || 30)}
-                  />
-                </div>
+              <div className="mt-4">
+                <DropzonePdf
+                  label="Arraste o PDF da prescrição ou clique para selecionar"
+                  file={prescricaoFile}
+                  onFileSelected={setPrescricaoFile}
+                  disabled={salvando}
+                />
+              </div>
+            )}
+          </section>
+
+          {/* Atestado */}
+          <section className="rounded-lg border border-border p-4">
+            <header className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-primary" />
+                <p className="font-semibold">Atestado</p>
+              </div>
+              <Switch checked={criarAtestado} onCheckedChange={setCriarAtestado} />
+            </header>
+            {criarAtestado && (
+              <div className="mt-4">
+                <DropzonePdf
+                  label="Arraste o PDF do atestado ou clique para selecionar"
+                  file={atestadoFile}
+                  onFileSelected={setAtestadoFile}
+                  disabled={salvando}
+                />
               </div>
             )}
           </section>
