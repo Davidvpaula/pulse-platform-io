@@ -307,7 +307,7 @@ export default function AgendamentoConfirmar() {
           motivo: reserva.motivo,
           paciente_id: reserva.paciente_id,
           medico_id: reserva.medico_id,
-          paciente_atendido_id: pacienteAtendidoId ?? undefined,
+          paciente_atendido_id: (resolvedAtendidoId && resolvedAtendidoId !== "novo") ? resolvedAtendidoId : undefined,
         },
         snapshot: {
           valor_bruto_centavos: reserva.valor_centavos,
