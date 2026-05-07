@@ -304,7 +304,8 @@ export async function listConsultasDoMedico(opts?: {
     .from("consultas")
     .select(`
       *,
-      pacientes:paciente_id ( user_id ),
+      pacientes:paciente_id ( user_id, nome_completo ),
+      paciente_atendido:paciente_atendido_id ( nome_completo ),
       especialidades:especialidade_id ( nome )
     `)
     .eq("medico_id", medicoId)
@@ -320,7 +321,7 @@ export async function listConsultasDoMedico(opts?: {
     return [];
   }
 
-  // Busca nomes de pacientes em lote
+  // Busca nomes de pacientes titulares em lote (fallback via profiles)
   const userIds = Array.from(
     new Set(
       (data ?? [])
@@ -337,11 +338,17 @@ export async function listConsultasDoMedico(opts?: {
     nomes = Object.fromEntries((profs ?? []).map((p) => [p.id, p.nome]));
   }
 
-  return (data ?? []).map((c: any) => ({
-    ...c,
-    paciente_nome: c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null,
-    especialidade_nome: c.especialidades?.nome ?? null,
-  }));
+  return (data ?? []).map((c: any) => {
+    // If paciente_atendido_id is set, show the dependente's name
+    const atendidoNome = (c as any).paciente_atendido?.nome_completo;
+    const titularNome = c.pacientes?.nome_completo
+      || (c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null);
+    return {
+      ...c,
+      paciente_nome: atendidoNome || titularNome || null,
+      especialidade_nome: c.especialidades?.nome ?? null,
+    };
+  });
 }
 
 /** Paciente agregado a partir das consultas do médico logado. */
