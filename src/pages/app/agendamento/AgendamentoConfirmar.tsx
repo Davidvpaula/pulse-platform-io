@@ -390,7 +390,15 @@ export default function AgendamentoConfirmar() {
             <h2 className="font-display text-lg font-semibold">Seus dados</h2>
           </div>
 
-          <div>
+          {/* Seletor de paciente atendido (titular ou dependente) */}
+          {titularPacienteId && (
+            <SeletorPacienteAtendido
+              titularId={titularPacienteId}
+              value={pacienteAtendidoId}
+              onChange={setPacienteAtendidoId}
+            />
+          )}
+
             <Label htmlFor="nome_completo">Nome completo *</Label>
             <Input id="nome_completo" {...form.register("nome_completo")} placeholder="Como aparece nos documentos" autoComplete="name" maxLength={120} />
             {form.formState.errors.nome_completo && <p className="mt-1 text-xs text-destructive">{form.formState.errors.nome_completo.message}</p>}
