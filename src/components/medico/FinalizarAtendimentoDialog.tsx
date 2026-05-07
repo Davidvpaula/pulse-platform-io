@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, FileText, ClipboardList, Pill, Wallet, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, ClipboardList, Pill, Wallet, AlertCircle } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
