@@ -229,8 +229,13 @@ export type AnexoConsulta = {
 export async function listAnexosConsultaDoPaciente(): Promise<AnexoConsulta[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
-  // Pega ids das consultas do paciente e busca anexos respeitando RLS
-  const { data: cs } = await supabase.from("consultas").select("id").eq("paciente_id", p.id);
+  const depIds = await getDependenteIds();
+  const allIds = [p.id, ...depIds];
+  // Get consultas where titular is paciente_id OR dependente is paciente_atendido_id
+  const { data: cs } = await supabase
+    .from("consultas")
+    .select("id")
+    .or(`paciente_id.in.(${allIds.join(",")}),paciente_atendido_id.in.(${allIds.join(",")})`);
   const ids = (cs ?? []).map((c: any) => c.id);
   if (ids.length === 0) return [];
   const { data, error } = await supabase
