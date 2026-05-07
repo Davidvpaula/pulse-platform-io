@@ -8039,6 +8039,7 @@ export type Database = {
         Returns: undefined
       }
       get_empresa_id_do_usuario: { Args: { _user_id: string }; Returns: string }
+      get_titular_paciente_id: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
