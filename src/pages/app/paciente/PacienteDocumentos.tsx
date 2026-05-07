@@ -105,6 +105,23 @@ export default function PacienteDocumentos() {
     if (!session) return;
     setLoadingDocs(true);
     setLoadingPresc(true);
+
+    // Load dependentes list
+    const pac = await getPacienteAtual();
+    if (pac) {
+      const { data: deps } = await supabase
+        .from("pacientes")
+        .select("id, nome_completo, parentesco")
+        .eq("responsavel_id", pac.id)
+        .eq("tipo_paciente", "dependente")
+        .eq("status_conta", "ativo");
+      setDependentes((deps ?? []).map((d: any) => ({
+        id: d.id,
+        nome: d.nome_completo ?? "Dependente",
+        parentesco: d.parentesco,
+      })));
+    }
+
     const [d, cs, an] = await Promise.all([
       listDocumentosDoPaciente(),
       listConsultasDoPaciente(),
