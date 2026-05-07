@@ -207,9 +207,9 @@ Deno.serve(async (req) => {
         entidade_id_interno: medico_id,
         entidade_id_externo: profId,
         payload_resposta: { mode: "diagnostico", testes: results.length, algum_ok: algumOk, algum_com_agenda: algumComAgenda },
-        status: algumOk ? "sucesso" : "erro",
+        status: algumOk ? "success" : "error",
         erro: algumOk ? null : recomendacao,
-        origem: "admin_ui",
+        origem: "admin",
         user_id: u.user.id,
         duracao_ms: Date.now() - start,
       });
@@ -314,9 +314,9 @@ Deno.serve(async (req) => {
         total_eventos: eventos.length,
         periodo: { inicio, fim },
       },
-      status: endpointUsado ? "sucesso" : "erro",
+      status: endpointUsado ? "success" : "error",
       erro: endpointUsado ? null : `Nenhum endpoint retornou dados. Último HTTP: ${httpStatus}`,
-      origem: "admin_ui",
+      origem: "admin",
       user_id: u.user.id,
       duracao_ms: Date.now() - start,
     });
