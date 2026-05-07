@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       .select(`
         id, inicio, fim, valor_centavos, modalidade, status, motivo,
         feegow_agendamento_id, feegow_sync_status,
-        medico_id, paciente_id,
+        medico_id, paciente_id, paciente_atendido_id,
         medicos!inner(id, nome, feegow_professional_id, feegow_especialidade_id),
         pacientes!inner(id, nome_completo, feegow_paciente_id, cpf, telefone, email)
       `)
@@ -97,10 +97,24 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
-    // === VALIDAÇÕES ===
+    // === RESOLVER PACIENTE ATENDIDO (dependente ou titular) ===
     const medico = consulta.medicos as any;
-    const paciente = consulta.pacientes as any;
+    let paciente = consulta.pacientes as any; // titular (responsável financeiro)
 
+    // Se há paciente_atendido_id, o paciente real na Feegow é o dependente
+    if (consulta.paciente_atendido_id) {
+      const { data: dep, error: depErr } = await adminClient
+        .from("pacientes")
+        .select("id, nome_completo, feegow_paciente_id, cpf, telefone, email")
+        .eq("id", consulta.paciente_atendido_id)
+        .maybeSingle();
+      if (depErr || !dep) {
+        return json({ error: "Dependente (paciente atendido) não encontrado", detalhe: depErr?.message }, 404);
+      }
+      paciente = dep;
+    }
+
+    // === VALIDAÇÕES ===
     if (!medico?.feegow_professional_id) {
       return json({ error: "Médico não vinculado à Feegow. Vincule primeiro na página de profissionais." }, 422);
     }
@@ -108,7 +122,8 @@ Deno.serve(async (req) => {
       return json({ error: "Médico sem especialidade Feegow mapeada. Verifique o vínculo." }, 422);
     }
     if (!paciente?.feegow_paciente_id) {
-      return json({ error: "Paciente sem cadastro na Feegow. Envie o paciente primeiro." }, 422);
+      const quem = consulta.paciente_atendido_id ? "Dependente" : "Paciente";
+      return json({ error: `${quem} sem cadastro na Feegow. Envie o paciente primeiro.` }, 422);
     }
 
     // === MONTAR PAYLOAD ===
