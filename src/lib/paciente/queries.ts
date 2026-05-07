@@ -157,7 +157,7 @@ export function usePacienteFinanceiro(enabled = true) {
         .select(`
           id, consulta_id, valor_centavos, status, metodo, provider,
           checkout_url, paid_at, cancelled_at, created_at, metadata,
-          consultas!inner(inicio, modalidade, medico_id, especialidade_id)
+          consultas!inner(inicio, modalidade, medico_id, especialidade_id, paciente_atendido_id)
         `)
         .order("created_at", { ascending: false });
 
@@ -165,13 +165,16 @@ export function usePacienteFinanceiro(enabled = true) {
 
       const medicoIds = Array.from(new Set((pags ?? []).map((p: any) => p.consultas?.medico_id).filter(Boolean)));
       const espIds = Array.from(new Set((pags ?? []).map((p: any) => p.consultas?.especialidade_id).filter(Boolean)));
+      const atendidoIds = Array.from(new Set((pags ?? []).map((p: any) => p.consultas?.paciente_atendido_id).filter(Boolean)));
 
-      const [medRes, espRes] = await Promise.all([
+      const [medRes, espRes, atendidoRes] = await Promise.all([
         medicoIds.length ? supabase.from("medicos").select("id, nome").in("id", medicoIds) : Promise.resolve({ data: [] as any[] }),
         espIds.length ? supabase.from("especialidades").select("id, nome").in("id", espIds) : Promise.resolve({ data: [] as any[] }),
+        atendidoIds.length ? supabase.from("pacientes").select("id, nome_completo").in("id", atendidoIds as string[]) : Promise.resolve({ data: [] as any[] }),
       ]);
       const medMap = new Map((medRes.data ?? []).map((m: any) => [m.id, m.nome]));
       const espMap = new Map((espRes.data ?? []).map((e: any) => [e.id, e.nome]));
+      const atendidoMap = new Map((atendidoRes.data ?? []).map((p: any) => [p.id, p.nome_completo]));
 
       const linhas = (pags ?? []).map((p: any) => ({
         id: p.id,
@@ -190,6 +193,7 @@ export function usePacienteFinanceiro(enabled = true) {
           modalidade: p.consultas?.modalidade,
           medico_nome: medMap.get(p.consultas?.medico_id) ?? "Médico",
           especialidade_nome: espMap.get(p.consultas?.especialidade_id) ?? "—",
+          paciente_atendido_nome: atendidoMap.get(p.consultas?.paciente_atendido_id) ?? null,
         },
       }));
 
