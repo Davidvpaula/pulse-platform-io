@@ -191,6 +191,7 @@ export default function AgendamentoConfirmar() {
   const [submitting, setSubmitting] = useState(false);
   const [titularPacienteId, setTitularPacienteId] = useState<string | null>(null);
   const [pacienteAtendidoId, setPacienteAtendidoId] = useState<string | null>(null);
+  const [novoDependenteRef, setNovoDependenteRef] = useState<{ validate: () => NovoDependenteData | null; save: () => Promise<string | null> } | null>(null);
 
   // Terms acceptance state
   const [termoConsulta, setTermoConsulta] = useState<TermoRow | null>(null);
