@@ -312,6 +312,61 @@ export default function PacienteDocumentos() {
         })}
       </div>
 
+      {/* Seletor de paciente (titular ou dependente) */}
+      {dependentes.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Visualizando:</span>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setFiltroPaciente("todos")}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition",
+                filtroPaciente === "todos"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const fetchTitularId = async () => {
+                  const pac = await getPacienteAtual();
+                  if (pac) setFiltroPaciente(pac.id);
+                };
+                void fetchTitularId();
+              }}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition",
+                filtroPaciente !== "todos" && !dependentes.some(d => d.id === filtroPaciente)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              Eu mesmo
+            </button>
+            {dependentes.map((dep) => (
+              <button
+                key={dep.id}
+                type="button"
+                onClick={() => setFiltroPaciente(dep.id)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition",
+                  filtroPaciente === dep.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {dep.nome}{dep.parentesco ? ` (${dep.parentesco})` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="meus">
