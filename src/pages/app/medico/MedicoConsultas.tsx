@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Video, MessageCircle, Repeat, XCircle,
   Loader2, Search, Play, User, Stethoscope, History, Building2,
-  CheckCircle2, Clock, AlertCircle, ListChecks,
+  CheckCircle2, Clock, AlertCircle, ListChecks, ExternalLink,
 } from "lucide-react";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";

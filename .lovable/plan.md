@@ -1,21 +1,17 @@
 ## Objetivo
+Adicionar um botão na área de ações de cada card de consulta (ao lado dos botões existentes como Continuar, Finalizar, etc.) que abre a página do dashboard Feegow em uma nova aba.
 
-Remover a seção "Registro do prontuário" (Queixa, Hipótese, Conduta, CID-10) do dialog `FinalizarAtendimentoDialog`.
+## Implementação
 
-## Confirmação de rotas de upload
+**Arquivo:** `src/pages/app/medico/MedicoConsultas.tsx`
 
-As rotas de upload de PDF (Prescrição e Atestado) estão corretas:
-- Bucket `paciente-docs` existe (privado)
-- Storage policy `medico envia docs para paciente-docs` permite INSERT pelo médico
-- Tabela `documentos_paciente` tem policy `Médico insere docs paciente da consulta` para INSERT
-- Path: `{paciente_user_id}/{consulta_id}/{tipo}_{timestamp}.pdf`
-- Tudo funcional, sem alteração necessária
+1. Importar `ExternalLink` do lucide-react
+2. Adicionar um botão `variant="ghost"` com ícone e título "Abrir Feegow" na área de ações do card (junto com os botões de chat, histórico, reagendar, cancelar)
+3. O botão abrirá a URL do dashboard Feegow (`https://app.feegow.com`) em nova aba via `window.open`
+4. A URL da Feegow pode vir de uma variável de ambiente (`FEEGOW_BASE_URL`) ou ser fixa — como é apenas um link para o dashboard, usaremos a URL padrão `https://app.feegow.com`
 
-## Alterações
-
-### 1. `src/components/medico/FinalizarAtendimentoDialog.tsx`
-
-- Remover estados: `criarProntuario`, `queixa`, `conduta`, `hipotese`, `cidStr`
-- Remover toda a seção visual "Registro do prontuário" (section com switch + textareas + input CID)
-- Remover bloco de upsert em `prontuarios` dentro da função `finalizar()`
-- Manter tudo o mais (Prescrição, Atestado, Pagamento) intacto
+## Detalhes técnicos
+- Botão com `variant="ghost"`, `size="sm"`, ícone `ExternalLink` com cor indicativa
+- Título (tooltip nativo): "Abrir dashboard Feegow"
+- `window.open(url, "_blank", "noopener,noreferrer")`
+- Sem dependência de backend, apenas um link externo
