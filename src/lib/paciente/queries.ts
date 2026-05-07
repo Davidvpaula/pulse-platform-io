@@ -68,7 +68,7 @@ export function usePacienteRetornos(enabled = true) {
 export function usePacienteDocumentos(enabled = true) {
   return useQuery<DocumentoPaciente[]>({
     queryKey: pacienteKeys.documentos(),
-    queryFn: listDocumentosDoPaciente,
+    queryFn: () => listDocumentosDoPaciente(),
     enabled,
     ...QUERY_DYNAMIC,
   });
