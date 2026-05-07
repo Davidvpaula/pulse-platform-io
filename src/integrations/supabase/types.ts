@@ -6848,7 +6848,15 @@ export type Database = {
           updated_at?: string
           valor_centavos?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reembolsos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       retornos_gratuitos: {
         Row: {
