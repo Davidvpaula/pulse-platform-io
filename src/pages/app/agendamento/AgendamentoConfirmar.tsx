@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
+import { SeletorPacienteAtendido } from "@/components/paciente/SeletorPacienteAtendido";
 
 /* ─── Tipos de agendamento suportados ─── */
 export type TipoAgendamento = "especialidade" | "servico" | "pa" | "retorno" | "empresa" | "plano";
@@ -188,6 +189,8 @@ export default function AgendamentoConfirmar() {
   const [slotInfo, setSlotInfo] = useState<SlotInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [titularPacienteId, setTitularPacienteId] = useState<string | null>(null);
+  const [pacienteAtendidoId, setPacienteAtendidoId] = useState<string | null>(null);
 
   // Terms acceptance state
   const [termoConsulta, setTermoConsulta] = useState<TermoRow | null>(null);
@@ -249,6 +252,7 @@ export default function AgendamentoConfirmar() {
       }
 
       if (paciente) {
+        setTitularPacienteId(paciente.id);
         form.reset({
           nome_completo: paciente.nome_completo ?? "",
           cpf: paciente.cpf ? maskCPF(paciente.cpf) : "",
@@ -293,6 +297,7 @@ export default function AgendamentoConfirmar() {
           motivo: reserva.motivo,
           paciente_id: reserva.paciente_id,
           medico_id: reserva.medico_id,
+          paciente_atendido_id: pacienteAtendidoId ?? undefined,
         },
         snapshot: {
           valor_bruto_centavos: reserva.valor_centavos,
@@ -327,7 +332,7 @@ export default function AgendamentoConfirmar() {
     } finally {
       setSubmitting(false);
     }
-  }, [slotInfo, navigate, tipo, ref]);
+  }, [slotInfo, navigate, tipo, ref, pacienteAtendidoId]);
 
   // Determine if terms need acceptance
   const needsConsulta = !!termoConsulta && !aceitouConsulta;
@@ -384,6 +389,15 @@ export default function AgendamentoConfirmar() {
             <User className="h-4 w-4 text-primary" />
             <h2 className="font-display text-lg font-semibold">Seus dados</h2>
           </div>
+
+          {/* Seletor de paciente atendido (titular ou dependente) */}
+          {titularPacienteId && (
+            <SeletorPacienteAtendido
+              titularId={titularPacienteId}
+              value={pacienteAtendidoId}
+              onChange={setPacienteAtendidoId}
+            />
+          )}
 
           <div>
             <Label htmlFor="nome_completo">Nome completo *</Label>

@@ -34,6 +34,8 @@ export interface CriarCheckoutInput {
     motivo?: string | null;
     paciente_id: string;
     medico_id: string;
+    /** When set, the consultation is for a dependente (not the titular). */
+    paciente_atendido_id?: string | null;
   };
   /** Snapshot financeiro imutável — congelado no momento do checkout */
   snapshot?: {
@@ -94,6 +96,9 @@ const mockProvider = {
       metadata.motivo = input.reserva.motivo ?? null;
       metadata.paciente_id = input.reserva.paciente_id;
       metadata.medico_id = input.reserva.medico_id;
+      if (input.reserva.paciente_atendido_id) {
+        metadata.paciente_atendido_id = input.reserva.paciente_atendido_id;
+      }
     }
     // Snapshot financeiro imutável
     if (input.snapshot) {

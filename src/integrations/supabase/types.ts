@@ -1414,6 +1414,7 @@ export type Database = {
           nfe_id: string | null
           nfe_snapshot: Json | null
           nfe_status: string | null
+          paciente_atendido_id: string | null
           paciente_id: string
           responsavel_agendamento_id: string | null
           servico_id: string | null
@@ -1452,6 +1453,7 @@ export type Database = {
           nfe_id?: string | null
           nfe_snapshot?: Json | null
           nfe_status?: string | null
+          paciente_atendido_id?: string | null
           paciente_id: string
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
@@ -1490,6 +1492,7 @@ export type Database = {
           nfe_id?: string | null
           nfe_snapshot?: Json | null
           nfe_status?: string | null
+          paciente_atendido_id?: string | null
           paciente_id?: string
           responsavel_agendamento_id?: string | null
           servico_id?: string | null
@@ -1520,6 +1523,13 @@ export type Database = {
             columns: ["medico_id"]
             isOneToOne: false
             referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_paciente_atendido_id_fkey"
+            columns: ["paciente_atendido_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
             referencedColumns: ["id"]
           },
           {

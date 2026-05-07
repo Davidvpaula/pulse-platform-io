@@ -304,7 +304,8 @@ export async function listConsultasDoMedico(opts?: {
     .from("consultas")
     .select(`
       *,
-      pacientes:paciente_id ( user_id ),
+      pacientes:paciente_id ( user_id, nome_completo ),
+      paciente_atendido:paciente_atendido_id ( nome_completo ),
       especialidades:especialidade_id ( nome )
     `)
     .eq("medico_id", medicoId)
@@ -320,7 +321,7 @@ export async function listConsultasDoMedico(opts?: {
     return [];
   }
 
-  // Busca nomes de pacientes em lote
+  // Busca nomes de pacientes titulares em lote (fallback via profiles)
   const userIds = Array.from(
     new Set(
       (data ?? [])
@@ -337,11 +338,17 @@ export async function listConsultasDoMedico(opts?: {
     nomes = Object.fromEntries((profs ?? []).map((p) => [p.id, p.nome]));
   }
 
-  return (data ?? []).map((c: any) => ({
-    ...c,
-    paciente_nome: c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null,
-    especialidade_nome: c.especialidades?.nome ?? null,
-  }));
+  return (data ?? []).map((c: any) => {
+    // If paciente_atendido_id is set, show the dependente's name
+    const atendidoNome = (c as any).paciente_atendido?.nome_completo;
+    const titularNome = c.pacientes?.nome_completo
+      || (c.pacientes?.user_id ? nomes[c.pacientes.user_id] ?? null : null);
+    return {
+      ...c,
+      paciente_nome: atendidoNome || titularNome || null,
+      especialidade_nome: c.especialidades?.nome ?? null,
+    };
+  });
 }
 
 /** Paciente agregado a partir das consultas do médico logado. */
@@ -494,14 +501,25 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
   const paciente = await getPacienteAtual();
   if (!paciente) return [];
 
+  // Fetch own consultations + those where a dependente is the patient
+  const { data: depIds } = await supabase
+    .from("pacientes")
+    .select("id")
+    .eq("responsavel_id", paciente.id)
+    .eq("tipo_paciente", "dependente");
+  const allIds = [paciente.id, ...(depIds ?? []).map((d: any) => d.id)];
+
   const { data, error } = await supabase
     .from("consultas")
     .select(`
       *,
       medicos:medico_id ( nome ),
-      especialidades:especialidade_id ( nome )
+      especialidades:especialidade_id ( nome ),
+      paciente_atendido:paciente_atendido_id ( nome_completo, parentesco )
     `)
-    .eq("paciente_id", paciente.id)
+    .or(
+      `paciente_id.eq.${paciente.id},paciente_atendido_id.in.(${allIds.join(",")})`
+    )
     .order("inicio", { ascending: true });
 
   if (error) {
@@ -513,6 +531,9 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
     ...c,
     medico_nome: c.medicos?.nome ?? null,
     especialidade_nome: c.especialidades?.nome ?? null,
+    // Expose dependente info for display
+    paciente_atendido_nome: c.paciente_atendido?.nome_completo ?? null,
+    paciente_atendido_parentesco: c.paciente_atendido?.parentesco ?? null,
   }));
 }
 
