@@ -531,6 +531,9 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
     ...c,
     medico_nome: c.medicos?.nome ?? null,
     especialidade_nome: c.especialidades?.nome ?? null,
+    // Expose dependente info for display
+    paciente_atendido_nome: c.paciente_atendido?.nome_completo ?? null,
+    paciente_atendido_parentesco: c.paciente_atendido?.parentesco ?? null,
   }));
 }
 
