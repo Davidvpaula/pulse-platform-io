@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -31,6 +31,11 @@ type ConsultaCtx = {
   especialidade_id: string | null;
 };
 
+type AtendidoInfo = {
+  nome: string;
+  parentesco: string | null;
+} | null;
+
 export default function PacienteCheckout() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
@@ -39,6 +44,8 @@ export default function PacienteCheckout() {
   const [loading, setLoading] = useState(true);
   const [metodo, setMetodo] = useState<PagamentoMetodo>("pix");
   const [processando, setProcessando] = useState(false);
+  const [atendidoInfo, setAtendidoInfo] = useState<AtendidoInfo>(null);
+  const [titularNome, setTitularNome] = useState<string>("");
 
   // Cupom
   const [codigoCupom, setCodigoCupom] = useState("");
@@ -91,6 +98,21 @@ export default function PacienteCheckout() {
           });
         }
       }
+
+      // Resolve dependente info and titular name
+      const pacienteAtendidoId = (p.metadata as any)?.paciente_atendido_id;
+      if (pacienteAtendidoId) {
+        const { data: dep } = await supabase
+          .from("pacientes")
+          .select("nome_completo, parentesco")
+          .eq("id", pacienteAtendidoId)
+          .maybeSingle();
+        if (dep) setAtendidoInfo({ nome: dep.nome_completo ?? "Dependente", parentesco: dep.parentesco });
+      }
+
+      // Titular name (from session)
+      const { data: { session: s } } = await supabase.auth.getSession();
+      setTitularNome(s?.user?.user_metadata?.nome ?? s?.user?.email ?? "Você");
     }
 
     setLoading(false);
@@ -279,6 +301,28 @@ export default function PacienteCheckout() {
           em seguida. Aqui você pode testar o fluxo completo sem cobrança.
         </div>
       </div>
+
+      {/* Bloco responsável / paciente atendido */}
+      {atendidoInfo && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+          <Users className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div className="space-y-1">
+            <p>
+              <span className="text-muted-foreground">Responsável financeiro:</span>{" "}
+              <strong>{titularNome}</strong>
+            </p>
+            <p>
+              <span className="text-muted-foreground">Paciente atendido:</span>{" "}
+              <strong>{atendidoInfo.nome}</strong>
+              {atendidoInfo.parentesco && (
+                <span className="ml-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {atendidoInfo.parentesco}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Coluna principal */}

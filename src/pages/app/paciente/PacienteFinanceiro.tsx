@@ -39,6 +39,7 @@ type Linha = {
     modalidade: string;
     medico_nome?: string;
     especialidade_nome?: string;
+    paciente_atendido_nome?: string | null;
   };
 };
 
@@ -312,6 +313,11 @@ export default function PacienteFinanceiro() {
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDataHora(detalhe.consulta?.inicio ?? null)} · {detalhe.consulta?.modalidade}
                     </div>
+                    {detalhe.consulta?.paciente_atendido_nome && (
+                      <div className="flex items-center gap-2 text-xs text-primary">
+                        <span className="font-medium">Paciente atendido:</span> {detalhe.consulta.paciente_atendido_nome}
+                      </div>
+                    )}
                   </div>
 
                   {/* Valores */}
@@ -384,6 +390,7 @@ export default function PacienteFinanceiro() {
                           consultaData: detalhe.consulta?.inicio ?? null,
                           modalidade: detalhe.consulta?.modalidade ?? "—",
                           pacienteNome: pacNome,
+                          pacienteAtendidoNome: detalhe.consulta?.paciente_atendido_nome ?? null,
                           cupom: detalhe.metadata?.cupom ?? null,
                         });
                         toast.success("Recibo PDF gerado com sucesso!");

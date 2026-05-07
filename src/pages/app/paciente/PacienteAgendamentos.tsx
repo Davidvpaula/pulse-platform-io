@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Calendar, Stethoscope, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Loader2, Search, Filter, Star, Receipt, ChevronDown,
+  Loader2, Search, Filter, Star, Receipt, ChevronDown, Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -35,6 +35,7 @@ import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteSt
 import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 
 type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
+type FiltroQuem = "todas" | "minhas" | "dependentes";
 
 export default function PacienteAgendamentos() {
   const { session } = useSession();
@@ -52,6 +53,7 @@ export default function PacienteAgendamentos() {
 
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("futuras");
+  const [filtroQuem, setFiltroQuem] = useState<FiltroQuem>("todas");
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
   const [expandedPag, setExpandedPag] = useState<string | null>(null);
@@ -69,13 +71,20 @@ export default function PacienteAgendamentos() {
       if (filtro === "canceladas") return c.status === "cancelada";
       return true;
     });
+    // Filtro "para quem"
+    if (filtroQuem === "minhas") {
+      arr = arr.filter((c) => !(c as any).paciente_atendido_nome);
+    } else if (filtroQuem === "dependentes") {
+      arr = arr.filter((c) => !!(c as any).paciente_atendido_nome);
+    }
     if (busca.trim()) {
       const q = busca.toLowerCase();
       arr = arr.filter(
         (c) =>
           (c.medico_nome ?? "").toLowerCase().includes(q) ||
           (c.especialidade_nome ?? "").toLowerCase().includes(q) ||
-          (c.motivo ?? "").toLowerCase().includes(q),
+          (c.motivo ?? "").toLowerCase().includes(q) ||
+          ((c as any).paciente_atendido_nome ?? "").toLowerCase().includes(q),
       );
     }
     return arr.sort((a, b) =>
@@ -83,7 +92,7 @@ export default function PacienteAgendamentos() {
         ? new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
         : new Date(a.inicio).getTime() - new Date(b.inicio).getTime(),
     );
-  }, [rows, filtro, busca]);
+  }, [rows, filtro, filtroQuem, busca]);
 
   const confirmarCancelamento = async (id: string) => {
     setCancelando(id);
@@ -163,7 +172,7 @@ export default function PacienteAgendamentos() {
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar por médico, especialidade…"
+            placeholder="Buscar por médico, especialidade, dependente…"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="pl-9"
@@ -180,6 +189,16 @@ export default function PacienteAgendamentos() {
               <SelectItem value="passadas">Passadas</SelectItem>
               <SelectItem value="canceladas">Canceladas</SelectItem>
               <SelectItem value="todas">Todas</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filtroQuem} onValueChange={(v) => setFiltroQuem(v as FiltroQuem)}>
+            <SelectTrigger className="w-[170px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todos pacientes</SelectItem>
+              <SelectItem value="minhas">Minhas consultas</SelectItem>
+              <SelectItem value="dependentes">Dos dependentes</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -226,6 +245,15 @@ export default function PacienteAgendamentos() {
                     {c.motivo && (
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                         Motivo: {c.motivo}
+                      </p>
+                    )}
+                    {(c as any).paciente_atendido_nome && (
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-primary">
+                        <Users className="h-3 w-3" />
+                        Para: {(c as any).paciente_atendido_nome}
+                        {(c as any).paciente_atendido_parentesco && (
+                          <span className="text-muted-foreground">({(c as any).paciente_atendido_parentesco})</span>
+                        )}
                       </p>
                     )}
                   </div>
