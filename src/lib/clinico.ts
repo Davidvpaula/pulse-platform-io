@@ -125,13 +125,29 @@ export type DocumentoPaciente = {
   created_at: string;
 };
 
-export async function listDocumentosDoPaciente(): Promise<DocumentoPaciente[]> {
+/** Retorna IDs dos dependentes ativos do paciente atual. */
+export async function getDependenteIds(): Promise<string[]> {
   const p = await getPacienteAtual();
   if (!p) return [];
+  const { data } = await supabase
+    .from("pacientes")
+    .select("id")
+    .eq("responsavel_id", p.id)
+    .eq("tipo_paciente", "dependente")
+    .eq("ativo", true);
+  return (data ?? []).map((d: any) => d.id);
+}
+
+export async function listDocumentosDoPaciente(filtroId?: string | null): Promise<DocumentoPaciente[]> {
+  const p = await getPacienteAtual();
+  if (!p) return [];
+  const depIds = await getDependenteIds();
+  const allIds = [p.id, ...depIds];
+  const targetIds = filtroId ? [filtroId] : allIds;
   const { data, error } = await supabase
     .from("documentos_paciente")
     .select("*")
-    .eq("paciente_id", p.id)
+    .in("paciente_id", targetIds)
     .order("created_at", { ascending: false });
   if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
   return (data ?? []) as DocumentoPaciente[];
