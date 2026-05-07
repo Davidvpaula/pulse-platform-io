@@ -313,6 +313,11 @@ export default function PacienteFinanceiro() {
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDataHora(detalhe.consulta?.inicio ?? null)} · {detalhe.consulta?.modalidade}
                     </div>
+                    {detalhe.consulta?.paciente_atendido_nome && (
+                      <div className="flex items-center gap-2 text-xs text-primary">
+                        <span className="font-medium">Paciente atendido:</span> {detalhe.consulta.paciente_atendido_nome}
+                      </div>
+                    )}
                   </div>
 
                   {/* Valores */}
