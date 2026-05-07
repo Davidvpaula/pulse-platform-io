@@ -39,6 +39,7 @@ type Linha = {
     modalidade: string;
     medico_nome?: string;
     especialidade_nome?: string;
+    paciente_atendido_nome?: string | null;
   };
 };
 
