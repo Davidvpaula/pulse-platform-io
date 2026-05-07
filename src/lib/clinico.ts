@@ -20,6 +20,12 @@ export type ConsultaDetalhada = Consulta & {
   paciente_nome?: string | null;
   medico_nome?: string | null;
   especialidade_nome?: string | null;
+  /** Nome do dependente atendido (quando paciente_atendido_id != null) */
+  paciente_atendido_nome?: string | null;
+  /** Parentesco do dependente */
+  paciente_atendido_parentesco?: string | null;
+  /** Nome do titular/responsável financeiro (disponível na visão do médico quando há dependente) */
+  responsavel_nome?: string | null;
 };
 
 /* ─────────────────────────────────────────────────────────────────────────
