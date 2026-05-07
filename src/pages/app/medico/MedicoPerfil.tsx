@@ -214,7 +214,20 @@ export default function MedicoPerfil() {
                   <h3 className="font-display text-lg font-semibold">Perfil profissional</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="md:col-span-2">
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tratamento</Label>
+                    <Select value={tratamento ?? "__none__"} onValueChange={v => setTratamento(v === "__none__" ? null : v)}>
+                      <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
+                        <SelectItem value="Dr.">Dr.</SelectItem>
+                        <SelectItem value="Dra.">Dra.</SelectItem>
+                        <SelectItem value="Prof.">Prof.</SelectItem>
+                        <SelectItem value="Prof.ª">Prof.ª</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nome completo</Label>
                     <Input value={nome} onChange={e => setNome(e.target.value)} className="mt-1.5" />
                   </div>
