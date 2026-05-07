@@ -734,6 +734,19 @@ export default function AdminAgendamentos() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Feegow sync dialog */}
+      {feegowConsulta && (
+        <FeegowSyncConsulta
+          consultaId={feegowConsulta.id}
+          pacienteNome={feegowConsulta.paciente_nome}
+          medicoNome={feegowConsulta.medico_nome}
+          inicio={feegowConsulta.inicio}
+          feegowAgendamentoId={feegowConsulta.feegow_agendamento_id}
+          feegowSyncStatus={feegowConsulta.feegow_sync_status}
+          onSuccess={() => { invalidateAll(); setFeegowConsulta(null); }}
+        />
+      )}
     </div>
   );
 }
