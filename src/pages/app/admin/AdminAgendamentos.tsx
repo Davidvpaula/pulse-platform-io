@@ -599,6 +599,10 @@ export default function AdminAgendamentos() {
                           <AlertTriangle className="h-4 w-4 mr-2" /> Marcar no-show
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setFeegowConsulta(r)} disabled={!!r.feegow_agendamento_id}>
+                          <Upload className="h-4 w-4 mr-2" /> {r.feegow_agendamento_id ? "Já enviado Feegow" : "Enviar p/ Feegow"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => setCancelDialog({ open: true, consulta: r })}
