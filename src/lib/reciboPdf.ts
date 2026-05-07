@@ -13,6 +13,8 @@ export interface DadosRecibo {
   consultaData: string | null;
   modalidade: string;
   pacienteNome: string;
+  /** Nome do dependente atendido (quando diferente do titular) */
+  pacienteAtendidoNome?: string | null;
   cupom?: { codigo: string; desconto_centavos: number; valor_original_centavos: number } | null;
 }
 
