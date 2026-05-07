@@ -399,6 +399,7 @@ export default function AgendamentoConfirmar() {
             />
           )}
 
+          <div>
             <Label htmlFor="nome_completo">Nome completo *</Label>
             <Input id="nome_completo" {...form.register("nome_completo")} placeholder="Como aparece nos documentos" autoComplete="name" maxLength={120} />
             {form.formState.errors.nome_completo && <p className="mt-1 text-xs text-destructive">{form.formState.errors.nome_completo.message}</p>}
