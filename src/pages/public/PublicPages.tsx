@@ -232,7 +232,7 @@ export const Medicos = () => {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{m.nome}</p>
+                    <p className="font-semibold truncate">{formatNomeMedico(m.tratamento, m.nome)}</p>
                     <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-xs text-warning">
@@ -356,7 +356,7 @@ export const MedicoDetalhe = () => {
   }
 
   return (
-    <PageShell title={medico.nome} subtitle="">
+    <PageShell title={formatNomeMedico(medico.tratamento, medico.nome)} subtitle="">
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         {/* Main info */}
         <div className="space-y-6">
@@ -371,7 +371,7 @@ export const MedicoDetalhe = () => {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold">{medico.nome}</h2>
+                <h2 className="text-xl font-bold">{formatNomeMedico(medico.tratamento, medico.nome)}</h2>
                 <p className="text-sm text-muted-foreground">{medico.especialidade ?? "Clínica Geral"} · CRM {medico.crm}</p>
 
                 {espInfo.map((e, i) => (
