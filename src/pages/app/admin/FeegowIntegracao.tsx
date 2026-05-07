@@ -290,15 +290,15 @@ export default function FeegowIntegracao() {
             {actionLoading === "Listar especialidades" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Tag className="mr-2 h-4 w-4" />}
             Listar especialidades
           </Button>
-          <Button
-            variant="outline"
-            className="justify-start"
-            disabled={actionLoading !== null}
-            onClick={() => executarAcaoSegura("Listar profissionais", "diagnostico")}
-          >
-            {actionLoading === "Listar profissionais" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Stethoscope className="mr-2 h-4 w-4" />}
-            Listar profissionais
-          </Button>
+          <Link to="/app/admin/feegow/profissionais">
+            <Button
+              variant="outline"
+              className="justify-start w-full"
+            >
+              <Stethoscope className="mr-2 h-4 w-4" />
+              Vincular profissionais
+            </Button>
+          </Link>
 
           <div className="flex gap-2 col-span-full sm:col-span-1">
             <Input
