@@ -158,6 +158,7 @@ export async function uploadDocumentoPaciente(input: {
   tipo: DocumentoPacienteTipo;
   titulo: string;
   descricao?: string | null;
+  dependenteId?: string | null;
 }): Promise<{ ok: boolean; error?: string; doc?: DocumentoPaciente }> {
   const { data: s } = await supabase.auth.getSession();
   const uid = s.session?.user.id;
@@ -165,11 +166,15 @@ export async function uploadDocumentoPaciente(input: {
   const paciente = await ensurePaciente();
   if (!paciente) return { ok: false, error: "Cadastro de paciente não encontrado." };
 
+  const targetPacienteId = input.dependenteId || paciente.id;
+
   if (input.file.size > 20 * 1024 * 1024) {
     return { ok: false, error: "Arquivo muito grande (máx. 20 MB)." };
   }
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
-  const path = `${uid}/${Date.now()}-${safeName}`;
+  // Dependentes usam pasta dep-{id}, titular usa auth.uid()
+  const folder = input.dependenteId ? `dep-${input.dependenteId}` : uid;
+  const path = `${folder}/${Date.now()}-${safeName}`;
   const up = await supabase.storage.from("paciente-docs").upload(path, input.file, {
     cacheControl: "3600",
     upsert: false,
@@ -180,7 +185,7 @@ export async function uploadDocumentoPaciente(input: {
   const { data, error } = await supabase
     .from("documentos_paciente")
     .insert({
-      paciente_id: paciente.id,
+      paciente_id: targetPacienteId,
       user_id: uid,
       tipo: input.tipo,
       titulo: input.titulo.trim() || input.file.name,
