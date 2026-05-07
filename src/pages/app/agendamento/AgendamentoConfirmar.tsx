@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { trackEvent, trackConversion } from "@/lib/analytics/tracker";
-import { SeletorPacienteAtendido } from "@/components/paciente/SeletorPacienteAtendido";
+import { SeletorPacienteAtendido, type NovoDependenteData } from "@/components/paciente/SeletorPacienteAtendido";
 
 /* ─── Tipos de agendamento suportados ─── */
 export type TipoAgendamento = "especialidade" | "servico" | "pa" | "retorno" | "empresa" | "plano";
