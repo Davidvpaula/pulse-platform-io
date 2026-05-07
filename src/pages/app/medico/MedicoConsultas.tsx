@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Video, MessageCircle, Repeat, XCircle,
   Loader2, Search, Play, User, Stethoscope, History, Building2,
-  CheckCircle2, Clock, AlertCircle, ListChecks,
+  CheckCircle2, Clock, AlertCircle, ListChecks, ExternalLink,
 } from "lucide-react";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
 import { FinalizarAtendimentoDialog } from "@/components/medico/FinalizarAtendimentoDialog";
@@ -267,6 +267,14 @@ export default function MedicoConsultas() {
               title="Histórico de mudanças"
             >
               <History className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Abrir dashboard Feegow"
+              onClick={() => window.open("https://app.feegow.com", "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="h-4 w-4 text-emerald-600" />
             </Button>
             <Button size="sm" variant="ghost" asChild title="Reagendar (gerenciar horários)">
               <Link to="/app/medico/agenda">
