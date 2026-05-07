@@ -71,13 +71,20 @@ export default function PacienteAgendamentos() {
       if (filtro === "canceladas") return c.status === "cancelada";
       return true;
     });
+    // Filtro "para quem"
+    if (filtroQuem === "minhas") {
+      arr = arr.filter((c) => !(c as any).paciente_atendido_nome);
+    } else if (filtroQuem === "dependentes") {
+      arr = arr.filter((c) => !!(c as any).paciente_atendido_nome);
+    }
     if (busca.trim()) {
       const q = busca.toLowerCase();
       arr = arr.filter(
         (c) =>
           (c.medico_nome ?? "").toLowerCase().includes(q) ||
           (c.especialidade_nome ?? "").toLowerCase().includes(q) ||
-          (c.motivo ?? "").toLowerCase().includes(q),
+          (c.motivo ?? "").toLowerCase().includes(q) ||
+          ((c as any).paciente_atendido_nome ?? "").toLowerCase().includes(q),
       );
     }
     return arr.sort((a, b) =>
@@ -85,7 +92,7 @@ export default function PacienteAgendamentos() {
         ? new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
         : new Date(a.inicio).getTime() - new Date(b.inicio).getTime(),
     );
-  }, [rows, filtro, busca]);
+  }, [rows, filtro, filtroQuem, busca]);
 
   const confirmarCancelamento = async (id: string) => {
     setCancelando(id);
