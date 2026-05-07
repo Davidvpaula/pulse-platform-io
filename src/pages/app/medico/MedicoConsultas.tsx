@@ -268,6 +268,14 @@ export default function MedicoConsultas() {
             >
               <History className="h-4 w-4" />
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Abrir dashboard Feegow"
+              onClick={() => window.open("https://app.feegow.com", "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="h-4 w-4 text-emerald-600" />
+            </Button>
             <Button size="sm" variant="ghost" asChild title="Reagendar (gerenciar horários)">
               <Link to="/app/medico/agenda">
                 <Repeat className="h-4 w-4" />
