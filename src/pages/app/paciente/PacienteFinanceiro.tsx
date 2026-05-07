@@ -385,6 +385,7 @@ export default function PacienteFinanceiro() {
                           consultaData: detalhe.consulta?.inicio ?? null,
                           modalidade: detalhe.consulta?.modalidade ?? "—",
                           pacienteNome: pacNome,
+                          pacienteAtendidoNome: detalhe.consulta?.paciente_atendido_nome ?? null,
                           cupom: detalhe.metadata?.cupom ?? null,
                         });
                         toast.success("Recibo PDF gerado com sucesso!");
