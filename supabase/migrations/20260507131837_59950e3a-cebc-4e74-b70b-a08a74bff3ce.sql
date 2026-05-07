@@ -1,0 +1,1 @@
+ALTER TABLE public.medicos ADD COLUMN tratamento TEXT DEFAULT NULL;
