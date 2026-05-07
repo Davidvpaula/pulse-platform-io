@@ -191,6 +191,16 @@ export default function PacienteAgendamentos() {
               <SelectItem value="todas">Todas</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={filtroQuem} onValueChange={(v) => setFiltroQuem(v as FiltroQuem)}>
+            <SelectTrigger className="w-[170px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todos pacientes</SelectItem>
+              <SelectItem value="minhas">Minhas consultas</SelectItem>
+              <SelectItem value="dependentes">Dos dependentes</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
