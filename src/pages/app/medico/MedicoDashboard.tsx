@@ -96,6 +96,7 @@ export default function MedicoDashboard() {
     const medico = medicoAtual;
     setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
+    setMedicoTratamento((medico as any).tratamento ?? null);
 
     // Gamificação: ranking + saldo (em paralelo com o resto)
     const [rankRes, saldoRes] = await Promise.all([
