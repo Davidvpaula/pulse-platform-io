@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_pacientes_responsavel_id ON public.pacientes(responsavel_id);
