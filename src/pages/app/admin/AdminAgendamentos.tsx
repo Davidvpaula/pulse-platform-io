@@ -140,6 +140,7 @@ export default function AdminAgendamentos() {
   const [obsCancel, setObsCancel] = useState("");
   const [motivoStatus, setMotivoStatus] = useState("");
   const [acting, setActing] = useState(false);
+  const [feegowConsulta, setFeegowConsulta] = useState<ConsultaRow | null>(null);
 
   // Auditoria drawer
   const [auditOpen, setAuditOpen] = useState(false);
