@@ -31,6 +31,11 @@ type ConsultaCtx = {
   especialidade_id: string | null;
 };
 
+type AtendidoInfo = {
+  nome: string;
+  parentesco: string | null;
+} | null;
+
 export default function PacienteCheckout() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
@@ -39,6 +44,8 @@ export default function PacienteCheckout() {
   const [loading, setLoading] = useState(true);
   const [metodo, setMetodo] = useState<PagamentoMetodo>("pix");
   const [processando, setProcessando] = useState(false);
+  const [atendidoInfo, setAtendidoInfo] = useState<AtendidoInfo>(null);
+  const [titularNome, setTitularNome] = useState<string>("");
 
   // Cupom
   const [codigoCupom, setCodigoCupom] = useState("");
