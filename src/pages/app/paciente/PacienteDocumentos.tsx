@@ -22,7 +22,7 @@ import { useSession } from "@/lib/session";
 import {
   listDocumentosDoPaciente, uploadDocumentoPaciente, deletarDocumentoPaciente,
   getDocumentoPacienteUrl, listConsultasDoPaciente, formatDataBR,
-  listAnexosConsultaDoPaciente, getAnexoConsultaUrl,
+  listAnexosConsultaDoPaciente, getAnexoConsultaUrl, getPacienteAtual,
   type DocumentoPaciente, type DocumentoPacienteTipo, type ConsultaDetalhada,
   type AnexoConsulta,
 } from "@/lib/clinico";
