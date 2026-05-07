@@ -573,7 +573,7 @@ export const Agendar = () => {
       // 2. Dados públicos dos médicos
       const { data: meds } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
+        .select("id, nome, tratamento, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
         .in("id", medicoIds);
 
       // 3. Próximo slot por médico (uma única query)
