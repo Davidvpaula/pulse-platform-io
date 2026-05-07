@@ -252,6 +252,7 @@ export default function AgendamentoConfirmar() {
       }
 
       if (paciente) {
+        setTitularPacienteId(paciente.id);
         form.reset({
           nome_completo: paciente.nome_completo ?? "",
           cpf: paciente.cpf ? maskCPF(paciente.cpf) : "",
