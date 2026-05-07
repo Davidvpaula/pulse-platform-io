@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
         acao: "desvincular_profissional",
         entidade_tipo: "medico",
         entidade_id_interno: medico_id,
-        status: "sucesso",
-        origem: "admin_ui",
+        status: "success",
+        origem: "admin",
         user_id: u.user.id,
         duracao_ms: Date.now() - start,
       });
@@ -151,8 +151,8 @@ Deno.serve(async (req) => {
       entidade_id_externo: String(feegow_profissional_id),
       payload_envio: { medico_id, feegow_profissional_id },
       payload_resposta: metadata,
-      status: "sucesso",
-      origem: "admin_ui",
+      status: "success",
+      origem: "admin",
       user_id: u.user.id,
       duracao_ms: Date.now() - start,
     });

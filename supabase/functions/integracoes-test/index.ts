@@ -97,9 +97,9 @@ async function persistTestResult(
     entidade_id_externo: null,
     payload_envio: null,
     payload_resposta: detailPayload as Record<string, unknown>,
-    status: ok ? "sucesso" : "erro",
+    status: ok ? "success" : "error",
     erro: erro,
-    origem: "admin_ui",
+    origem: "admin",
     user_id: userId,
     duracao_ms: null,
   });

@@ -61,9 +61,9 @@ Deno.serve(async (req) => {
       await adminClient.from("integracoes_logs").insert({
         integracao: "feegow",
         acao: "listar_profissionais",
-        status: "erro",
+        status: "error",
         erro: data.message ?? `HTTP ${resp.status}`,
-        origem: "admin_ui",
+        origem: "admin",
         user_id: u.user.id,
         duracao_ms: Date.now() - start,
       });
@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
     await adminClient.from("integracoes_logs").insert({
       integracao: "feegow",
       acao: "listar_profissionais",
-      status: "sucesso",
+      status: "success",
       payload_resposta: { total: profissionais.length },
-      origem: "admin_ui",
+      origem: "admin",
       user_id: u.user.id,
       duracao_ms: Date.now() - start,
     });
