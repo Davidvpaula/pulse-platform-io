@@ -365,7 +365,7 @@ export default function MedicoPerfil() {
                     </div>
 
                     {/* Name + specialty */}
-                    <h5 className="font-display text-base font-semibold leading-tight">{nome || "Seu nome"}</h5>
+                    <h5 className="font-display text-base font-semibold leading-tight">{formatNomeMedico(tratamento, nome) || "Seu nome"}</h5>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Stethoscope className="h-3 w-3" />
