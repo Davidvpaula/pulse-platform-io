@@ -738,13 +738,15 @@ export default function AdminAgendamentos() {
       {/* Feegow sync dialog */}
       {feegowConsulta && (
         <FeegowSyncConsulta
+          autoOpen
           consultaId={feegowConsulta.id}
           pacienteNome={feegowConsulta.paciente_nome}
           medicoNome={feegowConsulta.medico_nome}
           inicio={feegowConsulta.inicio}
           feegowAgendamentoId={feegowConsulta.feegow_agendamento_id}
           feegowSyncStatus={feegowConsulta.feegow_sync_status}
-          onSuccess={() => { invalidateAll(); setFeegowConsulta(null); }}
+          onSuccess={() => { invalidateAll(); }}
+          onClose={() => setFeegowConsulta(null)}
         />
       )}
     </div>
