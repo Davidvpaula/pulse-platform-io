@@ -104,8 +104,14 @@ Deno.serve(async (req) => {
       return json({ error: "Profissional não encontrado na Feegow", detail: fData.message }, 404);
     }
 
-    const prof = Array.isArray(fData.content) ? fData.content[0] : null;
-    if (!prof) return json({ error: "Profissional não encontrado na Feegow" }, 404);
+    // content pode ser array ou objeto indexado por profissional_id
+    let prof: Record<string, unknown> | null = null;
+    if (Array.isArray(fData.content)) {
+      prof = fData.content.find((p: any) => Number(p.profissional_id) === Number(feegow_profissional_id)) ?? null;
+    } else if (fData.content && typeof fData.content === "object") {
+      prof = fData.content[String(feegow_profissional_id)] ?? null;
+    }
+    if (!prof) return json({ error: "Profissional não encontrado na Feegow", id_solicitado: feegow_profissional_id }, 404);
 
     // Build metadata snapshot
     const metadata = {
