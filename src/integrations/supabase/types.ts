@@ -2065,6 +2065,7 @@ export type Database = {
       }
       documentos_paciente: {
         Row: {
+          consulta_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -2075,10 +2076,12 @@ export type Database = {
           tipo: Database["public"]["Enums"]["documento_paciente_tipo"]
           titulo: string
           updated_at: string
+          uploaded_by: string | null
           user_id: string
           visibilidade_empresa: boolean
         }
         Insert: {
+          consulta_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -2089,10 +2092,12 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["documento_paciente_tipo"]
           titulo: string
           updated_at?: string
+          uploaded_by?: string | null
           user_id: string
           visibilidade_empresa?: boolean
         }
         Update: {
+          consulta_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -2103,10 +2108,19 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["documento_paciente_tipo"]
           titulo?: string
           updated_at?: string
+          uploaded_by?: string | null
           user_id?: string
           visibilidade_empresa?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documentos_paciente_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       empresa_medicos: {
         Row: {
@@ -8572,6 +8586,8 @@ export type Database = {
         | "plano"
         | "vacina"
         | "outro"
+        | "prescricao"
+        | "atestado"
       empresa_contrato_status: "ativo" | "suspenso" | "encerrado" | "rascunho"
       empresa_fatura_status: "em_aberto" | "paga" | "atrasada" | "cancelada"
       empresa_funcionario_status: "ativo" | "desligado" | "licenca" | "suspenso"
@@ -9099,6 +9115,8 @@ export const Constants = {
         "plano",
         "vacina",
         "outro",
+        "prescricao",
+        "atestado",
       ],
       empresa_contrato_status: ["ativo", "suspenso", "encerrado", "rascunho"],
       empresa_fatura_status: ["em_aberto", "paga", "atrasada", "cancelada"],
