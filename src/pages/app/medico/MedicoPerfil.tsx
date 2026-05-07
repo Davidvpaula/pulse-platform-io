@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
-import { updateMedicoPerfil, type MedicoRow } from "@/lib/clinico";
+import { updateMedicoPerfil, formatNomeMedico, type MedicoRow } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
