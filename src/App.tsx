@@ -40,6 +40,7 @@ import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
 import PacientePlano from "@/pages/app/paciente/PacientePlano";
 import PacienteMensagens from "@/pages/app/paciente/PacienteMensagens";
 import PacienteFinanceiro from "@/pages/app/paciente/PacienteFinanceiro";
+import PacienteDependentes from "@/pages/app/paciente/PacienteDependentes";
 import PacienteRotaNaoEncontrada from "@/pages/app/paciente/PacienteRotaNaoEncontrada";
 import {
   PacienteParamGuard,
@@ -221,6 +222,7 @@ const App = () => (
               <Route path="paciente/financeiro" element={<PacienteGuard><PacienteFinanceiro /></PacienteGuard>} />
               <Route path="paciente/perfil" element={<PacienteGuard><PacientePerfilPage /></PacienteGuard>} />
               <Route path="paciente/mensagens" element={<PacienteGuard><PacienteMensagens /></PacienteGuard>} />
+              <Route path="paciente/dependentes" element={<PacienteGuard><PacienteDependentes /></PacienteGuard>} />
               <Route
                 path="paciente/checkout/:sessionId"
                 element={

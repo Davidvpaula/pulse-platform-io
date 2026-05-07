@@ -52,6 +52,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       { label: "Meu Plano", to: "/app/paciente/plano", icon: BadgeCheck },
       { label: "Montar Plano", to: "/app/paciente/montar-plano", icon: Layers },
       { label: "Financeiro", to: "/app/paciente/financeiro", icon: Wallet },
+      { label: "Dependentes", to: "/app/paciente/dependentes", icon: Users },
       { label: "Notificações", to: "/app/paciente/mensagens", icon: Bell },
       { label: "Perfil", to: "/app/paciente/perfil", icon: User },
     ],
