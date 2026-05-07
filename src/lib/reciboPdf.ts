@@ -98,7 +98,13 @@ export function gerarReciboPdf(d: DadosRecibo) {
     doc.text(v, m + 140, yy);
   };
 
-  label("Paciente", d.pacienteNome || "—", y);
+  if (d.pacienteAtendidoNome) {
+    label("Responsável", d.pacienteNome || "—", y);
+    y += 18;
+    label("Paciente atendido", d.pacienteAtendidoNome, y);
+  } else {
+    label("Paciente", d.pacienteNome || "—", y);
+  }
   y += 18;
   label("Profissional", d.medicoNome, y);
   y += 18;
