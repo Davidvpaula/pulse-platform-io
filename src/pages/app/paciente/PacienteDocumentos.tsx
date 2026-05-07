@@ -3,7 +3,7 @@ import {
   FileText, Upload, Loader2, Download, Trash2, Search, Filter,
   FilePlus, Pill, FileCheck2, IdCard, Syringe, FileQuestion, Image as ImageIcon,
   Database as DbIcon, Eye, AlertCircle, CheckCircle2, Paperclip, CalendarDays,
-  ClipboardList,
+  ClipboardList, Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
