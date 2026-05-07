@@ -98,6 +98,21 @@ export default function PacienteCheckout() {
           });
         }
       }
+
+      // Resolve dependente info and titular name
+      const pacienteAtendidoId = (p.metadata as any)?.paciente_atendido_id;
+      if (pacienteAtendidoId) {
+        const { data: dep } = await supabase
+          .from("pacientes")
+          .select("nome_completo, parentesco")
+          .eq("id", pacienteAtendidoId)
+          .maybeSingle();
+        if (dep) setAtendidoInfo({ nome: dep.nome_completo ?? "Dependente", parentesco: dep.parentesco });
+      }
+
+      // Titular name (from session)
+      const { data: { session: s } } = await supabase.auth.getSession();
+      setTitularNome(s?.user?.user_metadata?.nome ?? s?.user?.email ?? "Você");
     }
 
     setLoading(false);
