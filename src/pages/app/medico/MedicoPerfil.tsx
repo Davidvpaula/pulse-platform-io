@@ -122,7 +122,8 @@ export default function MedicoPerfil() {
       nome: nome.trim(),
       bio: bio.trim() || null,
       foto_url: newFotoUrl,
-    } as any);
+      tratamento: tratamento || null,
+    });
     setSaving(false);
     if (!res.ok) { toast.error(res.error ?? "Erro ao salvar"); return; }
     setFotoUrl(newFotoUrl);
