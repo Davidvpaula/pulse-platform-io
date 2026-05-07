@@ -273,6 +273,15 @@ export default function AgendamentoConfirmar() {
     if (!slotInfo) return;
     setSubmitting(true);
     try {
+      // 0) If "novo" dependente selected, validate and save first
+      let resolvedAtendidoId = pacienteAtendidoId;
+      if (pacienteAtendidoId === "novo" && novoDependenteRef) {
+        const valid = novoDependenteRef.validate();
+        if (!valid) { setSubmitting(false); return; }
+        const newId = await novoDependenteRef.save();
+        if (!newId) { setSubmitting(false); return; }
+        resolvedAtendidoId = newId;
+      }
       // 1) Reserva o slot SEM criar consulta
       const reserva = await reservarSlotUnificado({
         slot_id: slotInfo.id,
