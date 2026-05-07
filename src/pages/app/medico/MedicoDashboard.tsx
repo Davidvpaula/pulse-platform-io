@@ -68,6 +68,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
+  const [medicoTratamento, setMedicoTratamento] = useState<string | null>(null);
   const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
   const [propostasPendentes, setPropostasPendentes] = useState(0);
