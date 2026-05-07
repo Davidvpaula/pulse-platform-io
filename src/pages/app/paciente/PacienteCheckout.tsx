@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
