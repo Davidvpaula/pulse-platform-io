@@ -223,16 +223,18 @@ export function AppBreadcrumb() {
           const isSelfLink = crumb.to === pathname;
           const showAsLink = !isLast && crumb.to && !isSelfLink;
           return (
-            <BreadcrumbItem key={i}>
+            <React.Fragment key={i}>
               {i > 0 && <BreadcrumbSeparator className="mr-1.5" />}
-              {showAsLink ? (
-                <BreadcrumbLink asChild>
-                  <Link to={crumb.to!}>{crumb.label}</Link>
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {showAsLink ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={crumb.to!}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
           );
         })}
       </BreadcrumbList>
