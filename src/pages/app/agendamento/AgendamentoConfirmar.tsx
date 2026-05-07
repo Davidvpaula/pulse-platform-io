@@ -406,6 +406,7 @@ export default function AgendamentoConfirmar() {
               titularId={titularPacienteId}
               value={pacienteAtendidoId}
               onChange={setPacienteAtendidoId}
+              onNovoDependenteRef={setNovoDependenteRef}
             />
           )}
 
