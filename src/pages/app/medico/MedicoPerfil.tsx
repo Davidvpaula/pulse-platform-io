@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
-import { updateMedicoPerfil, type MedicoRow } from "@/lib/clinico";
+import { updateMedicoPerfil, formatNomeMedico, type MedicoRow } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
@@ -38,6 +38,7 @@ export default function MedicoPerfil() {
   const [saving, setSaving] = useState(false);
   const [medico, setMedico] = useState<MedicoRow | null>(null);
   const [nome, setNome] = useState("");
+  const [tratamento, setTratamento] = useState<string | null>(null);
   
   const [bio, setBio] = useState("");
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function MedicoPerfil() {
       if (m) {
         setMedico(m as MedicoRow);
         setNome(m.nome ?? "");
+        setTratamento((m as any).tratamento ?? null);
         setBio(m.bio ?? "");
         setFotoUrl(m.foto_url ?? null);
         loadFormacoes(m.id);
@@ -120,7 +122,8 @@ export default function MedicoPerfil() {
       nome: nome.trim(),
       bio: bio.trim() || null,
       foto_url: newFotoUrl,
-    } as any);
+      tratamento: tratamento || null,
+    });
     setSaving(false);
     if (!res.ok) { toast.error(res.error ?? "Erro ao salvar"); return; }
     setFotoUrl(newFotoUrl);
@@ -211,7 +214,20 @@ export default function MedicoPerfil() {
                   <h3 className="font-display text-lg font-semibold">Perfil profissional</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="md:col-span-2">
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tratamento</Label>
+                    <Select value={tratamento ?? "__none__"} onValueChange={v => setTratamento(v === "__none__" ? null : v)}>
+                      <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
+                        <SelectItem value="Dr.">Dr.</SelectItem>
+                        <SelectItem value="Dra.">Dra.</SelectItem>
+                        <SelectItem value="Prof.">Prof.</SelectItem>
+                        <SelectItem value="Prof.ª">Prof.ª</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nome completo</Label>
                     <Input value={nome} onChange={e => setNome(e.target.value)} className="mt-1.5" />
                   </div>
@@ -349,7 +365,7 @@ export default function MedicoPerfil() {
                     </div>
 
                     {/* Name + specialty */}
-                    <h5 className="font-display text-base font-semibold leading-tight">{nome || "Seu nome"}</h5>
+                    <h5 className="font-display text-base font-semibold leading-tight">{formatNomeMedico(tratamento, nome) || "Seu nome"}</h5>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Stethoscope className="h-3 w-3" />

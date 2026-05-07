@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type MedicoDestaque = {
   id: string;
   nome: string;
+  tratamento: string | null;
   especialidade: string | null;
   crm: string;
   bio: string | null;
@@ -29,7 +30,7 @@ export function useMedicosDestaque(limit = 6) {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
+        .select("id, nome, tratamento, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
         .order("online", { ascending: false })
         .order("ranking_score", { ascending: false })
         .limit(limit);

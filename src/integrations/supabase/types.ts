@@ -4861,6 +4861,7 @@ export type Database = {
           suspenso_indeterminado: boolean
           telefone: string | null
           tipo_sala: string
+          tratamento: string | null
           updated_at: string
           user_id: string
         }
@@ -4909,6 +4910,7 @@ export type Database = {
           suspenso_indeterminado?: boolean
           telefone?: string | null
           tipo_sala?: string
+          tratamento?: string | null
           updated_at?: string
           user_id: string
         }
@@ -4957,6 +4959,7 @@ export type Database = {
           suspenso_indeterminado?: boolean
           telefone?: string | null
           tipo_sala?: string
+          tratamento?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -7609,6 +7612,7 @@ export type Database = {
           ranking_score: number | null
           taxa_no_show: number | null
           total_avaliacoes: number | null
+          tratamento: string | null
         }
         Relationships: []
       }

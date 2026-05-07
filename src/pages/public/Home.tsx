@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatNomeMedico } from "@/lib/clinico";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarCheck, Video, ShieldCheck, Stethoscope, Building2, Sparkles, Star, Clock, HeartPulse, Activity, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -166,7 +167,7 @@ export default function Home() {
                       {m.nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("")}
                     </div>
                     <div>
-                      <p className="font-semibold">{m.nome}</p>
+                      <p className="font-semibold">{formatNomeMedico(m.tratamento, m.nome)}</p>
                       <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
                     </div>
                   </div>

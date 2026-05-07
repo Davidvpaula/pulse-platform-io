@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { formatNomeMedico } from "@/lib/clinico";
 import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Star, Video, Calendar, MapPin, GraduationCap, Loader2, Stethoscope,
@@ -231,7 +232,7 @@ export const Medicos = () => {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{m.nome}</p>
+                    <p className="font-semibold truncate">{formatNomeMedico(m.tratamento, m.nome)}</p>
                     <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-xs text-warning">
@@ -273,7 +274,7 @@ export const MedicoDetalhe = () => {
       // Find medico by slug
       const { data } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, created_at");
+        .select("id, nome, tratamento, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, created_at");
 
       const found = (data ?? []).find((m: any) => medicoSlug(m.nome) === slug);
       const med = found ?? null;
@@ -355,7 +356,7 @@ export const MedicoDetalhe = () => {
   }
 
   return (
-    <PageShell title={medico.nome} subtitle="">
+    <PageShell title={formatNomeMedico(medico.tratamento, medico.nome)} subtitle="">
       <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
         {/* Main info */}
         <div className="space-y-6">
@@ -370,7 +371,7 @@ export const MedicoDetalhe = () => {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold">{medico.nome}</h2>
+                <h2 className="text-xl font-bold">{formatNomeMedico(medico.tratamento, medico.nome)}</h2>
                 <p className="text-sm text-muted-foreground">{medico.especialidade ?? "Clínica Geral"} · CRM {medico.crm}</p>
 
                 {espInfo.map((e, i) => (
@@ -572,7 +573,7 @@ export const Agendar = () => {
       // 2. Dados públicos dos médicos
       const { data: meds } = await (supabase as any)
         .from("medicos_publicos")
-        .select("id, nome, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
+        .select("id, nome, tratamento, especialidade, crm, bio, foto_url, avaliacao_media, total_avaliacoes, online, ranking_score, taxa_no_show, fator_premium, created_at")
         .in("id", medicoIds);
 
       // 3. Próximo slot por médico (uma única query)
@@ -736,7 +737,7 @@ export const Agendar = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="font-semibold text-base">{m.nome}</p>
+                            <p className="font-semibold text-base">{formatNomeMedico(m.tratamento, m.nome)}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               Especialidade: {m.especialista ? `RQE ${m.rqe ?? "—"}` : "Não especialista"}
                             </p>

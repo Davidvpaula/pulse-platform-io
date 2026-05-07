@@ -307,11 +307,18 @@ export async function getMedicoAtual(): Promise<MedicoRow | null> {
 }
 
 /** Atualiza campos editáveis do perfil do médico (nome, bio, telefone, link sala). */
+/** Formata nome do médico com prefixo de tratamento */
+export function formatNomeMedico(tratamento: string | null | undefined, nome: string): string {
+  return tratamento ? `${tratamento} ${nome}` : nome;
+}
+
 export async function updateMedicoPerfil(patch: {
   nome?: string;
   bio?: string | null;
   telefone?: string | null;
   link_sala_padrao?: string | null;
+  tratamento?: string | null;
+  foto_url?: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
   const id = await getMedicoAtualId();
   if (!id) return { ok: false, error: "Médico não encontrado." };
@@ -548,7 +555,7 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
     .from("consultas")
     .select(`
       *,
-      medicos:medico_id ( nome ),
+      medicos:medico_id ( nome, tratamento ),
       especialidades:especialidade_id ( nome ),
       paciente_atendido:paciente_atendido_id ( nome_completo, parentesco )
     `)
@@ -564,7 +571,7 @@ export async function listConsultasDoPaciente(): Promise<ConsultaDetalhada[]> {
 
   return (data ?? []).map((c: any) => ({
     ...c,
-    medico_nome: c.medicos?.nome ?? null,
+    medico_nome: formatNomeMedico(c.medicos?.tratamento, c.medicos?.nome ?? ""),
     especialidade_nome: c.especialidades?.nome ?? null,
     // Expose dependente info for display
     paciente_atendido_nome: c.paciente_atendido?.nome_completo ?? null,

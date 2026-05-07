@@ -68,6 +68,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
+  const [medicoTratamento, setMedicoTratamento] = useState<string | null>(null);
   const [medicoNaoExiste, setMedicoNaoExiste] = useState(false);
   const [onb, setOnb] = useState<Onboarding>({ semSala: false, semEspecialidade: false, pendente: false, treinamentoConcluido: true, treinamentoTotal: 0, treinamentoFeito: 0, perfilIncompleto: false, semDadosBancarios: true, semTermos: false });
   const [propostasPendentes, setPropostasPendentes] = useState(0);
@@ -95,6 +96,7 @@ export default function MedicoDashboard() {
     const medico = medicoAtual;
     setMedicoNaoExiste(false);
     setMedicoNome(medico.nome ?? "");
+    setMedicoTratamento((medico as any).tratamento ?? null);
 
     // Gamificação: ranking + saldo (em paralelo com o resto)
     const [rankRes, saldoRes] = await Promise.all([
@@ -373,7 +375,7 @@ export default function MedicoDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${saudacao()}${medicoNome ? `, Dr(a). ${medicoNome.split(" ")[0]}` : ""}`}
+        title={`${saudacao()}${medicoNome ? `, ${medicoTratamento ?? "Dr(a)."} ${medicoNome.split(" ")[0]}` : ""}`}
         description="O que você precisa fazer agora — atendimentos, fila e alertas."
         actions={
           !podeAtuar ? (
