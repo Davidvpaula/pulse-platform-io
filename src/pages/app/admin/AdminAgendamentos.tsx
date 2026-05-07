@@ -56,6 +56,8 @@ type ConsultaRow = {
   paciente_nome?: string;
   medico_nome?: string;
   empresa_nome?: string;
+  feegow_agendamento_id?: string | null;
+  feegow_sync_status?: string | null;
 };
 
 type Insight = {
