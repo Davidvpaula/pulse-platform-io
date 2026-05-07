@@ -63,6 +63,7 @@ export default function MedicoPerfil() {
       if (m) {
         setMedico(m as MedicoRow);
         setNome(m.nome ?? "");
+        setTratamento((m as any).tratamento ?? null);
         setBio(m.bio ?? "");
         setFotoUrl(m.foto_url ?? null);
         loadFormacoes(m.id);
