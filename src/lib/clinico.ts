@@ -307,11 +307,18 @@ export async function getMedicoAtual(): Promise<MedicoRow | null> {
 }
 
 /** Atualiza campos editáveis do perfil do médico (nome, bio, telefone, link sala). */
+/** Formata nome do médico com prefixo de tratamento */
+export function formatNomeMedico(tratamento: string | null | undefined, nome: string): string {
+  return tratamento ? `${tratamento} ${nome}` : nome;
+}
+
 export async function updateMedicoPerfil(patch: {
   nome?: string;
   bio?: string | null;
   telefone?: string | null;
   link_sala_padrao?: string | null;
+  tratamento?: string | null;
+  foto_url?: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
   const id = await getMedicoAtualId();
   if (!id) return { ok: false, error: "Médico não encontrado." };
