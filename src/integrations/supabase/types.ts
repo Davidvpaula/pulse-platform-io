@@ -1972,6 +1972,60 @@ export type Database = {
           },
         ]
       }
+      dependente_consentimentos: {
+        Row: {
+          accepted_at: string | null
+          aceite: boolean
+          created_at: string
+          dependente_id: string
+          id: string
+          ip: string | null
+          responsavel_id: string
+          texto_termo_snapshot: string | null
+          tipo_consentimento: string
+          user_agent: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          aceite?: boolean
+          created_at?: string
+          dependente_id: string
+          id?: string
+          ip?: string | null
+          responsavel_id: string
+          texto_termo_snapshot?: string | null
+          tipo_consentimento?: string
+          user_agent?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          aceite?: boolean
+          created_at?: string
+          dependente_id?: string
+          id?: string
+          ip?: string | null
+          responsavel_id?: string
+          texto_termo_snapshot?: string | null
+          tipo_consentimento?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dependente_consentimentos_dependente_id_fkey"
+            columns: ["dependente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dependente_consentimentos_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       desconto_progressivo_regras: {
         Row: {
           ativo: boolean
@@ -5088,7 +5142,9 @@ export type Database = {
           numero: string | null
           observacoes_internas: string | null
           origem_cadastro: string | null
+          parentesco: string | null
           responsavel_cadastro_id: string | null
+          responsavel_id: string | null
           rg: string | null
           sexo: Database["public"]["Enums"]["sexo_biologico"]
           status_alterado_em: string | null
@@ -5099,9 +5155,10 @@ export type Database = {
           tags: string[]
           telefone: string | null
           telefone_secundario: string | null
+          tipo_paciente: Database["public"]["Enums"]["tipo_paciente"]
           uf: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           whatsapp_opt_in: boolean | null
         }
         Insert: {
@@ -5134,7 +5191,9 @@ export type Database = {
           numero?: string | null
           observacoes_internas?: string | null
           origem_cadastro?: string | null
+          parentesco?: string | null
           responsavel_cadastro_id?: string | null
+          responsavel_id?: string | null
           rg?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
           status_alterado_em?: string | null
@@ -5145,9 +5204,10 @@ export type Database = {
           tags?: string[]
           telefone?: string | null
           telefone_secundario?: string | null
+          tipo_paciente?: Database["public"]["Enums"]["tipo_paciente"]
           uf?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           whatsapp_opt_in?: boolean | null
         }
         Update: {
@@ -5180,7 +5240,9 @@ export type Database = {
           numero?: string | null
           observacoes_internas?: string | null
           origem_cadastro?: string | null
+          parentesco?: string | null
           responsavel_cadastro_id?: string | null
+          responsavel_id?: string | null
           rg?: string | null
           sexo?: Database["public"]["Enums"]["sexo_biologico"]
           status_alterado_em?: string | null
@@ -5191,12 +5253,21 @@ export type Database = {
           tags?: string[]
           telefone?: string | null
           telefone_secundario?: string | null
+          tipo_paciente?: Database["public"]["Enums"]["tipo_paciente"]
           uf?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           whatsapp_opt_in?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pacientes_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pacientes_auditoria: {
         Row: {
@@ -8721,6 +8792,7 @@ export type Database = {
         | "proposta_medico"
         | "cancelamento_reembolso"
       tipo_conta_bancaria: "corrente" | "poupanca"
+      tipo_paciente: "titular" | "dependente"
       tipo_pessoa: "pf" | "pj"
       whatsapp_instance_status:
         | "conectado"
@@ -9277,6 +9349,7 @@ export const Constants = {
         "cancelamento_reembolso",
       ],
       tipo_conta_bancaria: ["corrente", "poupanca"],
+      tipo_paciente: ["titular", "dependente"],
       tipo_pessoa: ["pf", "pj"],
       whatsapp_instance_status: [
         "conectado",
