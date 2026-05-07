@@ -737,7 +737,7 @@ export const Agendar = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="font-semibold text-base">{m.nome}</p>
+                            <p className="font-semibold text-base">{formatNomeMedico(m.tratamento, m.nome)}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               Especialidade: {m.especialista ? `RQE ${m.rqe ?? "—"}` : "Não especialista"}
                             </p>
