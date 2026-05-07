@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import {
   Calendar, Search, Filter, MoreHorizontal, AlertTriangle, Loader2,
   CheckCircle2, XCircle, Clock, Send, RefreshCw, UserCog, Sparkles,
-  History, Video, Eye, ChevronDown,
+  History, Video, Eye, ChevronDown, Upload,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { FeegowSyncConsulta } from "@/components/admin/FeegowSyncConsulta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
