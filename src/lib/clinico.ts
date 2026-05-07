@@ -353,6 +353,9 @@ export async function listConsultasDoMedico(opts?: {
       ...c,
       paciente_nome: atendidoNome || titularNome || null,
       especialidade_nome: c.especialidades?.nome ?? null,
+      // Expose dependente info for médico view
+      paciente_atendido_nome: atendidoNome ?? null,
+      responsavel_nome: atendidoNome ? titularNome : null,
     };
   });
 }
