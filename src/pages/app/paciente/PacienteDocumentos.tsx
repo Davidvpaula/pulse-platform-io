@@ -166,6 +166,7 @@ export default function PacienteDocumentos() {
 
   const docsFiltrados = useMemo(() => {
     let arr = docs;
+    if (filtroPaciente !== "todos") arr = arr.filter((d) => d.paciente_id === filtroPaciente);
     if (filtroTipo !== "todos") arr = arr.filter((d) => d.tipo === filtroTipo);
     const q = busca.trim().toLowerCase();
     if (q) arr = arr.filter((d) => d.titulo.toLowerCase().includes(q) || (d.descricao ?? "").toLowerCase().includes(q));
