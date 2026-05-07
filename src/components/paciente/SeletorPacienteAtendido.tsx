@@ -176,10 +176,6 @@ export function SeletorPacienteAtendido({ titularId, onChange, value, onNovoDepe
     );
   }
 
-  const maskFone = (v: string) => {
-    const d = onlyDigits(v).slice(0, 11);
-    return maskCpf(v);
-  };
 
   return (
     <div className="rounded-lg border border-border p-4 space-y-3">
