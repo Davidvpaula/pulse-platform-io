@@ -7612,6 +7612,7 @@ export type Database = {
           ranking_score: number | null
           taxa_no_show: number | null
           total_avaliacoes: number | null
+          tratamento: string | null
         }
         Relationships: []
       }
