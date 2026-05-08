@@ -524,7 +524,7 @@ export default function ComunicacaoInbox() {
 
   async function assumir() {
     if (!active || !user || isMedico) return;
-    const { error } = await supabase.rpc("assumir_conversa", { p_conversation_id: active.id });
+    const { error } = await supabase.rpc("claim_conversation" as any, { p_conversation_id: active.id });
     if (error) {
       if (error.code === "55006") {
         toast.error("Conversa já está sendo atendida por outro usuário");
@@ -534,6 +534,14 @@ export default function ComunicacaoInbox() {
       return;
     }
     toast.success(`Conversa de ${active.contact_name || "paciente"} assumida`);
+    loadConvs();
+  }
+
+  async function resolver() {
+    if (!active || !user || isMedico) return;
+    const { error } = await supabase.rpc("resolver_conversa" as any, { p_conversation_id: active.id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Conversa resolvida");
     loadConvs();
   }
 
