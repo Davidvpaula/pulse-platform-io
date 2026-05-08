@@ -1,74 +1,28 @@
-## Objetivo
+## Teste de envio sandbox WhatsApp
 
-Configurar integração mecânica da API oficial WhatsApp Meta em modo **sandbox/teste** para validar conectividade. Arquitetura preparada para trocar token/número/WABA no futuro **sem refatorar código** — basta atualizar secrets.
+Disparar a edge function `whatsapp-test-send` para o número **5511985045280** com o template `hello_world` e relatar o resultado.
 
-## Princípio de arquitetura (futuro-proof)
+## Passos
 
-- Nada de token, phone_number_id ou verify_token no código — tudo via `Deno.env.get()`.
-- Versão da Graph API isolada em constante (`GRAPH_API_VERSION = "v25.0"`).
-- Endpoint montado dinamicamente: `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}/messages`.
-- Quando trocarmos para produção: só atualizar os 3 secrets no painel Lovable Cloud. Zero deploy de código.
+1. Chamar a function via `supabase--curl_edge_functions`:
+   - `POST /whatsapp-test-send`
+   - Body: `{ "to": "5511985045280" }`
+   - Authorization: token da sessão atual (você está logado como admin no preview).
 
-## Etapas
+2. Ler o JSON de resposta e mostrar:
+   - `ok` (true/false)
+   - `http_status` retornado pela Meta
+   - `wa_message_id`
+   - `meta_request_id`
+   - Se houver erro: código + mensagem da Meta (ex.: `131030` se o número não estiver na lista de destinatários autorizados).
 
-### 1. Cadastrar 3 secrets no Lovable Cloud
+3. Buscar logs com `supabase--edge_function_logs` da `whatsapp-test-send` para confirmar o ciclo completo (request → resposta Meta → request_id).
 
-Via tool `add_secret` (você confirma os valores num form seguro — eu não toco nos valores aqui no chat):
+## Resultado esperado
 
-- `META_WHATSAPP_TOKEN`
-- `META_PHONE_NUMBER_ID`
-- `META_VERIFY_TOKEN`
+- ✅ **Sucesso**: `wa_message_id` no formato `wamid.HBg...`, mensagem `hello_world` chega no seu WhatsApp em segundos.
+- ❌ **Erro 131030**: número ainda não autorizado no painel sandbox da Meta — você precisa adicionar `+55 11 98504-5280` em "To" → "Manage phone number list" e confirmar via código SMS/WhatsApp.
+- ❌ **Erro 401/403**: token inválido ou expirado.
+- ❌ **Erro 190**: token expirado (sandbox expira em 24h por padrão).
 
-Observação: o projeto hoje usa `WHATSAPP_ACCESS_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` na função `whatsapp-enviar` (produção). Vou manter os novos secrets com prefixo `META_*` para deixar **explícito que são sandbox/teste**, sem colidir com a função de produção.
-
-### 2. Criar edge function `whatsapp-test-send`
-
-Caminho: `supabase/functions/whatsapp-test-send/index.ts`
-
-Comportamento:
-
-- **Auth obrigatório**: só usuário com role `admin` pode disparar (evita abuso e protege quota sandbox).
-- Validar que os 3 secrets existem; se faltar algum, retorna `503` com lista do que falta (mensagem clara para troubleshooting).
-- Aceita `POST { to: "5531999999999" }` — número de destino precisa estar autorizado no painel sandbox da Meta.
-- Monta payload `hello_world` (template padrão sandbox, idioma `en_US`).
-- Faz `POST` para `https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages` com `Bearer ${META_WHATSAPP_TOKEN}`.
-- Retorna o JSON cru da Meta + status HTTP — útil pra debugar erros (token expirado, número não autorizado, etc.).
-- Loga request_id da Meta no console pra rastrear no painel.
-- CORS habilitado.
-
-Sem deduplicação, sem audit log, sem opt-in LGPD — é só teste mecânico. A função de produção (`whatsapp-enviar`) já tem tudo isso.
-
-### 3. Registrar no `supabase/config.toml`
-
-Adicionar bloco `[functions.whatsapp-test-send]` somente se precisarmos de `verify_jwt` diferente do default. **Vamos manter o default** (verify_jwt = false) e validar JWT manualmente no código + checar role admin — padrão do projeto.
-
-### 4. Validação manual
-
-Após deploy, testo a function via `curl_edge_functions` enviando `{ "to": "<seu número autorizado no sandbox Meta>" }` e mostro:
-
-- Resposta da Meta (com `messages[0].id`).
-- Logs da edge function.
-- Confirmação de que mensagem `hello_world` chegou no WhatsApp do número de teste.
-
-### 5. NÃO faço nesta etapa (fica para "integração total" final)
-
-- Webhook receptor (`whatsapp-webhook` já existe vazio — não mexo).
-- Templates customizados.
-- UI no painel admin pra disparar teste (se quiser, adiciono botão depois).
-- Vincular ao módulo de Comunicação / Inbox.
-- Trocar a função `whatsapp-enviar` para usar os novos secrets `META_*` (faremos quando promover sandbox → produção).
-
-## Arquivos
-
-**Novo:**
-- `supabase/functions/whatsapp-test-send/index.ts`
-
-**Sem alterações em:**
-- `whatsapp-enviar` (produção, intocada)
-- `whatsapp-webhook`
-- Frontend
-- Banco de dados / migrations
-
-## Pergunta antes de implementar
-
-Você tem **um número de WhatsApp autorizado no painel sandbox da Meta** pra receber o `hello_world` no teste? (Sandbox da Meta só envia pra números pré-autorizados na lista de "recipientes de teste".) Se sim, me passa no momento do teste — não preciso agora pra criar a função.
+Sem alteração de código nesta etapa — apenas execução do teste.
