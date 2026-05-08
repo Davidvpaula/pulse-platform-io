@@ -32,6 +32,7 @@ import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
 import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
+import { JanelaAtivaIndicator } from "@/components/comunicacao/JanelaAtivaIndicator";
 import { ConversationSlaBadge } from "@/components/comunicacao/ConversationSlaBadge";
 import { AttendantPresenceBadge } from "@/components/comunicacao/AttendantPresenceBadge";
 import { ConversationQueuePanel } from "@/components/comunicacao/ConversationQueuePanel";
