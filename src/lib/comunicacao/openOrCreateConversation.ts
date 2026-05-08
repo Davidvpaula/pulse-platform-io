@@ -48,7 +48,7 @@ export async function openOrCreatePacienteConversation({ pacienteId, telefone, n
     .from("conversations")
     .insert({
       channel: "whatsapp",
-      origin: "admin_manual",
+      origin: "operacional",
       status: "aberta",
       contact_phone: digits,
       contact_name: nome ?? null,
