@@ -764,6 +764,13 @@ export default function ComunicacaoInbox() {
                             </Badge>
                           )}
                           {c.priority === "urgente" && <AlertCircle className="h-3 w-3 text-red-500" />}
+                          {c.priority === "alta" && !c.resolved_at && (
+                            <Badge variant="outline" className="text-[9px] py-0 h-4 bg-orange-500/10 text-orange-600 border-orange-500/30">alta</Badge>
+                          )}
+                          {!isMedico && <ConversationSlaBadge slaDueAt={c.sla_due_at} resolvedAt={c.resolved_at} compact />}
+                          {!isMedico && c.assigned_to && (
+                            <AttendantPresenceBadge userId={c.assigned_to} />
+                          )}
                         </div>
                       </div>
                     </div>
