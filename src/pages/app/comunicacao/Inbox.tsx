@@ -1049,6 +1049,16 @@ export default function ComunicacaoInbox() {
                 {/* Janela 24h Meta */}
                 <Janela24hMeta conversationId={active.id} />
 
+                {/* IA Avatar — Fase 7 */}
+                {!isMedico && (
+                  <ConversationAvatarPanel
+                    conversationId={active.id}
+                    onChanged={loadConvs}
+                    onOpenMemory={() => setMemoryOpen(true)}
+                  />
+                )}
+
+
                 {/* Status do atendimento */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Atendimento</h4>
