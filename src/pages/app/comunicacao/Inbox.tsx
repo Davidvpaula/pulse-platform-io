@@ -565,6 +565,19 @@ export default function ComunicacaoInbox() {
         toast.error("Janela 24h Meta expirada — abrindo template oficial.");
         setJanelaExpirada(true);
         setTemplateDialogOpen(true);
+        supabase.functions.invoke("observabilidade-ingest", {
+          body: {
+            modulo: "whatsapp",
+            evento: "mensagem_livre_bloqueada",
+            severity: "info",
+            conversation_id: active.id,
+            metadata: {
+              reason: "janela_24h_expirada_servidor",
+              acao_sugerida: "usar_template",
+              contact_phone: active.contact_phone,
+            },
+          },
+        }).catch(() => {});
         return;
       }
       if (data?.lgpd_block) {
