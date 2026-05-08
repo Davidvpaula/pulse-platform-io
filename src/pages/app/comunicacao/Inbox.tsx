@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LockBadge } from "@/components/comunicacao/LockBadge";
+import { TransferirConversaDialog } from "@/components/comunicacao/TransferirConversaDialog";
 
 type Conv = {
   id: string;
@@ -45,6 +47,8 @@ type Conv = {
   medico_id: string | null;
   intent: string | null;
   tags: string[];
+  locked_by: string | null;
+  locked_at: string | null;
 };
 
 type Msg = {
@@ -136,8 +140,10 @@ export default function ComunicacaoInbox() {
 
   // Detail data for right panel
   const [assignedName, setAssignedName] = useState<string | null>(null);
+  const [lockedByName, setLockedByName] = useState<string | null>(null);
   const [medicoName, setMedicoName] = useState<string | null>(null);
   const [consultaInfo, setConsultaInfo] = useState<{ inicio: string; status: string } | null>(null);
+  const [transferirOpen, setTransferirOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
@@ -270,6 +276,7 @@ export default function ComunicacaoInbox() {
   // Load detail data for right panel
   async function loadDetailData(conv: Conv) {
     setAssignedName(null);
+    setLockedByName(null);
     setMedicoName(null);
     setConsultaInfo(null);
 
@@ -280,6 +287,19 @@ export default function ComunicacaoInbox() {
         .eq("id", conv.assigned_to)
         .maybeSingle();
       setAssignedName(data?.nome || data?.email || "—");
+    }
+
+    if (conv.locked_by) {
+      if (conv.locked_by === conv.assigned_to && assignedName) {
+        setLockedByName(assignedName);
+      } else {
+        const { data } = await supabase
+          .from("profiles")
+          .select("nome, email")
+          .eq("id", conv.locked_by)
+          .maybeSingle();
+        setLockedByName(data?.nome || data?.email || "—");
+      }
     }
 
     if (conv.medico_id) {
@@ -315,7 +335,7 @@ export default function ComunicacaoInbox() {
   const active = convs.find(c => c.id === activeId) || null;
   useEffect(() => {
     if (active) loadDetailData(active);
-  }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id]);
+  }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id, active?.locked_by]);
 
   // Realtime
   useEffect(() => {
@@ -408,17 +428,25 @@ export default function ComunicacaoInbox() {
 
   async function assumir() {
     if (!active || !user || isMedico) return;
-    const { error } = await supabase.from("conversations").update({
-      assigned_to: user.id,
-      status: "em_atendimento",
-    }).eq("id", active.id);
-    if (error) { toast.error(error.message); return; }
-    await registrarAuditoria("assumir_conversa", active.id, {
-      conversa_id: active.id,
-      paciente_id: active.patient_id,
-      contact_name: active.contact_name,
-    });
+    const { error } = await supabase.rpc("assumir_conversa", { p_conversation_id: active.id });
+    if (error) {
+      if (error.code === "55006") {
+        toast.error("Conversa já está sendo atendida por outro usuário");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
     toast.success(`Conversa de ${active.contact_name || "paciente"} assumida`);
+    loadConvs();
+  }
+
+  async function liberar() {
+    if (!active || !user || isMedico) return;
+    const { error } = await supabase.rpc("liberar_conversa", { p_conversation_id: active.id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Conversa liberada");
+    loadConvs();
   }
 
   async function fechar() {
@@ -634,14 +662,22 @@ export default function ComunicacaoInbox() {
             </div>
           ) : (
             <>
-              <div className="border-b p-3 flex items-center justify-between gap-2">
-                <div>
-                  <div className="font-medium text-sm">{active.contact_name || active.contact_phone}</div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3" /> {active.contact_phone || "sem número"}
+              <div className="border-b p-3 flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm truncate">{active.contact_name || active.contact_phone}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-3 w-3" /> {active.contact_phone || "sem número"}
+                    </span>
+                    <LockBadge
+                      lockedBy={active.locked_by}
+                      lockedAt={active.locked_at}
+                      lockedByName={lockedByName}
+                      isMe={active.locked_by === user?.id}
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                   {!isMedico && canRespond && (
                     <>
                       <Button size="sm" variant="ghost" onClick={toggleBot} title={active.bot_active ? "Pausar bot" : "Ativar bot"}>
@@ -652,8 +688,32 @@ export default function ComunicacaoInbox() {
                       </Button>
                     </>
                   )}
-                  {canAssume && active.assigned_to !== user?.id && (
-                    <Button size="sm" variant="outline" onClick={assumir}><UserCheck className="h-4 w-4 mr-1" />Assumir</Button>
+                  {/* Lock-aware Assumir / Liberar */}
+                  {canAssume && !isMedico && (
+                    active.locked_by === null ? (
+                      <Button size="sm" variant="outline" onClick={assumir}>
+                        <UserCheck className="h-4 w-4 mr-1" />Assumir
+                      </Button>
+                    ) : active.locked_by === user?.id ? (
+                      <Button size="sm" variant="outline" onClick={liberar}>
+                        <Lock className="h-4 w-4 mr-1" />Liberar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={liberar}
+                        title="Forçar liberação (admin)"
+                        className="text-amber-700 border-amber-500/40"
+                      >
+                        <Lock className="h-4 w-4 mr-1" />Forçar liberar
+                      </Button>
+                    )
+                  )}
+                  {canTransfer && !isMedico && (
+                    <Button size="sm" variant="outline" onClick={() => setTransferirOpen(true)}>
+                      <ArrowRightLeft className="h-4 w-4 mr-1" />Transferir
+                    </Button>
                   )}
                   {canClose && (
                     <Button size="sm" variant="outline" onClick={fechar}><X className="h-4 w-4 mr-1" />Finalizar</Button>
@@ -897,6 +957,16 @@ export default function ComunicacaoInbox() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Dialog — Transferir conversa */}
+      {active && (
+        <TransferirConversaDialog
+          open={transferirOpen}
+          onOpenChange={setTransferirOpen}
+          conversationId={active.id}
+          onTransferred={loadConvs}
+        />
       )}
     </div>
   );
