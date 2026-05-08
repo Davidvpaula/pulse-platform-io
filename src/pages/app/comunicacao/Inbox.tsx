@@ -140,8 +140,10 @@ export default function ComunicacaoInbox() {
 
   // Detail data for right panel
   const [assignedName, setAssignedName] = useState<string | null>(null);
+  const [lockedByName, setLockedByName] = useState<string | null>(null);
   const [medicoName, setMedicoName] = useState<string | null>(null);
   const [consultaInfo, setConsultaInfo] = useState<{ inicio: string; status: string } | null>(null);
+  const [transferirOpen, setTransferirOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
