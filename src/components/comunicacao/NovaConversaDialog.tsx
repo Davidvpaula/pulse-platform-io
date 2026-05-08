@@ -42,7 +42,7 @@ export function NovaConversaDialog({ open, onOpenChange, onCreated }: Props) {
       const digits = q.replace(/\D/g, "");
       let query = supabase
         .from("pacientes")
-        .select("id, nome_completo, telefone, email, cpf")
+        .select("id, nome_completo, telefone, cpf")
         .limit(15);
       if (digits.length >= 3) {
         query = query.or(
@@ -120,7 +120,7 @@ export function NovaConversaDialog({ open, onOpenChange, onCreated }: Props) {
                   <div className="min-w-0">
                     <div className="text-sm font-medium truncate">{p.nome_completo || "Sem nome"}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {p.telefone || "sem telefone"} · {p.email || "sem e-mail"}
+                      {p.telefone || "sem telefone"} · {p.cpf || "sem CPF"}
                     </div>
                   </div>
                   <Button
