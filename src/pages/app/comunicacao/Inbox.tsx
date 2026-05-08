@@ -20,6 +20,7 @@ import {
   Send, Search, Bot, Sparkles, UserCheck, Phone, FileText,
   CreditCard, Calendar, ArrowRightLeft, Pause, X, AlertCircle,
   FileEdit, Shield, Clock, Stethoscope, Headphones, Loader2, Lock,
+  MessageSquarePlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,8 @@ import { TypingIndicator } from "@/components/comunicacao/TypingIndicator";
 import { useAttendantPresence } from "@/hooks/useAttendantPresence";
 import { useConversationTyping } from "@/hooks/useConversationTyping";
 import { CheckCircle2 } from "lucide-react";
+import { NovaConversaDialog } from "@/components/comunicacao/NovaConversaDialog";
+import { openOrCreatePacienteConversation } from "@/lib/comunicacao/openOrCreateConversation";
 
 type Conv = {
   id: string;
@@ -145,8 +148,11 @@ function isConvDentroJanela(
 export default function ComunicacaoInbox() {
   const { user } = useSession();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const convParam = searchParams.get("conv");
+  const pacienteParam = searchParams.get("paciente");
+  const phoneParam = searchParams.get("phone");
+  const [novaConversaOpen, setNovaConversaOpen] = useState(false);
   const { loading: permLoading, allowed: perms } = usePermission(INBOX_PERMISSIONS);
   const [convs, setConvs] = useState<Conv[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -355,6 +361,46 @@ export default function ComunicacaoInbox() {
     loadConvs();
     loadTemplates();
   }, [medicoCheckDone, loadConvs]);
+
+  // Resolve ?paciente= or ?phone= → open or create conversation
+  const resolvedRef = useRef(false);
+  useEffect(() => {
+    if (resolvedRef.current) return;
+    if (!medicoCheckDone || isMedico) return;
+    if (!pacienteParam && !phoneParam) return;
+    resolvedRef.current = true;
+    (async () => {
+      try {
+        let nome: string | null = null;
+        let telefone: string | null = phoneParam;
+        if (pacienteParam) {
+          const { data } = await supabase
+            .from("pacientes")
+            .select("nome_completo, telefone")
+            .eq("id", pacienteParam)
+            .maybeSingle();
+          if (data) {
+            nome = data.nome_completo;
+            telefone = telefone || data.telefone;
+          }
+        }
+        const convId = await openOrCreatePacienteConversation({
+          pacienteId: pacienteParam || undefined,
+          telefone,
+          nome,
+        });
+        setActiveId(convId);
+        await loadConvs();
+        const next = new URLSearchParams(searchParams);
+        next.delete("paciente");
+        next.delete("phone");
+        next.set("conv", convId);
+        setSearchParams(next, { replace: true });
+      } catch (e: any) {
+        toast.error(e?.message || "Não foi possível abrir a conversa do paciente.");
+      }
+    })();
+  }, [medicoCheckDone, isMedico, pacienteParam, phoneParam, loadConvs, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (activeId) loadMsgs(activeId);
@@ -643,6 +689,23 @@ export default function ComunicacaoInbox() {
           ? "Conversas vinculadas aos seus pacientes e atendimentos."
           : "Atendimento de pacientes e leads via WhatsApp."
         }
+        actions={!isMedico && (perms["comunicacao.ver_todas"] || perms["comunicacao.inbox.supervisionar"]) ? (
+          <Button size="sm" onClick={() => setNovaConversaOpen(true)}>
+            <MessageSquarePlus className="h-4 w-4 mr-1.5" /> Nova conversa
+          </Button>
+        ) : undefined}
+      />
+
+      <NovaConversaDialog
+        open={novaConversaOpen}
+        onOpenChange={setNovaConversaOpen}
+        onCreated={async (id) => {
+          setActiveId(id);
+          await loadConvs();
+          const next = new URLSearchParams(searchParams);
+          next.set("conv", id);
+          setSearchParams(next, { replace: true });
+        }}
       />
 
       <div className="grid grid-cols-12 gap-4 h-[calc(100vh-220px)] min-h-[600px]">
