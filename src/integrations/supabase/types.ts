@@ -7794,6 +7794,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_webhook_log: {
+        Row: {
+          error: string | null
+          http_status: number | null
+          id: string
+          payload: Json
+          processed_count: number
+          received_at: string
+          signature_valid: boolean | null
+          wamid_processed: string[]
+        }
+        Insert: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          payload: Json
+          processed_count?: number
+          received_at?: string
+          signature_valid?: boolean | null
+          wamid_processed?: string[]
+        }
+        Update: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          payload?: Json
+          processed_count?: number
+          received_at?: string
+          signature_valid?: boolean | null
+          wamid_processed?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
       audit_eventos_unificado: {
