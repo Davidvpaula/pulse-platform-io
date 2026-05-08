@@ -1,83 +1,39 @@
 ## Objetivo
 
-Aplicar a decisão arquitetural "Operação interna, Clínica externa": tornar o sistema interno o SoR operacional definitivo e reduzir a Feegow ao papel de provider clínico externo, atrás de uma abstração `ClinicalProvider` (futuro Memed/Native plugáveis). Sem sync bidirecional, sem espelho de agenda/financeiro, sem iframe.
+Consolidar oficialmente a decisão arquitetural Feegow como **regra permanente** do projeto, elevando-a de "memória de feature" para **constraint vinculante** que vale para qualquer mudança futura.
 
-Memória já registrada em `mem://features/arquitetura-clinical-provider`.
+## O que vai mudar
 
-## Frente 1 — Abstração ClinicalProvider
+### 1. Promover regra ao Core do projeto
+A linha já existente no `mem://index.md` Core será reescrita de forma mais imperativa, deixando claro que é decisão **permanente e bloqueante**:
 
-**Backend** (`supabase/functions/_shared/clinical-providers.ts`):
-- Interface `ClinicalProvider` com: `getPatientDeepLink`, `getDocumentsList`, `downloadDocument`, `verifyHealth`.
-- Implementações: `FeegowProvider` (real, usa edge functions já existentes), `NullProvider` (default no-op).
-- Factory `getActiveProvider()` lê `app_settings.clinical_provider` (`'feegow' | 'none'` agora; `'memed' | 'native'` reservados).
+> **Arquitetura clínica (DEFINITIVA): sistema interno = SoR operacional; Feegow = SoR clínico externo. PROIBIDO: sync bidirecional, financeiro/agenda/mensagens/filas/SLA na Feegow, espelhamento operacional, dupla fonte da verdade, iframe, dependência operacional. Feegow só serve para prontuário, documentos, histórico, receitas/exames/atestados e deep-link clínico.**
 
-**Frontend** (`src/lib/clinical/`):
-- `clinicalUrls.ts` — URL builders centralizados (paciente, prontuário, documentos da Feegow). Único ponto de mudança se a URL deles mudar.
-- `useClinicalProvider()` hook — devolve `{ enabled, providerId, openPatient(id), openDocuments(id) }` com base em `app_settings`.
-- Componente `<AbrirNaFeegowButton patientId={...} variant="prontuario|paciente|documentos" />` que só renderiza se `enabled`.
+### 2. Criar memória do tipo `constraint` (nunca re-propor)
+Novo arquivo `mem://constraints/feegow-arquitetura-definitiva.md` com:
 
-**Migração mínima**: adicionar coluna `clinical_provider text default 'none'` em `app_settings` (ou chave em JSON existente, conforme padrão do projeto — checar antes).
+- **Status:** decisão permanente, aprovada, não-negociável.
+- **Lista exaustiva de proibições** (a lista que você mandou, palavra por palavra).
+- **Lista do que a Feegow PODE fazer** (provider clínico, prontuário, documentos, deep-link, interoperabilidade).
+- **Lista do que o sistema interno é dono** (operação, Inbox, WhatsApp, IA, agenda, financeiro, pagamentos, repasses, marketplace, automações, multiatendimento, observabilidade, auditoria, UX).
+- **Why:** evitar acoplamento, dívida técnica, race conditions, perda de autonomia, dupla fonte da verdade.
+- **How to apply:** qualquer feature/PR que viole estas regras deve ser **rejeitado automaticamente** sem nova discussão.
 
-## Frente 2 — Limpeza de `src/lib/feegow.ts`
+### 3. Atualizar memória existente
+- `mem://features/arquitetura-clinical-provider` ganha um banner no topo: "STATUS: DEFINITIVO — ver constraint `feegow-arquitetura-definitiva`".
+- `mem://features/feegow-agendamento-manual` (já marcada como SUPERADA) ganha referência cruzada à constraint.
+- `mem://preferences/integracoes-externas` ganha nota: "Feegow → escopo congelado pela constraint definitiva. Ativação futura = só deep-link + documentos read-only."
 
-Encolher de ~330 linhas para ~80 linhas. Manter apenas:
-- Tipos de identidade: `FeegowMapping`, `FeegowConnectionState`.
-- URL builders (movidos para `clinicalUrls.ts`).
-
-**Remover**:
-- `feegowSchema` (TableDef[] inteiro — vira documentação morta).
-- `statusInternoLabel`, `statusFeegowLabel`, `statusMap` (não haverá mapeamento de status).
-- `validatePacienteParaFeegow`, `validateAgendamentoParaFeegow` (Feegow não é pré-requisito de nada operacional).
-- `integrationLogsMock`, `pendenciasFeegow` (mocks não usados em produção).
-
-Auditar imports antes de remover; substituir usos remanescentes pela nova abstração.
-
-## Frente 3 — Auditoria de edge functions Feegow
-
-| Função | Decisão |
-|--------|---------|
-| `feegow-importar-documentos` | **Manter** (read-only docs) |
-| `feegow-vincular-profissional` | **Manter** (mapping de identidade) |
-| `feegow-profissionais` | **Manter** (listing read-only para vincular) |
-| `feegow-agenda-readonly` | **Avaliar** — manter só se usada em algum dashboard |
-| `feegow-criar-agendamento` | **Marcar deprecated** (header de warning + log) |
-| `feegow-enviar-paciente` | **Marcar deprecated** |
-| `feegow-liberar-medico` | **Marcar deprecated** |
-
-"Deprecated" = adiciona log `console.warn('[DEPRECATED] ...')` e header `X-Deprecated: true`. Não excluir agora — pode haver chamadas legadas. Excluir em revisão futura.
-
-## Frente 4 — UI: substituir `FeegowSyncConsulta`
-
-- `src/components/admin/FeegowSyncConsulta.tsx` → trocar por `<AbrirNaFeegowButton>` simples (link em nova aba) onde for usado.
-- Página `src/pages/app/shared/PendenciasIntegracao.tsx` → reduzir para apenas health-check + lista de erros do `feegow-importar-documentos`. Remover painel de "agendamentos pendentes de sync".
-- Adicionar botões `AbrirNaFeegowButton` em:
-  - Perfil do paciente (médico/colaborador).
-  - Tela de consulta em andamento (médico) — variante "prontuário".
-
-## Frente 5 — Documentação e memória
-
-- Atualizar `mem://features/feegow-agendamento-manual` adicionando nota "SUPERADA pela arquitetura ClinicalProvider".
-- (Já feito) `mem://features/arquitetura-clinical-provider` criada e referenciada no index.
-
-## Detalhes técnicos
-
-- **Sem migração destrutiva**: nenhuma coluna `feegow_*` será removida das tabelas — apenas deixam de ser populadas pelos novos fluxos. Compatível com dados existentes.
-- **Health-check**: usar `feegow-importar-documentos` ou criar `feegow-health-check` minimal (HEAD na API). Circuit breaker simples em `useClinicalProvider` (cache 60s).
-- **Feature flag**: `app_settings.clinical_provider = 'none'` desativa todos os botões instantaneamente. Default = `'none'` para não quebrar nada na entrega.
-- **Sem iframe, sem postMessage, sem SSO**. Apenas `window.open(url, '_blank', 'noopener')`.
+### 4. Atualizar índice
+`mem://index.md` ganha entrada de destaque na seção Memories:
+> - [Constraint: arquitetura Feegow definitiva](mem://constraints/feegow-arquitetura-definitiva) — **REGRA PERMANENTE.** Proibições e escopo congelado.
 
 ## O que NÃO está no escopo
 
-- Não tocar em agenda, financeiro, comunicação, IA, auditoria.
-- Não criar `MemedProvider` nem `NativeProvider` agora — só a interface preparada.
-- Não pedir secrets novos da Feegow.
-- Não excluir edge functions ainda (apenas deprecar).
-- Não migrar dados históricos.
+- Nenhuma alteração em código, edge functions, banco de dados, RLS ou UI.
+- Nenhuma exclusão das edge functions já marcadas como deprecated (decidiremos isso em outra revisão).
+- Apenas memória/documentação imutável.
 
 ## Resultado esperado
 
-- `src/lib/feegow.ts` reduzido a ~80 linhas só com identidade + URLs.
-- Abstração `ClinicalProvider` pronta para receber Memed/Native sem refatoração.
-- UI da Feegow reduzida a botões deep-link discretos, controlados por feature flag.
-- Edge functions de sync/agendamento marcadas como deprecated mas ainda funcionais para não quebrar legado.
-- Sistema 100% autônomo: derrubar a Feegow não impacta agenda, pagamento, comunicação ou teleconsulta.
+A partir desta consolidação, qualquer pedido futuro que mencione "sincronizar agenda com Feegow", "puxar financeiro da Feegow", "embutir Feegow num iframe", "usar Feegow como fonte de pacientes", etc. será automaticamente recusado pelo agente com referência direta a esta constraint, sem precisar redebater a decisão.
