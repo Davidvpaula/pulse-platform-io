@@ -252,6 +252,7 @@ function TestePanel() {
             {enviando ? "Enviando…" : "Disparar teste"}
           </Button>
         </div>
+        {resultado && <ResumoMeta resultado={resultado} />}
         {resultado && (
           <pre className="max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs">
             {JSON.stringify(resultado, null, 2)}
@@ -259,5 +260,38 @@ function TestePanel() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ResumoMeta({ resultado }: { resultado: any }) {
+  if (resultado?.ok && resultado?.wa_message_id) {
+    return (
+      <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm space-y-1">
+        <div className="font-medium text-emerald-700 dark:text-emerald-400">✅ Mensagem aceita pela Meta</div>
+        <div><strong>wa_message_id:</strong> <code className="text-xs">{resultado.wa_message_id}</code></div>
+        <div><strong>meta_request_id:</strong> <code className="text-xs">{resultado.meta_request_id ?? "—"}</code></div>
+        <div><strong>HTTP:</strong> {resultado.http_status}</div>
+      </div>
+    );
+  }
+  const code = resultado?.error_code;
+  const dicas: Record<number, string> = {
+    131030: "Número não está na lista de destinatários autorizados do sandbox Meta.",
+    190: "Token expirado — gere um novo no painel Meta e atualize o secret META_WHATSAPP_TOKEN.",
+    100: "Parâmetro inválido — confira phone_number_id ou payload.",
+    132000: "Template hello_world não está aprovado nesse WABA.",
+    133010: "Número de origem não registrado para envio.",
+  };
+  const dica = code && dicas[code];
+  return (
+    <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm space-y-1">
+      <div className="font-medium text-destructive">❌ Falha no envio</div>
+      {resultado?.http_status && <div><strong>HTTP:</strong> {resultado.http_status}</div>}
+      {code != null && <div><strong>error_code:</strong> {code}{resultado.error_subcode ? ` / ${resultado.error_subcode}` : ""} ({resultado.error_type ?? "—"})</div>}
+      {resultado?.error_message && <div><strong>mensagem:</strong> {resultado.error_message}</div>}
+      {resultado?.fbtrace_id && <div><strong>fbtrace_id:</strong> <code className="text-xs">{resultado.fbtrace_id}</code></div>}
+      {resultado?.erro && !code && <div><strong>erro:</strong> {resultado.erro}</div>}
+      {dica && <div className="mt-2 text-xs text-muted-foreground">💡 {dica}</div>}
+    </div>
   );
 }
