@@ -335,7 +335,7 @@ export default function ComunicacaoInbox() {
   const active = convs.find(c => c.id === activeId) || null;
   useEffect(() => {
     if (active) loadDetailData(active);
-  }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id]);
+  }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id, active?.locked_by]);
 
   // Realtime
   useEffect(() => {
