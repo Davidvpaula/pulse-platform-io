@@ -279,6 +279,184 @@ export type Database = {
           },
         ]
       }
+      ai_avatar_memory: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          memory_type: Database["public"]["Enums"]["ai_avatar_memory_type"]
+          patient_id: string | null
+          relevance_score: number
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          memory_type?: Database["public"]["Enums"]["ai_avatar_memory_type"]
+          patient_id?: string | null
+          relevance_score?: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          memory_type?: Database["public"]["Enums"]["ai_avatar_memory_type"]
+          patient_id?: string | null
+          relevance_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_avatar_memory_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_avatar_profiles: {
+        Row: {
+          assinatura: string | null
+          ativo: boolean
+          comportamento: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          limites: string | null
+          nome: string
+          saudacao_padrao: string | null
+          system_prompt: string
+          tom: string
+          updated_at: string
+        }
+        Insert: {
+          assinatura?: string | null
+          ativo?: boolean
+          comportamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          limites?: string | null
+          nome: string
+          saudacao_padrao?: string | null
+          system_prompt: string
+          tom?: string
+          updated_at?: string
+        }
+        Update: {
+          assinatura?: string | null
+          ativo?: boolean
+          comportamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          limites?: string | null
+          nome?: string
+          saudacao_padrao?: string | null
+          system_prompt?: string
+          tom?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_blocked_topics: {
+        Row: {
+          acao: string
+          ativo: boolean
+          categoria: Database["public"]["Enums"]["ai_blocked_categoria"]
+          created_at: string
+          descricao: string | null
+          id: string
+          severidade: Database["public"]["Enums"]["ai_avatar_risco"]
+          termo: string
+          updated_at: string
+        }
+        Insert: {
+          acao?: string
+          ativo?: boolean
+          categoria: Database["public"]["Enums"]["ai_blocked_categoria"]
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          severidade?: Database["public"]["Enums"]["ai_avatar_risco"]
+          termo: string
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["ai_blocked_categoria"]
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          severidade?: Database["public"]["Enums"]["ai_avatar_risco"]
+          termo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_handoff_logs: {
+        Row: {
+          confianca: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          conversation_id: string | null
+          created_at: string
+          gatilho: string | null
+          id: string
+          metadata: Json
+          motivo: Database["public"]["Enums"]["ai_handoff_motivo"]
+          risco: Database["public"]["Enums"]["ai_avatar_risco"] | null
+          setor_alvo: string | null
+          status: string
+          supervisor_alvo: string | null
+        }
+        Insert: {
+          confianca?: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          conversation_id?: string | null
+          created_at?: string
+          gatilho?: string | null
+          id?: string
+          metadata?: Json
+          motivo: Database["public"]["Enums"]["ai_handoff_motivo"]
+          risco?: Database["public"]["Enums"]["ai_avatar_risco"] | null
+          setor_alvo?: string | null
+          status?: string
+          supervisor_alvo?: string | null
+        }
+        Update: {
+          confianca?: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          conversation_id?: string | null
+          created_at?: string
+          gatilho?: string | null
+          id?: string
+          metadata?: Json
+          motivo?: Database["public"]["Enums"]["ai_handoff_motivo"]
+          risco?: Database["public"]["Enums"]["ai_avatar_risco"] | null
+          setor_alvo?: string | null
+          status?: string
+          supervisor_alvo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_handoff_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_handoff_rules: {
         Row: {
           action: string
@@ -329,43 +507,76 @@ export type Database = {
       ai_logs: {
         Row: {
           action_taken: string | null
+          auto_reply: boolean
+          confianca: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          confianca_score: number | null
           conversation_id: string | null
           created_at: string
+          custo_estimado: number | null
           error: string | null
+          handoff_motivo:
+            | Database["public"]["Enums"]["ai_handoff_motivo"]
+            | null
           id: string
           latency_ms: number | null
           model: string | null
+          modo: Database["public"]["Enums"]["ai_avatar_modo"] | null
+          motivo: string | null
+          profile_id: string | null
           prompt: string | null
           provider: Database["public"]["Enums"]["ai_provider"] | null
           response: string | null
+          risco: Database["public"]["Enums"]["ai_avatar_risco"] | null
           tokens_in: number | null
           tokens_out: number | null
         }
         Insert: {
           action_taken?: string | null
+          auto_reply?: boolean
+          confianca?: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          confianca_score?: number | null
           conversation_id?: string | null
           created_at?: string
+          custo_estimado?: number | null
           error?: string | null
+          handoff_motivo?:
+            | Database["public"]["Enums"]["ai_handoff_motivo"]
+            | null
           id?: string
           latency_ms?: number | null
           model?: string | null
+          modo?: Database["public"]["Enums"]["ai_avatar_modo"] | null
+          motivo?: string | null
+          profile_id?: string | null
           prompt?: string | null
           provider?: Database["public"]["Enums"]["ai_provider"] | null
           response?: string | null
+          risco?: Database["public"]["Enums"]["ai_avatar_risco"] | null
           tokens_in?: number | null
           tokens_out?: number | null
         }
         Update: {
           action_taken?: string | null
+          auto_reply?: boolean
+          confianca?: Database["public"]["Enums"]["ai_avatar_confianca"] | null
+          confianca_score?: number | null
           conversation_id?: string | null
           created_at?: string
+          custo_estimado?: number | null
           error?: string | null
+          handoff_motivo?:
+            | Database["public"]["Enums"]["ai_handoff_motivo"]
+            | null
           id?: string
           latency_ms?: number | null
           model?: string | null
+          modo?: Database["public"]["Enums"]["ai_avatar_modo"] | null
+          motivo?: string | null
+          profile_id?: string | null
           prompt?: string | null
           provider?: Database["public"]["Enums"]["ai_provider"] | null
           response?: string | null
+          risco?: Database["public"]["Enums"]["ai_avatar_risco"] | null
           tokens_in?: number | null
           tokens_out?: number | null
         }
@@ -418,6 +629,18 @@ export type Database = {
       ai_settings: {
         Row: {
           active: boolean
+          avatar_confianca_minima: Database["public"]["Enums"]["ai_avatar_confianca"]
+          avatar_cooldown_segundos: number
+          avatar_horario_fim: string | null
+          avatar_horario_inicio: string | null
+          avatar_kill_switch: boolean
+          avatar_kill_switch_at: string | null
+          avatar_kill_switch_by: string | null
+          avatar_kill_switch_motivo: string | null
+          avatar_max_msgs_paciente_dia: number
+          avatar_max_respostas_consecutivas: number
+          avatar_modo: Database["public"]["Enums"]["ai_avatar_modo"]
+          avatar_profile_id: string | null
           base_prompt: string | null
           created_at: string
           created_by: string | null
@@ -435,6 +658,18 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avatar_confianca_minima?: Database["public"]["Enums"]["ai_avatar_confianca"]
+          avatar_cooldown_segundos?: number
+          avatar_horario_fim?: string | null
+          avatar_horario_inicio?: string | null
+          avatar_kill_switch?: boolean
+          avatar_kill_switch_at?: string | null
+          avatar_kill_switch_by?: string | null
+          avatar_kill_switch_motivo?: string | null
+          avatar_max_msgs_paciente_dia?: number
+          avatar_max_respostas_consecutivas?: number
+          avatar_modo?: Database["public"]["Enums"]["ai_avatar_modo"]
+          avatar_profile_id?: string | null
           base_prompt?: string | null
           created_at?: string
           created_by?: string | null
@@ -452,6 +687,18 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avatar_confianca_minima?: Database["public"]["Enums"]["ai_avatar_confianca"]
+          avatar_cooldown_segundos?: number
+          avatar_horario_fim?: string | null
+          avatar_horario_inicio?: string | null
+          avatar_kill_switch?: boolean
+          avatar_kill_switch_at?: string | null
+          avatar_kill_switch_by?: string | null
+          avatar_kill_switch_motivo?: string | null
+          avatar_max_msgs_paciente_dia?: number
+          avatar_max_respostas_consecutivas?: number
+          avatar_modo?: Database["public"]["Enums"]["ai_avatar_modo"]
+          avatar_profile_id?: string | null
           base_prompt?: string | null
           created_at?: string
           created_by?: string | null
@@ -467,7 +714,15 @@ export type Database = {
           temperature?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_settings_avatar_profile_fk"
+            columns: ["avatar_profile_id"]
+            isOneToOne: false
+            referencedRelation: "ai_avatar_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       analytics_conversions: {
         Row: {
@@ -2288,6 +2543,13 @@ export type Database = {
       conversations: {
         Row: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -2326,6 +2588,13 @@ export type Database = {
         }
         Insert: {
           ai_active?: boolean
+          ai_avatar_blocked?: boolean
+          ai_avatar_blocked_at?: string | null
+          ai_avatar_blocked_by?: string | null
+          ai_avatar_blocked_motivo?: string | null
+          ai_avatar_consecutive_replies?: number
+          ai_avatar_last_reply_at?: string | null
+          ai_avatar_paused_until?: string | null
           assigned_sector?: string | null
           assigned_to?: string | null
           bot_active?: boolean
@@ -2364,6 +2633,13 @@ export type Database = {
         }
         Update: {
           ai_active?: boolean
+          ai_avatar_blocked?: boolean
+          ai_avatar_blocked_at?: string | null
+          ai_avatar_blocked_by?: string | null
+          ai_avatar_blocked_motivo?: string | null
+          ai_avatar_consecutive_replies?: number
+          ai_avatar_last_reply_at?: string | null
+          ai_avatar_paused_until?: string | null
           assigned_sector?: string | null
           assigned_to?: string | null
           bot_active?: boolean
@@ -8532,6 +8808,156 @@ export type Database = {
         Args: { _motivo?: string; _slot_id: string; _voucher_id: string }
         Returns: Json
       }
+      ai_avatar_assumir_conversa: {
+        Args: { _conversation_id: string }
+        Returns: {
+          ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ai_avatar_kill_switch: {
+        Args: { _motivo?: string; _on: boolean }
+        Returns: {
+          active: boolean
+          avatar_confianca_minima: Database["public"]["Enums"]["ai_avatar_confianca"]
+          avatar_cooldown_segundos: number
+          avatar_horario_fim: string | null
+          avatar_horario_inicio: string | null
+          avatar_kill_switch: boolean
+          avatar_kill_switch_at: string | null
+          avatar_kill_switch_by: string | null
+          avatar_kill_switch_motivo: string | null
+          avatar_max_msgs_paciente_dia: number
+          avatar_max_respostas_consecutivas: number
+          avatar_modo: Database["public"]["Enums"]["ai_avatar_modo"]
+          avatar_profile_id: string | null
+          base_prompt: string | null
+          created_at: string
+          created_by: string | null
+          handoff_keywords: string[]
+          id: string
+          knowledge_base: string | null
+          max_tokens: number | null
+          model: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          safety_rules: string | null
+          sugestao_medicos_ativa: boolean
+          sugestao_prioridade: Json
+          temperature: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ai_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ai_avatar_pausar_conversa: {
+        Args: { _conversation_id: string; _minutos?: number; _motivo?: string }
+        Returns: {
+          ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ai_avatar_should_reply: {
+        Args: { _conversation_id: string }
+        Returns: Json
+      }
       alterar_status_conta_paciente:
         | {
             Args: {
@@ -8570,6 +8996,13 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -8724,6 +9157,13 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -8852,6 +9292,13 @@ export type Database = {
         Args: { p_conversation_id: string; p_paciente_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9156,6 +9603,13 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9490,6 +9944,13 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9555,6 +10016,13 @@ export type Database = {
         Args: { p_conversation_id: string; p_queue_id: string }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9615,6 +10083,13 @@ export type Database = {
         }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9685,6 +10160,13 @@ export type Database = {
         }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9735,6 +10217,13 @@ export type Database = {
         }
         Returns: {
           ai_active: boolean
+          ai_avatar_blocked: boolean
+          ai_avatar_blocked_at: string | null
+          ai_avatar_blocked_by: string | null
+          ai_avatar_blocked_motivo: string | null
+          ai_avatar_consecutive_replies: number
+          ai_avatar_last_reply_at: string | null
+          ai_avatar_paused_until: string | null
           assigned_sector: string | null
           assigned_to: string | null
           bot_active: boolean
@@ -9821,7 +10310,41 @@ export type Database = {
       }
     }
     Enums: {
+      ai_avatar_confianca: "critica" | "baixa" | "media" | "alta"
+      ai_avatar_memory_type:
+        | "preferencia"
+        | "contexto"
+        | "historico_operacional"
+        | "observacao"
+        | "pendencia"
+      ai_avatar_modo: "assistido" | "semi_autonomo" | "autonomo_controlado"
+      ai_avatar_risco: "nenhum" | "baixo" | "medio" | "alto" | "critico"
+      ai_blocked_categoria:
+        | "diagnostico"
+        | "prescricao"
+        | "dosagem"
+        | "laudo"
+        | "exame"
+        | "atestado"
+        | "urgencia_medica"
+        | "conduta_clinica"
+        | "aconselhamento_clinico"
+        | "interpretacao"
       ai_handoff_level: "urgente" | "moderado" | "baixo"
+      ai_handoff_motivo:
+        | "baixa_confianca"
+        | "topico_clinico"
+        | "urgencia"
+        | "crise_emocional"
+        | "risco_juridico"
+        | "paciente_irritado"
+        | "solicitacao_humano"
+        | "timeout_provider"
+        | "erro_provider"
+        | "rate_limit"
+        | "anti_loop"
+        | "manual"
+        | "outro"
       ai_provider: "lovable" | "openai" | "anthropic" | "gemini" | "outro"
       alerta_ia_severidade: "info" | "atencao" | "alerta" | "critico"
       alerta_ia_status:
@@ -10337,7 +10860,44 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_avatar_confianca: ["critica", "baixa", "media", "alta"],
+      ai_avatar_memory_type: [
+        "preferencia",
+        "contexto",
+        "historico_operacional",
+        "observacao",
+        "pendencia",
+      ],
+      ai_avatar_modo: ["assistido", "semi_autonomo", "autonomo_controlado"],
+      ai_avatar_risco: ["nenhum", "baixo", "medio", "alto", "critico"],
+      ai_blocked_categoria: [
+        "diagnostico",
+        "prescricao",
+        "dosagem",
+        "laudo",
+        "exame",
+        "atestado",
+        "urgencia_medica",
+        "conduta_clinica",
+        "aconselhamento_clinico",
+        "interpretacao",
+      ],
       ai_handoff_level: ["urgente", "moderado", "baixo"],
+      ai_handoff_motivo: [
+        "baixa_confianca",
+        "topico_clinico",
+        "urgencia",
+        "crise_emocional",
+        "risco_juridico",
+        "paciente_irritado",
+        "solicitacao_humano",
+        "timeout_provider",
+        "erro_provider",
+        "rate_limit",
+        "anti_loop",
+        "manual",
+        "outro",
+      ],
       ai_provider: ["lovable", "openai", "anthropic", "gemini", "outro"],
       alerta_ia_severidade: ["info", "atencao", "alerta", "critico"],
       alerta_ia_status: [
