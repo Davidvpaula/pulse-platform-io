@@ -149,6 +149,8 @@ export default function ComunicacaoInbox() {
   const [medicoName, setMedicoName] = useState<string | null>(null);
   const [consultaInfo, setConsultaInfo] = useState<{ inicio: string; status: string } | null>(null);
   const [transferirOpen, setTransferirOpen] = useState(false);
+  const [vinculosPaciente, setVinculosPaciente] = useState<VinculoPaciente[]>([]);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
