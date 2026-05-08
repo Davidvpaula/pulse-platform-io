@@ -64,6 +64,11 @@ type Conv = {
   locked_by: string | null;
   locked_at: string | null;
   paciente_ativo_id: string | null;
+  department_id: string | null;
+  queue_id: string | null;
+  sla_due_at: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
 };
 
 type Msg = {
