@@ -121,6 +121,10 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
       "comunicacao.inbox.encerrar",
       "comunicacao.usar_templates",
       "comunicacao.ver_metricas",
+      "comunicacao.inbox.resolver",
+      "comunicacao.inbox.alterar_prioridade",
+      "comunicacao.inbox.supervisionar",
+      "comunicacao.metricas.operacionais",
     ],
   },
 ];
