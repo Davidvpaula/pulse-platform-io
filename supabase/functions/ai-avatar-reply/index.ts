@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
   if (!lovableKey) return jsonResp({ error: "LOVABLE_API_KEY ausente" }, 503);
 
   const admin = createClient(supabaseUrl, serviceKey);
+  const _t0 = Date.now();
+  let _convId: string | null = null;
 
   try {
     // -------- Auth --------
