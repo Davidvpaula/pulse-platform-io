@@ -31,6 +31,14 @@ import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
 import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
+import { ConversationSlaBadge } from "@/components/comunicacao/ConversationSlaBadge";
+import { AttendantPresenceBadge } from "@/components/comunicacao/AttendantPresenceBadge";
+import { ConversationQueuePanel } from "@/components/comunicacao/ConversationQueuePanel";
+import { StatusOperacionalSelect } from "@/components/comunicacao/StatusOperacionalSelect";
+import { TypingIndicator } from "@/components/comunicacao/TypingIndicator";
+import { useAttendantPresence } from "@/hooks/useAttendantPresence";
+import { useConversationTyping } from "@/hooks/useConversationTyping";
+import { CheckCircle2 } from "lucide-react";
 
 type Conv = {
   id: string;
