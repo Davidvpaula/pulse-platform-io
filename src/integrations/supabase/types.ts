@@ -9481,6 +9481,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      _test_exec_sql: { Args: { q: string }; Returns: Json }
+      _test_purge_medico: { Args: { p_medico_id: string }; Returns: undefined }
+      _test_try_delete_movimento: {
+        Args: { p_medico_id: string }
+        Returns: boolean
+      }
+      _test_try_update_movimento: {
+        Args: { p_medico_id: string }
+        Returns: boolean
+      }
       admin_agendamentos_overview: {
         Args: { _data?: string; _periodo?: string }
         Returns: Json
