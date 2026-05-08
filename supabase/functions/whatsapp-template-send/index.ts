@@ -3,6 +3,7 @@
 // SEMPRE registra log em whatsapp_template_logs (sucesso ou falha).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildProvider } from "../_shared/wa-providers.ts";
+import { canSendReal, logEvento } from "../_shared/observabilidade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
