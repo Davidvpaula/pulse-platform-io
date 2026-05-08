@@ -728,6 +728,38 @@ export type Database = {
           },
         ]
       }
+      attendant_presence: {
+        Row: {
+          current_conversation_id: string | null
+          last_seen_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_conversation_id?: string | null
+          last_seen_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_conversation_id?: string | null
+          last_seen_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendant_presence_current_conversation_id_fkey"
+            columns: ["current_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -1313,6 +1345,80 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_departments: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+        }
+        Relationships: []
+      }
+      communication_queues: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          department_id: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          prioridade_padrao: Database["public"]["Enums"]["conversation_priority"]
+          sla_minutos: number
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          department_id?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          prioridade_padrao?: Database["public"]["Enums"]["conversation_priority"]
+          sla_minutos?: number
+          slug: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          department_id?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          prioridade_padrao?: Database["public"]["Enums"]["conversation_priority"]
+          sla_minutos?: number
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_queues_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "communication_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comunicacao_auditoria: {
         Row: {
           action: string
@@ -1872,6 +1978,35 @@ export type Database = {
           },
         ]
       }
+      conversation_typing: {
+        Row: {
+          conversation_id: string
+          is_typing: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          is_typing?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          is_typing?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_typing_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           ai_active: boolean
@@ -1886,6 +2021,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          department_id: string | null
           empresa_id: string | null
           first_response_at: string | null
           id: string
@@ -1900,6 +2036,10 @@ export type Database = {
           paciente_ativo_id: string | null
           patient_id: string | null
           priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
           unread_count: number
@@ -1919,6 +2059,7 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          department_id?: string | null
           empresa_id?: string | null
           first_response_at?: string | null
           id?: string
@@ -1933,6 +2074,10 @@ export type Database = {
           paciente_ativo_id?: string | null
           patient_id?: string | null
           priority?: Database["public"]["Enums"]["conversation_priority"]
+          queue_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sla_due_at?: string | null
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[]
           unread_count?: number
@@ -1952,6 +2097,7 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          department_id?: string | null
           empresa_id?: string | null
           first_response_at?: string | null
           id?: string
@@ -1966,6 +2112,10 @@ export type Database = {
           paciente_ativo_id?: string | null
           patient_id?: string | null
           priority?: Database["public"]["Enums"]["conversation_priority"]
+          queue_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sla_due_at?: string | null
           status?: Database["public"]["Enums"]["conversation_status"]
           tags?: string[]
           unread_count?: number
@@ -1974,10 +2124,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "conversations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "communication_departments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "conversations_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "conversation_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "communication_queues"
             referencedColumns: ["id"]
           },
           {
@@ -6773,6 +6937,35 @@ export type Database = {
           },
         ]
       }
+      queue_members: {
+        Row: {
+          created_at: string
+          queue_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          queue_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          queue_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_members_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "communication_queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ranking_audit_log: {
         Row: {
           actor_id: string | null
@@ -8110,6 +8303,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          department_id: string | null
           empresa_id: string | null
           first_response_at: string | null
           id: string
@@ -8124,6 +8318,10 @@ export type Database = {
           paciente_ativo_id: string | null
           patient_id: string | null
           priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
           unread_count: number
@@ -8244,6 +8442,53 @@ export type Database = {
         Args: { p_medico_id: string }
         Returns: undefined
       }
+      claim_conversation: {
+        Args: { p_conversation_id: string }
+        Returns: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       colaborador_alterar_status: {
         Args: {
           _id: string
@@ -8340,6 +8585,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          department_id: string | null
           empresa_id: string | null
           first_response_at: string | null
           id: string
@@ -8354,6 +8600,10 @@ export type Database = {
           paciente_ativo_id: string | null
           patient_id: string | null
           priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
           unread_count: number
@@ -8639,6 +8889,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          department_id: string | null
           empresa_id: string | null
           first_response_at: string | null
           id: string
@@ -8653,6 +8904,10 @@ export type Database = {
           paciente_ativo_id: string | null
           patient_id: string | null
           priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
           unread_count: number
@@ -8953,6 +9208,53 @@ export type Database = {
         }
         Returns: Json
       }
+      resolver_conversa: {
+        Args: { p_conversation_id: string }
+        Returns: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       security_generate_alerts: { Args: never; Returns: Json }
       session_heartbeat: {
         Args: {
@@ -8971,8 +9273,59 @@ export type Database = {
         Returns: boolean
       }
       set_audit_motivo: { Args: { p_motivo: string }; Returns: undefined }
+      set_conversation_queue: {
+        Args: { p_conversation_id: string; p_queue_id: string }
+        Returns: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_force_status_transition: {
         Args: { _motivo: string }
+        Returns: undefined
+      }
+      set_typing: {
+        Args: { p_conversation_id: string; p_is_typing: boolean }
         Returns: undefined
       }
       transferir_conversa: {
@@ -8995,6 +9348,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          department_id: string | null
           empresa_id: string | null
           first_response_at: string | null
           id: string
@@ -9009,6 +9363,10 @@ export type Database = {
           paciente_ativo_id: string | null
           patient_id: string | null
           priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["conversation_status"]
           tags: string[]
           unread_count: number
@@ -9025,6 +9383,122 @@ export type Database = {
       trocar_medico_consulta: {
         Args: { _consulta_id: string; _motivo?: string; _novo_slot_id: string }
         Returns: Json
+      }
+      update_attendant_presence: {
+        Args: { p_current_conversation_id?: string; p_status: string }
+        Returns: {
+          current_conversation_id: string | null
+          last_seen_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "attendant_presence"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_conversation_priority: {
+        Args: {
+          p_conversation_id: string
+          p_priority: Database["public"]["Enums"]["conversation_priority"]
+        }
+        Returns: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_conversation_status: {
+        Args: {
+          p_conversation_id: string
+          p_status: Database["public"]["Enums"]["conversation_status"]
+        }
+        Returns: {
+          ai_active: boolean
+          assigned_sector: string | null
+          assigned_to: string | null
+          bot_active: boolean
+          bot_handoff_at: string | null
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          closed_at: string | null
+          closed_by: string | null
+          consulta_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          department_id: string | null
+          empresa_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string | null
+          locked_at: string | null
+          locked_by: string | null
+          medico_id: string | null
+          origin: Database["public"]["Enums"]["conversation_origin"]
+          paciente_ativo_id: string | null
+          patient_id: string | null
+          priority: Database["public"]["Enums"]["conversation_priority"]
+          queue_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sla_due_at: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          unread_count: number
+          updated_at: string
+          whatsapp_instance_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       user_can_view_conversation: {
         Args: { _conv_id: string }
@@ -9194,6 +9668,7 @@ export type Database = {
         | "pendente"
         | "fechada"
         | "arquivada"
+        | "aguardando_paciente"
       cupom_escopo: "global" | "medico" | "especialidade"
       cupom_tipo: "percentual" | "fixo"
       documento_paciente_tipo:
@@ -9722,6 +10197,7 @@ export const Constants = {
         "pendente",
         "fechada",
         "arquivada",
+        "aguardando_paciente",
       ],
       cupom_escopo: ["global", "medico", "especialidade"],
       cupom_tipo: ["percentual", "fixo"],
