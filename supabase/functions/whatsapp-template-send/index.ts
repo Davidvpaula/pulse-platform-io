@@ -156,17 +156,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Log SEMPRE (sucesso ou falha)
+    const statusLabel = !gate.ok ? "mock_sent" : (result.ok ? "sent" : "failed");
+
+    // Log SEMPRE (sucesso, falha ou mock)
     await admin.from("whatsapp_template_logs").insert({
       conversation_id: conversation_id ?? null,
       template_id: tpl.id,
       template_name: templateMetaName,
       telefone: phone,
-      payload: { variables, language: tpl.language, instance_id: instanceId },
+      payload: { variables, language: tpl.language, instance_id: instanceId, mock_reason: !gate.ok ? gate.reason : undefined },
       provider_response: result.raw,
       wa_message_id: result.wa_message_id,
-      status: result.ok ? "sent" : "failed",
-      erro: result.ok ? null : (result.error_message ?? `http_${result.http_status}`),
+      status: statusLabel,
+      erro: !gate.ok ? gate.reason : (result.ok ? null : (result.error_message ?? `http_${result.http_status}`)),
       enviado_por: userId,
     });
 
@@ -179,17 +181,17 @@ Deno.serve(async (req) => {
       metadata: {
         template_name: templateMetaName,
         to: phone,
-        status: result.ok ? "sent" : "failed",
+        status: statusLabel,
         http_status: result.http_status,
         wa_message_id: result.wa_message_id,
         conversation_id: conversation_id ?? null,
         instance_id: instanceId,
+        mock_reason: !gate.ok ? gate.reason : undefined,
       },
     });
 
     // Persistir em messages se houver conversa
     if (conversation_id) {
-      // Renderiza preview substituindo variáveis na ordem
       let preview = tpl.content || `[template: ${templateMetaName}]`;
       (tpl.variables || []).forEach((v: string, i: number) => {
         preview = preview.replaceAll(v, variables[i] ?? "");
@@ -202,10 +204,15 @@ Deno.serve(async (req) => {
         sender_id: userId,
         sender_name: userData.user.email ?? null,
         message_type: "template",
-        status: result.ok ? "sent" : "failed",
+        status: statusLabel,
         whatsapp_message_id: result.wa_message_id,
-        failure_reason: result.ok ? null : (result.error_message ?? null),
-        metadata: { template_name: templateMetaName, template_id: tpl.id, instance_id: instanceId },
+        failure_reason: !gate.ok ? null : (result.ok ? null : (result.error_message ?? null)),
+        metadata: {
+          template_name: templateMetaName,
+          template_id: tpl.id,
+          instance_id: instanceId,
+          mock_reason: !gate.ok ? gate.reason : undefined,
+        },
       });
 
       if (result.ok) {
@@ -220,6 +227,10 @@ Deno.serve(async (req) => {
           if (error) console.warn("[whatsapp-template-send] first_response rpc:", error.message);
         });
       }
+    }
+
+    if (!gate.ok) {
+      return jsonResp({ ok: true, mock_sent: true, reason: gate.reason, sender_type: senderType });
     }
 
     if (!result.ok) {
