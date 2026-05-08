@@ -194,13 +194,32 @@ export async function buscarTermosPendentes(
 }
 
 export async function listarAceitesDoTermo(termoId: string) {
-  const { data, error } = await supabase
+  const { data: aceites, error } = await supabase
     .from("user_terms_acceptance")
-    .select("*, profiles:user_id(nome_completo, email)")
+    .select("*")
     .eq("termo_id", termoId)
     .order("aceito_em", { ascending: false });
   if (error) throw error;
-  return data;
+  if (!aceites?.length) return [];
+
+  const userIds = Array.from(new Set(aceites.map(a => a.user_id).filter(Boolean)));
+  let perfilMap = new Map<string, { nome_completo: string | null; email: string | null }>();
+
+  if (userIds.length) {
+    const { data: perfis, error: pErr } = await supabase
+      .from("profiles")
+      .select("id, nome, email")
+      .in("id", userIds);
+    if (pErr) throw pErr;
+    perfilMap = new Map(
+      (perfis ?? []).map(p => [p.id, { nome_completo: p.nome ?? null, email: p.email ?? null }])
+    );
+  }
+
+  return aceites.map(a => ({
+    ...a,
+    profiles: perfilMap.get(a.user_id) ?? null,
+  }));
 }
 
 /** Lista todos os aceites do usuário logado, com dados do termo */
