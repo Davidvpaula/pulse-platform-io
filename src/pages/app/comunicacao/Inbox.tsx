@@ -53,6 +53,7 @@ type Conv = {
   tags: string[];
   locked_by: string | null;
   locked_at: string | null;
+  paciente_ativo_id: string | null;
 };
 
 type Msg = {
