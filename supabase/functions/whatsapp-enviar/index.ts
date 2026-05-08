@@ -28,11 +28,8 @@ Deno.serve(async (req) => {
   try {
     const META_TOKEN = Deno.env.get("META_WHATSAPP_TOKEN");
     const META_PHONE_FALLBACK = Deno.env.get("META_PHONE_NUMBER_ID");
-
-    if (!META_TOKEN) {
-      console.warn("[whatsapp-enviar] META_WHATSAPP_TOKEN ausente");
-      return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
-    }
+    // Fail-closed: validação de produção é feita ABAIXO via canSendReal().
+    // Sem token => sandbox/mock_sent (não retorna mais 503 prematuro).
 
     // ── Auth: getUser (não getClaims) ──
     const authHeader = req.headers.get("Authorization") ?? "";
