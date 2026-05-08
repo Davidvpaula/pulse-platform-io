@@ -90,8 +90,8 @@ async function run() {
   try {
     const saldo = await rpc("fn_medico_saldo_real", { p_medico_id: TEST_MEDICO });
     const row = Array.isArray(saldo) ? saldo[0] : saldo;
-    // Após cenários 1+2, esperamos pendente = 100 + 200 = 300
-    log("5_saldo_real", Number(row?.pendente_cents) === 300, { saldo });
+    // Cenários 1+2 = 100+200 = 300; teste 3 (append-only) injeta +1; total esperado = 301
+    log("5_saldo_real", Number(row?.pendente_cents) === 301, { saldo });
   } catch (e) { log("5_saldo_real", false, String(e)); }
 
   // 6. Race de saque (mesma key) — variação do 2
@@ -126,7 +126,7 @@ async function run() {
   try {
     const r1 = await rpc("fn_backfill_financeiro_dry_run", { p_medico_id: null });
     const r2 = await rpc("fn_backfill_financeiro_dry_run", { p_medico_id: null });
-    log("8_backfill_dry_run_idempotente", r1?.ok === true && r2?.ok === true, { r1: r1?.relatorio, r2: r2?.relatorio });
+    log("8_backfill_dry_run_idempotente", r1?.ok === true && r2?.ok === true, { r1, r2 });
   } catch (e) { log("8_backfill_dry_run_idempotente", false, String(e)); }
 
   await cleanup();
