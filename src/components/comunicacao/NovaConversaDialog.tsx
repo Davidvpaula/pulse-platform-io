@@ -12,7 +12,6 @@ type Paciente = {
   id: string;
   nome_completo: string | null;
   telefone: string | null;
-  email: string | null;
   cpf: string | null;
 };
 
@@ -46,7 +45,7 @@ export function NovaConversaDialog({ open, onOpenChange, onCreated }: Props) {
         .limit(15);
       if (digits.length >= 3) {
         query = query.or(
-          `nome_completo.ilike.%${q}%,telefone.ilike.%${digits}%,cpf.ilike.%${digits}%,email.ilike.%${q}%`
+          `nome_completo.ilike.%${q}%,telefone.ilike.%${digits}%,cpf.ilike.%${digits}%`
         );
       } else {
         query = query.ilike("nome_completo", `%${q}%`);
