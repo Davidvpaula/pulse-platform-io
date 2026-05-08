@@ -344,6 +344,21 @@ export default function ComunicacaoInbox() {
 
   // Load detail data when active changes
   const active = convs.find(c => c.id === activeId) || null;
+
+  // Janela 24h Meta: rastrear se está expirada para a conversa ativa
+  useEffect(() => {
+    if (!active || active.channel !== "whatsapp") { setJanelaExpirada(false); return; }
+    let alive = true;
+    const check = async () => {
+      const { data } = await supabase.rpc("get_meta_window_state", { p_conversation_id: active.id } as any);
+      if (!alive) return;
+      const open = (data as any)?.open === true;
+      setJanelaExpirada(!open);
+    };
+    check();
+    const t = setInterval(check, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [active?.id, active?.channel]);
   useEffect(() => {
     if (active) loadDetailData(active);
   }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id, active?.locked_by]);
