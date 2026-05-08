@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Send, Search, Bot, Sparkles, UserCheck, Phone, FileText,
   CreditCard, Calendar, ArrowRightLeft, Pause, X, AlertCircle,
-  FileEdit, Shield, Clock, Stethoscope, Headphones, Loader2, Lock, ArrowRightLeft as ArrowTransfer,
+  FileEdit, Shield, Clock, Stethoscope, Headphones, Loader2, Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
