@@ -253,7 +253,39 @@ export default function PacienteDocumentos() {
     void carregar();
   };
 
-  if (!session) {
+  const importarFeegow = async () => {
+    const pac = await getPacienteAtual();
+    if (!pac) { toast.error("Paciente não encontrado."); return; }
+    setImportingFeegow(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("feegow-importar-documentos", {
+        body: { paciente_id: pac.id },
+      });
+      if (error) {
+        toast.error("Erro ao importar documentos da Feegow.");
+        return;
+      }
+      if (!data?.ok) {
+        toast.error(data?.error ?? "Nenhum documento encontrado na Feegow.");
+        return;
+      }
+      const n = data.importados ?? 0;
+      const dup = data.duplicados_pulados ?? 0;
+      if (n === 0 && dup > 0) {
+        toast.info(`Todos os ${dup} documento(s) já estavam importados.`);
+      } else if (n > 0) {
+        toast.success(`${n} documento(s) importado(s) da Feegow!`);
+        void carregar();
+      } else {
+        toast.info("Nenhum documento novo encontrado na Feegow.");
+      }
+    } catch {
+      toast.error("Falha na comunicação com a Feegow.");
+    } finally {
+      setImportingFeegow(false);
+    }
+  };
+
     return (
       <div className="space-y-6">
         <PageHeader title="Meus documentos" description="Faça login para acessar e enviar seus documentos." />
