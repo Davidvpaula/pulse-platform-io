@@ -1042,6 +1042,13 @@ export default function ComunicacaoInbox() {
           onTransferred={loadConvs}
         />
       )}
+
+      {/* Drawer — Audit log */}
+      <AuditLogDrawer
+        open={auditOpen}
+        onOpenChange={setAuditOpen}
+        conversationId={active?.id ?? null}
+      />
     </div>
   );
 }
