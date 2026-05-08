@@ -1,116 +1,161 @@
-## FASE 5 — Central Operacional Multiatendente (SAFE/FREEZE)
+## Fase 6 — IA Assistiva (Copiloto)
 
-Evolução incremental sobre o que já existe. **Não recriar** RPCs, audit log, transferência, lock, permissões, prioridade ou status que já estão em produção.
+Objetivo: adicionar uma camada de IA **assistiva** (sugere/resume/alerta) ao Inbox da Fase 5, sem autonomia, sem tocar no Avatar autônomo (Fase 7) já existente, sem alterar webhook/Fase 4/Fase 5.
 
-### Estado atual (reaproveitar)
+### Estado atual já verificado
 
-- `conversations`: já tem `assigned_to`, `assigned_sector`, `priority` (baixa/normal/alta/urgente), `status` (aberta/em_atendimento/pendente/fechada/arquivada), `locked_by/locked_at`, `first_response_at`, `closed_at/closed_by`, `unread_count`.
-- RPCs prontas: `assumir_conversa`, `liberar_conversa`, `transferir_conversa`.
-- Tabelas prontas: `conversation_assignments` (histórico de transferência), `conversation_audit_log`, `internal_notes`.
-- Componentes prontos: `TransferirConversaDialog`, `AuditLogDrawer`, `LockBadge`, `Janela24hMeta`, `EnviarTemplateDialog`.
-- Permissões já cadastradas: `comunicacao.ver_inbox`, `ver_todas`, `ver_atribuidas`, `responder`, `transferir`, `finalizar`, `inbox.assumir`, `inbox.encerrar`, `usar_templates`, `ver_metricas`.
-- Rota `/app/comunicacao/metricas` (página existe mas vazia).
+- Já existe `ai_settings` (singular, do **IA Avatar autônomo**), `ai_logs`, `ai_handoff_rules`, edge function `ai-respond` e página `/app/admin/comunicacao/ia-avatar`. **Nada disso será tocado.**
+- `LOVABLE_API_KEY` já está configurado e em uso pelo `ai-respond`.
+- Fase 5 entregue: presença, fila, SLA, status operacional, typing, claim/resolver, painel Operação.
+- Inbox tem painel direito modular onde encaixar o painel IA.
 
-### O que falta (entregáveis Fase 5)
+### Arquitetura proposta (SAFE/FREEZE)
 
-#### 1. Migration única (aditiva, sem quebrar nada)
-- Tabela **`communication_departments`**: id, nome, slug (unique), descricao, ativo, ordem, created_at.
-- Tabela **`communication_queues`**: id, nome, slug, department_id (FK), descricao, prioridade_padrao (enum existente), sla_minutos (int, default 60), ativo, created_at.
-- Tabela **`queue_members`**: queue_id, user_id, role (atendente|supervisor) — define quem opera em cada fila. (PK composta)
-- Em **`conversations`** adicionar (nullable, com defaults seguros): `department_id uuid`, `queue_id uuid`, `sla_due_at timestamptz`, `resolved_at timestamptz`, `resolved_by uuid`. Índices em `queue_id`, `department_id`, `sla_due_at`.
-- Tabela **`attendant_presence`**: user_id PK, status (online|ocupado|ausente|offline), last_seen_at, current_conversation_id. RLS: usuário lê/escreve seu próprio registro; admin/supervisor leem todos.
-- Tabela **`conversation_typing`**: conversation_id, user_id, is_typing, updated_at (PK composta). Realtime habilitado. Limpeza por timestamp (sem cron — filtro por `updated_at > now() - 8s`).
-- **Não** criar enum novo de status — reaproveitar `aberta/em_atendimento/pendente/fechada`. Adicionar valor `aguardando_paciente` ao enum `conversation_status` (não destrutivo).
-- **Não** criar `conversation_transfers` — `conversation_assignments` já existe; só passar a usar consistentemente em `transferir_conversa` (insert no histórico).
+```text
+                     Inbox (Fase 5)
+                          │
+        ┌─────────────────┴─────────────────┐
+        │  ConversationAiPanel (lateral)    │
+        │   Resumo • Intenção • Risco       │
+        │   Sugestões • Score • Auditoria   │
+        └─────────────────┬─────────────────┘
+                          │  invoke
+                ┌─────────▼──────────┐
+                │ edge: ai-assistant │  (ações: summarize | suggest_reply
+                └─────────┬──────────┘   | classify_intent | detect_urgency
+                          │                | detect_risk | suggest_department)
+                ┌─────────▼──────────┐
+                │ _shared/ai-providers.ts │  AIProvider interface
+                │  - LovableProvider  │
+                │  - (futuros)        │
+                └─────────┬──────────┘
+                          │
+                  ai_audit_logs (sempre)
+                  conversation_ai_* (cache)
+```
 
-#### 2. RPCs novas (e ajuste mínimo nas existentes)
-- `claim_conversation(p_conversation_id)` — **alias** finíssimo para `assumir_conversa` (mantém nome do plano sem duplicar lógica).
-- `update_conversation_status(p_conversation_id, p_status)` — valida transição permitida + permissão, grava em `conversation_audit_log`. Atalho: `resolver_conversa` seta `resolved_at/resolved_by` e status = `fechada`.
-- `update_conversation_priority(p_conversation_id, p_priority)` — exige `comunicacao.inbox.alterar_prioridade`; recalcula `sla_due_at`.
-- `set_conversation_queue(p_conversation_id, p_queue_id)` — atribui fila/setor + recalcula `sla_due_at = now() + queue.sla_minutos`.
-- `update_attendant_presence(p_status, p_current_conversation_id)` — upsert leve, chamada a cada 30s pelo client.
-- `set_typing(p_conversation_id, p_is_typing)` — upsert; expiração lógica via filtro temporal.
-- `transferir_conversa` (existente) — patch para também inserir em `conversation_assignments` (histórico real).
+Decisão importante: **não reaproveitar `ai_settings`** (é do Avatar). Será criada `ai_assistant_settings` separada — evita acoplar duas semânticas distintas.
 
-#### 3. Permissões novas (registrar sem quebrar templates)
-- `comunicacao.inbox.supervisionar` (admin/supervisor)
-- `comunicacao.inbox.resolver`
-- `comunicacao.inbox.alterar_prioridade`
-- `comunicacao.filas.gerenciar`
-- `comunicacao.setores.gerenciar`
-- `comunicacao.metricas.operacionais`
+### 1. Migration — novas tabelas
 
-Adicionar nos `roleTemplates` apropriados (admin = todas; colaborador ilimitado = resolver+alterar_prioridade; colaborador limitado = nenhuma extra).
+- `ai_assistant_settings` (singleton): `enabled`, `provider`, `model`, `temperature`, `max_tokens`, `auto_summary`, `auto_intent_detection`, `auto_urgency_detection`, `auto_reply_suggestion`, `daily_token_budget`, `created_by`.
+- `ai_prompts`: `nome`, `tipo` (`summary|reply|intent|urgency|risk|department`), `system_prompt`, `versao`, `ativo`. Único `(tipo, ativo=true)`.
+- `conversation_ai_summaries`: `conversation_id`, `summary`, `summary_type` (`short|operational|points|sentiment`), `last_message_id` (cache invalidation), `provider`, `model`, `generated_by`, `created_at`.
+- `conversation_ai_intents`: `conversation_id`, `detected_intent`, `confidence`, `provider`, `created_at` (uma linha vigente por conversa, mais histórico).
+- `conversation_ai_risk_analysis`: `conversation_id`, `risk_level` (`baixo|medio|alto|critico`), `signals jsonb`, `score numeric`, `requires_supervisor`, `created_at`.
+- `ai_audit_logs`: `conversation_id`, `action`, `provider`, `model`, `input_tokens`, `output_tokens`, `estimated_cost_cents`, `latency_ms`, `prompt_hash`, `response_excerpt`, `accepted_by_user` (`true|false|null`), `actor_id`, `created_at`.
 
-#### 4. UI — Inbox (extensão cirúrgica)
-- **Filtros novos** na coluna esquerda: dropdown `Setor`, `Fila`, toggles `Minhas conversas / Sem responsável / SLA vencido / Janela 24h expirada / Resolvidas`.
-- **Badges no item da lista**: setor, fila, prioridade colorida, SLA (verde/amarelo/vermelho via `<ConversationSlaBadge/>`).
-- **Header da conversa ativa**: avatar do responsável + `<AttendantPresenceBadge/>`, dropdown de status operacional, botão "Resolver" (verde), botão "Transferir" (já existe).
-- **Indicador de digitação** ("Fulano está digitando…") dentro do scroll de mensagens, escutando `conversation_typing` via realtime.
-- **Painel direito**: novo card "Operação" mostrando setor, fila, SLA, prioridade (cada um editável conforme permissão).
+RLS: leitura para quem tem `ia.assistiva.usar` ou `ver_todas`; escrita só via edge (service role) ou supervisor.
 
-#### 5. UI — Página nova
-- **`/app/admin/comunicacao/operacao`** (`AdminComunicacaoOperacao.tsx`): KPIs operacionais + tabelas:
-  - Conversas abertas / sem responsável / SLA vencido (3 cards).
-  - Tempo médio 1ª resposta, tempo médio resolução, atendentes online.
-  - Tabela "Por atendente" (conversas em aberto, resolvidas hoje, SLA vencido).
-  - Tabela "Por setor / fila".
-  - Lista de transferências recentes (de `conversation_assignments`).
-- Roteamento: adicionar em `App.tsx` com guard `comunicacao.metricas.operacionais` ou `admin`.
-- Adicionar item no menu Admin → Comunicação → Operação.
+### 2. Permissões novas
 
-#### 6. Componentes novos
-- `src/components/comunicacao/ConversationSlaBadge.tsx` (calcula tone a partir de `sla_due_at`).
-- `src/components/comunicacao/AttendantPresenceBadge.tsx` (bolinha + label, lê `attendant_presence`).
-- `src/components/comunicacao/ConversationQueuePanel.tsx` (card lateral: setor/fila/prioridade/SLA com edição inline).
-- `src/components/comunicacao/TypingIndicator.tsx` (escuta realtime `conversation_typing`).
-- `src/components/comunicacao/StatusOperacionalSelect.tsx` (dropdown de status com permissão).
-- **Reusar** `TransferirConversaDialog` e `AuditLogDrawer` existentes (sem duplicar).
+`ia.assistiva.usar`, `ia.assistiva.supervisionar`, `ia.assistiva.configurar`, `ia.assistiva.metricas`, `ia.assistiva.prompts`. Adicionar em `roleTemplates.ts`:
+- Admin: todas
+- Colaborador ilimitado: `usar`
+- Colaborador limitado: `usar` (opt-in via setting)
+- Médico: nenhuma
 
-#### 7. Hooks
-- `useAttendantPresence()` — heartbeat 30s + cleanup no unload.
-- `useConversationTyping(conversationId)` — debounce 2s no draft, realtime pub.
-- `useOperacaoMetricas()` — queries agregadas para a página Admin (cache 30s).
+### 3. Edge function `ai-assistant`
 
-#### 8. Realtime (sem inflar subscriptions)
-- Reusar canal já existente de `conversations`/`messages` no Inbox.
-- Adicionar 2 novos canais cirúrgicos: `attendant_presence` (escopo: page de admin) e `conversation_typing` (escopo: conversa ativa apenas).
+Arquivo único `supabase/functions/ai-assistant/index.ts` + `_shared/ai-providers.ts`.
 
-### Não fazer (reservado para Fase 6+)
-- IA assistiva, distribuição automática, sugestões de resposta, chatbot autônomo, sincronização templates Meta, integração Feegow.
-- WebSocket próprio — usar realtime nativo Lovable Cloud.
+Body: `{ action, conversation_id, options? }` onde `action ∈ {summarize, suggest_reply, classify_intent, detect_urgency, detect_risk, suggest_department}`.
 
-### Arquivos afetados
+Fluxo:
+1. `auth.getUser()` (não getClaims) → valida + checa `has_permission(ia.assistiva.usar)`.
+2. Lê `ai_assistant_settings`. Se `enabled=false` → 403.
+3. Verifica orçamento diário (`SUM(input+output) HOJE < daily_token_budget`).
+4. Carrega prompt vigente em `ai_prompts` por `tipo`.
+5. Carrega últimas N mensagens da conversa (limite ~30, contexto ~3 KB).
+6. Chama `AIProvider.<metodo>()`. Provider default = **LovableProvider** (Lovable AI Gateway, modelo `google/gemini-3-flash-preview` por padrão; configurável).
+7. Persiste resultado em `conversation_ai_*` (cache) + sempre em `ai_audit_logs`.
+8. Retorna JSON compacto + id do log (para o front marcar `accepted_by_user`).
 
-**Criar:**
-- `supabase/migrations/<novo>.sql`
-- `src/components/comunicacao/ConversationSlaBadge.tsx`
-- `src/components/comunicacao/AttendantPresenceBadge.tsx`
-- `src/components/comunicacao/ConversationQueuePanel.tsx`
-- `src/components/comunicacao/TypingIndicator.tsx`
-- `src/components/comunicacao/StatusOperacionalSelect.tsx`
-- `src/hooks/useAttendantPresence.ts`
-- `src/hooks/useConversationTyping.ts`
-- `src/hooks/useOperacaoMetricas.ts`
-- `src/pages/app/admin/AdminComunicacaoOperacao.tsx`
+Cache: `summarize` reusa último summary se `last_message_id` igual (sem nova msg). `classify_intent` regenera no máx. 1×/5min ou após N msgs novas. Debounce no front.
 
-**Editar (cirúrgico):**
-- `src/pages/app/comunicacao/Inbox.tsx` (filtros, badges, painel direito, dropdown status, typing)
-- `src/lib/permissions/constants.ts` + `roleTemplates.ts` (5 permissões novas)
-- `src/lib/menu/menuCatalog.ts` (item Admin → Operação)
-- `src/App.tsx` (rota nova)
+### 4. Adapter `_shared/ai-providers.ts`
+
+```ts
+interface AIProvider {
+  summarize(messages, opts): Promise<{ summary, tokens, latency }>;
+  suggestReply(messages, opts);
+  classifyIntent(messages, opts);
+  detectUrgency(messages, opts);
+  detectRisk(messages, opts);
+  suggestDepartment(messages, opts);
+}
+```
+
+Implementação concreta inicial: `LovableProvider` (chama `https://ai.gateway.lovable.dev/v1/chat/completions` com `Lovable-API-Key` header). Estrutura preparada para `OpenAIProvider`/`AnthropicProvider` futuros sem refator.
+
+Saída estruturada via `response_format: json_object` + schemas Zod no edge.
+
+### 5. Componentes UI novos
+
+- `src/components/comunicacao/ai/ConversationAiPanel.tsx` — painel colapsável com abas: **Resumo / Intenção / Risco / Sugestões / Auditoria**. Botões "Gerar resumo", "Sugerir resposta".
+- `ConversationAiSummary.tsx` — resumo curto + operacional + pontos.
+- `ConversationAiReplySuggestion.tsx` — gera 1–3 sugestões; botão "Usar" copia para o `draft` do Inbox via callback (NUNCA envia direto). Marca `accepted_by_user=true` no log.
+- `ConversationAiRiskBadge.tsx` — badge visual (baixo/médio/alto/crítico).
+- `ConversationAiIntentBadge.tsx` — badge intenção + sugestão de setor.
+- `useConversationAi.ts` (hook) — orquestra invoke + cache local + realtime das novas tabelas.
+
+### 6. Integração no Inbox.tsx (mínima)
+
+Apenas:
+- Importar `ConversationAiPanel` e renderizar dentro do painel direito (após `ConversationQueuePanel`), gated por permissão `ia.assistiva.usar` E `ai_assistant_settings.enabled`.
+- Adicionar `ConversationAiIntentBadge` e `ConversationAiRiskBadge` no header e (compactos) na lista lateral, lendo do cache `conversation_ai_*`.
+- Botão "Aplicar sugestão" injeta texto no `draft` (estado já existente). **Nada envia automaticamente.**
+- Sem alterar `enviar()`, webhook, templates, presença, claim/resolve.
+
+### 7. Páginas Admin
+
+- `src/pages/app/admin/AdminAiAssistant.tsx` em `/app/admin/ia-assistiva` — toggle global, provider/modelo, switches de auto-features, orçamento diário, link para prompts.
+- `src/pages/app/admin/AdminAiPrompts.tsx` em `/app/admin/ia-assistiva/prompts` — CRUD de `ai_prompts` com versionamento.
+- `src/pages/app/admin/AdminAiDashboard.tsx` em `/app/admin/ia-assistiva/operacao` — métricas: tokens/custo por dia/atendente/conversa/modelo, % sugestões aceitas, alertas de risco recentes, falhas.
+
+Adicionar entrada de menu Admin → "IA Assistiva" via `menuCatalog.ts` (gated por `ia.assistiva.configurar` / `metricas`).
+
+### 8. Segurança / Custos
+
+- Toda chamada passa pelo edge → `LOVABLE_API_KEY` server-side (já existe).
+- Auditoria 100%: todo invoke gera linha em `ai_audit_logs` com tokens e custo estimado.
+- Hard-stop: se `daily_token_budget` excedido, edge retorna 402-like e UI mostra aviso.
+- Debounce cliente: máx. 1 chamada por ação por conversa a cada 10s.
+- Sem auto-execução em `INSERT` de mensagens (sem trigger). Auto-features (auto_summary etc.) ficam atrás de toggle e só rodam quando atendente abre conversa, não a cada mensagem.
+
+### 9. Realtime
+
+Canal único por conversa ativa: `ai-${conversationId}` ouvindo `conversation_ai_summaries/intents/risk_analysis`. Sem subscription global.
+
+### 10. Fora do escopo (Fase 7)
+
+IA respondendo, IA Avatar autônoma, voz, ligação, prescrição, automações autônomas, integração Feegow.
 
 ### Critérios de aceite
-1. Conversa nova nasce sem responsável, em fila padrão (se setor configurado), com `sla_due_at` calculado.
-2. Atendente autorizado assume conversa via `claim_conversation` (alias para `assumir_conversa`).
-3. Lock impede dois atendentes simultâneos (já validado na Fase Estabilidade).
-4. Admin/supervisor transfere via dialog existente; transferência grava em `conversation_assignments` + `conversation_audit_log`.
-5. Atendente comum só vê conversas atribuídas a ele OU em filas das quais é membro (RLS em queue_members).
-6. Status pode mudar para `aguardando_paciente` / `fechada` com auditoria.
-7. Prioridade alterável por quem tem `inbox.alterar_prioridade`; SLA recalcula.
-8. Badge SLA exibe tom correto (verde / amarelo / vermelho).
-9. Presença atualiza a cada 30s e some após desconexão.
-10. Typing indicator aparece e desaparece sem flicker.
-11. Página `/app/admin/comunicacao/operacao` exibe KPIs e tabelas reais.
-12. Webhook, envio WhatsApp, janela 24h e templates Meta da Fase 4 **intactos**.
-13. Build + TS limpos. RLS preservada. Sem regressões no Inbox.
+
+- Admin liga/desliga IA assistiva; provider/modelo configuráveis.
+- Atendente clica "Gerar resumo" e vê resumo persistido.
+- "Sugerir resposta" preenche `draft` mas **não envia**.
+- Badges de intenção, risco e urgência aparecem na conversa.
+- Toda interação gera linha em `ai_audit_logs` (com aceite/recusa).
+- Dashboard admin mostra custos e métricas.
+- Inbox/Fase 4/Fase 5/webhook/Avatar autônomo intactos.
+- Build e TS limpos. RLS preservada.
+
+### Arquivos
+
+**Novos**
+- Migration: tabelas + RLS + permissões + seeds de `ai_prompts` + uma linha default em `ai_assistant_settings(enabled=false)`.
+- `supabase/functions/ai-assistant/index.ts`
+- `supabase/functions/_shared/ai-providers.ts`
+- `src/components/comunicacao/ai/{ConversationAiPanel,ConversationAiSummary,ConversationAiReplySuggestion,ConversationAiRiskBadge,ConversationAiIntentBadge}.tsx`
+- `src/hooks/useConversationAi.ts`
+- `src/pages/app/admin/{AdminAiAssistant,AdminAiPrompts,AdminAiDashboard}.tsx`
+
+**Editados (mínimo)**
+- `src/pages/app/comunicacao/Inbox.tsx` — montar painel + badges (sem mexer em handlers de envio).
+- `src/lib/permissions/roleTemplates.ts` — registrar 5 permissões.
+- `src/lib/menu/menuCatalog.ts` — itens admin.
+- `src/App.tsx` — 3 rotas admin.
+
+**NÃO editar**: `whatsapp-webhook`, `whatsapp-enviar`, `whatsapp-template-send`, `ai-respond`, `ai_settings` (Avatar), Fase 5 RPCs, IA Avatar UI.

@@ -166,6 +166,119 @@ export type Database = {
           },
         ]
       }
+      ai_assistant_settings: {
+        Row: {
+          auto_intent_detection: boolean
+          auto_reply_suggestion: boolean
+          auto_summary: boolean
+          auto_urgency_detection: boolean
+          created_at: string
+          created_by: string | null
+          daily_token_budget: number
+          enabled: boolean
+          id: string
+          max_tokens: number
+          model: string
+          provider: Database["public"]["Enums"]["ai_provider"]
+          temperature: number
+          updated_at: string
+        }
+        Insert: {
+          auto_intent_detection?: boolean
+          auto_reply_suggestion?: boolean
+          auto_summary?: boolean
+          auto_urgency_detection?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_token_budget?: number
+          enabled?: boolean
+          id?: string
+          max_tokens?: number
+          model?: string
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          temperature?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_intent_detection?: boolean
+          auto_reply_suggestion?: boolean
+          auto_summary?: boolean
+          auto_urgency_detection?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_token_budget?: number
+          enabled?: boolean
+          id?: string
+          max_tokens?: number
+          model?: string
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          temperature?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_audit_logs: {
+        Row: {
+          accepted_by_user: boolean | null
+          action: string
+          actor_id: string | null
+          conversation_id: string | null
+          created_at: string
+          error: string | null
+          estimated_cost_cents: number | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number | null
+          model: string | null
+          output_tokens: number | null
+          prompt_hash: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          response_excerpt: string | null
+        }
+        Insert: {
+          accepted_by_user?: boolean | null
+          action: string
+          actor_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          prompt_hash?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          response_excerpt?: string | null
+        }
+        Update: {
+          accepted_by_user?: boolean | null
+          action?: string
+          actor_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          estimated_cost_cents?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          prompt_hash?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          response_excerpt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_audit_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_handoff_rules: {
         Row: {
           action: string
@@ -265,6 +378,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ai_prompts: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string
+          system_prompt: string
+          tipo: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome: string
+          system_prompt: string
+          tipo: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string
+          system_prompt?: string
+          tipo?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
       }
       ai_settings: {
         Row: {
@@ -1758,6 +1907,135 @@ export type Database = {
           valor_plataforma_centavos?: number
         }
         Relationships: []
+      }
+      conversation_ai_intents: {
+        Row: {
+          confidence: number | null
+          conversation_id: string
+          created_at: string
+          detected_intent: string
+          id: string
+          provider: Database["public"]["Enums"]["ai_provider"]
+          suggested_department: string | null
+          suggested_priority: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          conversation_id: string
+          created_at?: string
+          detected_intent: string
+          id?: string
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          suggested_department?: string | null
+          suggested_priority?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          conversation_id?: string
+          created_at?: string
+          detected_intent?: string
+          id?: string
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          suggested_department?: string | null
+          suggested_priority?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_ai_intents_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_ai_risk_analysis: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          requires_supervisor: boolean
+          risk_level: string
+          score: number | null
+          signals: Json
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          requires_supervisor?: boolean
+          risk_level: string
+          score?: number | null
+          signals?: Json
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          requires_supervisor?: boolean
+          risk_level?: string
+          score?: number | null
+          signals?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_ai_risk_analysis_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_ai_summaries: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          last_message_id: string | null
+          model: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          summary: string
+          summary_type: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          last_message_id?: string | null
+          model?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          summary: string
+          summary_type?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          last_message_id?: string | null
+          model?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          summary?: string
+          summary_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_ai_summaries_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversation_assignments: {
         Row: {
