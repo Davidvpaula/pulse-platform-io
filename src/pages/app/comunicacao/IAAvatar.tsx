@@ -216,8 +216,17 @@ export default function IAAvatar() {
     <div className="space-y-6">
       <PageHeader
         title="IA Avatar"
-        description="Atendente virtual inteligente. Configure prompt, transferência, sugestão de médicos e segurança."
+        description="Atendente virtual inteligente. Configure prompt, transferência, segurança, modos operacionais e supervisão."
       />
+
+      <Tabs defaultValue="config" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="config"><Settings2 className="h-3 w-3 mr-1" />Configuração</TabsTrigger>
+          <TabsTrigger value="operacao"><Sliders className="h-3 w-3 mr-1" />Operação</TabsTrigger>
+          <TabsTrigger value="supervisor"><Activity className="h-3 w-3 mr-1" />Supervisor</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config" className="space-y-6">
 
       {/* Card 1 — Configuração Geral */}
       <Card>
