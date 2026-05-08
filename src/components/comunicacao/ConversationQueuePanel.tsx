@@ -20,8 +20,9 @@ type Props = { conversation: Conv; onChanged?: () => void };
 export function ConversationQueuePanel({ conversation, onChanged }: Props) {
   const [departments, setDepartments] = useState<{ id: string; nome: string }[]>([]);
   const [queues, setQueues] = useState<{ id: string; nome: string; department_id: string | null }[]>([]);
-  const podePrioridade = usePermission("comunicacao.inbox.alterar_prioridade");
-  const podeResponder = usePermission("comunicacao.responder");
+  const { allowed } = usePermission(["comunicacao.inbox.alterar_prioridade", "comunicacao.responder"]);
+  const podePrioridade = allowed["comunicacao.inbox.alterar_prioridade"];
+  const podeResponder = allowed["comunicacao.responder"];
 
   useEffect(() => {
     supabase.from("communication_departments").select("id, nome").eq("ativo", true).order("ordem")
