@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function useAttendantPresence(currentConversationId?: string | null) {
   useEffect(() => {
     let alive = true;
-    const beat = (status: "online" | "offline" = "online") => {
+    const beat = (status: "online" | "offline" | "ausente" | "ocupado" = "online") => {
       supabase.rpc("update_attendant_presence" as any, {
         p_status: status,
         p_current_conversation_id: currentConversationId ?? null,
