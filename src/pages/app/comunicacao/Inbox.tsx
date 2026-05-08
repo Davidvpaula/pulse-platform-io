@@ -25,6 +25,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { LockBadge } from "@/components/comunicacao/LockBadge";
 import { TransferirConversaDialog } from "@/components/comunicacao/TransferirConversaDialog";
+import { Janela24hMeta } from "@/components/comunicacao/Janela24hMeta";
+import { PacientesVinculadosPanel, type VinculoPaciente } from "@/components/comunicacao/PacientesVinculadosPanel";
+import { LGPDGate } from "@/components/comunicacao/LGPDGate";
+import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 
 type Conv = {
   id: string;
@@ -49,6 +53,7 @@ type Conv = {
   tags: string[];
   locked_by: string | null;
   locked_at: string | null;
+  paciente_ativo_id: string | null;
 };
 
 type Msg = {
@@ -144,6 +149,8 @@ export default function ComunicacaoInbox() {
   const [medicoName, setMedicoName] = useState<string | null>(null);
   const [consultaInfo, setConsultaInfo] = useState<{ inicio: string; status: string } | null>(null);
   const [transferirOpen, setTransferirOpen] = useState(false);
+  const [vinculosPaciente, setVinculosPaciente] = useState<VinculoPaciente[]>([]);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
@@ -799,11 +806,29 @@ export default function ComunicacaoInbox() {
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Contato</h4>
                   <p className="text-sm font-medium">{active.contact_name || "Sem nome"}</p>
                   <p className="text-xs text-muted-foreground">{active.contact_phone}</p>
-                  <div className="flex gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1 mt-2">
                     {active.lead_id && <Badge variant="secondary" className="text-[10px]">Lead</Badge>}
                     {active.patient_id && <Badge variant="default" className="text-[10px]">Paciente</Badge>}
+                    {active.bot_active && (
+                      <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-600">
+                        <Bot className="h-2.5 w-2.5 mr-0.5" /> Bot
+                      </Badge>
+                    )}
+                    {active.ai_active && (
+                      <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-600">
+                        <Sparkles className="h-2.5 w-2.5 mr-0.5" /> IA
+                      </Badge>
+                    )}
+                    {active.locked_by && (
+                      <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600">
+                        <UserCheck className="h-2.5 w-2.5 mr-0.5" /> Humano
+                      </Badge>
+                    )}
                   </div>
                 </div>
+
+                {/* Janela 24h Meta */}
+                <Janela24hMeta conversationId={active.id} />
 
                 {/* Status do atendimento */}
                 <div>
@@ -821,6 +846,12 @@ export default function ComunicacaoInbox() {
                         <span className="font-medium">{assignedName || "Ninguém"}</span>
                       </div>
                     )}
+                    {active.locked_by && lockedByName && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Atendendo:</span>
+                        <span className="font-medium">{lockedByName}</span>
+                      </div>
+                    )}
                     {!isMedico && active.assigned_sector && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground w-20">Setor:</span>
@@ -830,26 +861,69 @@ export default function ComunicacaoInbox() {
                   </div>
                 </div>
 
-                {/* Consulta vinculada */}
-                {consultaInfo && (
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> Consulta Vinculada
-                    </h4>
-                    <div className="text-xs space-y-1">
-                      <div>Início: {new Date(consultaInfo.inicio).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</div>
-                      <div>Status: <Badge variant="outline" className="text-[10px]">{consultaInfo.status}</Badge></div>
-                    </div>
-                  </div>
+                {/* Pacientes vinculados (LGPD) */}
+                {!isMedico && (
+                  <PacientesVinculadosPanel
+                    conversationId={active.id}
+                    contactPhone={active.contact_phone}
+                    pacienteAtivoId={active.paciente_ativo_id}
+                    canResponder={!!perms["comunicacao.responder"]}
+                    onChange={setVinculosPaciente}
+                  />
                 )}
 
-                {/* Médico vinculado (only for non-medico) */}
-                {!isMedico && (active.medico_id || medicoName) && (
+                {/* LGPD gate — esconde dados clínicos sem confirmação */}
+                {!isMedico && (() => {
+                  const hasConfirmed = vinculosPaciente.some(v => v.confirmado_em !== null);
+                  const hasAny = vinculosPaciente.length > 0;
+                  return (
+                    <LGPDGate hasConfirmedLink={hasConfirmed} hasAnyLink={hasAny}>
+                      <div className="space-y-5">
+                        {consultaInfo && (
+                          <div>
+                            <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" /> Consulta Vinculada
+                            </h4>
+                            <div className="text-xs space-y-1">
+                              <div>Início: {new Date(consultaInfo.inicio).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</div>
+                              <div>Status: <Badge variant="outline" className="text-[10px]">{consultaInfo.status}</Badge></div>
+                            </div>
+                          </div>
+                        )}
+                        {(active.medico_id || medicoName) && (
+                          <div>
+                            <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                              <Stethoscope className="h-3 w-3" /> Médico Vinculado
+                            </h4>
+                            <p className="text-sm font-medium">{medicoName || "Carregando…"}</p>
+                          </div>
+                        )}
+                      </div>
+                    </LGPDGate>
+                  );
+                })()}
+
+                {/* Médico vinculado (modo médico — sempre visível) */}
+                {isMedico && medicoName && (
                   <div>
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
                       <Stethoscope className="h-3 w-3" /> Médico Vinculado
                     </h4>
-                    <p className="text-sm font-medium">{medicoName || "Carregando…"}</p>
+                    <p className="text-sm font-medium">{medicoName}</p>
+                  </div>
+                )}
+
+                {/* Audit log */}
+                {!isMedico && (
+                  <div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full h-7 text-xs"
+                      onClick={() => setAuditOpen(true)}
+                    >
+                      <FileText className="h-3 w-3 mr-1" /> Ver audit log
+                    </Button>
                   </div>
                 )}
 
@@ -968,6 +1042,13 @@ export default function ComunicacaoInbox() {
           onTransferred={loadConvs}
         />
       )}
+
+      {/* Drawer — Audit log */}
+      <AuditLogDrawer
+        open={auditOpen}
+        onOpenChange={setAuditOpen}
+        conversationId={active?.id ?? null}
+      />
     </div>
   );
 }
