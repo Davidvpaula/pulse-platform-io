@@ -1,40 +1,34 @@
-## Causa do erro
+## Diagnóstico
 
-Toast: `invalid input value for enum consulta_canal: "direto"`.
+A página **/app/admin/auditoria** mostra o toast vermelho **"Falha no painel — column 'funcao' does not exist"**.
 
-A função RPC do relatório financeiro (migration `20260506193607_…`) tem:
+As RPCs `auditoria_eventos` e `auditoria_dashboard` (migration `20260503141020_…sql`, linhas 109 e 163) checam autorização lendo `colaboradores.funcao IN ('admin','supervisor')`, mas a coluna real da tabela `colaboradores` é **`funcao_interna`** — e mesmo assim o único valor existente hoje é `gestor_operacional`. O usuário admin nem está em `colaboradores`, está em `user_roles` via `has_role(uid,'admin')` (padrão usado em todo o resto do projeto).
 
-```sql
-SELECT COALESCE(c.canal_origem, 'direto') as canal, ...
-GROUP BY c.canal_origem
-```
+Resultado: a RPC quebra com erro de coluna inexistente antes de qualquer linha ser retornada.
 
-`canal_origem` é do tipo enum `consulta_canal`, cujos valores válidos são:
-`app, empresa, manual_admin, manual_secretaria, retorno, api, pa_publico, servico_plataforma`.
+## Correção (apenas backend, 1 migration)
 
-`'direto'` não existe no enum, então o Postgres falha ao tentar resolver o `COALESCE` (ambos os ramos precisam ser do mesmo tipo). O relatório quebra inteiro.
-
-## Correção
-
-Migration nova que recria a função `relatorio_financeiro_consolidado` (ou o nome exato dessa RPC) trocando o trecho do `por_canal` para fazer cast para texto antes do `COALESCE`:
+Recriar as duas funções trocando o gate de autorização para o padrão do projeto:
 
 ```sql
-SELECT COALESCE(c.canal_origem::text, 'direto') as canal,
-       COUNT(*) as consultas,
-       SUM(cf.valor_bruto_centavos) as receita_centavos
-FROM consultas_financeiro cf
-LEFT JOIN consultas c ON c.id = cf.consulta_id
-WHERE cf.status = 'valido'
-  AND cf.data_consulta::date >= p_inicio
-  AND cf.data_consulta::date <= p_fim
-GROUP BY c.canal_origem
-ORDER BY receita_centavos DESC
+IF NOT (
+  has_role(auth.uid(), 'admin'::app_role)
+  OR has_role(auth.uid(), 'supervisor'::app_role)
+) THEN
+  RAISE EXCEPTION 'Acesso negado';
+END IF;
 ```
 
-Mudança única: `c.canal_origem` → `c.canal_origem::text` no `COALESCE`. Resolve o erro sem mexer no enum nem em dados.
+- `public.auditoria_eventos(...)` — mesmo corpo, só troca o `IF NOT EXISTS (... colaboradores ... funcao ...)` pelo `has_role`.
+- `public.auditoria_dashboard(...)` — idem.
 
-Nada muda no frontend.
+Sem mudança de assinatura, sem mudança de retorno, sem mexer em frontend.
 
 ## Validação
-1. Acessar `/app/admin/relatorios/financeiro` com um período que tenha consultas — o relatório deve carregar sem o toast vermelho.
-2. Verificar que o gráfico "Receita por canal" mostra as barras (incluindo possivelmente "direto" se houver consulta sem canal, embora hoje canal_origem seja NOT NULL DEFAULT 'app').
+
+1. Recarregar `/app/admin/auditoria` — KPIs, "Painel Analítico" e tabela de eventos devem carregar sem o toast de erro.
+2. Exportar CSV/PDF do mesmo período para confirmar que `auditoria_eventos` também responde.
+
+## Observação
+
+Se em algum momento existir o perfil "supervisor" como colaborador (e não como `app_role`), avaliamos depois trocar para `has_permission(uid, 'auditoria.ver')`. Por ora, `has_role` resolve o bug e mantém consistência com o resto das RPCs administrativas.
