@@ -662,14 +662,22 @@ export default function ComunicacaoInbox() {
             </div>
           ) : (
             <>
-              <div className="border-b p-3 flex items-center justify-between gap-2">
-                <div>
-                  <div className="font-medium text-sm">{active.contact_name || active.contact_phone}</div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3" /> {active.contact_phone || "sem número"}
+              <div className="border-b p-3 flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm truncate">{active.contact_name || active.contact_phone}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-3 w-3" /> {active.contact_phone || "sem número"}
+                    </span>
+                    <LockBadge
+                      lockedBy={active.locked_by}
+                      lockedAt={active.locked_at}
+                      lockedByName={lockedByName}
+                      isMe={active.locked_by === user?.id}
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                   {!isMedico && canRespond && (
                     <>
                       <Button size="sm" variant="ghost" onClick={toggleBot} title={active.bot_active ? "Pausar bot" : "Ativar bot"}>
@@ -680,8 +688,32 @@ export default function ComunicacaoInbox() {
                       </Button>
                     </>
                   )}
-                  {canAssume && active.assigned_to !== user?.id && (
-                    <Button size="sm" variant="outline" onClick={assumir}><UserCheck className="h-4 w-4 mr-1" />Assumir</Button>
+                  {/* Lock-aware Assumir / Liberar */}
+                  {canAssume && !isMedico && (
+                    active.locked_by === null ? (
+                      <Button size="sm" variant="outline" onClick={assumir}>
+                        <UserCheck className="h-4 w-4 mr-1" />Assumir
+                      </Button>
+                    ) : active.locked_by === user?.id ? (
+                      <Button size="sm" variant="outline" onClick={liberar}>
+                        <Lock className="h-4 w-4 mr-1" />Liberar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={liberar}
+                        title="Forçar liberação (admin)"
+                        className="text-amber-700 border-amber-500/40"
+                      >
+                        <Lock className="h-4 w-4 mr-1" />Forçar liberar
+                      </Button>
+                    )
+                  )}
+                  {canTransfer && !isMedico && (
+                    <Button size="sm" variant="outline" onClick={() => setTransferirOpen(true)}>
+                      <ArrowRightLeft className="h-4 w-4 mr-1" />Transferir
+                    </Button>
                   )}
                   {canClose && (
                     <Button size="sm" variant="outline" onClick={fechar}><X className="h-4 w-4 mr-1" />Finalizar</Button>
