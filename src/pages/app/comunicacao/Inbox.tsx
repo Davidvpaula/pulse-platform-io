@@ -452,7 +452,7 @@ export default function ComunicacaoInbox() {
       }
       return true;
     });
-  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, user, isMedico]);
+  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, filtroSla, filtroPrioridade, user, isMedico]);
 
   // Actions with audit
   const canAssume = !isMedico && (perms["comunicacao.inbox.assumir"] || perms["comunicacao.responder"]);
