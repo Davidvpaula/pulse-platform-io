@@ -30,6 +30,32 @@ function extractFeegowId(data: Record<string, unknown> | null): string | null {
   return id ? String(id) : null;
 }
 
+function normalizeName(s: string): string {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function nameSimilarity(a: string, b: string): number {
+  const la = normalizeName(a);
+  const lb = normalizeName(b);
+  if (!la || !lb) return 0;
+  if (la === lb) return 1;
+  const wordsA = la.split(" ").filter(Boolean);
+  const wordsB = lb.split(" ").filter(Boolean);
+  const setB = new Set(wordsB);
+  const matches = wordsA.filter(w => setB.has(w)).length;
+  return matches / Math.max(wordsA.length, wordsB.length);
+}
+
+function maskCpf(cpf: string): string {
+  if (!cpf || cpf.length < 5) return "***";
+  return cpf.slice(0, 3) + "***" + cpf.slice(-2);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
