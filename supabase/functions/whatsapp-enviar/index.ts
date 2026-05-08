@@ -4,6 +4,7 @@
 // - Guard janela 24h: bloqueia texto livre fora da janela; permite template; admin pode forçar
 // - Persiste em messages.body com sender_type real (medico/colaborador/sistema)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { canSendReal, logEvento } from "../_shared/observabilidade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,11 +28,8 @@ Deno.serve(async (req) => {
   try {
     const META_TOKEN = Deno.env.get("META_WHATSAPP_TOKEN");
     const META_PHONE_FALLBACK = Deno.env.get("META_PHONE_NUMBER_ID");
-
-    if (!META_TOKEN) {
-      console.warn("[whatsapp-enviar] META_WHATSAPP_TOKEN ausente");
-      return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
-    }
+    // Fail-closed: validação de produção é feita ABAIXO via canSendReal().
+    // Sem token => sandbox/mock_sent (não retorna mais 503 prematuro).
 
     // ── Auth: getUser (não getClaims) ──
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -68,6 +66,69 @@ Deno.serve(async (req) => {
 
     const phone = String(to).replace(/\D/g, "");
     if (phone.length < 10 || phone.length > 15) return jsonResp({ error: "Telefone inválido" }, 400);
+
+    // ── Fase 8: Gate fail-closed (sandbox => mock_sent) ──
+    const sendGate = await canSendReal(admin);
+    if (!sendGate.ok) {
+      // Persistir mock_sent quando vinculado a uma conversa
+      let senderTypeMock: "medico" | "colaborador" | "sistema" = "sistema";
+      const { data: medM } = await admin.from("medicos").select("id").eq("user_id", userId).maybeSingle();
+      if (medM) senderTypeMock = "medico";
+      else {
+        const { data: colM } = await admin.from("colaboradores").select("id").eq("user_id", userId).maybeSingle();
+        if (colM) senderTypeMock = "colaborador";
+      }
+      if (conversation_id) {
+        await admin.from("messages").insert({
+          conversation_id,
+          body: message || `[template: ${template_name}]`,
+          sender_type: senderTypeMock,
+          sender_id: userId,
+          sender_name: userData.user.email ?? null,
+          message_type: template_name ? "template" : "text",
+          status: "mock_sent",
+          metadata: { template_name: template_name ?? null, tipo: tipo ?? null, mock_reason: sendGate.reason },
+        });
+        await admin
+          .from("conversations")
+          .update({
+            last_message_at: new Date().toISOString(),
+            last_message_preview: (message || `[template: ${template_name}]`).slice(0, 80),
+          })
+          .eq("id", conversation_id);
+      }
+      await admin.from("comunicacao_auditoria").insert({
+        action: tipo || "envio_manual",
+        entity_type: "whatsapp_envio",
+        entity_id: consulta_id || null,
+        user_id: userId,
+        metadata: {
+          to: phone,
+          status: "mock_sent",
+          reason: sendGate.reason,
+          modo: sendGate.modo,
+          health: sendGate.health,
+          template_name: template_name ?? null,
+          conversation_id: conversation_id ?? null,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      await logEvento(admin, {
+        modulo: "whatsapp",
+        evento: "mock_sent",
+        severity: "info",
+        conversation_id: conversation_id ?? null,
+        user_id: userId,
+        metadata: { reason: sendGate.reason, modo: sendGate.modo, health: sendGate.health, to: phone },
+      });
+      return jsonResp({
+        ok: true,
+        mock_sent: true,
+        reason: sendGate.reason,
+        modo: sendGate.modo,
+        health: sendGate.health,
+      });
+    }
 
     // ── Resolver phone_number_id ──
     let phoneNumberId: string | null = null;
@@ -239,8 +300,24 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       console.error("[whatsapp-enviar] Meta API erro:", res.status, result);
+      await logEvento(admin, {
+        modulo: "whatsapp",
+        evento: "send_failed",
+        severity: "error",
+        conversation_id: conversation_id ?? null,
+        user_id: userId,
+        metadata: { http_status: res.status, error: result?.error?.message ?? null, to: phone },
+      });
       return jsonResp({ ok: false, error: "Falha no envio Meta", detail: result.error?.message, http_status: res.status }, 502);
     }
+    await logEvento(admin, {
+      modulo: "whatsapp",
+      evento: "sent",
+      severity: "info",
+      conversation_id: conversation_id ?? null,
+      user_id: userId,
+      metadata: { wamid, template_name: template_name ?? null, instance_id: instanceId },
+    });
 
     return jsonResp({ ok: true, wa_message_id: wamid, sender_type: senderType, instance_id: instanceId });
   } catch (e) {

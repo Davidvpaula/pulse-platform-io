@@ -5,6 +5,7 @@
 // - Persiste sempre o payload bruto em whatsapp_webhook_log
 // Secrets: META_VERIFY_TOKEN, META_APP_SECRET (HMAC opcional em sandbox)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logEvento } from "../_shared/observabilidade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -236,6 +237,15 @@ Deno.serve(async (req) => {
             }
             wamidProcessed.push(wamid);
             processedCount++;
+            // Fase 8: observabilidade — só eventos críticos
+            if (newStatus === "failed") {
+              await logEvento(supabase, {
+                modulo: "whatsapp",
+                evento: "message_failed",
+                severity: "error",
+                metadata: { wamid, reason: update.failure_reason ?? null },
+              });
+            }
           } catch (e) {
             errors.push(`status_loop: ${String(e)}`);
           }

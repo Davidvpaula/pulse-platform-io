@@ -19,6 +19,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { LovableProvider, type ChatMsg } from "../_shared/ai-providers.ts";
 import { MetaCloudProvider } from "../_shared/wa-providers.ts";
+import { logEvento } from "../_shared/observabilidade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,6 +101,8 @@ Deno.serve(async (req) => {
   if (!lovableKey) return jsonResp({ error: "LOVABLE_API_KEY ausente" }, 503);
 
   const admin = createClient(supabaseUrl, serviceKey);
+  const _t0 = Date.now();
+  let _convId: string | null = null;
 
   try {
     // -------- Auth --------
@@ -120,6 +123,7 @@ Deno.serve(async (req) => {
     const conversationId: string | undefined = body?.conversation_id;
     const dryRun: boolean = !!body?.dry_run;
     if (!conversationId) return jsonResp({ error: "conversation_id obrigatório" }, 400);
+    _convId = conversationId;
 
     // -------- 1) RPC should_reply (gate principal) --------
     const { data: gate, error: gateErr } = await admin.rpc("ai_avatar_should_reply", {
@@ -455,6 +459,13 @@ Deno.serve(async (req) => {
       error: sendRes.ok ? null : sendRes.error_message ?? `http_${sendRes.http_status}`,
     });
 
+    await logEvento(admin, {
+      modulo: "ia_avatar",
+      evento: sendRes.ok ? "replied" : "send_failed",
+      severity: sendRes.ok ? "info" : "warn",
+      conversation_id: _convId,
+      metadata: { confianca, risco, modo, latency_ms: Date.now() - _t0 },
+    });
     return jsonResp({
       ok: sendRes.ok,
       replied: sendRes.ok,
@@ -464,6 +475,13 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("[ai-avatar-reply] erro:", e);
+    await logEvento(admin, {
+      modulo: "ia_avatar",
+      evento: "exception",
+      severity: "error",
+      conversation_id: _convId,
+      metadata: { latency_ms: Date.now() - _t0, error: (e as Error).message },
+    });
     return jsonResp({ error: (e as Error).message }, 500);
   }
 });
