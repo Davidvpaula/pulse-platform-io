@@ -45,6 +45,8 @@ type Conv = {
   medico_id: string | null;
   intent: string | null;
   tags: string[];
+  locked_by: string | null;
+  locked_at: string | null;
 };
 
 type Msg = {
