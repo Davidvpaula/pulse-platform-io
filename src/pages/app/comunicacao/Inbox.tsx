@@ -975,6 +975,9 @@ export default function ComunicacaoInbox() {
 
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
+                  {active.channel === "whatsapp" && !janelaExpirada && (
+                    <JanelaAtivaIndicator conversationId={active.id} />
+                  )}
                   {active.channel === "whatsapp" && janelaExpirada && (
                     <JanelaExpiradaBanner onUseTemplate={() => setTemplateDialogOpen(true)} />
                   )}
