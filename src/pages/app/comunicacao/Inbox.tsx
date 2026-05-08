@@ -41,6 +41,7 @@ import { useAttendantPresence } from "@/hooks/useAttendantPresence";
 import { useConversationTyping } from "@/hooks/useConversationTyping";
 import { CheckCircle2 } from "lucide-react";
 import { NovaConversaDialog } from "@/components/comunicacao/NovaConversaDialog";
+import { SandboxBanner } from "@/components/comunicacao/SandboxBanner";
 import { openOrCreatePacienteConversation } from "@/lib/comunicacao/openOrCreateConversation";
 import { ConversationAvatarPanel } from "@/components/comunicacao/avatar/ConversationAvatarPanel";
 import { AiAvatarMemoryDrawer } from "@/components/comunicacao/avatar/AiAvatarMemoryDrawer";
