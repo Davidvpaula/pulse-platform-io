@@ -124,6 +124,8 @@ import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminFaq from "@/pages/app/admin/AdminFaq";
 import AdminComunicacaoOperacao from "@/pages/app/admin/AdminComunicacaoOperacao";
+import AdminProducaoCockpit from "@/pages/app/admin/AdminProducaoCockpit";
+import AdminObservabilidade from "@/pages/app/admin/AdminObservabilidade";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
 import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
