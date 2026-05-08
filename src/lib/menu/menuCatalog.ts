@@ -76,6 +76,7 @@ export const colaboradorMenu: MenuNode[] = [
       { label: "Equipe (interna)", to: "/app/colaborador/comunicacao-interna" },
       { label: "Templates", to: "/app/comunicacao/templates", key: "comunicacao.usar_templates" },
       { label: "Métricas", to: "/app/comunicacao/metricas", key: "comunicacao.ver_metricas" },
+      { label: "Operação", to: "/app/admin/comunicacao/operacao", key: "comunicacao.metricas.operacionais" },
     ],
   },
   {
