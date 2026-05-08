@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
 
     // Cliente service role (bypass RLS para escrita controlada)
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    _admin = sb;
 
     // Permissão
     const { data: hasPerm } = await sb.rpc("has_permission", {
