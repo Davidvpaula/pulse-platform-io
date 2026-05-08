@@ -153,6 +153,8 @@ export default function ComunicacaoInbox() {
   const [transferirOpen, setTransferirOpen] = useState(false);
   const [vinculosPaciente, setVinculosPaciente] = useState<VinculoPaciente[]>([]);
   const [auditOpen, setAuditOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [janelaExpirada, setJanelaExpirada] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
