@@ -52,12 +52,11 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
-      return json({ error: "Sessão inválida" }, 401);
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return json({ error: "Sessão inválida", details: userErr?.message ?? null }, 401);
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = userData.user.id;
 
     const { data: isAdmin, error: roleErr } = await userClient.rpc("has_role", {
       _user_id: userId,
@@ -125,6 +124,11 @@ Deno.serve(async (req) => {
         http_status: res.status,
         meta_request_id: requestId,
         wa_message_id: metaBody?.messages?.[0]?.id ?? null,
+        error_code: metaBody?.error?.code ?? null,
+        error_subcode: metaBody?.error?.error_subcode ?? null,
+        error_message: metaBody?.error?.message ?? null,
+        error_type: metaBody?.error?.type ?? null,
+        fbtrace_id: metaBody?.error?.fbtrace_id ?? null,
         meta_response: metaBody,
         env: {
           graph_api_version: GRAPH_API_VERSION,
