@@ -483,6 +483,16 @@ export default function IAAvatar() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="operacao" className="space-y-4">
+          <OperacaoTab settings={settings} setSettings={setSettings} salvar={salvar} saving={saving} />
+        </TabsContent>
+
+        <TabsContent value="supervisor">
+          <AiAvatarSupervisorDashboard />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog para adicionar/editar regra de handoff */}
       <Dialog open={ruleDialog} onOpenChange={setRuleDialog}>
