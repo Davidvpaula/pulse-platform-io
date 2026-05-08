@@ -363,6 +363,10 @@ export default function ComunicacaoInbox() {
   // Load detail data when active changes
   const active = convs.find(c => c.id === activeId) || null;
 
+  // Fase 5 — Presença + Typing
+  useAttendantPresence(activeId);
+  useConversationTyping(activeId, draft);
+
   // Janela 24h Meta: rastrear se está expirada para a conversa ativa
   useEffect(() => {
     if (!active || active.channel !== "whatsapp") { setJanelaExpirada(false); return; }
