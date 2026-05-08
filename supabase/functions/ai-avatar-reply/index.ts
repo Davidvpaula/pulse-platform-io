@@ -123,6 +123,7 @@ Deno.serve(async (req) => {
     const conversationId: string | undefined = body?.conversation_id;
     const dryRun: boolean = !!body?.dry_run;
     if (!conversationId) return jsonResp({ error: "conversation_id obrigatório" }, 400);
+    _convId = conversationId;
 
     // -------- 1) RPC should_reply (gate principal) --------
     const { data: gate, error: gateErr } = await admin.rpc("ai_avatar_should_reply", {
