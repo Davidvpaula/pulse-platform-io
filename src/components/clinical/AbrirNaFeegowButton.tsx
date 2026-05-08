@@ -3,10 +3,13 @@ import { ExternalLink } from "lucide-react";
 import { useClinicalProvider } from "@/lib/clinical/useClinicalProvider";
 import type { DeepLinkVariant } from "@/lib/clinical/clinicalUrls";
 
-interface Props extends Omit<ButtonProps, "onClick" | "children"> {
+interface Props extends Omit<ButtonProps, "onClick" | "children" | "variant"> {
   /** ID externo do paciente/profissional no provider (ex: feegow_paciente_id). */
   externalId: string | null | undefined;
-  variant?: DeepLinkVariant;
+  /** Tipo de link (paciente, prontuário, documentos). */
+  linkVariant?: DeepLinkVariant;
+  /** Estilo visual do botão (passa para o Button do shadcn). */
+  buttonVariant?: ButtonProps["variant"];
   label?: string;
 }
 
@@ -22,24 +25,24 @@ const defaultLabel: Record<DeepLinkVariant, string> = {
  */
 export function AbrirNaFeegowButton({
   externalId,
-  variant = "prontuario",
+  linkVariant = "prontuario",
+  buttonVariant = "outline",
   label,
   size = "sm",
-  variant: _btnVariant, // alias para clareza — Button.variant
   ...buttonProps
-}: Props & { variant?: DeepLinkVariant }) {
+}: Props) {
   const { enabled, providerId, openDeepLink } = useClinicalProvider();
 
   if (!enabled || !externalId) return null;
 
-  const text = label ?? defaultLabel[variant];
+  const text = label ?? defaultLabel[linkVariant];
 
   return (
     <Button
       type="button"
       size={size}
-      variant="outline"
-      onClick={() => openDeepLink(externalId, variant)}
+      variant={buttonVariant}
+      onClick={() => openDeepLink(externalId, linkVariant)}
       title={`Abrir em ${providerId === "feegow" ? "Feegow" : providerId} (nova aba)`}
       {...buttonProps}
     >
