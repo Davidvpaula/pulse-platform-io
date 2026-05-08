@@ -27,12 +27,12 @@ export function TypingIndicator({ conversationId, currentUserId }: Props) {
       // load names lazily
       const missing = filtered.filter(t => !names[t.user_id]).map(t => t.user_id);
       if (missing.length) {
-        const { data: profs } = await supabase
+        const { data: profs } = await (supabase as any)
           .from("profiles")
           .select("user_id, full_name")
           .in("user_id", missing);
         if (profs) {
-          setNames(prev => ({ ...prev, ...Object.fromEntries(profs.map((p: any) => [p.user_id, p.full_name || "Atendente"])) }));
+          setNames(prev => ({ ...prev, ...Object.fromEntries((profs as any[]).map((p) => [p.user_id, p.full_name || "Atendente"])) }));
         }
       }
     };
