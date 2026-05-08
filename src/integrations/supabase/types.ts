@@ -5202,12 +5202,17 @@ export type Database = {
       message_templates: {
         Row: {
           active: boolean
+          aprovado_em: string | null
+          buttons: Json | null
           category: Database["public"]["Enums"]["template_category"]
           content: string
           created_at: string
           created_by: string | null
+          footer: string | null
+          header_type: string | null
           id: string
           language: string
+          meta_template_id: string | null
           name: string
           updated_at: string
           variables: string[]
@@ -5216,12 +5221,17 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          aprovado_em?: string | null
+          buttons?: Json | null
           category?: Database["public"]["Enums"]["template_category"]
           content: string
           created_at?: string
           created_by?: string | null
+          footer?: string | null
+          header_type?: string | null
           id?: string
           language?: string
+          meta_template_id?: string | null
           name: string
           updated_at?: string
           variables?: string[]
@@ -5230,12 +5240,17 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          aprovado_em?: string | null
+          buttons?: Json | null
           category?: Database["public"]["Enums"]["template_category"]
           content?: string
           created_at?: string
           created_by?: string | null
+          footer?: string | null
+          header_type?: string | null
           id?: string
           language?: string
+          meta_template_id?: string | null
           name?: string
           updated_at?: string
           variables?: string[]
@@ -7794,6 +7809,66 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_template_logs: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          enviado_por: string | null
+          erro: string | null
+          id: string
+          payload: Json
+          provider_response: Json | null
+          status: string
+          telefone: string
+          template_id: string | null
+          template_name: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          payload?: Json
+          provider_response?: Json | null
+          status: string
+          telefone: string
+          template_id?: string | null
+          template_name: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          payload?: Json
+          provider_response?: Json | null
+          status?: string
+          telefone?: string
+          template_id?: string | null
+          template_name?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_template_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_template_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_webhook_log: {
         Row: {
           error: string | null
@@ -8474,6 +8549,10 @@ export type Database = {
         Returns: undefined
       }
       get_empresa_id_do_usuario: { Args: { _user_id: string }; Returns: string }
+      get_meta_window_state: {
+        Args: { p_conversation_id: string }
+        Returns: Json
+      }
       get_titular_paciente_id: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
