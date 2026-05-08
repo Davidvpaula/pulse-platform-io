@@ -3,7 +3,7 @@ import {
   FileText, Upload, Loader2, Download, Trash2, Search, Filter,
   FilePlus, Pill, FileCheck2, IdCard, Syringe, FileQuestion, Image as ImageIcon,
   Database as DbIcon, Eye, AlertCircle, CheckCircle2, Paperclip, CalendarDays,
-  ClipboardList, Users,
+  ClipboardList, Users, RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,7 @@ export default function PacienteDocumentos() {
   const [filtroTipo, setFiltroTipo] = useState<DocumentoPacienteTipo | "todos">("todos");
   const [openUpload, setOpenUpload] = useState(false);
   const [preview, setPreview] = useState<PreviewState>(null);
+  const [importingFeegow, setImportingFeegow] = useState(false);
 
   const [prescricoes, setPrescricoes] = useState<Prescricao[]>([]);
   const [prontuariosSet, setProntuariosSet] = useState<Set<string>>(new Set());
@@ -252,6 +253,39 @@ export default function PacienteDocumentos() {
     void carregar();
   };
 
+  const importarFeegow = async () => {
+    const pac = await getPacienteAtual();
+    if (!pac) { toast.error("Paciente não encontrado."); return; }
+    setImportingFeegow(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("feegow-importar-documentos", {
+        body: { paciente_id: pac.id },
+      });
+      if (error) {
+        toast.error("Erro ao importar documentos da Feegow.");
+        return;
+      }
+      if (!data?.ok) {
+        toast.error(data?.error ?? "Nenhum documento encontrado na Feegow.");
+        return;
+      }
+      const n = data.importados ?? 0;
+      const dup = data.duplicados_pulados ?? 0;
+      if (n === 0 && dup > 0) {
+        toast.info(`Todos os ${dup} documento(s) já estavam importados.`);
+      } else if (n > 0) {
+        toast.success(`${n} documento(s) importado(s) da Feegow!`);
+        void carregar();
+      } else {
+        toast.info("Nenhum documento novo encontrado na Feegow.");
+      }
+    } catch {
+      toast.error("Falha na comunicação com a Feegow.");
+    } finally {
+      setImportingFeegow(false);
+    }
+  };
+
   if (!session) {
     return (
       <div className="space-y-6">
@@ -269,10 +303,20 @@ export default function PacienteDocumentos() {
         title="Meus documentos"
         description="Receitas e laudos emitidos por médicos, anexos das consultas e seus próprios documentos."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
               <DbIcon className="h-3 w-3" /> Dados em tempo real
             </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={importarFeegow}
+              disabled={importingFeegow}
+              className="text-xs"
+            >
+              {importingFeegow ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+              {importingFeegow ? "Importando…" : "Importar da Feegow"}
+            </Button>
             <Dialog open={openUpload} onOpenChange={setOpenUpload}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-primary hover:opacity-90">
