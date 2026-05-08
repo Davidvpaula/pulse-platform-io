@@ -687,6 +687,7 @@ export default function ComunicacaoInbox() {
 
   return (
     <div className="space-y-4">
+      <SandboxBanner />
       <PageHeader
         title={isMedico ? "Inbox — Minhas Consultas" : "Inbox"}
         description={isMedico
