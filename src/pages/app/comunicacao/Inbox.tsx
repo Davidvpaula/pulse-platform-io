@@ -25,6 +25,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { LockBadge } from "@/components/comunicacao/LockBadge";
 import { TransferirConversaDialog } from "@/components/comunicacao/TransferirConversaDialog";
+import { Janela24hMeta } from "@/components/comunicacao/Janela24hMeta";
+import { PacientesVinculadosPanel, type VinculoPaciente } from "@/components/comunicacao/PacientesVinculadosPanel";
+import { LGPDGate } from "@/components/comunicacao/LGPDGate";
+import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 
 type Conv = {
   id: string;
