@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   try {
     const META_TOKEN = Deno.env.get("META_WHATSAPP_TOKEN");
     const META_PHONE_FALLBACK = Deno.env.get("META_PHONE_NUMBER_ID");
-    if (!META_TOKEN) return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
+    // Em sandbox o gate fail-closed responde com mock_sent — não bloqueamos por falta de token aqui.
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return jsonResp({ error: "Não autenticado" }, 401);
