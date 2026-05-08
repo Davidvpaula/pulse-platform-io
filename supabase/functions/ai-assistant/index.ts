@@ -308,8 +308,24 @@ Deno.serve(async (req) => {
       payload = { ...payload, reply: parsed };
     }
 
+    if (_admin) {
+      await logEvento(_admin, {
+        modulo: "ia_assistente",
+        evento: "ok",
+        severity: "info",
+        metadata: { action, latency_ms: Date.now() - _t0 },
+      });
+    }
     return json(200, payload);
   } catch (e) {
+    if (_admin) {
+      await logEvento(_admin, {
+        modulo: "ia_assistente",
+        evento: "exception",
+        severity: "error",
+        metadata: { latency_ms: Date.now() - _t0, error: e instanceof Error ? e.message : String(e) },
+      });
+    }
     return json(500, { error: "unexpected", detail: e instanceof Error ? e.message : String(e) });
   }
 });
