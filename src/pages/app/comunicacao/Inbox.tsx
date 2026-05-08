@@ -986,17 +986,40 @@ export default function ComunicacaoInbox() {
                 {/* Status do atendimento */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Atendimento</h4>
-                  <div className="text-xs space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground w-20">Status:</span>
-                      <Badge variant="outline" className={cn("text-[10px]", STATUS_LABEL[active.status]?.color)}>
-                        {STATUS_LABEL[active.status]?.icon} {STATUS_LABEL[active.status]?.label || active.status}
-                      </Badge>
-                    </div>
+                  <div className="text-xs space-y-2">
+                    {!isMedico ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Status:</span>
+                        <StatusOperacionalSelect
+                          conversationId={active.id}
+                          status={active.status}
+                          disabled={!perms["comunicacao.responder"]}
+                          onChanged={loadConvs}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Status:</span>
+                        <Badge variant="outline" className={cn("text-[10px]", STATUS_LABEL[active.status]?.color)}>
+                          {STATUS_LABEL[active.status]?.icon} {STATUS_LABEL[active.status]?.label || active.status}
+                        </Badge>
+                      </div>
+                    )}
                     {!isMedico && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground w-20">Responsável:</span>
-                        <span className="font-medium">{assignedName || "Ninguém"}</span>
+                        {active.assigned_to ? (
+                          <span className="font-medium flex items-center gap-1.5">
+                            <AttendantPresenceBadge userId={active.assigned_to} />
+                            {assignedName || "—"}
+                          </span>
+                        ) : (
+                          canAssume ? (
+                            <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={assumir}>
+                              <UserCheck className="h-3 w-3 mr-1" /> Assumir conversa
+                            </Button>
+                          ) : <span className="text-muted-foreground">Ninguém</span>
+                        )}
                       </div>
                     )}
                     {active.locked_by && lockedByName && (
@@ -1013,6 +1036,27 @@ export default function ComunicacaoInbox() {
                     )}
                   </div>
                 </div>
+
+                {/* Operação (Fase 5) */}
+                {!isMedico && (
+                  <ConversationQueuePanel
+                    conversation={{
+                      id: active.id,
+                      department_id: active.department_id,
+                      queue_id: active.queue_id,
+                      priority: active.priority,
+                      sla_due_at: active.sla_due_at,
+                      resolved_at: active.resolved_at,
+                    }}
+                    onChanged={loadConvs}
+                  />
+                )}
+
+                {!isMedico && perms["comunicacao.inbox.resolver"] && !active.resolved_at && (
+                  <Button size="sm" variant="outline" className="w-full text-emerald-700 border-emerald-500/40" onClick={resolver}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Resolver conversa
+                  </Button>
+                )}
 
                 {/* Pacientes vinculados (LGPD) */}
                 {!isMedico && (
