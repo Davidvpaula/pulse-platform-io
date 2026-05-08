@@ -1331,6 +1331,13 @@ export default function ComunicacaoInbox() {
         defaultTo={active?.contact_phone || ""}
         onSent={() => { setDraft(""); setJanelaExpirada(false); }}
       />
+      {/* Drawer — Memória IA Avatar (Fase 7) */}
+      <AiAvatarMemoryDrawer
+        open={memoryOpen}
+        onOpenChange={setMemoryOpen}
+        conversationId={active?.id ?? null}
+        patientId={active?.patient_id ?? null}
+      />
     </div>
   );
 }
