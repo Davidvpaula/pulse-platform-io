@@ -1,3 +1,6 @@
+// [DEPRECATED] Arquitetura ClinicalProvider: vínculo de médicos é local.
+// Use feegow-vincular-profissional para mapping mínimo de identidade.
+// Ver mem://features/arquitetura-clinical-provider
 // Edge function: libera acesso do médico na Feegow.
 // Por enquanto roda em MODO SIMULADO se FEEGOW_API_TOKEN não estiver configurada.
 // Quando a chave for adicionada, o bloco real de chamada à API Feegow é ativado.
@@ -9,7 +12,11 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+  "X-Deprecated": "true",
+  "X-Deprecation-Reason": "Use feegow-vincular-profissional",
 };
+
+console.warn("[DEPRECATED] feegow-liberar-medico — use feegow-vincular-profissional");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

@@ -1,3 +1,6 @@
+// [DEPRECATED] Arquitetura ClinicalProvider: sistema interno é SoR operacional.
+// Não criar agendamentos na Feegow — agenda fica internamente.
+// Mantido apenas para legado. Ver mem://features/arquitetura-clinical-provider
 // Edge function: cria agendamento na Feegow de forma MANUAL (somente admin)
 // NÃO é automático. NÃO é cron. NÃO é webhook. Envio unitário controlado.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
@@ -7,7 +10,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "X-Deprecated": "true",
+  "X-Deprecation-Reason": "Use ClinicalProvider deep-link instead",
 };
+
+console.warn("[DEPRECATED] feegow-criar-agendamento — operação interna agora; ver arquitetura ClinicalProvider");
 
 function json(b: unknown, status = 200) {
   return new Response(JSON.stringify(b), {
