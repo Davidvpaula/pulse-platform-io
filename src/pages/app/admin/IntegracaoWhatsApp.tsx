@@ -203,3 +203,61 @@ export default function IntegracaoWhatsApp() {
     </div>
   );
 }
+
+function TestePanel() {
+  const [numero, setNumero] = useState("5511985045280");
+  const [enviando, setEnviando] = useState(false);
+  const [resultado, setResultado] = useState<any>(null);
+
+  async function disparar() {
+    setEnviando(true);
+    setResultado(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-test-send", {
+        body: { to: numero.replace(/\D/g, "") },
+      });
+      if (error) {
+        setResultado({ ok: false, erro: error.message, contexto: (error as any).context ?? null });
+        toast.error("Falha no envio: " + error.message);
+      } else {
+        setResultado(data);
+        if (data?.ok) toast.success("Mensagem enviada — wa_message_id: " + data.wa_message_id);
+        else toast.error("Meta retornou erro — veja detalhes abaixo");
+      }
+    } catch (e: any) {
+      setResultado({ ok: false, erro: e.message });
+      toast.error(e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <Card className="border-amber-500/40">
+      <CardHeader>
+        <CardTitle className="text-base">🧪 Teste sandbox — envio mecânico hello_world</CardTitle>
+        <CardDescription>
+          Dispara template <code>hello_world</code> via Meta Cloud API v25.0 usando os secrets
+          {" "}<code>META_WHATSAPP_TOKEN</code> + <code>META_PHONE_NUMBER_ID</code>. O número precisa estar autorizado no painel sandbox da Meta.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex gap-2">
+          <Input
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            placeholder="5511999999999 (DDI+DDD+número, sem +)"
+          />
+          <Button onClick={disparar} disabled={enviando || !numero}>
+            {enviando ? "Enviando…" : "Disparar teste"}
+          </Button>
+        </div>
+        {resultado && (
+          <pre className="max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs">
+            {JSON.stringify(resultado, null, 2)}
+          </pre>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
