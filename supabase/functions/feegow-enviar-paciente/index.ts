@@ -30,6 +30,32 @@ function extractFeegowId(data: Record<string, unknown> | null): string | null {
   return id ? String(id) : null;
 }
 
+function normalizeName(s: string): string {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function nameSimilarity(a: string, b: string): number {
+  const la = normalizeName(a);
+  const lb = normalizeName(b);
+  if (!la || !lb) return 0;
+  if (la === lb) return 1;
+  const wordsA = la.split(" ").filter(Boolean);
+  const wordsB = lb.split(" ").filter(Boolean);
+  const setB = new Set(wordsB);
+  const matches = wordsA.filter(w => setB.has(w)).length;
+  return matches / Math.max(wordsA.length, wordsB.length);
+}
+
+function maskCpf(cpf: string): string {
+  if (!cpf || cpf.length < 5) return "***";
+  return cpf.slice(0, 3) + "***" + cpf.slice(-2);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -307,7 +333,136 @@ Deno.serve(async (req) => {
       return json(relatorio);
     }
 
-    // ── MODO PADRÃO ──
+    // ── MODO PADRÃO: buscar antes de criar (anti-duplicidade) ──
+    const startedAt = Date.now();
+    const callerRoleStr = isAdmin ? "admin" : "secretaria_ou_supervisor";
+
+    async function logIntegracao(
+      acao: string,
+      status: "success" | "error" | "warning",
+      payloadResp: Record<string, unknown>,
+      feegowIdLog: string | null,
+    ) {
+      try {
+        await admin.from("integracoes_logs").insert({
+          integracao: "feegow",
+          acao,
+          entidade_tipo: "paciente",
+          entidade_id_interno: paciente_id,
+          entidade_id_externo: feegowIdLog,
+          payload_envio: { cpf_mascarado: maskCpf(cpfLimpo), nome: pac.nome_completo },
+          payload_resposta: payloadResp,
+          status,
+          origem: callerRoleStr,
+          user_id: u.user.id,
+          duracao_ms: Date.now() - startedAt,
+        });
+      } catch (_e) { /* log best-effort */ }
+    }
+
+    // 1. Já vinculado localmente
+    if (pac.feegow_paciente_id) {
+      await logIntegracao("ja_vinculado", "success", { feegow_paciente_id: pac.feegow_paciente_id }, String(pac.feegow_paciente_id));
+      return json({ ok: true, action: "ja_vinculado", feegow_paciente_id: pac.feegow_paciente_id });
+    }
+
+    if (!cpfLimpo || cpfLimpo.length < 11) {
+      return json({ ok: false, error: "CPF do paciente inválido ou ausente" }, 400);
+    }
+
+    // 2. Buscar por CPF na Feegow
+    const searchResp = await fetch(`${FEEGOW_URL}/patient/list?cpf=${cpfLimpo}&limit=10`, {
+      method: "GET",
+      headers: { "x-access-token": FEEGOW_TOKEN },
+    });
+    const searchJson = await searchResp.json().catch(() => null) as Record<string, unknown> | null;
+    const content = (searchJson?.content as Record<string, unknown>[] | undefined) ?? [];
+    const matches = Array.isArray(content) ? content : [];
+
+    function getId(p: Record<string, unknown>): string | null {
+      const id = p.paciente_id ?? p.id ?? null;
+      return id ? String(id) : null;
+    }
+    function getName(p: Record<string, unknown>): string {
+      return String(p.nome_completo ?? p.nome ?? p.nome_paciente ?? "");
+    }
+
+    // 3. Um único resultado → vincular
+    if (matches.length === 1) {
+      const fid = getId(matches[0]);
+      if (fid) {
+        await admin.from("pacientes").update({
+          feegow_status: "liberado",
+          feegow_paciente_id: fid,
+          feegow_ultimo_envio_em: new Date().toISOString(),
+          feegow_erro: null,
+        }).eq("id", paciente_id);
+
+        await logIntegracao("vincular_existente", "success", {
+          encontrados: 1,
+          feegow_paciente_id: fid,
+          nome_feegow: getName(matches[0]),
+        }, fid);
+
+        return json({ ok: true, action: "vincular_existente", feegow_paciente_id: fid });
+      }
+    }
+
+    // 4. Múltiplos resultados → fuzzy match por nome
+    if (matches.length > 1) {
+      let best: { id: string | null; name: string; score: number } = { id: null, name: "", score: 0 };
+      for (const m of matches) {
+        const score = nameSimilarity(pac.nome_completo ?? "", getName(m));
+        if (score > best.score) best = { id: getId(m), name: getName(m), score };
+      }
+
+      const THRESHOLD = 0.6;
+      if (best.id && best.score >= THRESHOLD) {
+        await admin.from("pacientes").update({
+          feegow_status: "liberado",
+          feegow_paciente_id: best.id,
+          feegow_ultimo_envio_em: new Date().toISOString(),
+          feegow_erro: null,
+        }).eq("id", paciente_id);
+
+        await logIntegracao("vincular_existente", "success", {
+          encontrados: matches.length,
+          escolhido_por: "fuzzy_match",
+          score: best.score,
+          nome_feegow: best.name,
+        }, best.id);
+
+        return json({
+          ok: true,
+          action: "vincular_existente",
+          feegow_paciente_id: best.id,
+          fuzzy_score: best.score,
+        });
+      }
+
+      // Confiança baixa → não criar; pedir validação manual
+      await admin.from("pacientes").update({
+        feegow_status: "erro",
+        feegow_ultimo_envio_em: new Date().toISOString(),
+        feegow_erro: `Múltiplos pacientes na Feegow com este CPF (${matches.length}) e nenhum nome bate o suficiente (melhor score: ${best.score.toFixed(2)}). Validação manual necessária.`,
+      }).eq("id", paciente_id);
+
+      await logIntegracao("multiplo_match_baixa_confianca", "warning", {
+        encontrados: matches.length,
+        melhor_score: best.score,
+        candidatos: matches.map((m) => ({ id: getId(m), nome: getName(m) })),
+      }, null);
+
+      return json({
+        ok: false,
+        action: "multiplo_match_baixa_confianca",
+        error: "Múltiplos pacientes na Feegow com mesmo CPF — validação manual necessária",
+        candidatos: matches.map((m) => ({ id: getId(m), nome: getName(m) })),
+        melhor_score: best.score,
+      }, 409);
+    }
+
+    // 5. Nenhum encontrado → criar novo
     const nomeCompleto = pac.nome_completo ?? "";
     const nomePaciente = nomeCompleto.split(" ")[0];
     const payload = {
@@ -338,6 +493,8 @@ Deno.serve(async (req) => {
         feegow_erro: JSON.stringify(result).slice(0, 500),
       }).eq("id", paciente_id);
 
+      await logIntegracao("criar_novo", "error", { http_status: resp.status, detail: result }, null);
+
       return json({ ok: false, error: "Erro ao enviar para Feegow", detail: result }, resp.status);
     }
 
@@ -350,7 +507,10 @@ Deno.serve(async (req) => {
       feegow_erro: null,
     }).eq("id", paciente_id);
 
-    return json({ ok: true, feegow_paciente_id: feegowId });
+    await logIntegracao("criar_novo", "success", { feegow_paciente_id: feegowId }, feegowId);
+
+    return json({ ok: true, action: "criar_novo", feegow_paciente_id: feegowId });
+
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
