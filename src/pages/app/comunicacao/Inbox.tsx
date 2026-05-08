@@ -443,6 +443,13 @@ export default function ComunicacaoInbox() {
         setDraft(body);
         return;
       }
+      // Janela expirada → abre modal de template direto, sem chamar a API
+      if (janelaExpirada) {
+        setDraft(body);
+        toast.error("Janela 24h expirada — envie um template para reabrir.");
+        setTemplateDialogOpen(true);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("whatsapp-enviar", {
         body: { to: active.contact_phone, message: body, conversation_id: active.id },
       });
@@ -457,8 +464,10 @@ export default function ComunicacaoInbox() {
         return;
       }
       if (data?.requires_template) {
-        toast.error("Janela 24h Meta expirada — envie um template para reabrir.");
         setDraft(body);
+        toast.error("Janela 24h Meta expirada — abrindo template oficial.");
+        setJanelaExpirada(true);
+        setTemplateDialogOpen(true);
         return;
       }
       if (data?.lgpd_block) {
