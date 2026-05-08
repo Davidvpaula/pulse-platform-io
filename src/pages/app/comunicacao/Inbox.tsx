@@ -423,7 +423,14 @@ export default function ComunicacaoInbox() {
   const filtered = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return convs.filter(c => {
-      if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
+      if (filtroStatus === "resolvidas") {
+        if (!c.resolved_at) return false;
+      } else if (filtroStatus !== "todos") {
+        if (c.status !== filtroStatus) return false;
+        if (c.resolved_at) return false;
+      } else {
+        if (c.resolved_at) return false;
+      }
       if (!isMedico) {
         if (filtroResp === "minhas" && c.assigned_to !== user?.id) return false;
         if (filtroResp === "nao_atribuidas" && c.assigned_to) return false;
@@ -434,6 +441,10 @@ export default function ComunicacaoInbox() {
         if (filtroTipo === "consulta_hoje") {
           if (!c.consulta_id) return false;
         }
+        if (filtroSla === "vencido") {
+          if (!c.sla_due_at || new Date(c.sla_due_at).getTime() >= Date.now()) return false;
+        }
+        if (filtroPrioridade !== "todas" && c.priority !== filtroPrioridade) return false;
       }
       if (q) {
         const hay = `${c.contact_name || ""} ${c.contact_phone || ""} ${c.last_message_preview || ""}`.toLowerCase();
