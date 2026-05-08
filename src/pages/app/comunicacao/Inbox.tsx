@@ -865,6 +865,11 @@ export default function ComunicacaoInbox() {
                       <ArrowRightLeft className="h-4 w-4 mr-1" />Transferir
                     </Button>
                   )}
+                  {!isMedico && perms["comunicacao.inbox.resolver"] && !active.resolved_at && (
+                    <Button size="sm" variant="outline" onClick={resolver} className="text-emerald-700 border-emerald-500/40">
+                      <CheckCircle2 className="h-4 w-4 mr-1" />Resolver
+                    </Button>
+                  )}
                   {canClose && (
                     <Button size="sm" variant="outline" onClick={fechar}><X className="h-4 w-4 mr-1" />Finalizar</Button>
                   )}
