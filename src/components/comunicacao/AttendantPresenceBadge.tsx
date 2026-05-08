@@ -33,7 +33,7 @@ export function AttendantPresenceBadge({ userId, showLabel }: Props) {
     };
     fetchPresence();
     const ch = supabase
-      .channel(`presence-${userId}`)
+      .channel(`presence-${userId}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "attendant_presence", filter: `user_id=eq.${userId}` },
         () => fetchPresence())
       .subscribe();
