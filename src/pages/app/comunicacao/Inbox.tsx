@@ -823,6 +823,9 @@ export default function ComunicacaoInbox() {
 
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
+                  {active.channel === "whatsapp" && janelaExpirada && (
+                    <JanelaExpiradaBanner onUseTemplate={() => setTemplateDialogOpen(true)} />
+                  )}
                   {!isMedico && templates.length > 0 && (
                     <div className="flex gap-1 flex-wrap">
                       {templates.slice(0, 5).map(t => (
