@@ -186,6 +186,8 @@ export default function IntegracaoWhatsApp() {
         </CardContent>
       </Card>
 
+      <TestePanel />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Status da integração com a Meta</CardTitle>
