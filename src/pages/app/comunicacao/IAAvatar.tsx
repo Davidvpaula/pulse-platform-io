@@ -141,6 +141,14 @@ export default function IAAvatar() {
       handoff_keywords: settings.handoff_keywords || [],
       sugestao_medicos_ativa: settings.sugestao_medicos_ativa,
       sugestao_prioridade: settings.sugestao_prioridade,
+      // Fase 7
+      avatar_modo: settings.avatar_modo ?? "assistido",
+      avatar_confianca_minima: settings.avatar_confianca_minima ?? "media",
+      avatar_cooldown_segundos: settings.avatar_cooldown_segundos ?? 30,
+      avatar_max_respostas_consecutivas: settings.avatar_max_respostas_consecutivas ?? 3,
+      avatar_max_msgs_paciente_dia: settings.avatar_max_msgs_paciente_dia ?? 40,
+      avatar_horario_inicio: settings.avatar_horario_inicio || null,
+      avatar_horario_fim: settings.avatar_horario_fim || null,
     };
     const { error } = settings.id
       ? await supabase.from("ai_settings").update(payload).eq("id", settings.id)
