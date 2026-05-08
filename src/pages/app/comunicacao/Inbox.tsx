@@ -42,6 +42,8 @@ import { useConversationTyping } from "@/hooks/useConversationTyping";
 import { CheckCircle2 } from "lucide-react";
 import { NovaConversaDialog } from "@/components/comunicacao/NovaConversaDialog";
 import { openOrCreatePacienteConversation } from "@/lib/comunicacao/openOrCreateConversation";
+import { ConversationAvatarPanel } from "@/components/comunicacao/avatar/ConversationAvatarPanel";
+import { AiAvatarMemoryDrawer } from "@/components/comunicacao/avatar/AiAvatarMemoryDrawer";
 
 type Conv = {
   id: string;
@@ -179,6 +181,7 @@ export default function ComunicacaoInbox() {
   const [auditOpen, setAuditOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [janelaExpirada, setJanelaExpirada] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
@@ -1046,6 +1049,16 @@ export default function ComunicacaoInbox() {
                 {/* Janela 24h Meta */}
                 <Janela24hMeta conversationId={active.id} />
 
+                {/* IA Avatar — Fase 7 */}
+                {!isMedico && (
+                  <ConversationAvatarPanel
+                    conversationId={active.id}
+                    onChanged={loadConvs}
+                    onOpenMemory={() => setMemoryOpen(true)}
+                  />
+                )}
+
+
                 {/* Status do atendimento */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Atendimento</h4>
@@ -1317,6 +1330,13 @@ export default function ComunicacaoInbox() {
         conversationId={active?.id}
         defaultTo={active?.contact_phone || ""}
         onSent={() => { setDraft(""); setJanelaExpirada(false); }}
+      />
+      {/* Drawer — Memória IA Avatar (Fase 7) */}
+      <AiAvatarMemoryDrawer
+        open={memoryOpen}
+        onOpenChange={setMemoryOpen}
+        conversationId={active?.id ?? null}
+        patientId={active?.patient_id ?? null}
       />
     </div>
   );

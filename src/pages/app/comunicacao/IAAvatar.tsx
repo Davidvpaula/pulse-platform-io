@@ -10,12 +10,14 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Sparkles, ShieldAlert, BookOpen, ArrowRightLeft, UserSearch, Settings2,
-  Plus, Trash2, Loader2, Send,
+  Plus, Trash2, Loader2, Send, Sliders, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { AiAvatarSupervisorDashboard } from "@/components/comunicacao/avatar/AiAvatarSupervisorDashboard";
 
 const PROVIDERS = [
   { value: "lovable", label: "Lovable AI Gateway (Gemini/GPT-5)" },
@@ -139,6 +141,14 @@ export default function IAAvatar() {
       handoff_keywords: settings.handoff_keywords || [],
       sugestao_medicos_ativa: settings.sugestao_medicos_ativa,
       sugestao_prioridade: settings.sugestao_prioridade,
+      // Fase 7
+      avatar_modo: settings.avatar_modo ?? "assistido",
+      avatar_confianca_minima: settings.avatar_confianca_minima ?? "media",
+      avatar_cooldown_segundos: settings.avatar_cooldown_segundos ?? 30,
+      avatar_max_respostas_consecutivas: settings.avatar_max_respostas_consecutivas ?? 3,
+      avatar_max_msgs_paciente_dia: settings.avatar_max_msgs_paciente_dia ?? 40,
+      avatar_horario_inicio: settings.avatar_horario_inicio || null,
+      avatar_horario_fim: settings.avatar_horario_fim || null,
     };
     const { error } = settings.id
       ? await supabase.from("ai_settings").update(payload).eq("id", settings.id)
@@ -214,8 +224,17 @@ export default function IAAvatar() {
     <div className="space-y-6">
       <PageHeader
         title="IA Avatar"
-        description="Atendente virtual inteligente. Configure prompt, transferência, sugestão de médicos e segurança."
+        description="Atendente virtual inteligente. Configure prompt, transferência, segurança, modos operacionais e supervisão."
       />
+
+      <Tabs defaultValue="config" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="config"><Settings2 className="h-3 w-3 mr-1" />Configuração</TabsTrigger>
+          <TabsTrigger value="operacao"><Sliders className="h-3 w-3 mr-1" />Operação</TabsTrigger>
+          <TabsTrigger value="supervisor"><Activity className="h-3 w-3 mr-1" />Supervisor</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config" className="space-y-6">
 
       {/* Card 1 — Configuração Geral */}
       <Card>
@@ -472,6 +491,16 @@ export default function IAAvatar() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="operacao" className="space-y-4">
+          <OperacaoTab settings={settings} setSettings={setSettings} salvar={salvar} saving={saving} />
+        </TabsContent>
+
+        <TabsContent value="supervisor">
+          <AiAvatarSupervisorDashboard />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog para adicionar/editar regra de handoff */}
       <Dialog open={ruleDialog} onOpenChange={setRuleDialog}>
@@ -525,5 +554,95 @@ export default function IAAvatar() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/* ====== Sub-componente: Operação (Fase 7) ====== */
+function OperacaoTab({ settings, setSettings, salvar, saving }: { settings: any; setSettings: (s: any) => void; salvar: () => void; saving: boolean }) {
+  if (!settings) return null;
+  const modoMeta: Record<string, { label: string; desc: string }> = {
+    assistido: { label: "Assistido", desc: "IA apenas sugere. Nunca responde sozinha." },
+    semi_autonomo: { label: "Semi-autônomo", desc: "IA responde apenas quando confiança ≥ mínima e sem riscos." },
+    autonomo_controlado: { label: "Autônomo controlado", desc: "IA responde com supervisão, anti-loop e limites diários." },
+  };
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-primary" /> Modo Operacional
+          </CardTitle>
+          <CardDescription>{modoMeta[settings.avatar_modo || "assistido"].desc}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Modo</Label>
+            <Select value={settings.avatar_modo || "assistido"} onValueChange={(v) => setSettings({ ...settings, avatar_modo: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="assistido">Assistido — só sugere</SelectItem>
+                <SelectItem value="semi_autonomo">Semi-autônomo — responde com confiança alta</SelectItem>
+                <SelectItem value="autonomo_controlado">Autônomo controlado — opera com limites</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Confiança mínima para auto-resposta</Label>
+            <Select value={settings.avatar_confianca_minima || "media"} onValueChange={(v) => setSettings({ ...settings, avatar_confianca_minima: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="critica">Crítica</SelectItem>
+                <SelectItem value="baixa">Baixa</SelectItem>
+                <SelectItem value="media">Média</SelectItem>
+                <SelectItem value="alta">Alta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-orange-500" /> Limites e Anti-Loop
+          </CardTitle>
+          <CardDescription>Bloqueios automáticos para evitar abuso ou erros em cascata.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <Label>Cooldown (segundos)</Label>
+            <Input type="number" value={settings.avatar_cooldown_segundos ?? 30}
+              onChange={(e) => setSettings({ ...settings, avatar_cooldown_segundos: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Máx. respostas seguidas</Label>
+            <Input type="number" value={settings.avatar_max_respostas_consecutivas ?? 3}
+              onChange={(e) => setSettings({ ...settings, avatar_max_respostas_consecutivas: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Máx. msgs/paciente/dia</Label>
+            <Input type="number" value={settings.avatar_max_msgs_paciente_dia ?? 40}
+              onChange={(e) => setSettings({ ...settings, avatar_max_msgs_paciente_dia: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Horário início</Label>
+            <Input type="time" value={settings.avatar_horario_inicio || ""}
+              onChange={(e) => setSettings({ ...settings, avatar_horario_inicio: e.target.value || null })} />
+          </div>
+          <div>
+            <Label>Horário fim</Label>
+            <Input type="time" value={settings.avatar_horario_fim || ""}
+              onChange={(e) => setSettings({ ...settings, avatar_horario_fim: e.target.value || null })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={salvar} disabled={saving}>
+          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          Salvar operação
+        </Button>
+      </div>
+    </>
   );
 }
