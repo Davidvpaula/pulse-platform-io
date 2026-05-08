@@ -237,6 +237,15 @@ Deno.serve(async (req) => {
             }
             wamidProcessed.push(wamid);
             processedCount++;
+            // Fase 8: observabilidade — só eventos críticos
+            if (newStatus === "failed") {
+              await logEvento(supabase, {
+                modulo: "whatsapp",
+                evento: "message_failed",
+                severity: "error",
+                metadata: { wamid, reason: update.failure_reason ?? null },
+              });
+            }
           } catch (e) {
             errors.push(`status_loop: ${String(e)}`);
           }
