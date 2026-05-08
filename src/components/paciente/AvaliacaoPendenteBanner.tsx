@@ -66,7 +66,24 @@ export default function AvaliacaoPendenteBanner() {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-muted-foreground"
-              onClick={() => setDismissed((s) => new Set(s).add(p.consulta_id))}
+              title="Não quero avaliar esta consulta"
+              onClick={async () => {
+                setDismissed((s) => new Set(s).add(p.consulta_id));
+                try {
+                  await dispensarAvaliacaoConsulta(p.consulta_id);
+                } catch (e: any) {
+                  setDismissed((s) => {
+                    const n = new Set(s);
+                    n.delete(p.consulta_id);
+                    return n;
+                  });
+                  toast({
+                    title: "Não foi possível dispensar",
+                    description: e?.message ?? "Tente novamente.",
+                    variant: "destructive",
+                  });
+                }
+              }}
             >
               <X className="h-4 w-4" />
             </Button>
