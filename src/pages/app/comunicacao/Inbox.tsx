@@ -902,6 +902,8 @@ export default function ComunicacaoInbox() {
                 </div>
               </ScrollArea>
 
+              <TypingIndicator conversationId={active.id} currentUserId={user?.id} />
+
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
                   {active.channel === "whatsapp" && janelaExpirada && (
