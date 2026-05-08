@@ -10182,6 +10182,10 @@ export type Database = {
         Args: { p_medico_id?: string }
         Returns: Json
       }
+      fn_finmov_alert_silent: {
+        Args: { p_medico: string; p_meta?: Json; p_msg: string; p_tipo: string }
+        Returns: undefined
+      }
       fn_finmov_hash: {
         Args: { p_hash_anterior: string; p_payload: Json }
         Returns: string
