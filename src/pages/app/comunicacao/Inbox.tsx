@@ -40,6 +40,8 @@ import { TypingIndicator } from "@/components/comunicacao/TypingIndicator";
 import { useAttendantPresence } from "@/hooks/useAttendantPresence";
 import { useConversationTyping } from "@/hooks/useConversationTyping";
 import { CheckCircle2 } from "lucide-react";
+import { NovaConversaDialog } from "@/components/comunicacao/NovaConversaDialog";
+import { openOrCreatePacienteConversation } from "@/lib/comunicacao/openOrCreateConversation";
 
 type Conv = {
   id: string;
@@ -146,8 +148,11 @@ function isConvDentroJanela(
 export default function ComunicacaoInbox() {
   const { user } = useSession();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const convParam = searchParams.get("conv");
+  const pacienteParam = searchParams.get("paciente");
+  const phoneParam = searchParams.get("phone");
+  const [novaConversaOpen, setNovaConversaOpen] = useState(false);
   const { loading: permLoading, allowed: perms } = usePermission(INBOX_PERMISSIONS);
   const [convs, setConvs] = useState<Conv[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
