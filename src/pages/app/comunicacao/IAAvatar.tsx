@@ -10,12 +10,14 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Sparkles, ShieldAlert, BookOpen, ArrowRightLeft, UserSearch, Settings2,
-  Plus, Trash2, Loader2, Send,
+  Plus, Trash2, Loader2, Send, Sliders, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { AiAvatarSupervisorDashboard } from "@/components/comunicacao/avatar/AiAvatarSupervisorDashboard";
 
 const PROVIDERS = [
   { value: "lovable", label: "Lovable AI Gateway (Gemini/GPT-5)" },
