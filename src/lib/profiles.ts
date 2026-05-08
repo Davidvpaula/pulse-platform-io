@@ -183,6 +183,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Métricas", to: "/app/comunicacao/metricas" },
           { label: "Configurações", to: "/app/comunicacao/configuracoes" },
           { label: "Equipe (interna)", to: "/app/admin/comunicacao-interna" },
+          { label: "Produção (Go-Live)", to: "/app/admin/comunicacao/producao" },
+          { label: "Observabilidade", to: "/app/admin/observabilidade" },
         ],
       },
       {
