@@ -1,3 +1,5 @@
+// [DEPRECATED] Arquitetura ClinicalProvider: sistema interno é SoR de pacientes.
+// Mantido só para legado. Ver mem://features/arquitetura-clinical-provider
 // Edge function: enviar paciente à API Feegow
 // Secrets: FEEGOW_API_TOKEN, FEEGOW_BASE_URL
 // Endpoints: POST /patient/store, GET /patient/list
@@ -7,7 +9,11 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "X-Deprecated": "true",
+  "X-Deprecation-Reason": "Use ClinicalProvider deep-link instead",
 };
+
+console.warn("[DEPRECATED] feegow-enviar-paciente — operação interna agora; ver arquitetura ClinicalProvider");
 
 function normalizeFeegowUrl(raw: string): string {
   let url = raw;
