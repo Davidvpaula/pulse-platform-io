@@ -8515,6 +8515,10 @@ export type Database = {
         Args: { p_conversation_id: string; p_preview: string }
         Returns: undefined
       }
+      inbox_set_first_response: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
       integracoes_dashboard: { Args: never; Returns: Json }
       is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
       is_medico_da_consulta: {
