@@ -110,9 +110,6 @@ Deno.serve(async (req) => {
       }
     }
     if (!phoneNumberId) phoneNumberId = META_PHONE_FALLBACK ?? null;
-    if (!phoneNumberId) {
-      return jsonResp({ error: "Nenhum phone_number_id disponível" }, 503);
-    }
 
     // sender_type
     let senderType: "medico" | "colaborador" | "sistema" = "sistema";
@@ -123,14 +120,41 @@ Deno.serve(async (req) => {
       if (colab) senderType = "colaborador";
     }
 
-    // Envio via adapter
-    const provider = buildProvider({ token: META_TOKEN, phoneNumberId });
-    const result = await provider.sendTemplate({
-      to: phone,
-      template_name: templateMetaName,
-      language: tpl.language || "pt_BR",
-      variables,
-    });
+    // ===== Gate fail-closed Fase 8 =====
+    const gate = await canSendReal(admin);
+
+    let result: { ok: boolean; wa_message_id: string | null; http_status: number; error_message: string | null; raw: any };
+
+    if (!gate.ok) {
+      // Modo sandbox/staging ou health!=ok ou secrets ausentes -> simula envio
+      result = {
+        ok: true,
+        wa_message_id: null,
+        http_status: 0,
+        error_message: null,
+        raw: { mock_sent: true, reason: gate.reason, modo: gate.modo, health: gate.health },
+      };
+
+      await logEvento(admin, {
+        modulo: "whatsapp",
+        evento: "template_mock_sent",
+        severity: "info",
+        conversation_id: conversation_id ?? null,
+        user_id: userId,
+        metadata: { reason: gate.reason, template_name: templateMetaName, to: phone },
+      });
+    } else {
+      // Envio real via adapter — exige phone_number_id e token
+      if (!phoneNumberId) return jsonResp({ error: "Nenhum phone_number_id disponível" }, 503);
+      if (!META_TOKEN) return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
+      const provider = buildProvider({ token: META_TOKEN, phoneNumberId });
+      result = await provider.sendTemplate({
+        to: phone,
+        template_name: templateMetaName,
+        language: tpl.language || "pt_BR",
+        variables,
+      });
+    }
 
     // Log SEMPRE (sucesso ou falha)
     await admin.from("whatsapp_template_logs").insert({
