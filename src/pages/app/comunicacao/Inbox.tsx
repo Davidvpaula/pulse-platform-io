@@ -532,6 +532,19 @@ export default function ComunicacaoInbox() {
         setDraft(body);
         toast.error("Janela 24h expirada — envie um template para reabrir.");
         setTemplateDialogOpen(true);
+        supabase.functions.invoke("observabilidade-ingest", {
+          body: {
+            modulo: "whatsapp",
+            evento: "mensagem_livre_bloqueada",
+            severity: "info",
+            conversation_id: active.id,
+            metadata: {
+              reason: "janela_24h_expirada",
+              acao_sugerida: "usar_template",
+              contact_phone: active.contact_phone,
+            },
+          },
+        }).catch(() => {});
         return;
       }
       const { data, error } = await supabase.functions.invoke("whatsapp-enviar", {
