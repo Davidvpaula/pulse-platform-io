@@ -56,7 +56,7 @@ export default function AdminObservabilidade() {
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (modulo !== "all") q = q.eq("modulo", modulo);
-      if (severity !== "all") q = q.eq("severity", severity);
+      if (severity !== "all") q = q.eq("severity", severity as any);
       if (search) q = q.ilike("evento", `%${search}%`);
       const { data, count, error } = await q;
       if (error) throw error;
