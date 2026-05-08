@@ -1,48 +1,41 @@
+## Objetivo
 
-# Importação de documentos Feegow → Página do paciente
+Quando o paciente clicar no "X" do banner "Como foi sua consulta com…", o pedido de avaliação some **definitivamente** para aquela consulta — não reaparece em recargas futuras.
 
-## Problema atual
+## Mudanças
 
-1. A edge function `feegow-importar-documentos` existe mas **nunca é chamada** — nenhum botão, cron ou trigger a invoca.
-2. Está em "modo teste unitário" com limite de 3 documentos.
-3. Quando o Feegow retorna múltiplos pacientes com o mesmo CPF, pega cegamente o primeiro — pode não ser o correto.
-4. Os endpoints de prescrição (`/patient/prescriptions`) podem retornar dados em formato diferente do esperado.
+### 1. Banco de dados (migration)
+Adicionar coluna em `consultas`:
+- `avaliacao_dispensada_em timestamptz NULL` — registra quando o paciente recusou avaliar.
 
-## Plano
+(Alternativa considerada: tabela separada. Descartada por ser 1:1 com a consulta e simplificar o filtro do RPC.)
 
-### 1. Corrigir edge function `feegow-importar-documentos`
+### 2. RPC `consultas_pendentes_avaliacao`
+Adicionar no `WHERE`:
+```sql
+AND c.avaliacao_dispensada_em IS NULL
+```
+Assim consultas dispensadas saem da lista para sempre.
 
-- **Remover limite de 3 docs** — importar todos.
-- **Reconciliação por CPF inteligente**: quando a Feegow retorna múltiplos pacientes para o mesmo CPF, comparar nome do paciente local com os nomes retornados e escolher o mais próximo (fuzzy match simples). Se `feegow_paciente_id` já estiver salvo, usar direto.
-- **Incluir endpoint de prescrições** com parsing adequado (nome do medicamento, posologia).
-- **Permitir chamada pelo próprio paciente** (não só admin/secretária) — o paciente pode sincronizar seus próprios documentos da Feegow.
+### 3. Novo RPC `dispensar_avaliacao_consulta(p_consulta_id uuid)`
+- `SECURITY DEFINER`, valida que `auth.uid()` é dono da consulta (via `pacientes.user_id`).
+- Atualiza `avaliacao_dispensada_em = now()` se ainda for `NULL`.
+- Retorna `boolean`.
 
-### 2. Botão "Sincronizar Feegow" na página de documentos do paciente
+### 4. Frontend — `src/lib/gamificacao.ts`
+Adicionar helper:
+```ts
+export async function dispensarAvaliacaoConsulta(consultaId: string)
+```
+que invoca o RPC.
 
-- Na página `/app/paciente/documentos`, adicionar um botão discreto "Importar da Feegow" que chama a edge function passando o `paciente_id` do paciente logado.
-- Mostrar loading, resultado (quantos importados) e recarregar lista.
-- O botão só aparece se o paciente tem CPF cadastrado.
+### 5. Frontend — `src/components/paciente/AvaliacaoPendenteBanner.tsx`
+- No clique do botão `X`, chamar `dispensarAvaliacaoConsulta(p.consulta_id)` e só então remover do estado local.
+- Manter o `dismissed` local apenas como fallback otimista até a chamada concluir.
+- Em caso de erro, mostrar toast e reverter.
 
-### 3. Botão no Admin (paciente individual)
+### 6. Avaliação posterior
+Quando o paciente avaliar normalmente (cria registro em `avaliacoes_medicas`), nada muda — o RPC já filtra por `NOT EXISTS avaliacoes_medicas`. Não é preciso preencher `avaliacao_dispensada_em` nesse caso.
 
-- Na tela de detalhes do paciente no admin (ou na aba de integração Feegow), adicionar botão "Importar documentos Feegow" para forçar a sincronização de um paciente específico.
-
-### 4. Log de integração
-
-- Já existe a lógica de `passos` no relatório — adicionar insert em `integracoes_logs` ao final da importação para rastreabilidade.
-
----
-
-### Detalhes técnicos
-
-**Edge function** — ajustes:
-- Aceitar role `paciente` quando `paciente.user_id === auth.uid()` (importar apenas seus próprios docs)
-- Remover cap de 3, manter paginação segura (max 50 por chamada)
-- Quando múltiplos pacientes retornados por CPF: preferir o que já tem `feegow_paciente_id` salvo, senão comparar `nome_completo` 
-- Parsear prescrições: campo `content` ou `descricao` da Feegow
-
-**Frontend** — `PacienteDocumentos.tsx`:
-- Botão "Importar da Feegow" no header (ao lado de "Anexar documento")
-- State de loading + toast com resultado
-
-**Tabelas** — nenhuma migração necessária, `documentos_paciente` já suporta os campos.
+## Resultado
+Clicar no X = decisão definitiva. Banner não acumula mais entre sessões.

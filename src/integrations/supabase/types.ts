@@ -1387,6 +1387,7 @@ export type Database = {
       }
       consultas: {
         Row: {
+          avaliacao_dispensada_em: string | null
           avaliacao_paciente_comentario: string | null
           avaliacao_paciente_em: string | null
           avaliacao_paciente_nota: number | null
@@ -1426,6 +1427,7 @@ export type Database = {
           valor_snapshot_centavos: number | null
         }
         Insert: {
+          avaliacao_dispensada_em?: string | null
           avaliacao_paciente_comentario?: string | null
           avaliacao_paciente_em?: string | null
           avaliacao_paciente_nota?: number | null
@@ -1465,6 +1467,7 @@ export type Database = {
           valor_snapshot_centavos?: number | null
         }
         Update: {
+          avaliacao_dispensada_em?: string | null
           avaliacao_paciente_comentario?: string | null
           avaliacao_paciente_em?: string | null
           avaliacao_paciente_nota?: number | null
@@ -7954,6 +7957,10 @@ export type Database = {
       criar_consulta_pos_pagamento: {
         Args: { _pagamento_id: string }
         Returns: Json
+      }
+      dispensar_avaliacao_consulta: {
+        Args: { p_consulta_id: string }
+        Returns: boolean
       }
       empresa_toggle_modulo: {
         Args: { _ativo: boolean; _empresa_id: string; _modulo_key: string }
