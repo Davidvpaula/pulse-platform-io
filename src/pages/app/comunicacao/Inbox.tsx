@@ -661,8 +661,10 @@ export default function ComunicacaoInbox() {
                     <SelectItem value="todos">Status</SelectItem>
                     <SelectItem value="aberta">Aberta</SelectItem>
                     <SelectItem value="em_atendimento">Atendimento</SelectItem>
+                    <SelectItem value="aguardando_paciente">Aguardando</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
                     <SelectItem value="fechada">Fechada</SelectItem>
+                    <SelectItem value="resolvidas">Resolvidas</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={filtroResp} onValueChange={setFiltroResp}>
@@ -682,6 +684,23 @@ export default function ComunicacaoInbox() {
                     <SelectItem value="ia">IA</SelectItem>
                     <SelectItem value="medico">Médico</SelectItem>
                     <SelectItem value="consulta_hoje">Consulta hoje</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroSla} onValueChange={setFiltroSla}>
+                  <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">SLA</SelectItem>
+                    <SelectItem value="vencido">SLA vencido</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroPrioridade} onValueChange={setFiltroPrioridade}>
+                  <SelectTrigger className="h-7 text-[10px] col-span-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Prioridade</SelectItem>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
