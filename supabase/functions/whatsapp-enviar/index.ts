@@ -1,6 +1,8 @@
-// Edge function: enviar mensagens via WhatsApp Cloud API
-// Suporta lembretes, confirmações e mensagens manuais
-// Secrets: WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID
+// Edge function: enviar mensagens via WhatsApp Cloud API (sandbox / produção)
+// - Secrets: META_WHATSAPP_TOKEN, META_PHONE_NUMBER_ID (fallback se não vier whatsapp_instance_id)
+// - Resolve phone_number_id via whatsapp_instances (preferido) ou env (fallback)
+// - Guard janela 24h: bloqueia texto livre fora da janela; permite template; admin pode forçar
+// - Persiste em messages.body com sender_type real (medico/colaborador/sistema)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -9,35 +11,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const WHATSAPP_API_URL = "https://graph.facebook.com/v19.0";
+const WA_BASE = "https://graph.facebook.com/v19.0";
+
+function jsonResp(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
 
   try {
-    const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-    const PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    const META_TOKEN = Deno.env.get("META_WHATSAPP_TOKEN");
+    const META_PHONE_FALLBACK = Deno.env.get("META_PHONE_NUMBER_ID");
 
-    if (!WHATSAPP_TOKEN || !PHONE_ID) {
-      console.warn("[whatsapp-enviar] credenciais não configuradas");
-      return new Response(
-        JSON.stringify({ error: "WhatsApp API não configurada", not_configured: true }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+    if (!META_TOKEN) {
+      console.warn("[whatsapp-enviar] META_WHATSAPP_TOKEN ausente");
+      return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
     }
 
-    // Auth
+    // ── Auth: getUser (não getClaims) ──
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader.startsWith("Bearer ")) return jsonResp({ error: "Não autenticado" }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -46,149 +44,207 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userData } = await userClient.auth.getUser();
-    if (!userData?.user) {
-      return new Response(JSON.stringify({ error: "Sessão inválida" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const body = await req.json();
-    const { to, message, template_name, template_params, tipo, consulta_id, conversation_id } = body;
-
-    if (!to || (!message && !template_name)) {
-      return new Response(JSON.stringify({ error: "Campos obrigatórios: to + (message ou template_name)" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Sanitizar telefone
-    const phone = to.replace(/\D/g, "");
-    if (phone.length < 10 || phone.length > 15) {
-      return new Response(JSON.stringify({ error: "Telefone inválido" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) return jsonResp({ error: "Sessão inválida" }, 401);
+    const userId = userData.user.id;
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // ── Verificar opt-in (LGPD) ──
+    const body = await req.json();
+    const {
+      to,
+      message,
+      template_name,
+      template_params,
+      tipo,
+      consulta_id,
+      conversation_id,
+      force = false,
+    } = body ?? {};
+
+    if (!to || (!message && !template_name)) {
+      return jsonResp({ error: "Campos obrigatórios: to + (message ou template_name)" }, 400);
+    }
+
+    const phone = String(to).replace(/\D/g, "");
+    if (phone.length < 10 || phone.length > 15) return jsonResp({ error: "Telefone inválido" }, 400);
+
+    // ── Resolver phone_number_id ──
+    let phoneNumberId: string | null = null;
+    let instanceId: string | null = null;
+    if (conversation_id) {
+      const { data: conv } = await admin
+        .from("conversations")
+        .select("whatsapp_instance_id")
+        .eq("id", conversation_id)
+        .maybeSingle();
+      if (conv?.whatsapp_instance_id) {
+        instanceId = conv.whatsapp_instance_id;
+        const { data: inst } = await admin
+          .from("whatsapp_instances")
+          .select("phone_number_id")
+          .eq("id", instanceId)
+          .maybeSingle();
+        phoneNumberId = inst?.phone_number_id ?? null;
+      }
+    }
+    if (!phoneNumberId) {
+      // fallback: primeira instância sandbox ativa
+      const { data: anyInst } = await admin
+        .from("whatsapp_instances")
+        .select("id, phone_number_id")
+        .eq("ativo", true)
+        .not("phone_number_id", "is", null)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (anyInst) {
+        phoneNumberId = anyInst.phone_number_id;
+        instanceId = anyInst.id;
+      }
+    }
+    if (!phoneNumberId) phoneNumberId = META_PHONE_FALLBACK ?? null;
+    if (!phoneNumberId) {
+      return jsonResp({ error: "Nenhum phone_number_id disponível (whatsapp_instances vazio e META_PHONE_NUMBER_ID ausente)" }, 503);
+    }
+
+    // ── Opt-in LGPD ──
     const { data: optIn } = await admin
       .from("pacientes")
       .select("whatsapp_opt_in")
       .eq("telefone", to)
       .maybeSingle();
-
     if (optIn && optIn.whatsapp_opt_in === false) {
-      console.warn("[whatsapp-enviar] paciente optou por não receber WhatsApp:", phone);
-      return new Response(JSON.stringify({ error: "Paciente não autoriza mensagens WhatsApp", lgpd_block: true }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResp({ error: "Paciente não autoriza mensagens WhatsApp", lgpd_block: true }, 403);
     }
 
-    // ── Deduplicação por consulta_id + tipo ──
+    // ── Janela 24h: bloqueia texto livre se expirou ──
+    if (conversation_id && !template_name && !force) {
+      const { data: win } = await admin
+        .from("conversation_meta_window")
+        .select("window_expires_at")
+        .eq("conversation_id", conversation_id)
+        .maybeSingle();
+      const expired = !win || !win.window_expires_at || new Date(win.window_expires_at).getTime() < Date.now();
+      if (expired) {
+        return jsonResp({
+          error: "Janela 24h Meta expirada — use um template",
+          requires_template: true,
+        }, 422);
+      }
+    }
+
+    // ── Dedup por consulta_id + tipo ──
     if (consulta_id && tipo) {
-      const { data: existente } = await admin
+      const { data: dup } = await admin
         .from("comunicacao_auditoria")
         .select("id")
         .eq("entity_type", "whatsapp_envio")
         .eq("entity_id", consulta_id)
         .eq("action", tipo)
-        .gte("created_at", new Date(Date.now() - 3600_000).toISOString()) // última hora
+        .gte("created_at", new Date(Date.now() - 3600_000).toISOString())
         .maybeSingle();
-
-      if (existente) {
-        console.log("[whatsapp-enviar] mensagem duplicada bloqueada:", tipo, consulta_id);
-        return new Response(JSON.stringify({ ok: false, duplicated: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (dup) return jsonResp({ ok: false, duplicated: true });
     }
 
-    // ── Montar payload WhatsApp ──
-    let waPayload: Record<string, unknown>;
-
-    if (template_name) {
-      waPayload = {
-        messaging_product: "whatsapp",
-        to: phone,
-        type: "template",
-        template: {
-          name: template_name,
-          language: { code: "pt_BR" },
-          ...(template_params?.length && {
-            components: [{
-              type: "body",
-              parameters: template_params.map((p: string) => ({ type: "text", text: p })),
-            }],
-          }),
-        },
-      };
-    } else {
-      waPayload = {
-        messaging_product: "whatsapp",
-        to: phone,
-        type: "text",
-        text: { body: message },
-      };
+    // ── Resolver sender_type a partir do role do usuário ──
+    let senderType: "medico" | "colaborador" | "sistema" = "sistema";
+    const { data: medico } = await admin.from("medicos").select("id").eq("user_id", userId).maybeSingle();
+    if (medico) senderType = "medico";
+    else {
+      const { data: colab } = await admin.from("colaboradores").select("id").eq("user_id", userId).maybeSingle();
+      if (colab) senderType = "colaborador";
     }
 
-    // ── Enviar via Meta API ──
-    const res = await fetch(`${WHATSAPP_API_URL}/${PHONE_ID}/messages`, {
+    // ── Payload Meta ──
+    const waPayload: Record<string, unknown> = template_name
+      ? {
+          messaging_product: "whatsapp",
+          to: phone,
+          type: "template",
+          template: {
+            name: template_name,
+            language: { code: "pt_BR" },
+            ...(template_params?.length && {
+              components: [{
+                type: "body",
+                parameters: template_params.map((p: string) => ({ type: "text", text: p })),
+              }],
+            }),
+          },
+        }
+      : {
+          messaging_product: "whatsapp",
+          to: phone,
+          type: "text",
+          text: { body: message },
+        };
+
+    const res = await fetch(`${WA_BASE}/${phoneNumberId}/messages`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
       body: JSON.stringify(waPayload),
     });
-
     const result = await res.json();
+    const wamid = result.messages?.[0]?.id ?? null;
 
-    // ── Audit log ──
+    // ── Audit ──
     await admin.from("comunicacao_auditoria").insert({
       action: tipo || "envio_manual",
       entity_type: "whatsapp_envio",
       entity_id: consulta_id || null,
-      user_id: userData.user.id,
+      user_id: userId,
       metadata: {
         to: phone,
         status: res.ok ? "sent" : "failed",
         http_status: res.status,
-        wa_message_id: result.messages?.[0]?.id ?? null,
+        wa_message_id: wamid,
         template_name: template_name ?? null,
         conversation_id: conversation_id ?? null,
+        instance_id: instanceId,
+        forced: force,
         timestamp: new Date().toISOString(),
       },
     });
 
-    // ── Salvar mensagem na conversa se conversation_id fornecido ──
-    if (conversation_id && res.ok) {
+    // ── Persistir em messages se houver conversa ──
+    if (conversation_id) {
       await admin.from("messages").insert({
         conversation_id,
-        content: message || `[template: ${template_name}]`,
-        sender_type: "sistema",
-        message_type: "text",
-        whatsapp_message_id: result.messages?.[0]?.id ?? null,
-        metadata: { sent_by: userData.user.id, tipo },
+        body: message || `[template: ${template_name}]`,
+        sender_type: senderType,
+        sender_id: userId,
+        sender_name: userData.user.email ?? null,
+        message_type: template_name ? "template" : "text",
+        status: res.ok ? "sent" : "failed",
+        whatsapp_message_id: wamid,
+        failure_reason: res.ok ? null : (result.error?.message ?? `http_${res.status}`),
+        metadata: { template_name: template_name ?? null, tipo: tipo ?? null, instance_id: instanceId },
       });
+
+      if (res.ok) {
+        await admin
+          .from("conversations")
+          .update({
+            last_message_at: new Date().toISOString(),
+            last_message_preview: (message || `[template: ${template_name}]`).slice(0, 80),
+          })
+          .eq("id", conversation_id);
+        // first_response_at apenas se ainda nulo
+        await admin.rpc("inbox_set_first_response", { p_conversation_id: conversation_id }).then(({ error }) => {
+          if (error) console.warn("[whatsapp-enviar] first_response rpc:", error.message);
+        });
+      }
     }
 
     if (!res.ok) {
       console.error("[whatsapp-enviar] Meta API erro:", res.status, result);
-      return new Response(JSON.stringify({ ok: false, error: "Falha no envio", detail: result.error?.message }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResp({ ok: false, error: "Falha no envio Meta", detail: result.error?.message, http_status: res.status }, 502);
     }
 
-    console.log("[whatsapp-enviar] enviado com sucesso:", result.messages?.[0]?.id);
-    return new Response(JSON.stringify({ ok: true, wa_message_id: result.messages?.[0]?.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResp({ ok: true, wa_message_id: wamid, sender_type: senderType, instance_id: instanceId });
   } catch (e) {
     console.error("[whatsapp-enviar] erro:", e);
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResp({ error: (e as Error).message }, 500);
   }
 });

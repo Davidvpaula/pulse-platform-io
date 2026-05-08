@@ -7794,6 +7794,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_webhook_log: {
+        Row: {
+          error: string | null
+          http_status: number | null
+          id: string
+          payload: Json
+          processed_count: number
+          received_at: string
+          signature_valid: boolean | null
+          wamid_processed: string[]
+        }
+        Insert: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          payload: Json
+          processed_count?: number
+          received_at?: string
+          signature_valid?: boolean | null
+          wamid_processed?: string[]
+        }
+        Update: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          payload?: Json
+          processed_count?: number
+          received_at?: string
+          signature_valid?: boolean | null
+          wamid_processed?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
       audit_eventos_unificado: {
@@ -8477,6 +8510,14 @@ export type Database = {
           role: string
           user_id: string
         }[]
+      }
+      inbox_increment_unread: {
+        Args: { p_conversation_id: string; p_preview: string }
+        Returns: undefined
+      }
+      inbox_set_first_response: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
       }
       integracoes_dashboard: { Args: never; Returns: Json }
       is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
