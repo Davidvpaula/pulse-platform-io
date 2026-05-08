@@ -300,8 +300,24 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       console.error("[whatsapp-enviar] Meta API erro:", res.status, result);
+      await logEvento(admin, {
+        modulo: "whatsapp",
+        evento: "send_failed",
+        severity: "error",
+        conversation_id: conversation_id ?? null,
+        user_id: userId,
+        metadata: { http_status: res.status, error: result?.error?.message ?? null, to: phone },
+      });
       return jsonResp({ ok: false, error: "Falha no envio Meta", detail: result.error?.message, http_status: res.status }, 502);
     }
+    await logEvento(admin, {
+      modulo: "whatsapp",
+      evento: "sent",
+      severity: "info",
+      conversation_id: conversation_id ?? null,
+      user_id: userId,
+      metadata: { wamid, template_name: template_name ?? null, instance_id: instanceId },
+    });
 
     return jsonResp({ ok: true, wa_message_id: wamid, sender_type: senderType, instance_id: instanceId });
   } catch (e) {
