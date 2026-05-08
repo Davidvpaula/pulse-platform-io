@@ -64,7 +64,7 @@ export function EnviarTemplateDialog({ open, onOpenChange, conversationId, defau
     if (!tpl) return "";
     let out = tpl.content;
     (tpl.variables || []).forEach(v => {
-      out = out.replaceAll(v, vars[v] || v);
+      out = out.split(v).join(vars[v] || v);
     });
     return out;
   }, [tpl, vars]);
