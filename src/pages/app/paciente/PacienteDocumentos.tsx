@@ -90,6 +90,7 @@ export default function PacienteDocumentos() {
   const [filtroTipo, setFiltroTipo] = useState<DocumentoPacienteTipo | "todos">("todos");
   const [openUpload, setOpenUpload] = useState(false);
   const [preview, setPreview] = useState<PreviewState>(null);
+  const [importingFeegow, setImportingFeegow] = useState(false);
 
   const [prescricoes, setPrescricoes] = useState<Prescricao[]>([]);
   const [prontuariosSet, setProntuariosSet] = useState<Set<string>>(new Set());
