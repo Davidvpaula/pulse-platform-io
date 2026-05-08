@@ -181,6 +181,7 @@ export default function ComunicacaoInbox() {
   const [auditOpen, setAuditOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [janelaExpirada, setJanelaExpirada] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
