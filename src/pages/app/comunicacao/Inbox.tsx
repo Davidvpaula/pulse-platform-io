@@ -31,6 +31,14 @@ import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
 import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
+import { ConversationSlaBadge } from "@/components/comunicacao/ConversationSlaBadge";
+import { AttendantPresenceBadge } from "@/components/comunicacao/AttendantPresenceBadge";
+import { ConversationQueuePanel } from "@/components/comunicacao/ConversationQueuePanel";
+import { StatusOperacionalSelect } from "@/components/comunicacao/StatusOperacionalSelect";
+import { TypingIndicator } from "@/components/comunicacao/TypingIndicator";
+import { useAttendantPresence } from "@/hooks/useAttendantPresence";
+import { useConversationTyping } from "@/hooks/useConversationTyping";
+import { CheckCircle2 } from "lucide-react";
 
 type Conv = {
   id: string;
@@ -56,6 +64,11 @@ type Conv = {
   locked_by: string | null;
   locked_at: string | null;
   paciente_ativo_id: string | null;
+  department_id: string | null;
+  queue_id: string | null;
+  sla_due_at: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
 };
 
 type Msg = {
@@ -94,6 +107,9 @@ const INBOX_PERMISSIONS = [
   "comunicacao.finalizar",
   "comunicacao.inbox.assumir",
   "comunicacao.inbox.encerrar",
+  "comunicacao.inbox.resolver",
+  "comunicacao.inbox.alterar_prioridade",
+  "comunicacao.inbox.supervisionar",
 ];
 
 // Audit helper
@@ -140,6 +156,8 @@ export default function ComunicacaoInbox() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroResp, setFiltroResp] = useState<string>("todas");
   const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+  const [filtroSla, setFiltroSla] = useState<string>("todos"); // todos | vencido
+  const [filtroPrioridade, setFiltroPrioridade] = useState<string>("todas");
   const [draft, setDraft] = useState("");
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
@@ -345,6 +363,10 @@ export default function ComunicacaoInbox() {
   // Load detail data when active changes
   const active = convs.find(c => c.id === activeId) || null;
 
+  // Fase 5 — Presença + Typing
+  useAttendantPresence(activeId);
+  useConversationTyping(activeId, draft);
+
   // Janela 24h Meta: rastrear se está expirada para a conversa ativa
   useEffect(() => {
     if (!active || active.channel !== "whatsapp") { setJanelaExpirada(false); return; }
@@ -401,7 +423,14 @@ export default function ComunicacaoInbox() {
   const filtered = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return convs.filter(c => {
-      if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
+      if (filtroStatus === "resolvidas") {
+        if (!c.resolved_at) return false;
+      } else if (filtroStatus !== "todos") {
+        if (c.status !== filtroStatus) return false;
+        if (c.resolved_at) return false;
+      } else {
+        if (c.resolved_at) return false;
+      }
       if (!isMedico) {
         if (filtroResp === "minhas" && c.assigned_to !== user?.id) return false;
         if (filtroResp === "nao_atribuidas" && c.assigned_to) return false;
@@ -412,6 +441,10 @@ export default function ComunicacaoInbox() {
         if (filtroTipo === "consulta_hoje") {
           if (!c.consulta_id) return false;
         }
+        if (filtroSla === "vencido") {
+          if (!c.sla_due_at || new Date(c.sla_due_at).getTime() >= Date.now()) return false;
+        }
+        if (filtroPrioridade !== "todas" && c.priority !== filtroPrioridade) return false;
       }
       if (q) {
         const hay = `${c.contact_name || ""} ${c.contact_phone || ""} ${c.last_message_preview || ""}`.toLowerCase();
@@ -419,7 +452,7 @@ export default function ComunicacaoInbox() {
       }
       return true;
     });
-  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, user, isMedico]);
+  }, [convs, busca, filtroStatus, filtroResp, filtroTipo, filtroSla, filtroPrioridade, user, isMedico]);
 
   // Actions with audit
   const canAssume = !isMedico && (perms["comunicacao.inbox.assumir"] || perms["comunicacao.responder"]);
@@ -502,7 +535,7 @@ export default function ComunicacaoInbox() {
 
   async function assumir() {
     if (!active || !user || isMedico) return;
-    const { error } = await supabase.rpc("assumir_conversa", { p_conversation_id: active.id });
+    const { error } = await supabase.rpc("claim_conversation" as any, { p_conversation_id: active.id });
     if (error) {
       if (error.code === "55006") {
         toast.error("Conversa já está sendo atendida por outro usuário");
@@ -512,6 +545,14 @@ export default function ComunicacaoInbox() {
       return;
     }
     toast.success(`Conversa de ${active.contact_name || "paciente"} assumida`);
+    loadConvs();
+  }
+
+  async function resolver() {
+    if (!active || !user || isMedico) return;
+    const { error } = await supabase.rpc("resolver_conversa" as any, { p_conversation_id: active.id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Conversa resolvida");
     loadConvs();
   }
 
@@ -620,8 +661,10 @@ export default function ComunicacaoInbox() {
                     <SelectItem value="todos">Status</SelectItem>
                     <SelectItem value="aberta">Aberta</SelectItem>
                     <SelectItem value="em_atendimento">Atendimento</SelectItem>
+                    <SelectItem value="aguardando_paciente">Aguardando</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
                     <SelectItem value="fechada">Fechada</SelectItem>
+                    <SelectItem value="resolvidas">Resolvidas</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={filtroResp} onValueChange={setFiltroResp}>
@@ -641,6 +684,23 @@ export default function ComunicacaoInbox() {
                     <SelectItem value="ia">IA</SelectItem>
                     <SelectItem value="medico">Médico</SelectItem>
                     <SelectItem value="consulta_hoje">Consulta hoje</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroSla} onValueChange={setFiltroSla}>
+                  <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">SLA</SelectItem>
+                    <SelectItem value="vencido">SLA vencido</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filtroPrioridade} onValueChange={setFiltroPrioridade}>
+                  <SelectTrigger className="h-7 text-[10px] col-span-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Prioridade</SelectItem>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -704,6 +764,13 @@ export default function ComunicacaoInbox() {
                             </Badge>
                           )}
                           {c.priority === "urgente" && <AlertCircle className="h-3 w-3 text-red-500" />}
+                          {c.priority === "alta" && !c.resolved_at && (
+                            <Badge variant="outline" className="text-[9px] py-0 h-4 bg-orange-500/10 text-orange-600 border-orange-500/30">alta</Badge>
+                          )}
+                          {!isMedico && <ConversationSlaBadge slaDueAt={c.sla_due_at} resolvedAt={c.resolved_at} compact />}
+                          {!isMedico && c.assigned_to && (
+                            <AttendantPresenceBadge userId={c.assigned_to} />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -749,6 +816,15 @@ export default function ComunicacaoInbox() {
                       lockedByName={lockedByName}
                       isMe={active.locked_by === user?.id}
                     />
+                    {!isMedico && active.assigned_to && (
+                      <span className="flex items-center gap-1">
+                        <AttendantPresenceBadge userId={active.assigned_to} showLabel />
+                        <span className="font-medium">{assignedName || "—"}</span>
+                      </span>
+                    )}
+                    {!isMedico && (
+                      <ConversationSlaBadge slaDueAt={active.sla_due_at} resolvedAt={active.resolved_at} />
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
@@ -789,6 +865,11 @@ export default function ComunicacaoInbox() {
                       <ArrowRightLeft className="h-4 w-4 mr-1" />Transferir
                     </Button>
                   )}
+                  {!isMedico && perms["comunicacao.inbox.resolver"] && !active.resolved_at && (
+                    <Button size="sm" variant="outline" onClick={resolver} className="text-emerald-700 border-emerald-500/40">
+                      <CheckCircle2 className="h-4 w-4 mr-1" />Resolver
+                    </Button>
+                  )}
                   {canClose && (
                     <Button size="sm" variant="outline" onClick={fechar}><X className="h-4 w-4 mr-1" />Finalizar</Button>
                   )}
@@ -820,6 +901,8 @@ export default function ComunicacaoInbox() {
                   })}
                 </div>
               </ScrollArea>
+
+              <TypingIndicator conversationId={active.id} currentUserId={user?.id} />
 
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
@@ -903,17 +986,40 @@ export default function ComunicacaoInbox() {
                 {/* Status do atendimento */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Atendimento</h4>
-                  <div className="text-xs space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground w-20">Status:</span>
-                      <Badge variant="outline" className={cn("text-[10px]", STATUS_LABEL[active.status]?.color)}>
-                        {STATUS_LABEL[active.status]?.icon} {STATUS_LABEL[active.status]?.label || active.status}
-                      </Badge>
-                    </div>
+                  <div className="text-xs space-y-2">
+                    {!isMedico ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Status:</span>
+                        <StatusOperacionalSelect
+                          conversationId={active.id}
+                          status={active.status}
+                          disabled={!perms["comunicacao.responder"]}
+                          onChanged={loadConvs}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-20">Status:</span>
+                        <Badge variant="outline" className={cn("text-[10px]", STATUS_LABEL[active.status]?.color)}>
+                          {STATUS_LABEL[active.status]?.icon} {STATUS_LABEL[active.status]?.label || active.status}
+                        </Badge>
+                      </div>
+                    )}
                     {!isMedico && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground w-20">Responsável:</span>
-                        <span className="font-medium">{assignedName || "Ninguém"}</span>
+                        {active.assigned_to ? (
+                          <span className="font-medium flex items-center gap-1.5">
+                            <AttendantPresenceBadge userId={active.assigned_to} />
+                            {assignedName || "—"}
+                          </span>
+                        ) : (
+                          canAssume ? (
+                            <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={assumir}>
+                              <UserCheck className="h-3 w-3 mr-1" /> Assumir conversa
+                            </Button>
+                          ) : <span className="text-muted-foreground">Ninguém</span>
+                        )}
                       </div>
                     )}
                     {active.locked_by && lockedByName && (
@@ -930,6 +1036,27 @@ export default function ComunicacaoInbox() {
                     )}
                   </div>
                 </div>
+
+                {/* Operação (Fase 5) */}
+                {!isMedico && (
+                  <ConversationQueuePanel
+                    conversation={{
+                      id: active.id,
+                      department_id: active.department_id,
+                      queue_id: active.queue_id,
+                      priority: active.priority,
+                      sla_due_at: active.sla_due_at,
+                      resolved_at: active.resolved_at,
+                    }}
+                    onChanged={loadConvs}
+                  />
+                )}
+
+                {!isMedico && perms["comunicacao.inbox.resolver"] && !active.resolved_at && (
+                  <Button size="sm" variant="outline" className="w-full text-emerald-700 border-emerald-500/40" onClick={resolver}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Resolver conversa
+                  </Button>
+                )}
 
                 {/* Pacientes vinculados (LGPD) */}
                 {!isMedico && (
