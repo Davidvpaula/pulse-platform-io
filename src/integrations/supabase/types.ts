@@ -6051,6 +6051,84 @@ export type Database = {
           },
         ]
       }
+      meta_template_sync_log: {
+        Row: {
+          action: string
+          created_at: string
+          dry_run: boolean
+          id: string
+          payload: Json | null
+          performed_by: string | null
+          status_meta: string | null
+          template_name: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          dry_run?: boolean
+          id?: string
+          payload?: Json | null
+          performed_by?: string | null
+          status_meta?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          dry_run?: boolean
+          id?: string
+          payload?: Json | null
+          performed_by?: string | null
+          status_meta?: string | null
+          template_name?: string | null
+        }
+        Relationships: []
+      }
+      meta_waba_health: {
+        Row: {
+          business_account_id: string | null
+          created_at: string
+          display_phone_number: string | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          last_check_at: string
+          phone_number_id: string | null
+          quality_rating: string | null
+          raw: Json | null
+          status: Database["public"]["Enums"]["waba_health_status"]
+          throughput_tier: string | null
+        }
+        Insert: {
+          business_account_id?: string | null
+          created_at?: string
+          display_phone_number?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_check_at?: string
+          phone_number_id?: string | null
+          quality_rating?: string | null
+          raw?: Json | null
+          status?: Database["public"]["Enums"]["waba_health_status"]
+          throughput_tier?: string | null
+        }
+        Update: {
+          business_account_id?: string | null
+          created_at?: string
+          display_phone_number?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          last_check_at?: string
+          phone_number_id?: string | null
+          quality_rating?: string | null
+          raw?: Json | null
+          status?: Database["public"]["Enums"]["waba_health_status"]
+          throughput_tier?: string | null
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           created_at: string
@@ -6089,6 +6167,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      observabilidade_eventos: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          evento: string
+          id: string
+          metadata: Json
+          modulo: string
+          severity: Database["public"]["Enums"]["severity_evento"]
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          evento: string
+          id?: string
+          metadata?: Json
+          modulo: string
+          severity?: Database["public"]["Enums"]["severity_evento"]
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          evento?: string
+          id?: string
+          metadata?: Json
+          modulo?: string
+          severity?: Database["public"]["Enums"]["severity_evento"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "observabilidade_eventos_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pacientes: {
         Row: {
@@ -7281,6 +7400,68 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "consultas"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      producao_checklist: {
+        Row: {
+          ativo: boolean
+          descricao: string | null
+          key: string
+          label: string
+          obrigatorio: boolean
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean
+          descricao?: string | null
+          key: string
+          label: string
+          obrigatorio?: boolean
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean
+          descricao?: string | null
+          key?: string
+          label?: string
+          obrigatorio?: boolean
+          ordem?: number
+        }
+        Relationships: []
+      }
+      producao_checklist_status: {
+        Row: {
+          conferido_em: string | null
+          conferido_por: string | null
+          evidencia: string | null
+          item_key: string
+          ok: boolean
+          updated_at: string
+        }
+        Insert: {
+          conferido_em?: string | null
+          conferido_por?: string | null
+          evidencia?: string | null
+          item_key: string
+          ok?: boolean
+          updated_at?: string
+        }
+        Update: {
+          conferido_em?: string | null
+          conferido_por?: string | null
+          evidencia?: string | null
+          item_key?: string
+          ok?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_checklist_status_item_key_fkey"
+            columns: ["item_key"]
+            isOneToOne: true
+            referencedRelation: "producao_checklist"
+            referencedColumns: ["key"]
           },
         ]
       }
@@ -8498,6 +8679,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_envio_metricas: {
+        Row: {
+          custo_estimado: number
+          data: string
+          entregues: number
+          falhas: number
+          id: string
+          lidas: number
+          mock_sent: number
+          por_template: Json
+          total_enviadas: number
+          updated_at: string
+        }
+        Insert: {
+          custo_estimado?: number
+          data: string
+          entregues?: number
+          falhas?: number
+          id?: string
+          lidas?: number
+          mock_sent?: number
+          por_template?: Json
+          total_enviadas?: number
+          updated_at?: string
+        }
+        Update: {
+          custo_estimado?: number
+          data?: string
+          entregues?: number
+          falhas?: number
+          id?: string
+          lidas?: number
+          mock_sent?: number
+          por_template?: Json
+          total_enviadas?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       whatsapp_instances: {
         Row: {
@@ -9730,6 +9950,17 @@ export type Database = {
         Args: { _medico_user_id: string; _paciente_id: string }
         Returns: boolean
       }
+      observabilidade_log: {
+        Args: {
+          _conversation_id?: string
+          _evento: string
+          _metadata?: Json
+          _modulo: string
+          _severity?: Database["public"]["Enums"]["severity_evento"]
+        }
+        Returns: string
+      }
+      observabilidade_purge: { Args: never; Returns: number }
       password_mark_changed: { Args: never; Returns: undefined }
       password_status: {
         Args: never
@@ -9768,6 +9999,11 @@ export type Database = {
         }
         Returns: Json
       }
+      producao_ativar: {
+        Args: { _modo: Database["public"]["Enums"]["whatsapp_modo"] }
+        Returns: Json
+      }
+      producao_pode_ativar: { Args: never; Returns: Json }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
       recalcular_ranking_medico: {
         Args: { p_medico_id: string }
@@ -10685,6 +10921,7 @@ export type Database = {
         | "cancelado"
       servico_financeiro_modelo: "percentual" | "valor_fixo"
       servico_financeiro_tipo: "consulta" | "pronto_atendimento" | "pacote"
+      severity_evento: "info" | "warn" | "error" | "critical"
       sexo_biologico: "feminino" | "masculino" | "intersexo" | "nao_informado"
       slot_status: "disponivel" | "reservado" | "bloqueado"
       status_colaborador:
@@ -10727,12 +10964,19 @@ export type Database = {
       tipo_conta_bancaria: "corrente" | "poupanca"
       tipo_paciente: "titular" | "dependente"
       tipo_pessoa: "pf" | "pj"
+      waba_health_status:
+        | "ok"
+        | "degraded"
+        | "down"
+        | "pending_credentials"
+        | "unknown"
       whatsapp_instance_status:
         | "conectado"
         | "desconectado"
         | "pendente"
         | "erro"
       whatsapp_instance_tipo: "comercial" | "operacional" | "suporte"
+      whatsapp_modo: "sandbox" | "staging" | "producao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -11278,6 +11522,7 @@ export const Constants = {
       ],
       servico_financeiro_modelo: ["percentual", "valor_fixo"],
       servico_financeiro_tipo: ["consulta", "pronto_atendimento", "pacote"],
+      severity_evento: ["info", "warn", "error", "critical"],
       sexo_biologico: ["feminino", "masculino", "intersexo", "nao_informado"],
       slot_status: ["disponivel", "reservado", "bloqueado"],
       status_colaborador: [
@@ -11324,6 +11569,13 @@ export const Constants = {
       tipo_conta_bancaria: ["corrente", "poupanca"],
       tipo_paciente: ["titular", "dependente"],
       tipo_pessoa: ["pf", "pj"],
+      waba_health_status: [
+        "ok",
+        "degraded",
+        "down",
+        "pending_credentials",
+        "unknown",
+      ],
       whatsapp_instance_status: [
         "conectado",
         "desconectado",
@@ -11331,6 +11583,7 @@ export const Constants = {
         "erro",
       ],
       whatsapp_instance_tipo: ["comercial", "operacional", "suporte"],
+      whatsapp_modo: ["sandbox", "staging", "producao"],
     },
   },
 } as const
