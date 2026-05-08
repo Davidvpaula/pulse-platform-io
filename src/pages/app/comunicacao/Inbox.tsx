@@ -428,17 +428,25 @@ export default function ComunicacaoInbox() {
 
   async function assumir() {
     if (!active || !user || isMedico) return;
-    const { error } = await supabase.from("conversations").update({
-      assigned_to: user.id,
-      status: "em_atendimento",
-    }).eq("id", active.id);
-    if (error) { toast.error(error.message); return; }
-    await registrarAuditoria("assumir_conversa", active.id, {
-      conversa_id: active.id,
-      paciente_id: active.patient_id,
-      contact_name: active.contact_name,
-    });
+    const { error } = await supabase.rpc("assumir_conversa", { p_conversation_id: active.id });
+    if (error) {
+      if (error.code === "55006") {
+        toast.error("Conversa já está sendo atendida por outro usuário");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
     toast.success(`Conversa de ${active.contact_name || "paciente"} assumida`);
+    loadConvs();
+  }
+
+  async function liberar() {
+    if (!active || !user || isMedico) return;
+    const { error } = await supabase.rpc("liberar_conversa", { p_conversation_id: active.id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Conversa liberada");
+    loadConvs();
   }
 
   async function fechar() {
