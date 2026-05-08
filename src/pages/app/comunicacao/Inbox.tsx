@@ -29,6 +29,8 @@ import { Janela24hMeta } from "@/components/comunicacao/Janela24hMeta";
 import { PacientesVinculadosPanel, type VinculoPaciente } from "@/components/comunicacao/PacientesVinculadosPanel";
 import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
+import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
+import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
 
 type Conv = {
   id: string;
@@ -151,6 +153,8 @@ export default function ComunicacaoInbox() {
   const [transferirOpen, setTransferirOpen] = useState(false);
   const [vinculosPaciente, setVinculosPaciente] = useState<VinculoPaciente[]>([]);
   const [auditOpen, setAuditOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [janelaExpirada, setJanelaExpirada] = useState(false);
 
   // Acesso temporário dialog
   const [acessoDialog, setAcessoDialog] = useState(false);
@@ -340,6 +344,21 @@ export default function ComunicacaoInbox() {
 
   // Load detail data when active changes
   const active = convs.find(c => c.id === activeId) || null;
+
+  // Janela 24h Meta: rastrear se está expirada para a conversa ativa
+  useEffect(() => {
+    if (!active || active.channel !== "whatsapp") { setJanelaExpirada(false); return; }
+    let alive = true;
+    const check = async () => {
+      const { data } = await supabase.rpc("get_meta_window_state", { p_conversation_id: active.id } as any);
+      if (!alive) return;
+      const open = (data as any)?.open === true;
+      setJanelaExpirada(!open);
+    };
+    check();
+    const t = setInterval(check, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [active?.id, active?.channel]);
   useEffect(() => {
     if (active) loadDetailData(active);
   }, [activeId, active?.assigned_to, active?.medico_id, active?.consulta_id, active?.locked_by]);
@@ -424,6 +443,13 @@ export default function ComunicacaoInbox() {
         setDraft(body);
         return;
       }
+      // Janela expirada → abre modal de template direto, sem chamar a API
+      if (janelaExpirada) {
+        setDraft(body);
+        toast.error("Janela 24h expirada — envie um template para reabrir.");
+        setTemplateDialogOpen(true);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("whatsapp-enviar", {
         body: { to: active.contact_phone, message: body, conversation_id: active.id },
       });
@@ -438,8 +464,10 @@ export default function ComunicacaoInbox() {
         return;
       }
       if (data?.requires_template) {
-        toast.error("Janela 24h Meta expirada — envie um template para reabrir.");
         setDraft(body);
+        toast.error("Janela 24h Meta expirada — abrindo template oficial.");
+        setJanelaExpirada(true);
+        setTemplateDialogOpen(true);
         return;
       }
       if (data?.lgpd_block) {
@@ -795,6 +823,9 @@ export default function ComunicacaoInbox() {
 
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
+                  {active.channel === "whatsapp" && janelaExpirada && (
+                    <JanelaExpiradaBanner onUseTemplate={() => setTemplateDialogOpen(true)} />
+                  )}
                   {!isMedico && templates.length > 0 && (
                     <div className="flex gap-1 flex-wrap">
                       {templates.slice(0, 5).map(t => (
@@ -1087,6 +1118,15 @@ export default function ComunicacaoInbox() {
         open={auditOpen}
         onOpenChange={setAuditOpen}
         conversationId={active?.id ?? null}
+      />
+
+      {/* Modal — Enviar template oficial Meta (Fase 4) */}
+      <EnviarTemplateDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        conversationId={active?.id}
+        defaultTo={active?.contact_phone || ""}
+        onSent={() => { setDraft(""); setJanelaExpirada(false); }}
       />
     </div>
   );
