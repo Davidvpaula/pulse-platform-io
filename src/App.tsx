@@ -380,6 +380,7 @@ const App = () => (
               <Route path="admin/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="admin/fluxo" element={<G perm="agenda.ver_todas"><FluxoOperacional /></G>} />
               <Route path="admin/comunicacao-interna" element={<G perm="admin.dashboard"><ComunicacaoInterna /></G>} />
+              <Route path="admin/comunicacao/operacao" element={<G perm="admin.dashboard"><AdminComunicacaoOperacao /></G>} />
               <Route path="admin/faq" element={<G perm="admin.dashboard"><AdminFaq /></G>} />
               <Route path="admin/saude" element={<G perm="admin.dashboard"><AdminSaude /></G>} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
