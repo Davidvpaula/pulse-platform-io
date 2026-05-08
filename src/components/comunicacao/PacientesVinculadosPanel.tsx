@@ -85,8 +85,7 @@ export function PacientesVinculadosPanel({
   async function confirmar(v: VinculoPaciente) {
     setActionId(v.id);
     const { error } = await supabase.rpc("confirmar_vinculo_paciente", {
-      p_conversation_id: conversationId,
-      p_paciente_id: v.paciente_id,
+      p_link_id: v.id,
     });
     setActionId(null);
     if (error) {
