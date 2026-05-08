@@ -32,6 +32,7 @@ import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
 import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
 import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
+import { JanelaAtivaIndicator } from "@/components/comunicacao/JanelaAtivaIndicator";
 import { ConversationSlaBadge } from "@/components/comunicacao/ConversationSlaBadge";
 import { AttendantPresenceBadge } from "@/components/comunicacao/AttendantPresenceBadge";
 import { ConversationQueuePanel } from "@/components/comunicacao/ConversationQueuePanel";
@@ -531,6 +532,19 @@ export default function ComunicacaoInbox() {
         setDraft(body);
         toast.error("Janela 24h expirada — envie um template para reabrir.");
         setTemplateDialogOpen(true);
+        supabase.functions.invoke("observabilidade-ingest", {
+          body: {
+            modulo: "whatsapp",
+            evento: "mensagem_livre_bloqueada",
+            severity: "info",
+            conversation_id: active.id,
+            metadata: {
+              reason: "janela_24h_expirada",
+              acao_sugerida: "usar_template",
+              contact_phone: active.contact_phone,
+            },
+          },
+        }).catch(() => {});
         return;
       }
       const { data, error } = await supabase.functions.invoke("whatsapp-enviar", {
@@ -551,6 +565,19 @@ export default function ComunicacaoInbox() {
         toast.error("Janela 24h Meta expirada — abrindo template oficial.");
         setJanelaExpirada(true);
         setTemplateDialogOpen(true);
+        supabase.functions.invoke("observabilidade-ingest", {
+          body: {
+            modulo: "whatsapp",
+            evento: "mensagem_livre_bloqueada",
+            severity: "info",
+            conversation_id: active.id,
+            metadata: {
+              reason: "janela_24h_expirada_servidor",
+              acao_sugerida: "usar_template",
+              contact_phone: active.contact_phone,
+            },
+          },
+        }).catch(() => {});
         return;
       }
       if (data?.lgpd_block) {
@@ -974,6 +1001,9 @@ export default function ComunicacaoInbox() {
 
               {activeCanRespond && (
                 <div className="border-t p-3 space-y-2">
+                  {active.channel === "whatsapp" && !janelaExpirada && (
+                    <JanelaAtivaIndicator conversationId={active.id} />
+                  )}
                   {active.channel === "whatsapp" && janelaExpirada && (
                     <JanelaExpiradaBanner onUseTemplate={() => setTemplateDialogOpen(true)} />
                   )}
