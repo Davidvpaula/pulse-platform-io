@@ -816,6 +816,15 @@ export default function ComunicacaoInbox() {
                       lockedByName={lockedByName}
                       isMe={active.locked_by === user?.id}
                     />
+                    {!isMedico && active.assigned_to && (
+                      <span className="flex items-center gap-1">
+                        <AttendantPresenceBadge userId={active.assigned_to} showLabel />
+                        <span className="font-medium">{assignedName || "—"}</span>
+                      </span>
+                    )}
+                    {!isMedico && (
+                      <ConversationSlaBadge slaDueAt={active.sla_due_at} resolvedAt={active.resolved_at} />
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap">
