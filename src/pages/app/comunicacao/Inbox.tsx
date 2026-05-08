@@ -958,6 +958,16 @@ export default function ComunicacaoInbox() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Dialog — Transferir conversa */}
+      {active && (
+        <TransferirConversaDialog
+          open={transferirOpen}
+          onOpenChange={setTransferirOpen}
+          conversationId={active.id}
+          onTransferred={loadConvs}
+        />
+      )}
     </div>
   );
 }
