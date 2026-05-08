@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session";
 import {
   consultasPendentesAvaliacao,
+  dispensarAvaliacaoConsulta,
   type ConsultaPendenteAvaliacao,
 } from "@/lib/gamificacao";
 import AvaliarMedicoDialog from "./AvaliarMedicoDialog";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Banner que aparece automaticamente no dashboard do paciente
