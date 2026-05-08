@@ -276,6 +276,7 @@ export default function ComunicacaoInbox() {
   // Load detail data for right panel
   async function loadDetailData(conv: Conv) {
     setAssignedName(null);
+    setLockedByName(null);
     setMedicoName(null);
     setConsultaInfo(null);
 
@@ -286,6 +287,19 @@ export default function ComunicacaoInbox() {
         .eq("id", conv.assigned_to)
         .maybeSingle();
       setAssignedName(data?.nome || data?.email || "—");
+    }
+
+    if (conv.locked_by) {
+      if (conv.locked_by === conv.assigned_to && assignedName) {
+        setLockedByName(assignedName);
+      } else {
+        const { data } = await supabase
+          .from("profiles")
+          .select("nome, email")
+          .eq("id", conv.locked_by)
+          .maybeSingle();
+        setLockedByName(data?.nome || data?.email || "—");
+      }
     }
 
     if (conv.medico_id) {
