@@ -80,6 +80,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_acoes_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       agenda_slots: {
@@ -142,6 +149,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_slots_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
           {
             foreignKeyName: "agenda_slots_reservado_por_fkey"
@@ -1405,6 +1419,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "avaliacoes_medicas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "avaliacoes_medicas_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -2037,6 +2058,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
           {
             foreignKeyName: "consultas_paciente_atendido_id_fkey"
@@ -2843,6 +2871,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cupons_uso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "cupons_uso_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -3040,6 +3075,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -3672,6 +3714,39 @@ export type Database = {
         }
         Relationships: []
       }
+      financeiro_alertas: {
+        Row: {
+          created_at: string
+          id: string
+          medico_id: string | null
+          payload: Json
+          resolvido_em: string | null
+          resolvido_por: string | null
+          severidade: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medico_id?: string | null
+          payload?: Json
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medico_id?: string | null
+          payload?: Json
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       financeiro_auditoria: {
         Row: {
           acao: string
@@ -3711,6 +3786,162 @@ export type Database = {
           payload?: Json | null
           valor_anterior?: string | null
           valor_novo?: string | null
+        }
+        Relationships: []
+      }
+      financeiro_backfill_log: {
+        Row: {
+          dry_run: boolean
+          erro: string | null
+          executado_em: string
+          executado_por: string | null
+          id: string
+          ok: boolean
+          relatorio: Json
+        }
+        Insert: {
+          dry_run: boolean
+          erro?: string | null
+          executado_em?: string
+          executado_por?: string | null
+          id?: string
+          ok: boolean
+          relatorio?: Json
+        }
+        Update: {
+          dry_run?: boolean
+          erro?: string | null
+          executado_em?: string
+          executado_por?: string | null
+          id?: string
+          ok?: boolean
+          relatorio?: Json
+        }
+        Relationships: []
+      }
+      financeiro_idempotency: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          result: Json
+          result_hash: string | null
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          result?: Json
+          result_hash?: string | null
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          result?: Json
+          result_hash?: string | null
+          scope?: string
+        }
+        Relationships: []
+      }
+      financeiro_movimentos: {
+        Row: {
+          actor_user_id: string | null
+          bucket: string
+          conta: string
+          conta_ref_id: string | null
+          created_at: string
+          direcao: string
+          hash_anterior: string | null
+          hash_atual: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          moeda: string
+          ocorrido_em: string
+          origem: string
+          ref_id: string | null
+          ref_type: string
+          seq: number
+          valor_cents: number
+        }
+        Insert: {
+          actor_user_id?: string | null
+          bucket?: string
+          conta: string
+          conta_ref_id?: string | null
+          created_at?: string
+          direcao: string
+          hash_anterior?: string | null
+          hash_atual: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          moeda?: string
+          ocorrido_em?: string
+          origem: string
+          ref_id?: string | null
+          ref_type: string
+          seq?: number
+          valor_cents: number
+        }
+        Update: {
+          actor_user_id?: string | null
+          bucket?: string
+          conta?: string
+          conta_ref_id?: string | null
+          created_at?: string
+          direcao?: string
+          hash_anterior?: string | null
+          hash_atual?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          moeda?: string
+          ocorrido_em?: string
+          origem?: string
+          ref_id?: string | null
+          ref_type?: string
+          seq?: number
+          valor_cents?: number
+        }
+        Relationships: []
+      }
+      financeiro_outbox: {
+        Row: {
+          created_at: string
+          evento: string
+          id: string
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          proxima_tentativa_em: string | null
+          status: string
+          tentativas: number
+        }
+        Insert: {
+          created_at?: string
+          evento: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          proxima_tentativa_em?: string | null
+          status?: string
+          tentativas?: number
+        }
+        Update: {
+          created_at?: string
+          evento?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          proxima_tentativa_em?: string | null
+          status?: string
+          tentativas?: number
         }
         Relationships: []
       }
@@ -3891,6 +4122,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "impulsionamento_campanhas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       impulsionamento_cliques: {
@@ -3991,6 +4229,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -4452,6 +4697,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_alertas_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_anomalias: {
@@ -4512,6 +4764,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_anomalias_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_auditoria_ia: {
@@ -4562,6 +4821,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_auditoria_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -4614,6 +4880,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_badges_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_comissao_override: {
@@ -4664,6 +4937,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_medico_comissao_override_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
           {
             foreignKeyName: "fk_medico_comissao_override_servico"
@@ -4745,6 +5025,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_dados_bancarios_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_enderecos: {
@@ -4804,6 +5091,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_enderecos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -4872,6 +5166,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_especialidades_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_formacoes: {
@@ -4916,6 +5217,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_formacoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -4968,6 +5276,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_google_tokens_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_logs_confianca: {
@@ -5018,6 +5333,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_logs_confianca_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5113,6 +5435,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medico_metas_progresso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "medico_metas_progresso_meta_id_fkey"
             columns: ["meta_id"]
             isOneToOne: false
@@ -5174,6 +5503,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medico_nfes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "medico_nfes_saque_id_fkey"
             columns: ["saque_id"]
             isOneToOne: false
@@ -5221,6 +5557,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_notificacao_prefs_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5275,6 +5618,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_premium_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5354,6 +5704,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_ranking_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_restricoes: {
@@ -5411,6 +5768,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_restricoes_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_saldo_crescimento: {
@@ -5458,6 +5822,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_saldo_crescimento_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5509,6 +5880,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_score_compliance_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5576,6 +5954,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "medico_score_detalhado_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       medico_score_operacional: {
@@ -5629,6 +6014,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_score_operacional_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: true
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5710,6 +6102,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medico_streaks_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -5914,6 +6313,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicos_auditoria_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -6926,6 +7332,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "plano_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "plano_medicos_plano_id_fkey"
             columns: ["plano_id"]
             isOneToOne: false
@@ -7110,6 +7523,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "planos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "planos_plano_base_id_fkey"
             columns: ["plano_base_id"]
             isOneToOne: false
@@ -7218,6 +7638,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "politica_reembolso_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       premium_assinaturas: {
@@ -7290,6 +7717,13 @@ export type Database = {
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "premium_assinaturas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
         ]
       }
       premium_creditos: {
@@ -7356,6 +7790,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "premium_creditos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -7664,6 +8105,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "propostas_empresa_medico_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "propostas_empresa_medico_plano_gerado_id_fkey"
             columns: ["plano_gerado_id"]
             isOneToOne: false
@@ -7752,6 +8200,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ranking_audit_log_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -7899,6 +8354,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recomendacoes_ia_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -8117,6 +8579,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_retornos_medico"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
             foreignKeyName: "fk_retornos_paciente"
             columns: ["paciente_id"]
             isOneToOne: false
@@ -8240,6 +8709,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medicos_publicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_medicos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
           },
         ]
       }
@@ -8916,6 +9392,18 @@ export type Database = {
         }
         Relationships: []
       }
+      mv_medico_saldo: {
+        Row: {
+          atualizado_em: string | null
+          disponivel_cents: number | null
+          medico_id: string | null
+          pendente_cents: number | null
+          retido_cents: number | null
+          sacado_cents: number | null
+          total_movimentos: number | null
+        }
+        Relationships: []
+      }
       servicos_publicos: {
         Row: {
           ativo: boolean | null
@@ -8992,6 +9480,16 @@ export type Database = {
           _valor_novo?: string
         }
         Returns: undefined
+      }
+      _test_exec_sql: { Args: { q: string }; Returns: Json }
+      _test_purge_medico: { Args: { p_medico_id: string }; Returns: undefined }
+      _test_try_delete_movimento: {
+        Args: { p_medico_id: string }
+        Returns: boolean
+      }
+      _test_try_update_movimento: {
+        Args: { p_medico_id: string }
+        Returns: boolean
       }
       admin_agendamentos_overview: {
         Args: { _data?: string; _periodo?: string }
@@ -9676,6 +10174,29 @@ export type Database = {
         }
         Returns: string
       }
+      fn_backfill_financeiro: {
+        Args: { p_dry_run?: boolean; p_medico_id?: string }
+        Returns: Json
+      }
+      fn_backfill_financeiro_dry_run: {
+        Args: { p_medico_id?: string }
+        Returns: Json
+      }
+      fn_finmov_hash: {
+        Args: { p_hash_anterior: string; p_payload: Json }
+        Returns: string
+      }
+      fn_medico_saldo_real: {
+        Args: { p_medico_id: string }
+        Returns: {
+          disponivel_cents: number
+          pendente_cents: number
+          retido_cents: number
+          sacado_cents: number
+          total_movimentos: number
+          ultimo_movimento_em: string
+        }[]
+      }
       fn_pa_confirmar_reserva: { Args: { _slot_id: string }; Returns: Json }
       fn_pa_reservar_slot: { Args: { _slot_inicio: string }; Returns: Json }
       fn_pa_slots_disponiveis: {
@@ -9706,6 +10227,14 @@ export type Database = {
           score: number
         }[]
       }
+      fn_reconciliar_saldo_medico: {
+        Args: { p_medico_id: string }
+        Returns: Json
+      }
+      fn_registrar_movimento_idempotente: {
+        Args: { p_key: string; p_payload: Json; p_scope: string }
+        Returns: Json
+      }
       fn_resolver_comissao: {
         Args: {
           _medico_id: string
@@ -9734,6 +10263,10 @@ export type Database = {
           slot_id: string
           total_vagas: number
         }[]
+      }
+      fn_validar_hash_chain: {
+        Args: { p_limit?: number; p_medico_id: string }
+        Returns: boolean
       }
       forcar_status_consulta: {
         Args: {

@@ -1,0 +1,1 @@
+REVOKE ALL ON public.mv_medico_saldo FROM PUBLIC, anon, authenticated;
