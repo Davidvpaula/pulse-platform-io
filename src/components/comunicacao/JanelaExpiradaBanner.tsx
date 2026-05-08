@@ -11,7 +11,7 @@ export function JanelaExpiradaBanner({ onUseTemplate }: Props) {
       <div className="flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
-          <strong>Janela 24h encerrada</strong> — mensagens livres bloqueadas pela Meta. Use um template oficial para reabrir a conversa.
+          <strong>Janela 24h encerrada.</strong> Use um template oficial para reabrir a conversa.
         </span>
       </div>
       <Button size="sm" variant="outline" onClick={onUseTemplate} className="shrink-0">
