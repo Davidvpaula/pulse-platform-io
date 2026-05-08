@@ -29,6 +29,8 @@ import { Janela24hMeta } from "@/components/comunicacao/Janela24hMeta";
 import { PacientesVinculadosPanel, type VinculoPaciente } from "@/components/comunicacao/PacientesVinculadosPanel";
 import { LGPDGate } from "@/components/comunicacao/LGPDGate";
 import { AuditLogDrawer } from "@/components/comunicacao/AuditLogDrawer";
+import { EnviarTemplateDialog } from "@/components/comunicacao/EnviarTemplateDialog";
+import { JanelaExpiradaBanner } from "@/components/comunicacao/JanelaExpiradaBanner";
 
 type Conv = {
   id: string;
