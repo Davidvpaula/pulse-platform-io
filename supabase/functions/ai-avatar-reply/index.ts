@@ -459,6 +459,13 @@ Deno.serve(async (req) => {
       error: sendRes.ok ? null : sendRes.error_message ?? `http_${sendRes.http_status}`,
     });
 
+    await logEvento(admin, {
+      modulo: "ia_avatar",
+      evento: sendRes.ok ? "replied" : "send_failed",
+      severity: sendRes.ok ? "info" : "warn",
+      conversation_id: _convId,
+      metadata: { confianca, risco, modo, latency_ms: Date.now() - _t0 },
+    });
     return jsonResp({
       ok: sendRes.ok,
       replied: sendRes.ok,
@@ -468,6 +475,13 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("[ai-avatar-reply] erro:", e);
+    await logEvento(admin, {
+      modulo: "ia_avatar",
+      evento: "exception",
+      severity: "error",
+      conversation_id: _convId,
+      metadata: { latency_ms: Date.now() - _t0, error: (e as Error).message },
+    });
     return jsonResp({ error: (e as Error).message }, 500);
   }
 });
