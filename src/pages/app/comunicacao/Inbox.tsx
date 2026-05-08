@@ -156,6 +156,8 @@ export default function ComunicacaoInbox() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroResp, setFiltroResp] = useState<string>("todas");
   const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+  const [filtroSla, setFiltroSla] = useState<string>("todos"); // todos | vencido
+  const [filtroPrioridade, setFiltroPrioridade] = useState<string>("todas");
   const [draft, setDraft] = useState("");
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
