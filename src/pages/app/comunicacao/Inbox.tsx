@@ -410,13 +410,52 @@ export default function ComunicacaoInbox() {
 
   async function enviar() {
     if (!draft.trim() || !active || !user) return;
-    // Médico: validate access
     if (isMedico && !canMedicoRespond(active)) {
       toast.error("Você não tem permissão para enviar mensagens nesta conversa.");
       return;
     }
     const body = draft;
     setDraft("");
+
+    // WhatsApp: rota via edge function (Meta sandbox/produção). Realtime traz a msg de volta.
+    if (active.channel === "whatsapp") {
+      if (!active.contact_phone) {
+        toast.error("Conversa sem telefone — não é possível enviar via WhatsApp.");
+        setDraft(body);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("whatsapp-enviar", {
+        body: { to: active.contact_phone, message: body, conversation_id: active.id },
+      });
+      if (error) {
+        toast.error(`Falha ao enviar WhatsApp: ${error.message}`);
+        setDraft(body);
+        return;
+      }
+      if (data?.not_configured) {
+        toast.error("WhatsApp ainda não configurado (sandbox sem credenciais).");
+        setDraft(body);
+        return;
+      }
+      if (data?.requires_template) {
+        toast.error("Janela 24h Meta expirada — envie um template para reabrir.");
+        setDraft(body);
+        return;
+      }
+      if (data?.lgpd_block) {
+        toast.error("Paciente não autoriza mensagens WhatsApp (opt-out LGPD).");
+        setDraft(body);
+        return;
+      }
+      if (data?.ok === false && data?.error) {
+        toast.error(data.error);
+        setDraft(body);
+        return;
+      }
+      return;
+    }
+
+    // Outros canais (interno/email): insert direto
     const { error } = await supabase.from("messages").insert({
       conversation_id: active.id,
       sender_type: isMedico ? "medico" : "colaborador",
