@@ -1119,6 +1119,15 @@ export default function ComunicacaoInbox() {
         onOpenChange={setAuditOpen}
         conversationId={active?.id ?? null}
       />
+
+      {/* Modal — Enviar template oficial Meta (Fase 4) */}
+      <EnviarTemplateDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        conversationId={active?.id}
+        defaultTo={active?.contact_phone || ""}
+        onSent={() => { setDraft(""); setJanelaExpirada(false); }}
+      />
     </div>
   );
 }
