@@ -452,7 +452,7 @@ export default function AdminUsuarios() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to={`/app/admin/whatsapp?to=${encodeURIComponent(p.telefone ?? "")}`}>
+                            <Link to={`/app/comunicacao/inbox?paciente=${p.id}`}>
                               <MessageSquare className="mr-2 h-4 w-4" />Abrir WhatsApp
                             </Link>
                           </DropdownMenuItem>
