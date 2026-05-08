@@ -8511,6 +8511,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      inbox_increment_unread: {
+        Args: { p_conversation_id: string; p_preview: string }
+        Returns: undefined
+      }
       integracoes_dashboard: { Args: never; Returns: Json }
       is_empresa_owner: { Args: { _empresa_id: string }; Returns: boolean }
       is_medico_da_consulta: {
