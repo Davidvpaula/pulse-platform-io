@@ -286,6 +286,7 @@ export default function PacienteDocumentos() {
     }
   };
 
+  if (!session) {
     return (
       <div className="space-y-6">
         <PageHeader title="Meus documentos" description="Faça login para acessar e enviar seus documentos." />
