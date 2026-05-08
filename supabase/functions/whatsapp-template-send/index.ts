@@ -3,6 +3,7 @@
 // SEMPRE registra log em whatsapp_template_logs (sucesso ou falha).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildProvider } from "../_shared/wa-providers.ts";
+import { canSendReal, logEvento } from "../_shared/observabilidade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,7 +25,7 @@ Deno.serve(async (req) => {
   try {
     const META_TOKEN = Deno.env.get("META_WHATSAPP_TOKEN");
     const META_PHONE_FALLBACK = Deno.env.get("META_PHONE_NUMBER_ID");
-    if (!META_TOKEN) return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
+    // Em sandbox o gate fail-closed responde com mock_sent — não bloqueamos por falta de token aqui.
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return jsonResp({ error: "Não autenticado" }, 401);
@@ -109,9 +110,6 @@ Deno.serve(async (req) => {
       }
     }
     if (!phoneNumberId) phoneNumberId = META_PHONE_FALLBACK ?? null;
-    if (!phoneNumberId) {
-      return jsonResp({ error: "Nenhum phone_number_id disponível" }, 503);
-    }
 
     // sender_type
     let senderType: "medico" | "colaborador" | "sistema" = "sistema";
@@ -122,26 +120,55 @@ Deno.serve(async (req) => {
       if (colab) senderType = "colaborador";
     }
 
-    // Envio via adapter
-    const provider = buildProvider({ token: META_TOKEN, phoneNumberId });
-    const result = await provider.sendTemplate({
-      to: phone,
-      template_name: templateMetaName,
-      language: tpl.language || "pt_BR",
-      variables,
-    });
+    // ===== Gate fail-closed Fase 8 =====
+    const gate = await canSendReal(admin);
 
-    // Log SEMPRE (sucesso ou falha)
+    let result: { ok: boolean; wa_message_id: string | null; http_status: number; error_message: string | null; raw: any };
+
+    if (!gate.ok) {
+      // Modo sandbox/staging ou health!=ok ou secrets ausentes -> simula envio
+      result = {
+        ok: true,
+        wa_message_id: null,
+        http_status: 0,
+        error_message: null,
+        raw: { mock_sent: true, reason: gate.reason, modo: gate.modo, health: gate.health },
+      };
+
+      await logEvento(admin, {
+        modulo: "whatsapp",
+        evento: "template_mock_sent",
+        severity: "info",
+        conversation_id: conversation_id ?? null,
+        user_id: userId,
+        metadata: { reason: gate.reason, template_name: templateMetaName, to: phone },
+      });
+    } else {
+      // Envio real via adapter — exige phone_number_id e token
+      if (!phoneNumberId) return jsonResp({ error: "Nenhum phone_number_id disponível" }, 503);
+      if (!META_TOKEN) return jsonResp({ error: "WhatsApp não configurado", not_configured: true }, 503);
+      const provider = buildProvider({ token: META_TOKEN, phoneNumberId });
+      result = await provider.sendTemplate({
+        to: phone,
+        template_name: templateMetaName,
+        language: tpl.language || "pt_BR",
+        variables,
+      });
+    }
+
+    const statusLabel = !gate.ok ? "mock_sent" : (result.ok ? "sent" : "failed");
+
+    // Log SEMPRE (sucesso, falha ou mock)
     await admin.from("whatsapp_template_logs").insert({
       conversation_id: conversation_id ?? null,
       template_id: tpl.id,
       template_name: templateMetaName,
       telefone: phone,
-      payload: { variables, language: tpl.language, instance_id: instanceId },
+      payload: { variables, language: tpl.language, instance_id: instanceId, mock_reason: !gate.ok ? gate.reason : undefined },
       provider_response: result.raw,
       wa_message_id: result.wa_message_id,
-      status: result.ok ? "sent" : "failed",
-      erro: result.ok ? null : (result.error_message ?? `http_${result.http_status}`),
+      status: statusLabel,
+      erro: !gate.ok ? gate.reason : (result.ok ? null : (result.error_message ?? `http_${result.http_status}`)),
       enviado_por: userId,
     });
 
@@ -154,17 +181,17 @@ Deno.serve(async (req) => {
       metadata: {
         template_name: templateMetaName,
         to: phone,
-        status: result.ok ? "sent" : "failed",
+        status: statusLabel,
         http_status: result.http_status,
         wa_message_id: result.wa_message_id,
         conversation_id: conversation_id ?? null,
         instance_id: instanceId,
+        mock_reason: !gate.ok ? gate.reason : undefined,
       },
     });
 
     // Persistir em messages se houver conversa
     if (conversation_id) {
-      // Renderiza preview substituindo variáveis na ordem
       let preview = tpl.content || `[template: ${templateMetaName}]`;
       (tpl.variables || []).forEach((v: string, i: number) => {
         preview = preview.replaceAll(v, variables[i] ?? "");
@@ -177,10 +204,15 @@ Deno.serve(async (req) => {
         sender_id: userId,
         sender_name: userData.user.email ?? null,
         message_type: "template",
-        status: result.ok ? "sent" : "failed",
+        status: statusLabel,
         whatsapp_message_id: result.wa_message_id,
-        failure_reason: result.ok ? null : (result.error_message ?? null),
-        metadata: { template_name: templateMetaName, template_id: tpl.id, instance_id: instanceId },
+        failure_reason: !gate.ok ? null : (result.ok ? null : (result.error_message ?? null)),
+        metadata: {
+          template_name: templateMetaName,
+          template_id: tpl.id,
+          instance_id: instanceId,
+          mock_reason: !gate.ok ? gate.reason : undefined,
+        },
       });
 
       if (result.ok) {
@@ -195,6 +227,10 @@ Deno.serve(async (req) => {
           if (error) console.warn("[whatsapp-template-send] first_response rpc:", error.message);
         });
       }
+    }
+
+    if (!gate.ok) {
+      return jsonResp({ ok: true, mock_sent: true, reason: gate.reason, sender_type: senderType });
     }
 
     if (!result.ok) {
