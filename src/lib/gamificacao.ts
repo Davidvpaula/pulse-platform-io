@@ -433,6 +433,11 @@ export async function consultasPendentesAvaliacao(): Promise<ConsultaPendenteAva
   return (data ?? []) as unknown as ConsultaPendenteAvaliacao[];
 }
 
+export async function dispensarAvaliacaoConsulta(consultaId: string): Promise<void> {
+  const { error } = await rpcCall("dispensar_avaliacao_consulta", { p_consulta_id: consultaId });
+  if (error) throw error;
+}
+
 /* ── Saldo de Crescimento ── */
 
 export async function listarSaldoCrescimento(medico_id: string): Promise<SaldoCrescimentoItem[]> {
