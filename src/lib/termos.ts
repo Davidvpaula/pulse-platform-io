@@ -208,11 +208,11 @@ export async function listarAceitesDoTermo(termoId: string) {
   if (userIds.length) {
     const { data: perfis, error: pErr } = await supabase
       .from("profiles")
-      .select("user_id, nome_completo, email")
-      .in("user_id", userIds);
+      .select("id, nome, email")
+      .in("id", userIds);
     if (pErr) throw pErr;
     perfilMap = new Map(
-      (perfis ?? []).map(p => [p.user_id, { nome_completo: p.nome_completo, email: p.email }])
+      (perfis ?? []).map(p => [p.id, { nome_completo: p.nome ?? null, email: p.email ?? null }])
     );
   }
 
