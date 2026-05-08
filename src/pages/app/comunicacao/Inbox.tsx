@@ -107,6 +107,9 @@ const INBOX_PERMISSIONS = [
   "comunicacao.finalizar",
   "comunicacao.inbox.assumir",
   "comunicacao.inbox.encerrar",
+  "comunicacao.inbox.resolver",
+  "comunicacao.inbox.alterar_prioridade",
+  "comunicacao.inbox.supervisionar",
 ];
 
 // Audit helper
