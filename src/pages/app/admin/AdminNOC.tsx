@@ -70,17 +70,16 @@ export default function AdminNOC() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="NOC — Operação"
-        description="Central de monitoramento operacional em tempo real"
-        icon={<Activity className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
-        }
-      />
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader
+          title="NOC — Operação"
+          description="Central de monitoramento operacional em tempo real"
+        />
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+          Atualizar
+        </Button>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi label="Em andamento agora" value={emAndamento.length} tone={emAndamento.length > 0 ? "ok" : undefined} />
