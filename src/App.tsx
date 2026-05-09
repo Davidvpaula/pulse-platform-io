@@ -114,6 +114,7 @@ import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
 import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
 import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
 import AdminFinanceiroConfig from "@/pages/app/admin/AdminFinanceiroConfig";
+import AdminLedgerObservabilidade from "@/pages/app/admin/AdminLedgerObservabilidade";
 import AdminIAMedicos from "@/pages/app/admin/AdminIAMedicos";
 import AdminPreviaRepasse from "@/pages/app/admin/AdminPreviaRepasse";
 import AdminAtendimentoImediato from "@/pages/app/admin/AdminAtendimentoImediato";
@@ -345,6 +346,7 @@ const App = () => (
               <Route path="admin/financeiro/previa-repasse" element={<G perm="financeiro.editar_comissao"><AdminPreviaRepasse /></G>} />
               <Route path="admin/financeiro/saques-medicos" element={<G perm="financeiro.saques.ver"><AdminSaquesMedicos /></G>} />
               <Route path="admin/financeiro/reembolsos" element={<G perm="financeiro.ver"><AdminReembolsoConfig /></G>} />
+              <Route path="admin/financeiro/ledger-observabilidade" element={<G perm="financeiro.ver"><AdminLedgerObservabilidade /></G>} />
               <Route path="admin/planos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanos /></G>} />
               <Route path="admin/planos-medicos" element={<G perm="financeiro.servicos_gerenciar"><AdminPlanosMedicos /></G>} />
               <Route path="admin/planos-cancelamentos" element={<G perm="financeiro.servicos_gerenciar"><AdminCancelamentosPlanos /></G>} />
