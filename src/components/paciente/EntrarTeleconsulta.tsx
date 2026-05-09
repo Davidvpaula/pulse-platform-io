@@ -17,8 +17,6 @@ interface EntrarTeleconsultaProps {
   variant?: "gradient" | "outline";
 }
 
-/** Minutos antes do horário que o paciente pode entrar */
-const ANTECEDENCIA_MIN = 15;
 /** Minutos depois do fim que o link ainda funciona */
 const TOLERANCIA_POS_MIN = 30;
 
