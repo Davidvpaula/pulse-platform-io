@@ -314,16 +314,19 @@ const stripeProvider = {
       | { error: string };
     if ("error" in payload) throw new Error(payload.error);
 
-    // Se retornou clientSecret (embedded checkout), redirecionar para checkout interno
-    const checkoutUrl = payload.checkout_url
-      ?? `/app/paciente/checkout/${payload.pagamento_id}`;
+    // Se retornou clientSecret (embedded checkout), usar rota interna de checkout
+    const hasEmbedded = !!payload.clientSecret;
+    const checkoutUrl = hasEmbedded
+      ? `/app/paciente/checkout/${payload.pagamento_id}`
+      : (payload.checkout_url ?? `/app/paciente/checkout/${payload.pagamento_id}`);
 
     return {
       pagamentoId: payload.pagamento_id,
       checkoutUrl,
       simulated: false,
       provider: "stripe",
-      external: !!payload.checkout_url && !payload.clientSecret,
+      external: !hasEmbedded && !!payload.checkout_url,
+      clientSecret: payload.clientSecret,
     };
   },
   async confirmar(_pagamentoId: string, _metodo: PagamentoMetodo): Promise<void> {
