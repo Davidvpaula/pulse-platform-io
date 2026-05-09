@@ -3945,6 +3945,54 @@ export type Database = {
         }
         Relationships: []
       }
+      financeiro_reconciliacao_jobs: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detalhes: Json
+          drift_total_cents: number
+          duracao_ms: number | null
+          finalizado_em: string | null
+          hash_global: string | null
+          id: string
+          iniciado_em: string
+          medicos_com_drift: number
+          medicos_processados: number
+          origem: string
+          status: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          drift_total_cents?: number
+          duracao_ms?: number | null
+          finalizado_em?: string | null
+          hash_global?: string | null
+          id?: string
+          iniciado_em?: string
+          medicos_com_drift?: number
+          medicos_processados?: number
+          origem?: string
+          status?: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          drift_total_cents?: number
+          duracao_ms?: number | null
+          finalizado_em?: string | null
+          hash_global?: string | null
+          id?: string
+          iniciado_em?: string
+          medicos_com_drift?: number
+          medicos_processados?: number
+          origem?: string
+          status?: string
+        }
+        Relationships: []
+      }
       function_permissions: {
         Row: {
           ativo: boolean
@@ -9440,6 +9488,36 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_financeiro_drift: {
+        Row: {
+          drift_cents: number | null
+          medico_id: string | null
+          qtd_movimentos: number | null
+          qtd_snapshot: number | null
+          saldo_ledger_cents: number | null
+          saldo_snapshot_cents: number | null
+          ultimo_mov_em: string | null
+        }
+        Relationships: []
+      }
+      vw_financeiro_obs_kpis: {
+        Row: {
+          alertas_abertos: number | null
+          alertas_criticos: number | null
+          hash_global_atual: string | null
+          idempotency_keys: number | null
+          medicos_cobertos: number | null
+          movs_24h: number | null
+          movs_7d: number | null
+          outbox_pendente: number | null
+          total_movimentos: number | null
+          ultima_reconciliacao_em: string | null
+          ultimo_drift_total_cents: number | null
+          ultimo_movimento_em: string | null
+          ultimo_status_reconciliacao: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _financeiro_calc_comissao: {
@@ -10201,6 +10279,7 @@ export type Database = {
           ultimo_movimento_em: string
         }[]
       }
+      fn_observabilidade_financeira: { Args: never; Returns: Json }
       fn_pa_confirmar_reserva: { Args: { _slot_id: string }; Returns: Json }
       fn_pa_reservar_slot: { Args: { _slot_inicio: string }; Returns: Json }
       fn_pa_slots_disponiveis: {
@@ -10231,6 +10310,7 @@ export type Database = {
           score: number
         }[]
       }
+      fn_reconciliar_global: { Args: { p_origem?: string }; Returns: Json }
       fn_reconciliar_saldo_medico: {
         Args: { p_medico_id: string }
         Returns: Json
