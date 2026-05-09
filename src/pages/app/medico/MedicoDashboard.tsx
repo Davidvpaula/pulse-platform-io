@@ -391,6 +391,11 @@ export default function MedicoDashboard() {
         }
       />
 
+      {/* Lembrete de link de sala (sem link = bloqueante; >30d = sugestão) */}
+      {isMedico && medicoAtual?.id && (
+        <LembreteTrocarLinkSala medicoId={medicoAtual.id} />
+      )}
+
       {/* Aviso para perfis não-médicos visualizando o painel */}
       {!podeAtuar && (
         <div className="card-elevated flex items-start gap-3 border-l-4 border-l-muted-foreground/40 p-4">
