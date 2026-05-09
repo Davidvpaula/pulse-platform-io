@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
 import { Gift } from "lucide-react";
-import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
+
 import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
 import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacienteKeys } from "@/lib/paciente/queries";
