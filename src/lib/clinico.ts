@@ -984,6 +984,15 @@ export async function updateConsultaStatus(
     console.error("[clinico] updateConsultaStatus:", error);
     return { ok: false, error: error.message };
   }
+  // Espelhar no Google Calendar do médico (fire-and-forget).
+  // Falha aqui NUNCA quebra a operação interna.
+  try {
+    const { syncConsultaToGoogle } = await import("./googleCalendarSync");
+    const action = status === "cancelada" || status === "no_show" ? "delete" : "upsert";
+    void syncConsultaToGoogle(consultaId, action);
+  } catch (e) {
+    console.warn("[clinico] google-sync skip:", e);
+  }
   return { ok: true };
 }
 
