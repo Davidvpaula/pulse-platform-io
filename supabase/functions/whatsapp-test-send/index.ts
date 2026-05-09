@@ -21,6 +21,16 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function metaErrorHint(code?: number | null) {
+  if (code === 133010) {
+    return "Phone Number ID não está registrado/ativo para o token Meta atual. Use o Phone Number ID do mesmo app/WABA do token, não o número de telefone nem um ID de ambiente diferente.";
+  }
+  if (code === 131030) return "Destinatário não autorizado no sandbox Meta.";
+  if (code === 190) return "Token Meta expirado ou inválido.";
+  if (code === 100) return "Parâmetro inválido no payload ou Phone Number ID.";
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -118,25 +128,24 @@ Deno.serve(async (req) => {
       error: metaBody?.error ?? null,
     });
 
-    return json(
-      {
-        ok: res.ok,
-        http_status: res.status,
-        meta_request_id: requestId,
-        wa_message_id: metaBody?.messages?.[0]?.id ?? null,
-        error_code: metaBody?.error?.code ?? null,
-        error_subcode: metaBody?.error?.error_subcode ?? null,
-        error_message: metaBody?.error?.message ?? null,
-        error_type: metaBody?.error?.type ?? null,
-        fbtrace_id: metaBody?.error?.fbtrace_id ?? null,
-        meta_response: metaBody,
-        env: {
-          graph_api_version: GRAPH_API_VERSION,
-          phone_number_id: META_PHONE_ID,
-        },
+    const errorCode = metaBody?.error?.code ?? null;
+    return json({
+      ok: res.ok,
+      http_status: res.status,
+      meta_request_id: requestId,
+      wa_message_id: metaBody?.messages?.[0]?.id ?? null,
+      error_code: errorCode,
+      error_subcode: metaBody?.error?.error_subcode ?? null,
+      error_message: metaBody?.error?.message ?? null,
+      error_type: metaBody?.error?.type ?? null,
+      fbtrace_id: metaBody?.error?.fbtrace_id ?? null,
+      hint: metaErrorHint(errorCode),
+      meta_response: metaBody,
+      env: {
+        graph_api_version: GRAPH_API_VERSION,
+        phone_number_id: META_PHONE_ID,
       },
-      res.ok ? 200 : 502,
-    );
+    });
   } catch (e) {
     console.error("[whatsapp-test-send] erro inesperado:", e);
     return json({ error: (e as Error).message }, 500);
