@@ -951,6 +951,27 @@ export type Database = {
             referencedRelation: "consultas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "anexos_consulta_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_consulta_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_consulta_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
         ]
       }
       app_settings: {
@@ -1402,6 +1423,27 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: true
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_medicas_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_medicas_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacoes_medicas_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
           {
@@ -1912,6 +1954,27 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: false
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_status_log_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_status_log_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_status_log_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
         ]
@@ -2850,6 +2913,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cupons_uso_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupons_uso_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cupons_uso_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cupons_uso_cupom_id_fkey"
             columns: ["cupom_id"]
             isOneToOne: false
@@ -3022,6 +3106,27 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: false
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_paciente_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_paciente_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_paciente_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
         ]
@@ -4265,6 +4370,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "impulsionamento_conversoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impulsionamento_conversoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "impulsionamento_conversoes_medico_id_fkey"
             columns: ["medico_id"]
             isOneToOne: false
@@ -4592,6 +4718,27 @@ export type Database = {
             columns: ["agendamento_id"]
             isOneToOne: false
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_threads_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_threads_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_threads_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
           {
@@ -6998,6 +7145,27 @@ export type Database = {
             referencedRelation: "consultas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pagamentos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
         ]
       }
       password_policy: {
@@ -7890,6 +8058,27 @@ export type Database = {
             referencedRelation: "consultas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "prescricoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescricoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescricoes_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
         ]
       }
       producao_checklist: {
@@ -8036,6 +8225,27 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: true
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prontuarios_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prontuarios_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prontuarios_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
         ]
@@ -8545,6 +8755,27 @@ export type Database = {
             referencedRelation: "consultas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reembolsos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reembolsos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reembolsos_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
         ]
       }
       retornos_gratuitos: {
@@ -8599,10 +8830,52 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_retornos_consulta_origem"
+            columns: ["consulta_origem_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_origem"
+            columns: ["consulta_origem_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_origem"
+            columns: ["consulta_origem_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_retornos_consulta_uso"
             columns: ["consulta_uso_id"]
             isOneToOne: false
             referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_uso"
+            columns: ["consulta_uso_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_uso"
+            columns: ["consulta_uso_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_consulta_uso"
+            columns: ["consulta_uso_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
             referencedColumns: ["id"]
           },
           {
@@ -9518,6 +9791,165 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_noc_atrasos_ativos: {
+        Row: {
+          id: string | null
+          inicio: string | null
+          medico_id: string | null
+          medico_nome: string | null
+          minutos_atraso: number | null
+          modalidade: Database["public"]["Enums"]["consulta_modalidade"] | null
+          paciente_id: string | null
+          paciente_nome: string | null
+          status: Database["public"]["Enums"]["consulta_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "consultas_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_noc_consultas_em_andamento: {
+        Row: {
+          fim: string | null
+          id: string | null
+          inicio: string | null
+          medico_id: string | null
+          medico_nome: string | null
+          minutos_em_andamento: number | null
+          modalidade: Database["public"]["Enums"]["consulta_modalidade"] | null
+          paciente_id: string | null
+          paciente_nome: string | null
+          status: Database["public"]["Enums"]["consulta_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "consultas_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_noc_fila_paciente: {
+        Row: {
+          id: string | null
+          inicio: string | null
+          medico_id: string | null
+          medico_nome: string | null
+          minutos_para_inicio: number | null
+          modalidade: Database["public"]["Enums"]["consulta_modalidade"] | null
+          paciente_id: string | null
+          paciente_nome: string | null
+          status: Database["public"]["Enums"]["consulta_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultas_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "consultas_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_noc_medicos_online: {
+        Row: {
+          current_conversation_id: string | null
+          last_seen_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          current_conversation_id?: string | null
+          last_seen_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          current_conversation_id?: string | null
+          last_seen_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendant_presence_current_conversation_id_fkey"
+            columns: ["current_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _financeiro_calc_comissao: {
@@ -10279,6 +10711,25 @@ export type Database = {
           ultimo_movimento_em: string
         }[]
       }
+      fn_metricas_operacionais_dia: {
+        Args: { p_dia?: string }
+        Returns: {
+          atraso_medio_min: number
+          cancelada_tarde: number
+          canceladas: number
+          concluidas: number
+          dia: string
+          duracao_media_min: number
+          iniciadas: number
+          no_show: number
+          pontualidade_pct: number
+          taxa_cancelamento: number
+          taxa_conclusao: number
+          taxa_no_show: number
+          total_consultas: number
+        }[]
+      }
+      fn_noc_snapshot: { Args: never; Returns: Json }
       fn_observabilidade_financeira: { Args: never; Returns: Json }
       fn_pa_confirmar_reserva: { Args: { _slot_id: string }; Returns: Json }
       fn_pa_reservar_slot: { Args: { _slot_inicio: string }; Returns: Json }
