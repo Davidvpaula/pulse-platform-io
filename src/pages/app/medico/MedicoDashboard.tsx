@@ -322,8 +322,10 @@ export default function MedicoDashboard() {
       ok: !onb.semSala,
       titulo: "Link da sala virtual configurado",
       desc: onb.semSala
-        ? "Configure o link padrão (Meet, Zoom...) para receber consultas online."
-        : "Sala configurada — slots online liberados.",
+        ? "Configure o link padrão (Meet, Zoom...) ou ative o modo Google Meet dinâmico."
+        : (medico as any)?.tipo_sala === "dinamico"
+          ? "Google Meet dinâmico ativo — link gerado automaticamente em cada consulta."
+          : "Sala configurada — slots online liberados.",
       link: onb.semSala ? "/app/medico/configuracoes" : null,
       icon: Video,
     },
