@@ -66,7 +66,9 @@ export default function PacienteAgendamentos() {
     const base = rows ?? [];
     let arr = base.filter((c) => {
       const fim = new Date(c.fim);
-      if (filtro === "futuras") return fim >= agora && c.status !== "cancelada";
+      const inativa = c.status === "cancelada" || c.status === "concluida" || c.status === "no_show";
+      if (filtro === "ativas") return fim >= agora && !inativa;
+      if (filtro === "concluidas") return c.status === "concluida";
       if (filtro === "passadas") return fim < agora && c.status !== "cancelada";
       if (filtro === "canceladas") return c.status === "cancelada";
       return true;
