@@ -117,7 +117,7 @@ export default function MedicoConfiguracoes() {
   const handleGoogleConnect = async () => {
     setGoogleActionLoading(true);
     try {
-      const redirectUri = `${window.location.origin}/medico/google-callback`;
+      const redirectUri = `${window.location.origin}/app/medico/google-callback`;
       const { data, error } = await supabase.functions.invoke("google-oauth", {
         body: { action: "get-auth-url", redirect_uri: redirectUri },
       });
