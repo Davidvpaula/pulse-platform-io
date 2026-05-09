@@ -52,7 +52,7 @@ export default function PacienteAgendamentos() {
   const { data: avaliadas = new Set<string>() } = usePacienteAvaliadas(concluidasIds, hasSession);
 
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<Filtro>("futuras");
+  const [filtro, setFiltro] = useState<Filtro>("ativas");
   const [filtroQuem, setFiltroQuem] = useState<FiltroQuem>("todas");
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
