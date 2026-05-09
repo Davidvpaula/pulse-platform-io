@@ -31,24 +31,35 @@ supabase.auth.onAuthStateChange(() => {
   cachedAdmin = null;
 });
 
-// Realtime: invalida cache quando permissões mudam no banco
-const realtimeChannel = supabase
-  .channel("permissions-invalidate")
-  .on("postgres_changes", { event: "*", schema: "public", table: "permissoes_colaborador" }, () => {
-    cache.clear();
-  })
-  .on("postgres_changes", { event: "*", schema: "public", table: "function_permissions" }, () => {
-    cache.clear();
-  })
-  .on("postgres_changes", { event: "*", schema: "public", table: "permissoes_perfil" }, () => {
-    cache.clear();
-  })
-  .subscribe();
+// Realtime: invalida cache quando permissões mudam no banco.
+// Construído dentro de função para podermos limpar com HMR sem disparar o erro
+// "cannot add postgres_changes callbacks ... after subscribe()".
+function buildRealtimeChannel() {
+  const ch = supabase.channel("permissions-invalidate");
+  ch.on("postgres_changes", { event: "*", schema: "public", table: "permissoes_colaborador" }, () => { cache.clear(); });
+  ch.on("postgres_changes", { event: "*", schema: "public", table: "function_permissions" }, () => { cache.clear(); });
+  ch.on("postgres_changes", { event: "*", schema: "public", table: "permissoes_perfil" }, () => { cache.clear(); });
+  ch.subscribe();
+  return ch;
+}
+
+const realtimeChannel = buildRealtimeChannel();
 
 // Cleanup (módulo unload) — defensive
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => realtimeChannel.unsubscribe());
+  window.addEventListener("beforeunload", () => { try { supabase.removeChannel(realtimeChannel); } catch {} });
 }
+
+// HMR: remove o canal antigo antes do módulo ser substituído.
+// Sem isso, o reload tenta registrar `.on()` num canal já assinado e quebra a árvore.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    try { supabase.removeChannel(realtimeChannel); } catch {}
+    cache.clear();
+    cachedAdmin = null;
+  });
+}
+
 
 async function checkAdmin(uid: string): Promise<boolean> {
   if (cachedAdmin && cachedAdmin.uid === uid && Date.now() < cachedAdmin.expiresAt) return cachedAdmin.isAdmin;
