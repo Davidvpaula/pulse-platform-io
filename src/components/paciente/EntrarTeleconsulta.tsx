@@ -17,8 +17,6 @@ interface EntrarTeleconsultaProps {
   variant?: "gradient" | "outline";
 }
 
-/** Minutos antes do horário que o paciente pode entrar */
-const ANTECEDENCIA_MIN = 15;
 /** Minutos depois do fim que o link ainda funciona */
 const TOLERANCIA_POS_MIN = 30;
 
@@ -42,24 +40,15 @@ export default function EntrarTeleconsulta({
     if (!linkSala) return { podeEntrar: false, motivo: "Sala em preparação — o link será disponibilizado em breve." };
 
     const agora = Date.now();
-    const inicioMs = new Date(inicio).getTime();
     const fimMs = new Date(fim).getTime();
-    const aberturaMs = inicioMs - ANTECEDENCIA_MIN * 60_000;
     const fechamentoMs = fimMs + TOLERANCIA_POS_MIN * 60_000;
 
-    if (agora < aberturaMs) {
-      const minFaltam = Math.ceil((aberturaMs - agora) / 60_000);
-      return {
-        podeEntrar: false,
-        motivo: `A sala abre ${ANTECEDENCIA_MIN} min antes. Faltam ${minFaltam} min.`,
-      };
-    }
     if (agora > fechamentoMs) {
       return { podeEntrar: false, motivo: "O horário da consulta já encerrou." };
     }
 
     return { podeEntrar: true, motivo: null };
-  }, [linkSala, inicio, fim]);
+  }, [linkSala, fim]);
 
   const handleEntrar = useCallback(() => {
     if (!linkSala || !podeEntrar) return;

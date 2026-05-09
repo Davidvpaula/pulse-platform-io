@@ -34,7 +34,7 @@ import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacien
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
 import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 
-type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
+type Filtro = "todas" | "ativas" | "concluidas" | "passadas" | "canceladas";
 type FiltroQuem = "todas" | "minhas" | "dependentes";
 
 export default function PacienteAgendamentos() {
@@ -52,7 +52,7 @@ export default function PacienteAgendamentos() {
   const { data: avaliadas = new Set<string>() } = usePacienteAvaliadas(concluidasIds, hasSession);
 
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<Filtro>("futuras");
+  const [filtro, setFiltro] = useState<Filtro>("ativas");
   const [filtroQuem, setFiltroQuem] = useState<FiltroQuem>("todas");
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
@@ -66,7 +66,9 @@ export default function PacienteAgendamentos() {
     const base = rows ?? [];
     let arr = base.filter((c) => {
       const fim = new Date(c.fim);
-      if (filtro === "futuras") return fim >= agora && c.status !== "cancelada";
+      const inativa = c.status === "cancelada" || c.status === "concluida" || c.status === "no_show";
+      if (filtro === "ativas") return fim >= agora && !inativa;
+      if (filtro === "concluidas") return c.status === "concluida";
       if (filtro === "passadas") return fim < agora && c.status !== "cancelada";
       if (filtro === "canceladas") return c.status === "cancelada";
       return true;
@@ -88,9 +90,9 @@ export default function PacienteAgendamentos() {
       );
     }
     return arr.sort((a, b) =>
-      filtro === "passadas"
-        ? new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
-        : new Date(a.inicio).getTime() - new Date(b.inicio).getTime(),
+      filtro === "ativas"
+        ? new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
+        : new Date(b.inicio).getTime() - new Date(a.inicio).getTime(),
     );
   }, [rows, filtro, filtroQuem, busca]);
 
@@ -185,9 +187,10 @@ export default function PacienteAgendamentos() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="futuras">Futuras</SelectItem>
-              <SelectItem value="passadas">Passadas</SelectItem>
+              <SelectItem value="ativas">Próximas</SelectItem>
+              <SelectItem value="concluidas">Concluídas</SelectItem>
               <SelectItem value="canceladas">Canceladas</SelectItem>
+              <SelectItem value="passadas">Passadas</SelectItem>
               <SelectItem value="todas">Todas</SelectItem>
             </SelectContent>
           </Select>
@@ -370,12 +373,13 @@ export default function PacienteAgendamentos() {
 
 function EmptyState({ filtro }: { filtro: Filtro }) {
   const msg: Record<Filtro, string> = {
-    futuras: "Você não tem consultas futuras agendadas.",
+    ativas: "Você não tem consultas próximas agendadas.",
+    concluidas: "Nenhuma consulta concluída ainda.",
     passadas: "Nenhuma consulta passada encontrada.",
     canceladas: "Nenhuma consulta cancelada.",
     todas: "Você ainda não realizou nenhum agendamento.",
   };
-  const isFuturas = filtro === "futuras" || filtro === "todas";
+  const isFuturas = filtro === "ativas" || filtro === "todas";
   return (
     <div className="flex flex-col items-center gap-4 py-12 text-center">
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
