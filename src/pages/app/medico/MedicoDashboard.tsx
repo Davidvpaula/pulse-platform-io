@@ -24,6 +24,7 @@ import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 import { checkTreinamentoObrigatorio } from "@/lib/treinamentos";
+import { LembreteTrocarLinkSala } from "@/components/medico/LembreteTrocarLinkSala";
 
 import { formatBRL } from "@/lib/format";
 function formatHora(iso: string) {
