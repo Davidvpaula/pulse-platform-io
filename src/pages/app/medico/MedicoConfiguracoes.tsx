@@ -480,23 +480,26 @@ export default function MedicoConfiguracoes() {
                     />
                     Fixo
                   </label>
-                  <label className={cn(
-                    "flex flex-1 cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm transition",
-                    tipoSala === "dinamico"
-                      ? "border-primary bg-primary/5 font-medium"
-                      : "border-border hover:border-primary/40",
-                    !googleStatus.connected && "opacity-50 cursor-not-allowed"
-                  )}>
-                    <input
-                      type="radio"
-                      name="tipo_sala"
-                      className="accent-primary"
-                      checked={tipoSala === "dinamico"}
-                      disabled={!googleStatus.connected}
-                      onChange={() => { setTipoSala("dinamico"); setMeetDirty(true); }}
-                    />
-                    Dinâmico (Google Meet)
-                  </label>
+                  <div
+                    className="flex flex-1 items-center justify-between gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-3 text-sm opacity-60 cursor-not-allowed"
+                    title="Em breve"
+                    aria-disabled="true"
+                  >
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="tipo_sala"
+                        className="accent-primary"
+                        checked={false}
+                        disabled
+                        readOnly
+                      />
+                      <span className="text-muted-foreground">Dinâmico (Google Meet)</span>
+                    </span>
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                      Em breve
+                    </span>
+                  </div>
                 </div>
               </Field>
 
