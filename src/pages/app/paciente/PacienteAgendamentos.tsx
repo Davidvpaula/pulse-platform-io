@@ -56,7 +56,7 @@ export default function PacienteAgendamentos() {
   const [filtroQuem, setFiltroQuem] = useState<FiltroQuem>("todas");
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
-  const [expandedPag, setExpandedPag] = useState<string | null>(null);
+  
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
   const [cancelarConsulta, setCancelarConsulta] = useState<ConsultaDetalhada | null>(null);
 
