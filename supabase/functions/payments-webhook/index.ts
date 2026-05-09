@@ -237,9 +237,14 @@ Deno.serve(async (req) => {
               // Espelha no Google Calendar do médico ANTES de notificar o paciente,
               // para que a notificação já leve o link Meet (quando dinâmico).
               try {
-                await admin.functions.invoke("google-calendar-sync", {
+                const { data: gRes, error: gErr } = await admin.functions.invoke("google-calendar-sync", {
                   body: { consulta_id: pagAtual.consulta_id, action: "upsert" },
                 });
+                if (gErr) {
+                  console.warn("[payments-webhook] google-calendar-sync error:", gErr);
+                } else {
+                  console.log("[payments-webhook] google-calendar-sync ok:", JSON.stringify(gRes));
+                }
               } catch (gErr) {
                 console.warn("[payments-webhook] google-calendar-sync falhou (ignorado):", gErr);
               }
