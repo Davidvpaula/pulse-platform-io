@@ -126,11 +126,8 @@ export default function MedicoDashboard() {
     // Perfil completo: nome, CRM, especialidade, bio
     const perfilIncompleto = !medico.nome?.trim() || !medico.crm?.trim() || !medico.especialidade?.trim() || !medico.bio?.trim();
 
-    // Sala virtual: dinâmico (Google Meet) gera link automático; fixo exige link_sala_padrao.
-    const tipoSala = (medico as any).tipo_sala ?? "fixo";
-    const semSala = tipoSala === "dinamico"
-      ? false
-      : !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0;
+    // Sala virtual: SEMPRE link fixo (modo dinâmico desativado para estabilidade operacional).
+    const semSala = !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0;
 
     setOnb({
       semSala,
