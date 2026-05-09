@@ -9579,6 +9579,48 @@ export type Database = {
           },
         ]
       }
+      whatsapp_cloud_test_log: {
+        Row: {
+          created_at: string
+          enviado_por: string | null
+          error_code: number | null
+          error_message: string | null
+          http_status: number | null
+          id: string
+          message: string
+          meta_request_id: string | null
+          raw_response: Json | null
+          to_number: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_por?: string | null
+          error_code?: number | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          message: string
+          meta_request_id?: string | null
+          raw_response?: Json | null
+          to_number: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          enviado_por?: string | null
+          error_code?: number | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          message?: string
+          meta_request_id?: string | null
+          raw_response?: Json | null
+          to_number?: string
+          wa_message_id?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_envio_metricas: {
         Row: {
           custo_estimado: number
