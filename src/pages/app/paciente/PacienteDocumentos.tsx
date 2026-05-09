@@ -81,7 +81,7 @@ type DependenteInfo = { id: string; nome: string; parentesco: string | null };
 
 export default function PacienteDocumentos() {
   const { session } = useSession();
-  const [tab, setTab] = useState<"meus" | "prescricoes" | "consultas">("meus");
+  const [tab, setTab] = useState<"meus" | "consultas">("meus");
 
   const [docs, setDocs] = useState<DocumentoPaciente[]>([]);
   const [anexos, setAnexos] = useState<AnexoConsulta[]>([]);
