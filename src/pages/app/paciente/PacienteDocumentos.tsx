@@ -304,9 +304,6 @@ export default function PacienteDocumentos() {
         description="Receitas e laudos emitidos por médicos, anexos das consultas e seus próprios documentos."
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
-              <DbIcon className="h-3 w-3" /> Dados em tempo real
-            </span>
             <Button
               variant="outline"
               size="sm"
@@ -315,7 +312,7 @@ export default function PacienteDocumentos() {
               className="text-xs"
             >
               {importingFeegow ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
-              {importingFeegow ? "Importando…" : "Importar da Feegow"}
+              {importingFeegow ? "Atualizando…" : "Atualizar documentos"}
             </Button>
             <Dialog open={openUpload} onOpenChange={setOpenUpload}>
               <DialogTrigger asChild>
