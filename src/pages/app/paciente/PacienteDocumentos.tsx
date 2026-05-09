@@ -524,63 +524,7 @@ export default function PacienteDocumentos() {
           </p>
         </TabsContent>
 
-        {/* PRESCRIÇÕES recebidas dos médicos */}
-        <TabsContent value="prescricoes" className="mt-4">
-          <div className="card-elevated p-2">
-            {loadingPresc ? (
-              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Carregando prescrições…
-              </div>
-            ) : prescricoes.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <div className="grid h-14 w-14 place-items-center rounded-full bg-muted text-muted-foreground">
-                  <Pill className="h-6 w-6" />
-                </div>
-                <p className="text-sm text-muted-foreground">Nenhuma prescrição recebida ainda.</p>
-                <p className="text-xs text-muted-foreground">Após uma consulta, o médico pode emitir prescrições — elas aparecem aqui.</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {prescricoes.map((p) => {
-                  const c = consultasMap[p.consulta_id];
-                  const meds = Array.isArray(p.medicamentos) ? p.medicamentos : [];
-                  const validade = new Date(new Date(p.emitida_em).getTime() + p.validade_dias * 86400000);
-                  const expirada = validade < new Date();
-                  return (
-                    <li key={p.id} className="flex flex-wrap items-start gap-3 p-4">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-                        <Pill className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
-                          Prescrição {c?.medico_nome ? `de ${c.medico_nome}` : ""}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {c?.especialidade_nome ?? "—"} · emitida em {formatDataBR(p.emitida_em)} · válida até {formatDataBR(validade.toISOString())}
-                        </p>
-                        {meds.length > 0 && (
-                          <p className="mt-1 text-xs text-foreground">
-                            {meds.slice(0, 3).map((m: any) => m?.nome ?? m?.medicamento ?? "Medicamento").join(", ")}
-                            {meds.length > 3 && ` +${meds.length - 3}`}
-                          </p>
-                        )}
-                        {p.orientacoes && (
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{p.orientacoes}</p>
-                        )}
-                      </div>
-                      <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                        expirada ? "bg-muted text-muted-foreground" : "bg-success/10 text-success",
-                      )}>
-                        {expirada ? "Expirada" : "Válida"}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </TabsContent>
+
 
         {/* POR CONSULTA — pendências e anexos */}
         <TabsContent value="consultas" className="mt-4">
