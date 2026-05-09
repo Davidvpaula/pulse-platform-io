@@ -409,20 +409,12 @@ export default function PacienteDocumentos() {
       )}
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-2">
           <TabsTrigger value="meus">
             Meus anexos
             {docs.length > 0 && (
               <span className="ml-2 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                 {docs.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="prescricoes">
-            Prescrições e laudos
-            {prescricoes.length > 0 && (
-              <span className="ml-2 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                {prescricoes.length}
               </span>
             )}
           </TabsTrigger>
