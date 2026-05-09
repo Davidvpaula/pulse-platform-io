@@ -246,20 +246,13 @@ serve(async (req) => {
       especialidadeNome = esp?.nome ?? null;
     }
 
-    // Decide se este sync deve criar/anexar Meet (dinâmico) ou só usar link fixo.
+    // ESTABILIDADE OPERACIONAL: Google Calendar é apenas complemento (lembrete na agenda do médico).
+    // Nunca gerar Meet dinâmico aqui. Link da consulta é responsabilidade do trigger
+    // `consulta_preencher_link_sala` (copia medicos.link_sala_padrao -> consultas.link_sala no INSERT).
     const isOnline = consulta.modalidade === "online";
-    const tipoSala = (medico as any)?.tipo_sala ?? "fixo";
     const linkPadrao = (medico as any)?.link_sala_padrao ?? null;
-    let linkSala: string | null = consulta.link_sala ?? null;
-    let needsMeet = false;
-
-    if (isOnline && !linkSala) {
-      if (tipoSala === "dinamico") {
-        needsMeet = true; // criamos via conferenceData
-      } else if (linkPadrao) {
-        linkSala = linkPadrao; // fixo: usa o link do médico
-      }
-    }
+    let linkSala: string | null = consulta.link_sala ?? linkPadrao ?? null;
+    const needsMeet = false;
 
     const pacienteNome = paciente?.nome_completo ?? "Paciente";
     const buildDesc = (currentLink: string | null) =>
