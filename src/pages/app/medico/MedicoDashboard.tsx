@@ -126,8 +126,14 @@ export default function MedicoDashboard() {
     // Perfil completo: nome, CRM, especialidade, bio
     const perfilIncompleto = !medico.nome?.trim() || !medico.crm?.trim() || !medico.especialidade?.trim() || !medico.bio?.trim();
 
+    // Sala virtual: dinâmico (Google Meet) gera link automático; fixo exige link_sala_padrao.
+    const tipoSala = (medico as any).tipo_sala ?? "fixo";
+    const semSala = tipoSala === "dinamico"
+      ? false
+      : !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0;
+
     setOnb({
-      semSala: !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0,
+      semSala,
       semEspecialidade: (vinculos ?? 0) === 0,
       pendente: medico.status !== "aprovado",
       treinamentoConcluido: treinCheck.concluido,
@@ -316,8 +322,10 @@ export default function MedicoDashboard() {
       ok: !onb.semSala,
       titulo: "Link da sala virtual configurado",
       desc: onb.semSala
-        ? "Configure o link padrão (Meet, Zoom...) para receber consultas online."
-        : "Sala configurada — slots online liberados.",
+        ? "Configure o link padrão (Meet, Zoom...) ou ative o modo Google Meet dinâmico."
+        : (medicoAtual as any)?.tipo_sala === "dinamico"
+          ? "Google Meet dinâmico ativo — link gerado automaticamente em cada consulta."
+          : "Sala configurada — slots online liberados.",
       link: onb.semSala ? "/app/medico/configuracoes" : null,
       icon: Video,
     },

@@ -236,15 +236,31 @@ Deno.serve(async (req) => {
             if (pagAtual?.consulta_id) {
               // Espelha no Google Calendar do médico ANTES de notificar o paciente,
               // para que a notificação já leve o link Meet (quando dinâmico).
+              // Usar fetch direto com SERVICE_ROLE — supabase.functions.invoke não
+              // anexa o bearer esperado pelo bypass interno do google-calendar-sync.
               try {
-                const { data: gRes, error: gErr } = await admin.functions.invoke("google-calendar-sync", {
-                  body: { consulta_id: pagAtual.consulta_id, action: "upsert" },
-                });
-                if (gErr) {
-                  console.warn("[payments-webhook] google-calendar-sync error:", gErr);
-                } else {
-                  console.log("[payments-webhook] google-calendar-sync ok:", JSON.stringify(gRes));
-                }
+                const syncRes = await fetch(
+                  `${SUPABASE_URL}/functions/v1/google-calendar-sync`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${SERVICE_ROLE}`,
+                      apikey: SERVICE_ROLE,
+                    },
+                    body: JSON.stringify({
+                      consulta_id: pagAtual.consulta_id,
+                      action: "upsert",
+                    }),
+                  },
+                );
+                const syncBody = await syncRes.text();
+                console.log(
+                  "[payments-webhook] google-calendar-sync",
+                  "status=", syncRes.status,
+                  "consulta_id=", pagAtual.consulta_id,
+                  "body=", syncBody.slice(0, 500),
+                );
               } catch (gErr) {
                 console.warn("[payments-webhook] google-calendar-sync falhou (ignorado):", gErr);
               }
