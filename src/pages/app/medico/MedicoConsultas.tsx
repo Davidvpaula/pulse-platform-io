@@ -19,6 +19,7 @@ import {
   updateConsultaStatus, type ConsultaDetalhada,
 } from "@/lib/clinico";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
@@ -140,7 +141,30 @@ export default function MedicoConsultas() {
       const result = await updateConsultaStatus(c.id, "em_andamento");
       if (!result.ok) throw new Error(result.error);
       toast.success("Consulta iniciada");
-      if (c.link_sala) window.open(c.link_sala, "_blank", "noopener,noreferrer");
+
+      // Fallback defensivo: se for online e ainda sem link_sala, tenta gerar agora.
+      let linkParaAbrir = c.link_sala;
+      if (!linkParaAbrir && c.modalidade === "online") {
+        try {
+          await supabase.functions.invoke("google-calendar-sync", {
+            body: { consulta_id: c.id, action: "upsert" },
+          });
+          const { data: refreshed } = await supabase
+            .from("consultas")
+            .select("link_sala")
+            .eq("id", c.id)
+            .maybeSingle();
+          linkParaAbrir = refreshed?.link_sala ?? null;
+        } catch (gErr) {
+          console.warn("[medico] fallback google-calendar-sync falhou", gErr);
+        }
+      }
+
+      if (linkParaAbrir) {
+        window.open(linkParaAbrir, "_blank", "noopener,noreferrer");
+      } else if (c.modalidade === "online") {
+        toast.error("Sala não pôde ser criada — verifique a conexão Google em Configurações.");
+      }
       void carregar();
     } catch (e: any) {
       toast.error(e?.message ?? "Não foi possível iniciar");

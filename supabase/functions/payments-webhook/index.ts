@@ -234,6 +234,15 @@ Deno.serve(async (req) => {
               .eq("provider_session_id", sessionId)
               .maybeSingle();
             if (pagAtual?.consulta_id) {
+              // Espelha no Google Calendar do médico ANTES de notificar o paciente,
+              // para que a notificação já leve o link Meet (quando dinâmico).
+              try {
+                await admin.functions.invoke("google-calendar-sync", {
+                  body: { consulta_id: pagAtual.consulta_id, action: "upsert" },
+                });
+              } catch (gErr) {
+                console.warn("[payments-webhook] google-calendar-sync falhou (ignorado):", gErr);
+              }
               await admin.functions.invoke("enviar-confirmacao-consulta", {
                 body: { consulta_id: pagAtual.consulta_id },
               });

@@ -221,9 +221,13 @@ serve(async (req) => {
     }
 
     // ============ UPSERT ============
-    // Carrega nomes para descrição
+    // Carrega nomes + config do médico (tipo_sala / link_sala_padrao)
     const [{ data: medico }, { data: paciente }] = await Promise.all([
-      serviceClient.from("medicos").select("nome").eq("id", medico_id).maybeSingle(),
+      serviceClient
+        .from("medicos")
+        .select("nome, tipo_sala, link_sala_padrao")
+        .eq("id", medico_id)
+        .maybeSingle(),
       serviceClient.from("pacientes").select("nome_completo").eq("id", consulta.paciente_id).maybeSingle(),
     ]);
 
@@ -237,46 +241,76 @@ serve(async (req) => {
       especialidadeNome = esp?.nome ?? null;
     }
 
-    const pacienteNome = paciente?.nome_completo ?? "Paciente";
-    const linhasDesc = [
-      `Consulta ${consulta.modalidade}${especialidadeNome ? ` — ${especialidadeNome}` : ""}`,
-      `Paciente: ${pacienteNome}`,
-      consulta.link_sala ? `Link Meet: ${consulta.link_sala}` : null,
-      `ID interno: ${consulta_id}`,
-    ].filter(Boolean);
+    // Decide se este sync deve criar/anexar Meet (dinâmico) ou só usar link fixo.
+    const isOnline = consulta.modalidade === "online";
+    const tipoSala = (medico as any)?.tipo_sala ?? "fixo";
+    const linkPadrao = (medico as any)?.link_sala_padrao ?? null;
+    let linkSala: string | null = consulta.link_sala ?? null;
+    let needsMeet = false;
 
-    const eventPayload = {
+    if (isOnline && !linkSala) {
+      if (tipoSala === "dinamico") {
+        needsMeet = true; // criamos via conferenceData
+      } else if (linkPadrao) {
+        linkSala = linkPadrao; // fixo: usa o link do médico
+      }
+    }
+
+    const pacienteNome = paciente?.nome_completo ?? "Paciente";
+    const buildDesc = (currentLink: string | null) =>
+      [
+        `Consulta ${consulta.modalidade}${especialidadeNome ? ` — ${especialidadeNome}` : ""}`,
+        `Paciente: ${pacienteNome}`,
+        currentLink ? `Link Meet: ${currentLink}` : null,
+        `ID interno: ${consulta_id}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+    const baseEvent: Record<string, unknown> = {
       summary: `Consulta — ${pacienteNome}`,
-      description: linhasDesc.join("\n"),
+      description: buildDesc(linkSala),
       start: { dateTime: consulta.inicio, timeZone: "America/Sao_Paulo" },
       end: { dateTime: consulta.fim, timeZone: "America/Sao_Paulo" },
     };
 
-    const doPost = async () => {
-      return await fetch(
-        `${GOOGLE_CALENDAR_URL}/calendars/${encodeURIComponent(calendarId)}/events`,
+    // Se já existe evento no Google sem Meet e precisamos de Meet, anexar via PATCH com conferenceData.
+    const attachMeetExisting = needsMeet && existing?.google_event_id;
+    if (needsMeet) {
+      baseEvent.conferenceData = {
+        createRequest: {
+          requestId: consulta_id,
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
+      };
+    }
+
+    const qs = needsMeet ? "?conferenceDataVersion=1" : "";
+
+    const doPost = async () =>
+      await fetch(
+        `${GOOGLE_CALENDAR_URL}/calendars/${encodeURIComponent(calendarId)}/events${qs}`,
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(eventPayload),
+          body: JSON.stringify(baseEvent),
         },
       );
-    };
 
     let calRes: Response;
     if (existing?.google_event_id) {
       calRes = await fetch(
-        `${GOOGLE_CALENDAR_URL}/calendars/${encodeURIComponent(calendarId)}/events/${existing.google_event_id}`,
+        `${GOOGLE_CALENDAR_URL}/calendars/${encodeURIComponent(calendarId)}/events/${existing.google_event_id}${qs}`,
         {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(eventPayload),
+          body: JSON.stringify(baseEvent),
         },
       );
       if (calRes.status === 404 || calRes.status === 410) {
@@ -297,6 +331,37 @@ serve(async (req) => {
       });
       console.error("google-calendar-sync upsert error", consulta_id, calRes.status, calData);
       return jsonResponse({ success: false, error: "google_upsert_failed", status: calRes.status });
+    }
+
+    // Se o Google devolveu Meet, extrai e grava em consultas.link_sala.
+    const meetFromGoogle: string | null =
+      calData?.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === "video")?.uri ??
+      calData?.hangoutLink ??
+      null;
+
+    if (meetFromGoogle && meetFromGoogle !== linkSala) {
+      linkSala = meetFromGoogle;
+    }
+
+    if (isOnline && linkSala && linkSala !== consulta.link_sala) {
+      await serviceClient.from("consultas").update({ link_sala: linkSala }).eq("id", consulta_id);
+    }
+
+    // Se anexamos Meet a um evento existente que não tinha, garante que a descrição contenha o link.
+    if (attachMeetExisting && meetFromGoogle) {
+      try {
+        await fetch(
+          `${GOOGLE_CALENDAR_URL}/calendars/${encodeURIComponent(calendarId)}/events/${calData.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ description: buildDesc(meetFromGoogle) }),
+          },
+        );
+      } catch (_) { /* best-effort */ }
     }
 
     await recordResult(serviceClient, consulta_id, medico_id, {
