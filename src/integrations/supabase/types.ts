@@ -6730,6 +6730,48 @@ export type Database = {
         }
         Relationships: []
       }
+      noc_resumos_ia: {
+        Row: {
+          created_at: string
+          gargalos: Json
+          id: string
+          janela_fim: string
+          janela_inicio: string
+          modelo: string | null
+          resumo: string
+          risco_geral: string
+          sugestoes: Json
+          tokens_entrada: number | null
+          tokens_saida: number | null
+        }
+        Insert: {
+          created_at?: string
+          gargalos?: Json
+          id?: string
+          janela_fim: string
+          janela_inicio: string
+          modelo?: string | null
+          resumo: string
+          risco_geral?: string
+          sugestoes?: Json
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+        }
+        Update: {
+          created_at?: string
+          gargalos?: Json
+          id?: string
+          janela_fim?: string
+          janela_inicio?: string
+          modelo?: string | null
+          resumo?: string
+          risco_geral?: string
+          sugestoes?: Json
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           created_at: string
@@ -6809,6 +6851,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operacao_alertas: {
+        Row: {
+          alerta_key: string
+          consulta_id: string | null
+          cooldown_ate: string
+          created_at: string
+          descricao: string | null
+          id: string
+          medico_id: string | null
+          paciente_id: string | null
+          payload: Json
+          resolucao_nota: string | null
+          resolvido_em: string | null
+          responsavel_id: string | null
+          severidade: string
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          alerta_key: string
+          consulta_id?: string | null
+          cooldown_ate?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          medico_id?: string | null
+          paciente_id?: string | null
+          payload?: Json
+          resolucao_nota?: string | null
+          resolvido_em?: string | null
+          responsavel_id?: string | null
+          severidade: string
+          status?: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          alerta_key?: string
+          consulta_id?: string | null
+          cooldown_ate?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          medico_id?: string | null
+          paciente_id?: string | null
+          payload?: Json
+          resolucao_nota?: string | null
+          resolvido_em?: string | null
+          responsavel_id?: string | null
+          severidade?: string
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       pacientes: {
         Row: {
@@ -10684,6 +10786,13 @@ export type Database = {
         }
         Returns: string
       }
+      fn_alertas_operacionais_scan: {
+        Args: never
+        Returns: {
+          emitidos: number
+          regra: string
+        }[]
+      }
       fn_backfill_financeiro: {
         Args: { p_dry_run?: boolean; p_medico_id?: string }
         Returns: Json
@@ -10691,6 +10800,21 @@ export type Database = {
       fn_backfill_financeiro_dry_run: {
         Args: { p_medico_id?: string }
         Returns: Json
+      }
+      fn_emitir_alerta_operacional: {
+        Args: {
+          p_alerta_key: string
+          p_consulta_id?: string
+          p_cooldown_min?: number
+          p_descricao?: string
+          p_medico_id?: string
+          p_paciente_id?: string
+          p_payload?: Json
+          p_severidade: string
+          p_tipo: string
+          p_titulo: string
+        }
+        Returns: string
       }
       fn_finmov_alert_silent: {
         Args: { p_medico: string; p_meta?: Json; p_msg: string; p_tipo: string }
