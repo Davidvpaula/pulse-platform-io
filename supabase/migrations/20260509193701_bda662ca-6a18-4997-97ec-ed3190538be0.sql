@@ -1,0 +1,1 @@
+UPDATE public.app_settings SET value = '"stripe"'::jsonb WHERE key = 'pagamentos_provider';
