@@ -10761,6 +10761,14 @@ export type Database = {
           score: number
         }[]
       }
+      fn_recalcular_score_operacional: {
+        Args: { p_data?: string }
+        Returns: {
+          data_referencia: string
+          duracao_ms: number
+          medicos_processados: number
+        }[]
+      }
       fn_reconciliar_global: { Args: { p_origem?: string }; Returns: Json }
       fn_reconciliar_saldo_medico: {
         Args: { p_medico_id: string }
