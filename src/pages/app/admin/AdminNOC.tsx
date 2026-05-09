@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
-import { Activity, RefreshCw, AlertTriangle, CheckCircle2, Users, Clock, PlayCircle } from "lucide-react";
+import {
+  Activity, RefreshCw, AlertTriangle, CheckCircle2, Users, Clock, PlayCircle,
+  Bell, Sparkles, Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
 
 type NocSnapshot = {
   generated_at: string;
@@ -28,8 +32,39 @@ type NocSnapshot = {
   medicos_online: Array<Record<string, any>>;
 };
 
+type Alerta = {
+  id: string;
+  tipo: string;
+  severidade: "info" | "aviso" | "critico";
+  titulo: string;
+  descricao: string | null;
+  status: "aberto" | "reconhecido" | "resolvido" | "expirado";
+  consulta_id: string | null;
+  medico_id: string | null;
+  paciente_id: string | null;
+  payload: Record<string, any>;
+  created_at: string;
+  resolvido_em: string | null;
+};
+
+type ResumoIA = {
+  id: string;
+  janela_inicio: string;
+  janela_fim: string;
+  resumo: string;
+  gargalos: Array<{ titulo: string; descricao: string }>;
+  sugestoes: Array<{ titulo: string; descricao: string }>;
+  risco_geral: "baixo" | "medio" | "alto";
+  modelo: string | null;
+  tokens_entrada: number | null;
+  tokens_saida: number | null;
+  created_at: string;
+};
+
 const fmtTime = (s?: string | null) =>
   s ? new Date(s).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—";
+const fmtDateTime = (s?: string | null) =>
+  s ? new Date(s).toLocaleString("pt-BR") : "—";
 
 function Kpi({ label, value, hint, tone }: { label: string; value: React.ReactNode; hint?: string; tone?: "ok" | "warn" | "danger" }) {
   const toneCls =
@@ -47,7 +82,28 @@ function Kpi({ label, value, hint, tone }: { label: string; value: React.ReactNo
   );
 }
 
+function SeveridadeBadge({ s }: { s: Alerta["severidade"] }) {
+  const map = {
+    info: "bg-blue-500/10 text-blue-700 border-blue-500/30",
+    aviso: "bg-amber-500/10 text-amber-700 border-amber-500/30",
+    critico: "bg-red-500/10 text-red-700 border-red-500/30",
+  } as const;
+  return <Badge variant="outline" className={map[s]}>{s}</Badge>;
+}
+
+function RiscoBadge({ r }: { r: ResumoIA["risco_geral"] }) {
+  const map = {
+    baixo: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30",
+    medio: "bg-amber-500/10 text-amber-700 border-amber-500/30",
+    alto: "bg-red-500/10 text-red-700 border-red-500/30",
+  } as const;
+  return <Badge variant="outline" className={map[r]}>Risco {r}</Badge>;
+}
+
 export default function AdminNOC() {
+  const qc = useQueryClient();
+  const [gerandoIA, setGerandoIA] = useState(false);
+
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin", "noc-snapshot"],
     queryFn: async () => {
@@ -59,6 +115,47 @@ export default function AdminNOC() {
     staleTime: 15_000,
   });
 
+  const { data: alertas, refetch: refetchAlertas } = useQuery({
+    queryKey: ["admin", "noc-alertas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("operacao_alertas" as never)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as unknown as Alerta[];
+    },
+    refetchInterval: 30_000,
+  });
+
+  const { data: resumosIA, refetch: refetchIA } = useQuery({
+    queryKey: ["admin", "noc-resumos-ia"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("noc_resumos_ia" as never)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data ?? []) as unknown as ResumoIA[];
+    },
+    refetchInterval: 60_000,
+  });
+
+  // Realtime alertas
+  useEffect(() => {
+    const ch = supabase
+      .channel("operacao_alertas_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "operacao_alertas" },
+        () => qc.invalidateQueries({ queryKey: ["admin", "noc-alertas"] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
   if (isLoading) return <AdminLoading />;
   if (error) return <AdminError message={(error as Error).message} />;
 
@@ -67,6 +164,47 @@ export default function AdminNOC() {
   const fila = data?.fila_paciente ?? [];
   const atrasos = data?.atrasos_ativos ?? [];
   const online = data?.medicos_online ?? [];
+
+  const alertasAbertos = (alertas ?? []).filter(a => a.status === "aberto");
+  const ultimoResumo = resumosIA?.[0];
+
+  async function reconhecerAlerta(id: string) {
+    const { error } = await supabase
+      .from("operacao_alertas" as never)
+      .update({ status: "reconhecido" } as never)
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Alerta reconhecido"); refetchAlertas(); }
+  }
+
+  async function resolverAlerta(id: string) {
+    const nota = window.prompt("Nota de resolução (opcional):") ?? "";
+    const { error } = await supabase
+      .from("operacao_alertas" as never)
+      .update({
+        status: "resolvido",
+        resolvido_em: new Date().toISOString(),
+        resolucao_nota: nota || null,
+      } as never)
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Alerta resolvido"); refetchAlertas(); }
+  }
+
+  async function gerarResumoIA() {
+    setGerandoIA(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("noc-ia-auditora");
+      if (error) throw error;
+      const src = (data as any)?.source;
+      toast.success(src === "cache" ? "Reaproveitado resumo recente (cooldown 50min)" : "Novo resumo gerado");
+      refetchIA();
+    } catch (e) {
+      toast.error((e as Error).message ?? "Falha ao gerar resumo");
+    } finally {
+      setGerandoIA(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -95,6 +233,10 @@ export default function AdminNOC() {
           <TabsTrigger value="atencao">
             Atenção {atrasos.length > 0 && <Badge variant="destructive" className="ml-2">{atrasos.length}</Badge>}
           </TabsTrigger>
+          <TabsTrigger value="alertas">
+            Alertas {alertasAbertos.length > 0 && <Badge variant="destructive" className="ml-2">{alertasAbertos.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="ia">Resumo IA</TabsTrigger>
         </TabsList>
 
         {/* AGORA */}
@@ -238,6 +380,142 @@ export default function AdminNOC() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ALERTAS */}
+        <TabsContent value="alertas" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Bell className="h-4 w-4" /> Alertas operacionais (últimos 100)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(alertas ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum alerta registrado.</p>
+              ) : (
+                <div className="divide-y">
+                  {(alertas ?? []).map((a) => (
+                    <div key={a.id} className="py-3 flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <SeveridadeBadge s={a.severidade} />
+                          <Badge variant="outline">{a.status}</Badge>
+                          <span className="font-medium text-sm">{a.titulo}</span>
+                        </div>
+                        {a.descricao && (
+                          <p className="text-xs text-muted-foreground mt-1">{a.descricao}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {a.tipo} · {fmtDateTime(a.created_at)}
+                        </p>
+                      </div>
+                      {a.status === "aberto" && (
+                        <div className="flex gap-2 shrink-0">
+                          <Button size="sm" variant="outline" onClick={() => reconhecerAlerta(a.id)}>
+                            Reconhecer
+                          </Button>
+                          <Button size="sm" onClick={() => resolverAlerta(a.id)}>
+                            Resolver
+                          </Button>
+                        </div>
+                      )}
+                      {a.status === "reconhecido" && (
+                        <Button size="sm" onClick={() => resolverAlerta(a.id)}>
+                          Resolver
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* RESUMO IA */}
+        <TabsContent value="ia" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Gerado por IA observadora — não toma ações automáticas. Cooldown 50min.
+            </p>
+            <Button size="sm" onClick={gerarResumoIA} disabled={gerandoIA}>
+              {gerandoIA ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              Gerar agora
+            </Button>
+          </div>
+
+          {!ultimoResumo ? (
+            <Card>
+              <CardContent className="p-6 text-sm text-muted-foreground">
+                Nenhum resumo gerado ainda. Clique em "Gerar agora".
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> Último resumo
+                  <RiscoBadge r={ultimoResumo.risco_geral} />
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {fmtDateTime(ultimoResumo.created_at)} · modelo {ultimoResumo.modelo ?? "—"}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm">{ultimoResumo.resumo}</p>
+
+                {ultimoResumo.gargalos?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium uppercase text-muted-foreground mb-2">Gargalos</h4>
+                    <ul className="space-y-2">
+                      {ultimoResumo.gargalos.map((g, i) => (
+                        <li key={i} className="text-sm border-l-2 border-amber-500 pl-3">
+                          <div className="font-medium">{g.titulo}</div>
+                          <div className="text-xs text-muted-foreground">{g.descricao}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {ultimoResumo.sugestoes?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium uppercase text-muted-foreground mb-2">Pontos de atenção</h4>
+                    <ul className="space-y-2">
+                      {ultimoResumo.sugestoes.map((s, i) => (
+                        <li key={i} className="text-sm border-l-2 border-blue-500 pl-3">
+                          <div className="font-medium">{s.titulo}</div>
+                          <div className="text-xs text-muted-foreground">{s.descricao}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {(resumosIA?.length ?? 0) > 1 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Histórico (últimos {(resumosIA?.length ?? 1) - 1})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y">
+                  {(resumosIA ?? []).slice(1).map((r) => (
+                    <div key={r.id} className="py-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <RiscoBadge r={r.risco_geral} />
+                        <span className="text-xs text-muted-foreground">{fmtDateTime(r.created_at)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.resumo}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
