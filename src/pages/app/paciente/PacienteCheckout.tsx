@@ -14,9 +14,11 @@ import {
   confirmarPagamento,
   formatBRL,
   getPagamento,
+  lerStripeClientSecret,
   type Pagamento,
   type PagamentoMetodo,
 } from "@/lib/pagamentos";
+import { StripeEmbeddedCheckout, PaymentTestModeBanner } from "@/components/payments/StripeEmbeddedCheckout";
 import {
   validarCupomParaConsulta,
   aplicarCupomNoPagamento,
