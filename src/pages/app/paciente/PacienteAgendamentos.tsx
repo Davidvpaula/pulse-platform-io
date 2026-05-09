@@ -373,12 +373,13 @@ export default function PacienteAgendamentos() {
 
 function EmptyState({ filtro }: { filtro: Filtro }) {
   const msg: Record<Filtro, string> = {
-    futuras: "Você não tem consultas futuras agendadas.",
+    ativas: "Você não tem consultas próximas agendadas.",
+    concluidas: "Nenhuma consulta concluída ainda.",
     passadas: "Nenhuma consulta passada encontrada.",
     canceladas: "Nenhuma consulta cancelada.",
     todas: "Você ainda não realizou nenhum agendamento.",
   };
-  const isFuturas = filtro === "futuras" || filtro === "todas";
+  const isFuturas = filtro === "ativas" || filtro === "todas";
   return (
     <div className="flex flex-col items-center gap-4 py-12 text-center">
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
