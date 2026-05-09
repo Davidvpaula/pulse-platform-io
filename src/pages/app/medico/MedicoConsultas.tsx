@@ -132,6 +132,18 @@ export default function MedicoConsultas() {
       toast.error("Esta consulta não pode ser iniciada no status atual.");
       return;
     }
+
+    // Abre janela SÍNCRONA antes de qualquer await para preservar o gesto do usuário
+    // e evitar bloqueio de popup. Se já tem link, navega de imediato; senão, placeholder.
+    let popup: Window | null = null;
+    if (c.modalidade === "online") {
+      if (c.link_sala) {
+        popup = window.open(c.link_sala, "_blank", "noopener,noreferrer");
+      } else {
+        popup = window.open("about:blank", "_blank");
+      }
+    }
+
     setAcaoId(c.id);
     try {
       if (c.status === "agendada") {
@@ -160,13 +172,21 @@ export default function MedicoConsultas() {
         }
       }
 
-      if (linkParaAbrir) {
-        window.open(linkParaAbrir, "_blank", "noopener,noreferrer");
-      } else if (c.modalidade === "online") {
-        toast.error("Sala não pôde ser criada — verifique a conexão Google em Configurações.");
+      if (c.modalidade === "online") {
+        if (linkParaAbrir) {
+          if (popup && !popup.closed) {
+            try { popup.location.href = linkParaAbrir; } catch { window.open(linkParaAbrir, "_blank", "noopener,noreferrer"); }
+          } else {
+            window.open(linkParaAbrir, "_blank", "noopener,noreferrer");
+          }
+        } else {
+          if (popup && !popup.closed) popup.close();
+          toast.error("Sala não pôde ser criada — verifique a conexão Google em Configurações.");
+        }
       }
       void carregar();
     } catch (e: any) {
+      if (popup && !popup.closed) popup.close();
       toast.error(e?.message ?? "Não foi possível iniciar");
     } finally {
       setAcaoId(null);
