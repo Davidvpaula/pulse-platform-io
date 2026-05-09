@@ -93,6 +93,8 @@ Deno.serve(async (req) => {
           metodo: "cartao",
           provider: "stripe",
           status: "pendente",
+          paciente_id: reserva.paciente_id,
+          medico_id: reserva.medico_id,
           metadata,
         } as any)
         .select("id")
