@@ -34,7 +34,7 @@ import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacien
 import { PacienteLoading, PacienteError } from "@/components/paciente/PacienteStates";
 import EntrarTeleconsulta from "@/components/paciente/EntrarTeleconsulta";
 
-type Filtro = "todas" | "futuras" | "passadas" | "canceladas";
+type Filtro = "todas" | "ativas" | "concluidas" | "passadas" | "canceladas";
 type FiltroQuem = "todas" | "minhas" | "dependentes";
 
 export default function PacienteAgendamentos() {
