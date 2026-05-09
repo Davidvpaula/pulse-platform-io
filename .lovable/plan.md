@@ -1,57 +1,23 @@
 ## Objetivo
 
-Resolver dois problemas de UX na visão de agendamentos do paciente:
+Remover o botão **Pagamentos** (e o painel expansível associado) de cada card na lista `PacienteAgendamentos`. Informações de pagamento já estão acessíveis em **Financeiro do paciente**, então mantê-las no card duplica espaço e polui as ações.
 
-1. **Botão "Aguarde" quebra a experiência** — quando o médico já tem link fixo de sala, o paciente deve ver **"Entrar"** clicável imediatamente, sem janela de antecedência de 15 min.
-2. **Lista padrão polui com Concluídas/Canceladas** — a primeira tela só deve mostrar consultas que **ainda vão acontecer** (ativas/futuras). Concluídas e canceladas só aparecem se o usuário escolher no filtro.
-
----
-
-## 1. Botão "Entrar" instantâneo (componente `EntrarTeleconsulta`)
-
-Arquivo: `src/components/paciente/EntrarTeleconsulta.tsx`
-
-Mudanças:
-- **Remover a janela de antecedência** (`ANTECEDENCIA_MIN = 15`) e o estado "Aguarde" associado. Hoje o componente bloqueia entrada até 15 min antes do início; com link fixo isso é desnecessário (a sala existe sempre).
-- Comportamento novo:
-  - Status bloqueado (`cancelada`, `concluida`, `no_show`) → não renderiza nada (mantém).
-  - Sem `link_sala` → mantém estado "Sala em prep." (médico ainda não configurou link fixo).
-  - Com `link_sala` e dentro do status válido → renderiza **"Entrar" sempre clicável**, independente do horário.
-- Manter `TOLERANCIA_POS_MIN = 30` apenas como limite máximo pós-fim (após 30 min do fim, esconder o botão para não confundir).
-- Manter o `audit-log` `teleconsulta.paciente_entrou` no clique.
-
-Resultado visual: o card de consulta futura passa a mostrar `[Entrar] [WhatsApp] [Remarcar] [Cancelar] [Pagamentos]` em vez de `[Aguarde]`.
-
----
-
-## 2. Filtro padrão: apenas consultas ativas
+## Mudanças
 
 Arquivo: `src/pages/app/paciente/PacienteAgendamentos.tsx`
 
-Mudanças no filtro principal (`Filtro` type + `lista` useMemo + `<Select>`):
+- Remover botão `Pagamentos` (linhas ~322–328) e o bloco expansível `{expandedPag === c.id && <ConsultaPagamentos … />}` (linhas ~330–333).
+- Remover o estado `expandedPag` / `setExpandedPag` (linha 59) — fica órfão.
+- Remover imports não usados após a limpeza:
+  - `ConsultaPagamentos` (linha 30)
+  - `ChevronDown` e `Receipt` do `lucide-react` se não forem mais referenciados.
+- Conferir TS para garantir que nenhum outro local usa `expandedPag`.
 
-- **Renomear o filtro padrão** de `"futuras"` para `"ativas"` (rótulo: **"Próximas"**) com a regra:
-  - `fim >= agora` **E** `status NÃO em ('cancelada','concluida','no_show')`.
-  - É o filtro inicial (`useState<Filtro>("ativas")`).
-- **Adicionar opção "Concluídas"** (`status === 'concluida'`).
-- Manter **"Canceladas"** (`status === 'cancelada'`).
-- Manter **"Passadas"** (todo histórico antes de agora, exceto canceladas) e **"Todas"** para quem quiser visão completa.
-- Atualizar `EmptyState` para reconhecer o novo valor `"ativas"` e a mensagem ("Você não tem consultas próximas").
-- Ordenação: ativas/futuras = ascendente; passadas/concluídas/canceladas = descendente (mais recente primeiro).
+## Resultado
 
-Ordem do dropdown sugerida:
-```
-Próximas    (default)
-Concluídas
-Canceladas
-Passadas
-Todas
-```
-
----
+Card final do paciente: `[Status] [Entrar] [WhatsApp] [Remarcar] [Cancelar]` — sem o item Pagamentos. Quem precisar do detalhe vai em **Financeiro**.
 
 ## Fora de escopo
 
-- Lógica do médico (`MedicoConsultas`) — janela de iniciar lá já é controlada por `agendada/confirmada` e não usa `EntrarTeleconsulta`.
-- Mudanças em status de consultas, snapshot financeiro, webhooks ou Stripe.
-- Backfill de dados antigos.
+- Página `PacienteFinanceiro` (já mostra pagamentos).
+- Card do médico/colaborador (mantém Pagamentos onde existir).

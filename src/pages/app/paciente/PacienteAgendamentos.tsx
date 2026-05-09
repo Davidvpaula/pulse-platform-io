@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Calendar, Stethoscope, Video, MapPin, MessageCircle, Repeat, XCircle,
-  Loader2, Search, Filter, Star, Receipt, ChevronDown, Users,
+  Loader2, Search, Filter, Star, Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
 import { Gift } from "lucide-react";
-import { ConsultaPagamentos } from "@/components/financeiro/ConsultaPagamentos";
+
 import MeusProfissionaisPlano from "@/components/paciente/MeusProfissionaisPlano";
 import CancelarConsultaDialog from "@/components/paciente/CancelarConsultaDialog";
 import { usePacienteConsultas, usePacienteRetornos, usePacienteAvaliadas, pacienteKeys } from "@/lib/paciente/queries";
@@ -56,7 +56,7 @@ export default function PacienteAgendamentos() {
   const [filtroQuem, setFiltroQuem] = useState<FiltroQuem>("todas");
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [voucherSelecionado, setVoucherSelecionado] = useState<RetornoComContexto | null>(null);
-  const [expandedPag, setExpandedPag] = useState<string | null>(null);
+  
   const [avaliarConsulta, setAvaliarConsulta] = useState<ConsultaDetalhada | null>(null);
   const [cancelarConsulta, setCancelarConsulta] = useState<ConsultaDetalhada | null>(null);
 
@@ -317,21 +317,7 @@ export default function PacienteAgendamentos() {
                         <Star className="mr-1 h-3 w-3 fill-warning text-warning" /> Avaliado
                       </Badge>
                     )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setExpandedPag(expandedPag === c.id ? null : c.id)}
-                    >
-                      <Receipt className="mr-1.5 h-3.5 w-3.5" />
-                      Pagamentos
-                      <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform", expandedPag === c.id && "rotate-180")} />
-                    </Button>
                   </div>
-                  {expandedPag === c.id && (
-                    <div className="w-full px-4 pb-3">
-                      <ConsultaPagamentos consultaId={c.id} />
-                    </div>
-                  )}
                 </li>
               );
             })}
