@@ -19,6 +19,7 @@ import {
   updateConsultaStatus, type ConsultaDetalhada,
 } from "@/lib/clinico";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import RetornoGratuitoDialog from "@/components/medico/RetornoGratuitoDialog";
