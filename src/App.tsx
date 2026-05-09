@@ -127,6 +127,7 @@ import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminFaq from "@/pages/app/admin/AdminFaq";
 import AdminComunicacaoOperacao from "@/pages/app/admin/AdminComunicacaoOperacao";
 import AdminProducaoCockpit from "@/pages/app/admin/AdminProducaoCockpit";
+import AdminWhatsappCloudTest from "@/pages/app/admin/AdminWhatsappCloudTest";
 import AdminObservabilidade from "@/pages/app/admin/AdminObservabilidade";
 import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
 import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
@@ -388,6 +389,7 @@ const App = () => (
               <Route path="admin/comunicacao-interna" element={<G perm="admin.dashboard"><ComunicacaoInterna /></G>} />
               <Route path="admin/comunicacao/operacao" element={<G perm="admin.dashboard"><AdminComunicacaoOperacao /></G>} />
               <Route path="admin/comunicacao/producao" element={<G perm="comunicacao.producao.ver"><AdminProducaoCockpit /></G>} />
+              <Route path="admin/whatsapp-cloud-test" element={<G perm="admin.dashboard"><AdminWhatsappCloudTest /></G>} />
               <Route path="admin/observabilidade" element={<G perm="observabilidade.ver"><AdminObservabilidade /></G>} />
               <Route path="admin/faq" element={<G perm="admin.dashboard"><AdminFaq /></G>} />
               <Route path="admin/saude" element={<G perm="admin.dashboard"><AdminSaude /></G>} />
