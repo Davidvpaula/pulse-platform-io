@@ -111,6 +111,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     nav: [
       { label: "Visão geral", to: "/app/admin/dashboard", icon: LayoutDashboard },
       { label: "Fluxo operacional", to: "/app/admin/fluxo", icon: Activity },
+      { label: "NOC — Operação", to: "/app/admin/noc", icon: Activity, requiresCapability: "agenda.ver_todas" },
       {
         label: "Pacientes",
         icon: Users,
