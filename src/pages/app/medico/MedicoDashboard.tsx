@@ -24,6 +24,7 @@ import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
 import { checkTreinamentoObrigatorio } from "@/lib/treinamentos";
+import { LembreteTrocarLinkSala } from "@/components/medico/LembreteTrocarLinkSala";
 
 import { formatBRL } from "@/lib/format";
 function formatHora(iso: string) {
@@ -126,11 +127,8 @@ export default function MedicoDashboard() {
     // Perfil completo: nome, CRM, especialidade, bio
     const perfilIncompleto = !medico.nome?.trim() || !medico.crm?.trim() || !medico.especialidade?.trim() || !medico.bio?.trim();
 
-    // Sala virtual: dinâmico (Google Meet) gera link automático; fixo exige link_sala_padrao.
-    const tipoSala = (medico as any).tipo_sala ?? "fixo";
-    const semSala = tipoSala === "dinamico"
-      ? false
-      : !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0;
+    // Sala virtual: SEMPRE link fixo (modo dinâmico desativado para estabilidade operacional).
+    const semSala = !medico.link_sala_padrao || medico.link_sala_padrao.trim().length === 0;
 
     setOnb({
       semSala,
@@ -393,6 +391,11 @@ export default function MedicoDashboard() {
           ) : undefined
         }
       />
+
+      {/* Lembrete de link de sala (sem link = bloqueante; >30d = sugestão) */}
+      {isMedico && medicoAtual?.id && (
+        <LembreteTrocarLinkSala medicoId={medicoAtual.id} />
+      )}
 
       {/* Aviso para perfis não-médicos visualizando o painel */}
       {!podeAtuar && (
