@@ -14,6 +14,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { syncConsultaToGoogle } from "@/lib/googleCalendarSync";
 
 export type Pagamento = Database["public"]["Tables"]["pagamentos"]["Row"];
 export type PagamentoStatus = Database["public"]["Enums"]["pagamento_status"];
@@ -165,6 +166,21 @@ const mockProvider = {
     const res = rpcResult as any;
     if (res && !res.ok) {
       console.warn("[pagamentos] criar_consulta_pos_pagamento:", res.erro);
+    }
+
+    // 3) Espelhar no Google Calendar do médico (fire-and-forget).
+    // Falhas no Google NUNCA quebram o pagamento ou a UI.
+    try {
+      const { data: pag } = await supabase
+        .from("pagamentos")
+        .select("consulta_id")
+        .eq("id", pagamentoId)
+        .maybeSingle();
+      if (pag?.consulta_id) {
+        syncConsultaToGoogle(pag.consulta_id, "upsert").catch(() => {});
+      }
+    } catch (e) {
+      console.warn("[pagamentos] google-sync trigger falhou (ignorado):", e);
     }
   },
 
