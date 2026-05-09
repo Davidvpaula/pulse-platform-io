@@ -217,12 +217,14 @@ function TestePanel() {
         body: { to: numero.replace(/\D/g, "") },
       });
       if (error) {
-        setResultado({ ok: false, erro: error.message, contexto: (error as any).context ?? null });
-        toast.error("Falha no envio: " + error.message);
+        const contexto = (error as any).context ?? null;
+        const metaPayload = typeof contexto?.json === "function" ? await contexto.json().catch(() => null) : null;
+        setResultado(metaPayload ?? { ok: false, erro: error.message, contexto });
+        toast.error(metaPayload?.error_message ?? `Falha no envio: ${error.message}`);
       } else {
         setResultado(data);
         if (data?.ok) toast.success("Mensagem enviada — wa_message_id: " + data.wa_message_id);
-        else toast.error("Meta retornou erro — veja detalhes abaixo");
+        else toast.error(data?.error_message ?? "Meta retornou erro — veja detalhes abaixo");
       }
     } catch (e: any) {
       setResultado({ ok: false, erro: e.message });
@@ -280,7 +282,7 @@ function ResumoMeta({ resultado }: { resultado: any }) {
     190: "Token expirado — gere um novo no painel Meta e atualize o secret META_WHATSAPP_TOKEN.",
     100: "Parâmetro inválido — confira phone_number_id ou payload.",
     132000: "Template hello_world não está aprovado nesse WABA.",
-    133010: "Número de origem não registrado para envio.",
+    133010: "Phone Number ID não registrado/ativo para esse token Meta. Confira se o ID é do mesmo app/WABA do token e se é o Phone Number ID, não o número do WhatsApp.",
   };
   const dica = code && dicas[code];
   return (
@@ -291,7 +293,7 @@ function ResumoMeta({ resultado }: { resultado: any }) {
       {resultado?.error_message && <div><strong>mensagem:</strong> {resultado.error_message}</div>}
       {resultado?.fbtrace_id && <div><strong>fbtrace_id:</strong> <code className="text-xs">{resultado.fbtrace_id}</code></div>}
       {resultado?.erro && !code && <div><strong>erro:</strong> {resultado.erro}</div>}
-      {dica && <div className="mt-2 text-xs text-muted-foreground">💡 {dica}</div>}
+      {(resultado?.hint || dica) && <div className="mt-2 text-xs text-muted-foreground">💡 {resultado?.hint || dica}</div>}
     </div>
   );
 }
