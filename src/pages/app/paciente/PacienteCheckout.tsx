@@ -14,9 +14,11 @@ import {
   confirmarPagamento,
   formatBRL,
   getPagamento,
+  lerStripeClientSecret,
   type Pagamento,
   type PagamentoMetodo,
 } from "@/lib/pagamentos";
+import { StripeEmbeddedCheckout, PaymentTestModeBanner } from "@/components/payments/StripeEmbeddedCheckout";
 import {
   validarCupomParaConsulta,
   aplicarCupomNoPagamento,
@@ -286,6 +288,77 @@ export default function PacienteCheckout() {
     );
   }
 
+
+  // ─── Branch Stripe (provider real) ─────────────────────────────────
+  if (pagamento.provider === "stripe") {
+    const clientSecret = lerStripeClientSecret(pagamento.id);
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Finalizar pagamento"
+          description="Pagamento processado com segurança pelo Stripe."
+        />
+        <PaymentTestModeBanner />
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-4">
+            {clientSecret ? (
+              <StripeEmbeddedCheckout clientSecret={clientSecret} />
+            ) : (
+              <div className="card-elevated p-6 text-center space-y-3">
+                <AlertTriangle className="mx-auto h-8 w-8 text-warning" />
+                <h2 className="font-display text-lg font-bold">Sessão de pagamento expirada</h2>
+                <p className="text-sm text-muted-foreground">
+                  Por segurança, a sessão do Stripe expirou. Volte e inicie um novo agendamento.
+                </p>
+                <Button asChild variant="outline">
+                  <Link to="/app/paciente/agendar">Iniciar novo agendamento</Link>
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" /> Conexão segura. Pagamentos processados pelo Stripe.
+            </div>
+          </div>
+
+          <aside className="space-y-3">
+            <div className="card-elevated p-5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Resumo</p>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Descrição</span>
+                  <span className="text-right">
+                    {(pagamento.metadata as any)?.snapshot?.referencia_nome
+                      ?? (pagamento.metadata as any)?.descricao
+                      ?? "Consulta"}
+                  </span>
+                </div>
+                <div className="my-2 border-t border-border" />
+                <div className="flex justify-between text-base font-bold">
+                  <span>Total</span>
+                  <span>{formatBRL(pagamento.valor_centavos)}</span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full"
+                onClick={cancelar}
+                disabled={processando}
+              >
+                Cancelar
+              </Button>
+            </div>
+            <p className="px-1 text-[11px] text-muted-foreground">
+              Provider: <strong>{pagamento.provider}</strong> · Sessão{" "}
+              <span className="font-mono">{pagamento.id.slice(0, 8)}</span>
+            </p>
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Branch MOCK (legado / desenvolvimento) ────────────────────────
   return (
     <div className="space-y-6">
       <PageHeader

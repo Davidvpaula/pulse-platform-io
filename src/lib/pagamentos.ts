@@ -57,15 +57,48 @@ export interface CheckoutSession {
   provider: PagamentoProvider;
   /** True quando a URL deve ser aberta com window.location (Stripe hosted). */
   external?: boolean;
+  /** Stripe Embedded Checkout client secret (quando provider=stripe e modo embedded). */
+  clientSecret?: string;
 }
 
-/** Helper que abre o checkout — interno usa router; externo (Stripe) usa redirect. */
+const STRIPE_CS_KEY = (pagamentoId: string) => `stripe_cs_${pagamentoId}`;
+
+/** Helper que abre o checkout — interno usa router; externo (Stripe hosted) usa redirect. */
 export function abrirCheckout(session: CheckoutSession, navigate: (url: string) => void) {
+  // Para Stripe Embedded, guardar clientSecret em sessionStorage para a tela de checkout consumir
+  if (session.clientSecret) {
+    try {
+      sessionStorage.setItem(
+        STRIPE_CS_KEY(session.pagamentoId),
+        JSON.stringify({ cs: session.clientSecret, ts: Date.now() }),
+      );
+    } catch (_) { /* noop */ }
+  }
   if (session.external) {
     window.location.href = session.checkoutUrl;
   } else {
     navigate(session.checkoutUrl);
   }
+}
+
+/** Lê o clientSecret guardado pelo `abrirCheckout` (TTL 30 min). */
+export function lerStripeClientSecret(pagamentoId: string): string | null {
+  try {
+    const raw = sessionStorage.getItem(STRIPE_CS_KEY(pagamentoId));
+    if (!raw) return null;
+    const { cs, ts } = JSON.parse(raw);
+    if (!cs || !ts || Date.now() - ts > 30 * 60_000) {
+      sessionStorage.removeItem(STRIPE_CS_KEY(pagamentoId));
+      return null;
+    }
+    return cs as string;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function limparStripeClientSecret(pagamentoId: string): void {
+  try { sessionStorage.removeItem(STRIPE_CS_KEY(pagamentoId)); } catch (_) { /* noop */ }
 }
 
 /* ─────────── Provider: configuração ─────────── */
@@ -281,16 +314,19 @@ const stripeProvider = {
       | { error: string };
     if ("error" in payload) throw new Error(payload.error);
 
-    // Se retornou clientSecret (embedded checkout), redirecionar para checkout interno
-    const checkoutUrl = payload.checkout_url
-      ?? `/app/paciente/checkout/${payload.pagamento_id}`;
+    // Se retornou clientSecret (embedded checkout), usar rota interna de checkout
+    const hasEmbedded = !!payload.clientSecret;
+    const checkoutUrl = hasEmbedded
+      ? `/app/paciente/checkout/${payload.pagamento_id}`
+      : (payload.checkout_url ?? `/app/paciente/checkout/${payload.pagamento_id}`);
 
     return {
       pagamentoId: payload.pagamento_id,
       checkoutUrl,
       simulated: false,
       provider: "stripe",
-      external: !!payload.checkout_url && !payload.clientSecret,
+      external: !hasEmbedded && !!payload.checkout_url,
+      clientSecret: payload.clientSecret,
     };
   },
   async confirmar(_pagamentoId: string, _metodo: PagamentoMetodo): Promise<void> {
