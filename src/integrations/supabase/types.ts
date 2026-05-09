@@ -1916,6 +1916,95 @@ export type Database = {
         }
         Relationships: []
       }
+      consulta_google_event: {
+        Row: {
+          attempts: number
+          calendar_id: string
+          consulta_id: string
+          created_at: string
+          google_event_id: string | null
+          last_error: string | null
+          last_synced_at: string | null
+          medico_id: string
+          sync_status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          calendar_id?: string
+          consulta_id: string
+          created_at?: string
+          google_event_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          medico_id: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          calendar_id?: string
+          consulta_id?: string
+          created_at?: string
+          google_event_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          medico_id?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consulta_google_event_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: true
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consulta_google_event_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+        ]
+      }
       consulta_status_log: {
         Row: {
           actor_id: string | null
