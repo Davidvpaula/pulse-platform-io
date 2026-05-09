@@ -187,9 +187,10 @@ export default function PacienteAgendamentos() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="futuras">Futuras</SelectItem>
-              <SelectItem value="passadas">Passadas</SelectItem>
+              <SelectItem value="ativas">Próximas</SelectItem>
+              <SelectItem value="concluidas">Concluídas</SelectItem>
               <SelectItem value="canceladas">Canceladas</SelectItem>
+              <SelectItem value="passadas">Passadas</SelectItem>
               <SelectItem value="todas">Todas</SelectItem>
             </SelectContent>
           </Select>
