@@ -90,9 +90,9 @@ export default function PacienteAgendamentos() {
       );
     }
     return arr.sort((a, b) =>
-      filtro === "passadas"
-        ? new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
-        : new Date(a.inicio).getTime() - new Date(b.inicio).getTime(),
+      filtro === "ativas"
+        ? new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
+        : new Date(b.inicio).getTime() - new Date(a.inicio).getTime(),
     );
   }, [rows, filtro, filtroQuem, busca]);
 
