@@ -37,7 +37,7 @@ export default function MedicoGoogleCallback() {
           return;
         }
 
-        const redirectUri = `${window.location.origin}/medico/google-callback`;
+        const redirectUri = `${window.location.origin}/app/medico/google-callback`;
 
         const { data, error: fnError } = await supabase.functions.invoke("google-oauth", {
           body: { action: "exchange-code", code, redirect_uri: redirectUri },
