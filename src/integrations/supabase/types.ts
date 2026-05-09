@@ -6427,6 +6427,7 @@ export type Database = {
           foto_url: string | null
           id: string
           link_sala_padrao: string | null
+          link_sala_padrao_atualizado_em: string | null
           motivo_reprovacao: string | null
           nome: string
           prioridade_atendimento: number
@@ -6476,6 +6477,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null
+          link_sala_padrao_atualizado_em?: string | null
           motivo_reprovacao?: string | null
           nome: string
           prioridade_atendimento?: number
@@ -6525,6 +6527,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           link_sala_padrao?: string | null
+          link_sala_padrao_atualizado_em?: string | null
           motivo_reprovacao?: string | null
           nome?: string
           prioridade_atendimento?: number
