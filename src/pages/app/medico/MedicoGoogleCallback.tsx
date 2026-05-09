@@ -16,14 +16,14 @@ export default function MedicoGoogleCallback() {
     if (error) {
       setStatus("error");
       setMessage(error === "access_denied" ? "Acesso negado. Tente novamente." : `Erro: ${error}`);
-      setTimeout(() => navigate("/medico/configuracoes"), 3000);
+      setTimeout(() => navigate("/app/medico/configuracoes"), 3000);
       return;
     }
 
     if (!code) {
       setStatus("error");
       setMessage("Código de autorização não encontrado.");
-      setTimeout(() => navigate("/medico/configuracoes"), 3000);
+      setTimeout(() => navigate("/app/medico/configuracoes"), 3000);
       return;
     }
 
@@ -49,12 +49,12 @@ export default function MedicoGoogleCallback() {
 
         setStatus("success");
         setMessage(`Google Calendar conectado! (${data.google_email || ""})`);
-        setTimeout(() => navigate("/medico/configuracoes"), 2000);
+        setTimeout(() => navigate("/app/medico/configuracoes"), 2000);
       } catch (err: any) {
         console.error("Google callback error:", err);
         setStatus("error");
         setMessage(err.message || "Falha ao conectar.");
-        setTimeout(() => navigate("/medico/configuracoes"), 4000);
+        setTimeout(() => navigate("/app/medico/configuracoes"), 4000);
       }
     })();
   }, [searchParams, navigate]);
