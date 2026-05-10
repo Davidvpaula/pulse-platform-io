@@ -191,7 +191,6 @@ export default function AdminUsuarios() {
       empresa_id: p.empresa_id,
       status_conta: (p.status_conta ?? "ativo") as StatusConta,
       status_motivo: p.status_motivo,
-      feegow_status: (p.feegow_status ?? "nao_enviado") as FeegowStatus,
       created_at: p.created_at,
       ultima_consulta: ultimaMap.get(p.id) ?? null,
       proxima_consulta: proximaMap.get(p.id) ?? null,
