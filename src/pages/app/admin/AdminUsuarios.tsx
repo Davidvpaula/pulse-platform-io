@@ -37,6 +37,8 @@ type PacienteRow = {
   empresa_id: string | null;
   status_conta: StatusConta;
   status_motivo: string | null;
+  responsavel_id: string | null;
+  parentesco: string | null;
   created_at: string;
   ultima_consulta?: string | null;
   proxima_consulta?: string | null;
