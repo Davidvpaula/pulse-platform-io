@@ -28,9 +28,13 @@ export default defineConfig({
 
   projects: [
     // Setup roda primeiro e gera os 4 storageStates.
+    // Recebe overrides: timeout maior + 1 retry extra (login pode flakeiar
+    // por jitter de rede / cold start do preview Lovable).
     {
       name: "setup",
       testMatch: /auth\/auth\.setup\.ts/,
+      timeout: 90_000,
+      retries: process.env.CI ? 2 : 0,
       use: { ...devices["Desktop Chrome"] },
     },
     {
