@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
 type StatusConta = "ativo" | "suspenso" | "bloqueado" | "banido" | "pendente";
-type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
 
 type PacienteRow = {
   id: string;
@@ -38,7 +37,8 @@ type PacienteRow = {
   empresa_id: string | null;
   status_conta: StatusConta;
   status_motivo: string | null;
-  feegow_status: FeegowStatus;
+  responsavel_id: string | null;
+  parentesco: string | null;
   created_at: string;
   ultima_consulta?: string | null;
   proxima_consulta?: string | null;
@@ -56,8 +56,6 @@ const filtrosPrincipais = [
   { key: "pendente", label: "Pendentes" },
   { key: "particular", label: "Particular" },
   { key: "empresarial", label: "Empresarial" },
-  { key: "feegow_ok", label: "Sincronizado Feegow" },
-  { key: "feegow_pendente", label: "Pendente Feegow" },
   { key: "pgto_pendente", label: "Com pagamento pendente" },
 ] as const;
 
@@ -84,16 +82,6 @@ function statusContaBadge(s: StatusConta) {
   return <Badge variant="outline" className={v.cls}>{v.label}</Badge>;
 }
 
-function feegowBadge(s: FeegowStatus) {
-  const map: Record<FeegowStatus, { label: string; cls: string }> = {
-    nao_enviado: { label: "Não enviado", cls: "border-muted-foreground/30 text-muted-foreground" },
-    pendente:    { label: "Pendente",    cls: "border-warning/40 text-warning" },
-    liberado:    { label: "Sincronizado", cls: "border-success/40 text-success" },
-    erro:        { label: "Erro",        cls: "border-destructive/40 text-destructive" },
-  };
-  const c = map[s] ?? map.nao_enviado;
-  return <Badge variant="outline" className={c.cls}>{c.label}</Badge>;
-}
 
 function formatDate(d?: string | null) {
   if (!d) return "—";
@@ -138,7 +126,7 @@ export default function AdminUsuarios() {
 
     const { data: pacientes, error } = await supabase
       .from("pacientes")
-      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,feegow_status,created_at,user_id")
+      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,responsavel_id,parentesco,created_at,user_id")
       .order("created_at", { ascending: false })
       .range(from, to);
 
@@ -205,7 +193,8 @@ export default function AdminUsuarios() {
       empresa_id: p.empresa_id,
       status_conta: (p.status_conta ?? "ativo") as StatusConta,
       status_motivo: p.status_motivo,
-      feegow_status: (p.feegow_status ?? "nao_enviado") as FeegowStatus,
+      responsavel_id: (p as any).responsavel_id ?? null,
+      parentesco: (p as any).parentesco ?? null,
       created_at: p.created_at,
       ultima_consulta: ultimaMap.get(p.id) ?? null,
       proxima_consulta: proximaMap.get(p.id) ?? null,
@@ -228,8 +217,6 @@ export default function AdminUsuarios() {
       if (filtro === "pendente" && r.status_conta !== "pendente") return false;
       if (filtro === "particular" && r.empresa_id) return false;
       if (filtro === "empresarial" && !r.empresa_id) return false;
-      if (filtro === "feegow_ok" && r.feegow_status !== "liberado") return false;
-      if (filtro === "feegow_pendente" && !["pendente", "nao_enviado", "erro"].includes(r.feegow_status)) return false;
       if (filtro === "pgto_pendente" && !r.tem_pagamento_pendente) return false;
 
       if (!q) return true;
@@ -398,7 +385,6 @@ export default function AdminUsuarios() {
                   <th className="px-4 py-2 text-left">E-mail</th>
                   <th className="px-4 py-2 text-left">Vínculo</th>
                   <th className="px-4 py-2 text-left">Conta</th>
-                  <th className="px-4 py-2 text-left">Feegow</th>
                   <th className="px-4 py-2 text-left">Última</th>
                   <th className="px-4 py-2 text-right">Ações</th>
                 </tr>
@@ -409,6 +395,11 @@ export default function AdminUsuarios() {
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{p.nome_completo ?? "—"}</span>
+                        {p.responsavel_id && (
+                          <Badge variant="outline" className="border-info/40 text-info text-[10px]" title={p.parentesco ? `Dependente (${p.parentesco})` : "Dependente"}>
+                            Dependente
+                          </Badge>
+                        )}
                         {p.tem_pagamento_pendente && (
                           <span title="Pagamento pendente">
                             <AlertCircle className="h-3.5 w-3.5 text-warning" />
@@ -425,7 +416,6 @@ export default function AdminUsuarios() {
                         : <Badge variant="outline">Particular</Badge>}
                     </td>
                     <td className="px-4 py-2.5">{statusContaBadge(p.status_conta)}</td>
-                    <td className="px-4 py-2.5">{feegowBadge(p.feegow_status)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.ultima_consulta)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <DropdownMenu>
@@ -650,7 +640,7 @@ export default function AdminUsuarios() {
               ))}
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Após criar, o paciente entra na fila de envio para Feegow automaticamente.
+              Após criar, o paciente fica disponível na plataforma e pode ser agendado normalmente.
             </p>
           </div>
           <DialogFooter>
