@@ -243,48 +243,72 @@ export default function AdminFinanceiroCentral() {
             </TabsList>
 
             <TabsContent value="pagamentos">
-              <PagamentosTable
-                pagamentos={pagamentos}
-                pgBusca={pgBusca} setPgBusca={setPgBusca}
-                pgStatus={pgStatus} setPgStatus={setPgStatus}
-                pgPage={pgPage} setPgPage={setPgPage}
-                selecionados={selecionados} togglePagamento={togglePagamento}
-                todosPendentesSelecionados={todosPendentesSelecionados} toggleTodos={toggleTodos}
-                selecionadosPendentes={selecionadosPendentes}
-                loteRunning={loteRunning}
-                onAprovarLote={aprovarLote}
-                onCancelLoteOpen={() => setLoteCancelOpen(true)}
-                onLimparSelecao={() => setSelecionados(new Set())}
-                onConfirmar={confirmarPagamento}
-                onCancelar={(id) => { setCancelId(id); setCancelMotivo(""); }}
-                onDetalhe={abrirDetalhe}
-              />
+              <FinanceiroErrorBoundary label="Pagamentos" onRetry={() => refetch()}>
+                {data?.errors?.pagamentos ? (
+                  <AdminError message={data.errors.pagamentos} onRetry={() => refetch()} />
+                ) : (
+                  <PagamentosTable
+                    pagamentos={pagamentos}
+                    pgBusca={pgBusca} setPgBusca={setPgBusca}
+                    pgStatus={pgStatus} setPgStatus={setPgStatus}
+                    pgPage={pgPage} setPgPage={setPgPage}
+                    selecionados={selecionados} togglePagamento={togglePagamento}
+                    todosPendentesSelecionados={todosPendentesSelecionados} toggleTodos={toggleTodos}
+                    selecionadosPendentes={selecionadosPendentes}
+                    loteRunning={loteRunning}
+                    onAprovarLote={aprovarLote}
+                    onCancelLoteOpen={() => setLoteCancelOpen(true)}
+                    onLimparSelecao={() => setSelecionados(new Set())}
+                    onConfirmar={confirmarPagamento}
+                    onCancelar={(id) => { setCancelId(id); setCancelMotivo(""); }}
+                    onDetalhe={abrirDetalhe}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="reembolsos">
-              <ReembolsosTable
-                reembolsos={reembolsos}
-                onAprovar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: true })}
-                onRecusar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: false })}
-              />
+              <FinanceiroErrorBoundary label="Reembolsos" onRetry={() => refetch()}>
+                {data?.errors?.reembolsos ? (
+                  <AdminError message={data.errors.reembolsos} onRetry={() => refetch()} />
+                ) : (
+                  <ReembolsosTable
+                    reembolsos={reembolsos}
+                    onAprovar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: true })}
+                    onRecusar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: false })}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="links">
-              <CobrancasLinksTable
-                links={data?.links ?? []}
-                lkBusca={lkBusca} setLkBusca={setLkBusca}
-                lkStatus={lkStatus} setLkStatus={setLkStatus}
-                lkPage={lkPage} setLkPage={setLkPage}
-                onNovaCobranca={() => setNovaCobrancaOpen(true)}
-              />
+              <FinanceiroErrorBoundary label="Links" onRetry={() => refetch()}>
+                {data?.errors?.links ? (
+                  <AdminError message={data.errors.links} onRetry={() => refetch()} />
+                ) : (
+                  <CobrancasLinksTable
+                    links={data?.links ?? []}
+                    lkBusca={lkBusca} setLkBusca={setLkBusca}
+                    lkStatus={lkStatus} setLkStatus={setLkStatus}
+                    lkPage={lkPage} setLkPage={setLkPage}
+                    onNovaCobranca={() => setNovaCobrancaOpen(true)}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="repasses">
-              <RepassesTable
-                repasses={data?.repasses ?? []}
-                onMarcarPago={marcarPagoRepasse}
-                onBloquear={bloquearRepasse}
-              />
+              <FinanceiroErrorBoundary label="Repasses" onRetry={() => refetch()}>
+                {data?.errors?.repasses ? (
+                  <AdminError message={data.errors.repasses} onRetry={() => refetch()} />
+                ) : (
+                  <RepassesTable
+                    repasses={data?.repasses ?? []}
+                    onMarcarPago={marcarPagoRepasse}
+                    onBloquear={bloquearRepasse}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
           </Tabs>
         </>
