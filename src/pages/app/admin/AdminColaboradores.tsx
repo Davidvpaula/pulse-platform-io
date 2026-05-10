@@ -70,7 +70,6 @@ const FILTROS = [
   { key: "bloqueado", label: "Bloqueados" },
   { key: "removido", label: "Removidos" },
   { key: "supervisor", label: "Supervisores" },
-  { key: "secretaria", label: "Secretaria" },
   { key: "financeiro", label: "Financeiro" },
   { key: "comercial", label: "Comercial" },
   { key: "suporte", label: "Suporte" },
