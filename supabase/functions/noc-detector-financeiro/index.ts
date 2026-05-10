@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       const corte = new Date(Date.now() - 2 * 3600_000).toISOString();
       const { data: cs, error } = await supa
         .from("consultas")
-        .select("id, medico_id, paciente_id, status, data_consulta, created_at")
+        .select("id, medico_id, paciente_id, status, inicio, valor_centavos, created_at")
         .in("status", ["confirmada", "em_andamento", "concluida"])
         .lt("created_at", corte)
         .order("created_at", { ascending: false })
