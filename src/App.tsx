@@ -84,6 +84,7 @@ import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
 import Conversas from "@/pages/app/comunicacao/Conversas";
 import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
 import MedicoNotificacoes from "@/pages/app/medico/MedicoNotificacoes";
+import PacienteNotificacoes from "@/pages/app/paciente/PacienteNotificacoes";
 import Templates from "@/pages/app/comunicacao/Templates";
 import Automacoes from "@/pages/app/comunicacao/Automacoes";
 import Metricas from "@/pages/app/comunicacao/Metricas";
@@ -228,7 +229,8 @@ const App = () => (
               <Route path="paciente/assinar-plano/:planoId" element={<PacienteGuard><PacienteAssinarPlano /></PacienteGuard>} />
               <Route path="paciente/financeiro" element={<PacienteGuard><PacienteFinanceiro /></PacienteGuard>} />
               <Route path="paciente/perfil" element={<PacienteGuard><PacientePerfilPage /></PacienteGuard>} />
-              <Route path="paciente/mensagens" element={<PacienteGuard><PacienteMensagens /></PacienteGuard>} />
+              <Route path="paciente/mensagens" element={<Navigate to="/app/paciente/notificacoes" replace />} />
+              <Route path="paciente/notificacoes" element={<PacienteGuard><PacienteNotificacoes /></PacienteGuard>} />
               <Route path="paciente/dependentes" element={<PacienteGuard><PacienteDependentes /></PacienteGuard>} />
               <Route
                 path="paciente/checkout/:sessionId"
