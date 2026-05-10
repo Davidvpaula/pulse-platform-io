@@ -30,6 +30,7 @@ import {
 import {
   EventoAuditoria, FiltrosAuditoria,
   MODULOS_AUDITORIA, RISCOS_AUDITORIA, ORIGENS_AUDITORIA,
+  ACTOR_TIPOS_AUDITORIA, CATEGORIAS_FINANCEIRAS_AUDITORIA,
   classeRisco, fmtDataHoraBR,
 } from "@/lib/relatorios/typesAuditoria";
 import { KpiCard } from "@/components/relatorios/KpiCard";
@@ -77,6 +78,7 @@ export default function AdminAuditoria() {
     inicio: inicial.inicio, fim: inicial.fim,
     modulo: "todos", risco: "todos", origem: "todas",
     actor: null, entidadeId: null, acao: "", busca: "",
+    actorTipo: "todos", categoriaFinanceira: "", correlationId: "",
   });
   const [aplicado, setAplicado] = useState<FiltrosAuditoria>(filtros);
   const [page, setPage] = useState(1);
@@ -130,6 +132,9 @@ export default function AdminAuditoria() {
         p_busca: aplicado.busca.trim() || "",
         p_limit: PAGE,
         p_offset: (page - 1) * PAGE,
+        p_actor_tipo: aplicado.actorTipo || "todos",
+        p_categoria_financeira: aplicado.categoriaFinanceira.trim() || "",
+        p_correlation_id: aplicado.correlationId.trim() || "",
       });
       if (error) throw error;
       const lista = (data || []) as EventoAuditoria[];
@@ -154,6 +159,7 @@ export default function AdminAuditoria() {
       inicio: inicial.inicio, fim: inicial.fim,
       modulo: "todos", risco: "todos", origem: "todas",
       actor: null, entidadeId: null, acao: "", busca: "",
+      actorTipo: "todos", categoriaFinanceira: "", correlationId: "",
     };
     setFiltros(reset); setAplicado(reset); setPage(1);
   };
@@ -179,6 +185,9 @@ export default function AdminAuditoria() {
       p_busca: aplicado.busca.trim() || "",
       p_limit: LIMITE_EXPORT,
       p_offset: 0,
+      p_actor_tipo: aplicado.actorTipo || "todos",
+      p_categoria_financeira: aplicado.categoriaFinanceira.trim() || "",
+      p_correlation_id: aplicado.correlationId.trim() || "",
     });
     if (error) throw error;
     return (data || []) as EventoAuditoria[];
@@ -329,6 +338,30 @@ export default function AdminAuditoria() {
           <div>
             <Label className="text-xs">Entidade ID</Label>
             <Input placeholder="UUID" value={filtros.entidadeId || ""} onChange={(e) => setFiltros({ ...filtros, entidadeId: e.target.value.trim() || null })} />
+          </div>
+          <div>
+            <Label className="text-xs">Tipo de ator</Label>
+            <Select value={filtros.actorTipo} onValueChange={(v) => setFiltros({ ...filtros, actorTipo: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {ACTOR_TIPOS_AUDITORIA.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Categoria financeira</Label>
+            <Select value={filtros.categoriaFinanceira || "todas"} onValueChange={(v) => setFiltros({ ...filtros, categoriaFinanceira: v === "todas" ? "" : v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {CATEGORIAS_FINANCEIRAS_AUDITORIA.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Correlation ID</Label>
+            <Input placeholder="ex: req-..." value={filtros.correlationId} onChange={(e) => setFiltros({ ...filtros, correlationId: e.target.value })} />
           </div>
         </div>
         <div className="flex items-end gap-2 mt-3">

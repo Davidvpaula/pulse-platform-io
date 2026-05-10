@@ -32,7 +32,32 @@ export type FiltrosAuditoria = {
   entidadeId: string | null; // uuid ou null
   acao: string; // texto livre
   busca: string;
+  actorTipo: string; // "todos" | "admin" | "medico" | "paciente" | "colaborador" | "supervisor" | "sistema"
+  categoriaFinanceira: string; // texto livre, vazio = sem filtro
+  correlationId: string; // texto livre, vazio = sem filtro
 };
+
+export const ACTOR_TIPOS_AUDITORIA = [
+  { value: "admin", label: "Admin" },
+  { value: "supervisor", label: "Supervisor" },
+  { value: "medico", label: "Médico" },
+  { value: "colaborador", label: "Colaborador" },
+  { value: "paciente", label: "Paciente" },
+  { value: "empresa", label: "Empresa" },
+  { value: "sistema", label: "Sistema (sem ator)" },
+];
+
+export const CATEGORIAS_FINANCEIRAS_AUDITORIA = [
+  { value: "consulta", label: "Consulta" },
+  { value: "plano", label: "Plano" },
+  { value: "assinatura", label: "Assinatura" },
+  { value: "saque", label: "Saque" },
+  { value: "repasse", label: "Repasse" },
+  { value: "reembolso", label: "Reembolso" },
+  { value: "estorno", label: "Estorno" },
+  { value: "ajuste", label: "Ajuste" },
+  { value: "personalizado", label: "Personalizado" },
+];
 
 export const MODULOS_AUDITORIA = [
   { value: "consultas", label: "Consultas" },
