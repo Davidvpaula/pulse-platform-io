@@ -44,7 +44,7 @@ export function useNotificacoes(limit = 20) {
   useEffect(() => {
     if (!session?.user?.id) return;
     const channel = supabase
-      .channel("notificacoes-realtime")
+      .channel(`notificacoes-realtime-${session.user.id}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         {
@@ -57,7 +57,8 @@ export function useNotificacoes(limit = 20) {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [session?.user?.id, fetchNotificacoes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   const marcarLida = useCallback(async (id: string) => {
     await supabase.from("notificacoes").update({ lida: true }).eq("id", id);
