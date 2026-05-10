@@ -1,33 +1,52 @@
-## Problema
+## Teste mecânico — Dashboard Médico (`/app/medico`)
 
-Na página **Meu Plano** do paciente (`/app/paciente/plano`), os botões da seção "Planos disponíveis" não fazem nada quando clicados.
+Vou rodar um **teste mecânico não-destrutivo** percorrendo todos os componentes visíveis do dashboard do médico via browser automation, validando renderização, dados carregados e navegação dos botões/links. Nenhuma ação destrutiva (iniciar consulta, mudar status, salvar configurações) será executada — apenas leitura e clique em links de navegação.
 
-**Causa raiz:** em `PlanoPlataformaTab.tsx`, o componente `<PlanosDisponiveisSection>` é renderizado em dois lugares passando `onSelecionar={() => {}}` — uma função vazia. O clique em **Selecionar** chama esse callback que não faz nada.
+### Pré-requisito
+Você precisa estar logado como **médico** no preview. Se aparecer tela de login, eu paro e te aviso.
 
-A rota de assinatura já existe e funciona: `/app/paciente/assinar-plano/:planoId` → `PacienteAssinarPlano`.
+### Escopo dos componentes a testar
 
-## Mudanças
+1. **Header / Saudação** — nome, tratamento, badge de modo leitura (se aplicável).
+2. **Lembrete de link de sala** (`LembreteTrocarLinkSala`) — renderização e CTA.
+3. **Onboarding checklist** — itens, barra de progresso, links de cada pendência.
+4. **Próxima consulta (destaque)** — dados, botão "Iniciar"/"Abrir sala" (apenas verifico habilitação, **não clico**).
+5. **Lista "Próximas consultas"** — renderização, link "Ver todas".
+6. **StatCards (KPIs)** — Hoje, Online, Semana, Pacientes únicos, Receita mês, Pendentes, Documentos.
+7. **Card de Receita / Financeiro** — particular vs serviços, link para `/app/medico/financeiro`.
+8. **Card de Gamificação / Ranking** — score, nível, saldo de crescimento, link Premium.
+9. **Card de Propostas** — contador e link para `/app/medico/propostas`.
+10. **Atalhos rápidos** — todos os links de navegação (Agenda, Pacientes, Configurações, Treinamento, etc.).
+11. **TermsAcceptanceDialog** — verificar se aparece quando aplicável (sem aceitar).
 
-### 1. `src/components/paciente/PlanoPlataformaTab.tsx`
-- Importar `useNavigate` do `react-router-dom`.
-- Substituir os dois `onSelecionar={() => {}}` por:
-  ```ts
-  onSelecionar={(id) => navigate(`/app/paciente/assinar-plano/${id}`)}
-  ```
-- O botão **"Ver planos disponíveis"** do estado vazio também aponta para `/planos` (página pública). Trocar para um scroll suave até a seção `PlanosDisponiveisSection` (que já está logo abaixo), evitando sair do app.
+### Método
 
-### 2. `src/components/paciente/plano-helpers.tsx` (opcional, leve)
-- Adicionar `id="planos-disponiveis"` na `<section>` de `PlanosDisponiveisSection` para suportar o scroll/anchor do item acima.
+- `navigate_to_sandbox` em `/app/medico`.
+- `screenshot` inicial para snapshot.
+- `observe` para mapear seções e botões.
+- Para cada link de navegação: clico, verifico rota destino, volto para `/app/medico`.
+- Para botões mutativos (iniciar consulta, salvar): apenas verifico se estão visíveis/habilitados, **sem clicar**.
+- Coleto `read_console_logs` no final para erros.
 
-### 3. Verificar `PlanoPersonalizadoTab` e `PlanoEmpresaTab`
-- Não usam `PlanosDisponiveisSection`, então não precisam de alteração. Apenas confirmar.
+### Entrega
 
-## Escopo
+Relatório final com tabela:
 
-Mudança puramente de UI/navegação — sem alterar queries, schema ou lógica de negócio. Nenhuma rota nova.
+```text
+Componente                  | Status | Observação
+----------------------------|--------|------------------------
+Header / saudação           | OK     | ...
+Onboarding checklist        | OK     | 2 pendências detectadas
+Próxima consulta            | OK     | botão Iniciar habilitado
+StatCard "Receita mês"      | WARN   | valor R$ 0,00
+Link → /app/medico/agenda   | OK     | navegou corretamente
+...
+```
 
-## Validação
+Erros, dados faltantes ou botões quebrados aparecem destacados. Se encontrar bug crítico, paro e te aviso antes de continuar.
 
-- Clicar em **Selecionar** em qualquer card de "Planos disponíveis" deve abrir `/app/paciente/assinar-plano/:planoId` (tela já existente com checkout Stripe embedded).
-- Botão **"Ver planos disponíveis"** no estado vazio rola a página até a grade de cards, em vez de levar para `/planos` público.
-- Botão **"Plano atual"** continua desabilitado quando `isAtual = true`.
+### Não inclui
+
+- Testes destrutivos (criar/editar/excluir).
+- Testes em outras rotas além do dashboard (cada link é apenas verificado quanto a destino correto, não auditado a fundo).
+- Testes responsivos em múltiplos viewports (uso o atual 1423×873).
