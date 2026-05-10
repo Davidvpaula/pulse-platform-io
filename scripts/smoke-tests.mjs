@@ -114,4 +114,42 @@ console.log([...permMap.keys()].sort().join(", "));
 console.log("\n── Relatório de rotas ──");
 console.log(routesReport);
 
+// ─── Drift contra baseline (modo --strict) ───
+if (STRICT) {
+  const { readFileSync: rf } = await import("node:fs");
+  let baseline;
+  try {
+    baseline = JSON.parse(rf("scripts/baseline.json", "utf8"));
+  } catch {
+    console.error("\n❌ scripts/baseline.json ausente — rode F6 para gerar.");
+    process.exit(1);
+  }
+  const curRpcs = new Set([...rpcMap.keys()]);
+  const curPerms = new Set([...permMap.keys()]);
+  const baseRpcs = new Set(baseline.rpcs);
+  const basePerms = new Set(baseline.permissions);
+
+  const newRpcs = [...curRpcs].filter(k => !baseRpcs.has(k));
+  const goneRpcs = [...baseRpcs].filter(k => !curRpcs.has(k));
+  const newPerms = [...curPerms].filter(k => !basePerms.has(k));
+  const gonePerms = [...basePerms].filter(k => !curPerms.has(k));
+
+  const drift = newRpcs.length || goneRpcs.length || newPerms.length || gonePerms.length;
+  if (drift) {
+    console.error("\n❌ DRIFT contra baseline (scripts/baseline.json):");
+    if (newRpcs.length)  console.error("  + RPCs novos:    ", newRpcs.join(", "));
+    if (goneRpcs.length) console.error("  - RPCs removidos:", goneRpcs.join(", "));
+    if (newPerms.length) console.error("  + Perms novas:   ", newPerms.join(", "));
+    if (gonePerms.length)console.error("  - Perms removidas:", gonePerms.join(", "));
+    console.error("\n→ Se intencional, regenere a baseline com:");
+    console.error("    node scripts/smoke-tests.mjs --json > /tmp/s.json && \\");
+    console.error("    node -e \"...\" (ver F6) atualizando scripts/baseline.json");
+    process.exit(1);
+  }
+  if (!routesOk) process.exit(1);
+  console.log("\n✅ Baseline OK — sem drift de rotas, RPCs ou permissões.\n");
+  process.exit(0);
+}
+
 if (!routesOk) process.exit(1);
+
