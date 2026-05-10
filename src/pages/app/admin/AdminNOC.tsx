@@ -260,9 +260,41 @@ export default function AdminNOC() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi label="Em andamento agora" value={emAndamento.length} tone={emAndamento.length > 0 ? "ok" : undefined} />
-        <Kpi label="Fila (próx. 60min)" value={fila.length} />
+        <Kpi label="Fila operacional" value={fila.length + atrasos.length} hint={`${fila.length} próximos · ${atrasos.length} atrasados`} tone={atrasos.length > 0 ? "warn" : undefined} />
         <Kpi label="Atrasos ativos (>10min)" value={atrasos.length} tone={atrasos.length > 0 ? "warn" : "ok"} />
         <Kpi label="Médicos online" value={online.length} />
+      </div>
+
+      {/* F3.1 — Saúde da Operação (janelas curtas) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi
+          label="Tempo médio de espera"
+          value={atrasos.length
+            ? `${Math.round(
+                atrasos.reduce((acc: number, a) => acc + Number((a as Record<string, unknown>).minutos_atrasado ?? 0), 0) / atrasos.length,
+              )} min`
+            : "—"}
+          hint="Pacientes aguardando início"
+          tone={atrasos.length > 0 ? "warn" : undefined}
+        />
+        <Kpi
+          label="Falhas integração (24h)"
+          value={paineis?.falhas_integracao_24h ?? "—"}
+          hint="Alertas tipo integracao_*"
+          tone={(paineis?.falhas_integracao_24h ?? 0) > 0 ? "warn" : "ok"}
+        />
+        <Kpi
+          label="Alertas financeiros (24h)"
+          value={paineis?.alertas_financeiros_24h ?? "—"}
+          hint="Alertas tipo financeiro_*"
+          tone={(paineis?.alertas_financeiros_24h ?? 0) > 0 ? "warn" : "ok"}
+        />
+        <Kpi
+          label="Eventos críticos (2h)"
+          value={paineis?.eventos_criticos_2h ?? "—"}
+          hint="Severidade crítica"
+          tone={(paineis?.eventos_criticos_2h ?? 0) > 0 ? "danger" : "ok"}
+        />
       </div>
 
       <Tabs defaultValue="agora" className="w-full">
