@@ -30,6 +30,7 @@ import {
 import {
   EventoAuditoria, FiltrosAuditoria,
   MODULOS_AUDITORIA, RISCOS_AUDITORIA, ORIGENS_AUDITORIA,
+  ACTOR_TIPOS_AUDITORIA, CATEGORIAS_FINANCEIRAS_AUDITORIA,
   classeRisco, fmtDataHoraBR,
 } from "@/lib/relatorios/typesAuditoria";
 import { KpiCard } from "@/components/relatorios/KpiCard";
