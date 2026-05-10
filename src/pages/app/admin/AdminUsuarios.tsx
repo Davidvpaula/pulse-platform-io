@@ -302,7 +302,7 @@ export default function AdminUsuarios() {
     <div className="space-y-6">
       <PageHeader
         title="Gestão de usuários/pacientes"
-        description="Cadastro, vínculo, integração Feegow e ações administrativas sobre contas de pacientes."
+        description="Cadastro, vínculo e ações administrativas sobre contas de pacientes."
         actions={
           <Button onClick={() => setNovoOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />Novo paciente

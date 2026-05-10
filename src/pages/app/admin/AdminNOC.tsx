@@ -528,7 +528,12 @@ export default function AdminNOC() {
       </Tabs>
 
       <p className="text-xs text-muted-foreground">
-        Snapshot atualizado em {data?.generated_at ? new Date(data.generated_at).toLocaleString("pt-BR") : "—"} · refresh automático 30s
+        {data?.generated_at
+          ? `Snapshot gerado em ${new Date(data.generated_at).toLocaleString("pt-BR")}`
+          : lastUpdated
+            ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+            : "Aguardando primeiro snapshot"}
+        {" · refresh automático 30s"}
       </p>
     </div>
   );
