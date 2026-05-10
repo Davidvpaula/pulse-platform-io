@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
 import {
   Activity, RefreshCw, AlertTriangle, CheckCircle2, Users, Clock, PlayCircle,
-  Bell, Sparkles, Loader2,
+  Bell, Sparkles, Loader2, Plug, DollarSign, Siren,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -144,6 +144,37 @@ export default function AdminNOC() {
     refetchInterval: 60_000,
   });
 
+  // Painéis extras (F3.1) — janelas curtas, queries leves, RLS aplicado.
+  const { data: paineis } = useQuery({
+    queryKey: ["admin", "noc-paineis-extras"],
+    queryFn: async () => {
+      const agora = Date.now();
+      const h24 = new Date(agora - 24 * 60 * 60_000).toISOString();
+      const h2 = new Date(agora - 2 * 60 * 60_000).toISOString();
+      const [integ, finan, criticos] = await Promise.all([
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .like("tipo", "integracao_%").eq("status", "aberto").gte("created_at", h24),
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .like("tipo", "financeiro_%").eq("status", "aberto").gte("created_at", h24),
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .eq("severidade", "critico").gte("created_at", h2),
+      ]);
+      return {
+        falhas_integracao_24h: integ.count ?? 0,
+        alertas_financeiros_24h: finan.count ?? 0,
+        eventos_criticos_2h: criticos.count ?? 0,
+        errors: {
+          integ: integ.error?.message,
+          finan: finan.error?.message,
+          criticos: criticos.error?.message,
+        },
+      };
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+
   // Realtime alertas
   useEffect(() => {
     const ch = supabase
@@ -229,9 +260,41 @@ export default function AdminNOC() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi label="Em andamento agora" value={emAndamento.length} tone={emAndamento.length > 0 ? "ok" : undefined} />
-        <Kpi label="Fila (próx. 60min)" value={fila.length} />
+        <Kpi label="Fila operacional" value={fila.length + atrasos.length} hint={`${fila.length} próximos · ${atrasos.length} atrasados`} tone={atrasos.length > 0 ? "warn" : undefined} />
         <Kpi label="Atrasos ativos (>10min)" value={atrasos.length} tone={atrasos.length > 0 ? "warn" : "ok"} />
         <Kpi label="Médicos online" value={online.length} />
+      </div>
+
+      {/* F3.1 — Saúde da Operação (janelas curtas) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi
+          label="Tempo médio de espera"
+          value={atrasos.length
+            ? `${Math.round(
+                atrasos.reduce((acc: number, a) => acc + Number((a as Record<string, unknown>).minutos_atrasado ?? 0), 0) / atrasos.length,
+              )} min`
+            : "—"}
+          hint="Pacientes aguardando início"
+          tone={atrasos.length > 0 ? "warn" : undefined}
+        />
+        <Kpi
+          label="Falhas integração (24h)"
+          value={paineis?.falhas_integracao_24h ?? "—"}
+          hint="Alertas tipo integracao_*"
+          tone={(paineis?.falhas_integracao_24h ?? 0) > 0 ? "warn" : "ok"}
+        />
+        <Kpi
+          label="Alertas financeiros (24h)"
+          value={paineis?.alertas_financeiros_24h ?? "—"}
+          hint="Alertas tipo financeiro_*"
+          tone={(paineis?.alertas_financeiros_24h ?? 0) > 0 ? "warn" : "ok"}
+        />
+        <Kpi
+          label="Eventos críticos (2h)"
+          value={paineis?.eventos_criticos_2h ?? "—"}
+          hint="Severidade crítica"
+          tone={(paineis?.eventos_criticos_2h ?? 0) > 0 ? "danger" : "ok"}
+        />
       </div>
 
       <Tabs defaultValue="agora" className="w-full">
