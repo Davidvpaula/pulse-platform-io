@@ -395,6 +395,11 @@ export default function AdminUsuarios() {
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{p.nome_completo ?? "—"}</span>
+                        {p.responsavel_id && (
+                          <Badge variant="outline" className="border-info/40 text-info text-[10px]" title={p.parentesco ? `Dependente (${p.parentesco})` : "Dependente"}>
+                            Dependente
+                          </Badge>
+                        )}
                         {p.tem_pagamento_pendente && (
                           <span title="Pagamento pendente">
                             <AlertCircle className="h-3.5 w-3.5 text-warning" />
