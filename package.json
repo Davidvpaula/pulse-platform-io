@@ -12,7 +12,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:routes": "node scripts/validate-routes.mjs",
-    "validate:routes:strict": "node scripts/validate-routes.mjs --strict"
+    "validate:routes:strict": "node scripts/validate-routes.mjs --strict",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -76,6 +79,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

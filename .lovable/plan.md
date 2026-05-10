@@ -1,153 +1,159 @@
+# F7 Onda A — Playwright E2E (infra + Admin + Guards + CI)
 
-# Próxima Fase Oficial — Financeiro Estrutural + Observabilidade + QA Permanente
+Escopo desta entrega: **só a Onda A**. Médico, Paciente e regressão visual ficam para a Onda B, depois que a Onda A estiver verde por alguns dias.
 
-Diagnóstico técnico já confirmado em exploração:
-- `pagamentos`: tem FK só para `consultas`. Faltam para `pacientes`, `medicos`, `empresas`, `servicos_financeiros`.
-- `cobrancas_links`: tem FK só para `pagamentos`. Faltam para `pacientes`, `consultas`, `servicos_financeiros`.
-- `fechamentos_mensais`: zero FKs. Falta para `medicos`.
-- O frontend pede embeds (`paciente:pacientes(...)`, `medico:medicos(...)`, `medicos(nome)`) — sem FK declarada o PostgREST devolve 400.
+## Princípios
 
-Por isso a fase começa por uma migração estrutural curta antes de tocar no frontend.
+- Poucos testes, fluxos completos, asserts funcionais.
+- Nada de pixel-perfect, nada de `waitForTimeout`, nada de mock excessivo.
+- Roda só no CI, headless, contra a URL de **preview Lovable**.
+- Seeds com prefixo `e2e_` — convivem com o banco do preview, nunca tocam dados reais.
+- Stripe coberto até o redirect; webhook de retorno simulado via fixture.
 
----
-
-## FRENTE F1 — Financeiro estrutural (P0)
-
-### F1.1 Inventário de órfãos + migração de FKs
-**Etapa A — inventário (read-only):** rodar SELECTs que listam linhas onde `paciente_id`, `medico_id`, `empresa_id`, `servico_id`, `consulta_id` apontam para registros inexistentes em cada uma das três tabelas. Exportar relatório CSV para `/mnt/documents/financeiro_orfaos_<timestamp>.csv`. Nenhum dado é alterado nessa etapa.
-
-**Etapa B — saneamento mínimo (via `supabase--insert`):** apenas se houver órfãos, `UPDATE ... SET coluna = NULL WHERE coluna NOT IN (SELECT id FROM tabela_alvo)`. Nunca `DELETE`. Documentar contagem antes/depois.
-
-**Etapa C — migração (via `supabase--migration`):**
-
-| Tabela | Coluna | Referência | ON DELETE |
-|---|---|---|---|
-| `pagamentos` | `paciente_id` | `pacientes(id)` | SET NULL |
-| `pagamentos` | `medico_id` | `medicos(id)` | SET NULL |
-| `pagamentos` | `empresa_id` | `empresas(id)` | SET NULL |
-| `pagamentos` | `servico_id` | `servicos_financeiros(id)` | SET NULL |
-| `cobrancas_links` | `paciente_id` | `pacientes(id)` | SET NULL |
-| `cobrancas_links` | `consulta_id` | `consultas(id)` | SET NULL |
-| `cobrancas_links` | `servico_id` | `servicos_financeiros(id)` | SET NULL |
-| `fechamentos_mensais` | `medico_id` | `medicos(id)` | RESTRICT |
-
-Padrão: `ADD CONSTRAINT ... NOT VALID` → `VALIDATE CONSTRAINT` em statement separado, evitando lock longo. Criar índice b-tree em cada coluna FK.
-
-**Plano de rollback documentado** no comentário da migration: `ALTER TABLE ... DROP CONSTRAINT ...; DROP INDEX ...;` por coluna.
-
-### F1.2 Frontend — embeds explícitos
-Arquivos: `AdminFinanceiroCentral.tsx`, `SecretariaFinanceiro.tsx`, `ConsultaPagamentos.tsx`, `NovaCobrancaDialog.tsx`, `lib/pagamentos.ts`.
-
-- Migrar para sintaxe `alias:tabela!fk_name(colunas)` (ex.: `paciente:pacientes!pagamentos_paciente_id_fkey(id, nome_completo)`).
-- Padronizar aliases (`paciente`, `medico`, `empresa`, `servico`, `consulta`).
-- Remover qualquer `.catch(() => [])` ou fallback que zere KPI. Toda falha → `<AdminError>` + log estruturado + retry.
-
-### F1.3 Hardening — `<FinanceiroErrorBoundary>`
-- Novo componente `src/components/financeiro/FinanceiroErrorBoundary.tsx`.
-- Aplicar por aba (Pagamentos, Repasses, Reembolsos, Cobranças, Ledger).
-- Header KPIs lê **somente** de `financeiro_central_dashboard` (RPC consolidada). Falha de aba não derruba header nem outras abas.
-
-### F1.4 Ledger e consistência
-- Sweep via `rg` por somatórios diretos de `valor_liquido_centavos`, `consultas - saques`, etc. Substituir por `fn_medico_saldo_real`.
-- Telemetria: detectar divergência {ledger × snapshot × saldo calculado × repasse}. Adicionar card "Divergências detectadas" em `AdminLedgerObservabilidade` lendo de uma view nova `vw_financeiro_divergencias` (SELECT-only, sem materialização).
-
-### Critérios F1
-- 0 erro 400 em `/admin/financeiro`, `/secretaria/financeiro`, `/medico/financeiro`.
-- Joins resolvidos; KPIs reais; saldo via ledger; falha isolada por aba; nenhum mascaramento.
-
----
-
-## FRENTE F2 — Polimento cosmético
-
-| Item | Arquivo | Ação |
-|---|---|---|
-| String "integração Feegow" | `AdminUsuarios.tsx` (subtítulo) | Substituir por "Cadastro, vínculo e ações administrativas". |
-| Footer "Snapshot atualizado em —" | `AdminNOC.tsx` | Reaproveitar `lastUpdated` do header; remover placeholder. |
-| Sessões com Usuário/IP "—" | `AdminSessoes.tsx` | Badges contextuais: "Sessão sem perfil" / "Sessão legada" / "IP não capturado". |
-| Endpoints Feegow 422 | `FeegowSchema.tsx` | Mapear 422 → label "Permissão pendente na instância (configuração externa)" + cor neutra. |
-| Padronização Admin | sweep com `rg "Loader2|animate-spin"` em `src/pages/app/admin` | Garantir uso de `AdminLoading/AdminError/AdminEmpty`. |
-
----
-
-## FRENTE F3 — Observabilidade & Auditoria avançada
-
-### F3.1 NOC — novos painéis
-- "Tempo médio de resposta" via `function_edge_logs.execution_time_ms` (24h).
-- "Consultas em andamento" — `consultas WHERE status='em_andamento'`.
-- "Filas operacionais" — `whatsapp_outbound_queue` pendente + `notificacoes` não lidas.
-- "Falhas integração" — `whatsapp_outbound_logs status='failed'` + `feegow_call_logs status='error'` (24h).
-- "Alertas financeiros" — `operacao_alertas WHERE categoria='financeiro'`.
-- "Eventos críticos" — severidade alta/crítica últimas 2h.
-
-### F3.2 Auditoria
-- Filtro "Tipo de ator" (admin/médico/colaborador/sistema).
-- Filtro "Categoria financeira" (saque/repasse/reembolso/pagamento).
-- Exportar PDF do filtro corrente (`react-pdf`).
-- Agrupamento por `correlation_id`.
-
-### F3.3 IA Auditora — expansão de score
-Adicionar dimensões: `retrabalho`, `atrasos`, `reclamações` (NPS<6 ou avaliação ≤2), `inconsistência financeira` (output do detector F3.4).
-
-### F3.4 Detector financeiro IA
-Edge function nova `noc-financeiro-detector` (cron horário 08-20 BRT) detectando:
-- divergência snapshot × ledger × saldo
-- repasse inconsistente
-- saldo inválido (negativo sem operação que justifique)
-- cobrança órfã (sem `paciente_id` válido)
-- fechamento sem médico
-Resultados gravados em `operacao_alertas` (categoria=`financeiro`, origem=`ia`).
-
----
-
-## FRENTE F4 — QA permanente
-
-### F4.1 Playwright E2E
-- Setup `@playwright/test` + script `bunx playwright test`.
-- Specs: `admin.spec.ts`, `medico.spec.ts`, `paciente.spec.ts`.
-- Cada spec: login → 5 rotas críticas → asserts (`h1` presente, sem texto "Page not found", sem responses 400/404 em endpoints listados).
-
-### F4.2 Smoke RPC — `scripts/smoke-rpc.ts`
-Executa via supabase-js: `financeiro_central_dashboard`, `fn_noc_snapshot`, `auditoria_listar`, `has_permission`, `has_permissions_batch`, `fn_medico_saldo_real`, `session_heartbeat`. Exit code != 0 em qualquer falha.
-
-### F4.3 Detector de drift — `scripts/check-routes.ts`
-Cruza `App.tsx` × `menuCatalog.ts` × `permissions_catalog`. Reporta: rota sem menu, menu sem rota, rota sem guard, permission key ausente. P0 falha CI; P1/P2 warning.
-
-### F4.4 Healthcheck financeiro automático
-`scripts/healthcheck-financeiro.ts` (chamável manual + cron diário): valida saldo ledger × snapshots, pagamentos órfãos, cobranças órfãs, fechamento sem médico, divergência de repasse. Saída em JSON + grava resumo em `operacao_alertas`.
-
----
-
-## Ordem de execução & gates
+## 1. Estrutura de arquivos
 
 ```text
-F1.1 Etapa A (inventário)  → user revisa CSV de órfãos
-       ↓
-F1.1 Etapa B (saneamento)  → via supabase--insert
-       ↓
-F1.1 Etapa C (migração)    → via supabase--migration  ← user aprova
-       ↓
-F1.2 / F1.3 / F1.4 (frontend + hardening + ledger)
-       ↓ GATE: build verde + 0 erro 400 financeiro + smoke RPC OK
-F2 (polimento cosmético)
-       ↓ GATE
-F3 (NOC → Auditoria → IA → detector financeiro)
-       ↓ GATE
-F4 (Playwright + Smoke + Drift + Healthcheck)
+playwright.config.ts
+tests/
+  e2e/
+    auth/
+      auth.setup.ts              # login dos 4 perfis, salva storageState
+    fixtures/
+      users.ts                   # emails/senhas dos seeds e2e_*
+      test.ts                    # extends base test com helpers tipados
+    helpers/
+      navigation.ts              # gotoApp, expectNoBlankScreen, expectNoLoaderForever
+      rbac.ts                    # expectAccessDenied, expectMenuItemHidden
+      stripe.ts                  # mockStripeRedirect, simulateWebhookSuccess
+    admin/
+      dashboard.spec.ts
+      financeiro.spec.ts
+      auditoria.spec.ts
+      noc.spec.ts
+      rbac.spec.ts
+    guards/
+      rotas.spec.ts              # rota inexistente, sem permissão, redirects
+.storage/
+  admin.json medico.json paciente.json colaborador.json   # gitignored
 ```
 
-**Gates obrigatórios entre frentes:** build verde, console limpo, smoke RPC OK, RBAC intacto, sem regressão visual, findings documentados.
+## 2. Seeds (migration `e2e_seed_users`)
 
----
+Migration **idempotente** que garante 4 usuários de teste:
 
-## Regras transversais (mantidas)
+| Email | Perfil | Observações |
+|---|---|---|
+| `e2e_admin@pulse.test` | admin | acesso total |
+| `e2e_medico@pulse.test` | medico | com `link_sala_padrao` configurado |
+| `e2e_paciente@pulse.test` | paciente | sem dependentes |
+| `e2e_colaborador@pulse.test` | colaborador | escopo limitado |
 
-- Sem `hasCapability`, sem mocks novos, sem mascaramento de erro, sem KPI artificial.
-- Não tocar `client.ts`, `types.ts`, `config.toml` core, webhooks Stripe, arquitetura auth.
-- Schema → `supabase--migration`. Dados → `supabase--insert`. RPC corrigida → atualizar todos os call-sites.
-- Feegow permanece read-only/deep-link clínico.
+Senha fixa para todos (constante no fixture, **não** secret), pois rodam só contra preview. Migration usa `ON CONFLICT DO NOTHING` em `auth.users` + upsert nas tabelas de perfil.
 
----
+Helper `resetEnvironment()` opcional (não destrutivo): apaga apenas linhas com `email LIKE 'e2e_%'` ou `created_by = e2e_admin`.
 
-## Resultado final esperado
+## 3. Auth state reuse
 
-Plataforma financeiramente íntegra, arquiteturalmente consistente, auditável, observável, antifraude preparada, com QA automatizado e pronta para escala operacional real.
+`auth.setup.ts` roda **uma vez** no início da suíte:
+- Login via UI (não via API direta — queremos pegar regressão de tela de login).
+- Salva `storageState` por perfil em `.storage/{perfil}.json`.
+- Os specs declaram `test.use({ storageState: '.storage/admin.json' })` e já entram logados.
+
+## 4. Testes da Onda A (~12-15 no total)
+
+### admin/dashboard.spec.ts
+- Renderiza KPIs (assert: pelo menos N cards com valor numérico).
+- Sidebar abre e fecha.
+- CTA principal navega para destino esperado.
+- Não há tela branca nem loader > 10s (helpers).
+
+### admin/financeiro.spec.ts
+- Abas carregam sem runtime error.
+- KPIs de saldo aparecem (valor pode ser zero, mas o componente renderiza).
+- Página de ledger / observabilidade abre.
+
+### admin/auditoria.spec.ts
+- Filtros aplicam (verifica que URL muda).
+- `correlation_id` filtra (insere uma linha de teste, busca por ela).
+- Botão exportar CSV dispara download.
+
+### admin/noc.spec.ts
+- KPIs operacionais renderizam.
+- Lista de alertas carrega (vazia ou com dados — ambos OK).
+- Timestamp "atualizado em" presente.
+
+### admin/rbac.spec.ts
+- Admin vê menus admin.
+- Paciente logado em rota admin → "Acesso restrito".
+- Colaborador limitado não vê menu financeiro.
+
+### guards/rotas.spec.ts
+- `/rota-que-nao-existe` → catch-all 404.
+- Rota protegida sem permissão → redirect ou tela de acesso restrito (não tela branca).
+- Sidebar coerente com perfil ativo.
+
+## 5. Helpers principais
+
+- **`expectNoBlankScreen(page)`**: garante que `body` tem conteúdo visível e que `#root` tem filhos renderizados.
+- **`expectNoLoaderForever(page, timeoutMs)`**: espera spinners/skeletons sumirem.
+- **`expectAccessDenied(page)`**: procura por texto "Acesso restrito" ou redirect para `/app`.
+- **`mockStripeRedirect(page)`**: intercepta `**/checkout.stripe.com/**` e simula sucesso/cancelamento.
+
+## 6. CI (`.github/workflows/ci.yml`)
+
+Adiciona job `e2e` que roda **depois** do job atual:
+
+```yaml
+e2e:
+  needs: [build-and-test]
+  runs-on: ubuntu-latest
+  steps:
+    - checkout
+    - setup-node
+    - npm ci
+    - npx playwright install --with-deps chromium
+    - npx playwright test
+      env:
+        E2E_BASE_URL: https://pulse-platform-io.lovable.app
+        E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+    - upload-artifact:
+        name: playwright-report
+        path: playwright-report/
+        if: failure()
+```
+
+Config:
+- `retries: 1` no CI, `0` local.
+- `workers: 2` (suíte é pequena, paralelismo controlado).
+- `screenshot: 'only-on-failure'`, `trace: 'retain-on-failure'`, vídeo desligado.
+- Timeout global por teste: 60s.
+
+## 7. Critérios de aceite (Onda A)
+
+- Suíte Playwright roda no CI e fica verde.
+- Falha do CI mostra: screenshot + trace + URL + console errors.
+- Os 4 storageStates são gerados em < 30s.
+- Suíte total roda em < 4 min no CI.
+- Nenhum dado fora de `e2e_*` é tocado.
+- README curto em `tests/e2e/README.md` explicando: como rodar local, como adicionar teste, como atualizar seed.
+
+## 8. Fora de escopo (Onda B, depois)
+
+- E2E completo de Médico (agenda, consulta, sala, upload).
+- E2E completo de Paciente (agendamento → checkout → documentos → dependentes).
+- Detector de regressão visual operacional (tela branca em todas as rotas).
+- Cobertura de fluxo de saque, retorno gratuito, cupons.
+
+## 9. Riscos e mitigação
+
+| Risco | Mitigação |
+|---|---|
+| Preview cair durante CI | Job `e2e` marcado como `continue-on-error: false` mas com 1 retry. Se cair 2x, falha clara. |
+| Seeds sujarem o banco | Prefixo `e2e_` + script de cleanup opcional. Nunca `DELETE` sem `WHERE email LIKE 'e2e_%'`. |
+| Senha em secret do GitHub | Pedirei `E2E_PASSWORD` via add_secret na implementação. Single secret, único uso. |
+| Lentidão do preview | Timeouts generosos (60s por teste, 10s para loaders). Sem `waitForTimeout` fixo. |
+
+## 10. O que vou pedir antes de começar a implementar
+
+1. Criar o secret `E2E_PASSWORD` no GitHub Actions (vou pedir via add_secret).
+2. Aprovação da migration de seed `e2e_seed_users` (vai pelo fluxo padrão de migration).
