@@ -78,6 +78,7 @@ export default function AdminAuditoria() {
     inicio: inicial.inicio, fim: inicial.fim,
     modulo: "todos", risco: "todos", origem: "todas",
     actor: null, entidadeId: null, acao: "", busca: "",
+    actorTipo: "todos", categoriaFinanceira: "", correlationId: "",
   });
   const [aplicado, setAplicado] = useState<FiltrosAuditoria>(filtros);
   const [page, setPage] = useState(1);
