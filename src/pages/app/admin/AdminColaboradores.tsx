@@ -85,7 +85,7 @@ const PERM_GROUPS: { titulo: string; perms: { key: string; label: string }[] }[]
       { key: "pacientes.editar", label: "Editar paciente" },
       { key: "pacientes.suspender", label: "Suspender paciente" },
       { key: "pacientes.bloquear", label: "Bloquear paciente" },
-      { key: "pacientes.banir", label: "Banir paciente" },
+      { key: "pacientes.bloquear", label: "Banir paciente" },
       { key: "pacientes.reativar", label: "Reativar paciente" },
       { key: "pacientes.ver_documentos", label: "Ver documentos" },
       { key: "pacientes.ver_financeiro", label: "Ver financeiro do paciente" },

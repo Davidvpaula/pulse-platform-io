@@ -1109,7 +1109,7 @@ export const ParaMedicos = () => (
         <Link to="/cadastro/medico">Quero me cadastrar</Link>
       </Button>
       <Button asChild variant="outline">
-        <Link to="/login">Já tenho conta</Link>
+        <Link to="/auth">Já tenho conta</Link>
       </Button>
     </div>
   </PageShell>
