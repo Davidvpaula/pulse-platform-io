@@ -189,15 +189,31 @@ export default function AdminSessoes() {
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhuma sessão</TableCell></TableRow>
-                  ) : filtered.map((r) => (
+                  ) : filtered.map((r) => {
+                    const semPerfil = !r.nome && !r.email;
+                    const semIp = !r.ip_address;
+                    return (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <div className="font-medium">{r.nome ?? "—"}</div>
-                        <div className="text-xs text-muted-foreground">{r.email ?? r.user_id.slice(0, 8)}</div>
+                        {semPerfil ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">Sessão sem perfil</Badge>
+                            <div className="text-xs text-muted-foreground mt-1 font-mono">{r.user_id.slice(0, 8)}…</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-medium">{r.nome ?? "—"}</div>
+                            <div className="text-xs text-muted-foreground">{r.email ?? r.user_id.slice(0, 8)}</div>
+                          </>
+                        )}
                       </TableCell>
-                      <TableCell className="font-mono text-xs" title="IP mascarado (LGPD)">{maskIp(r.ip_address)}</TableCell>
+                      <TableCell className="font-mono text-xs" title="IP mascarado (LGPD)">
+                        {semIp
+                          ? <Badge variant="outline" className="text-xs font-normal">IP não capturado</Badge>
+                          : maskIp(r.ip_address)}
+                      </TableCell>
                       <TableCell>
-                        <div className="text-sm">{r.device_label ?? "—"}</div>
+                        <div className="text-sm">{r.device_label ?? <span className="text-muted-foreground italic">Dispositivo legado</span>}</div>
                         <div className="text-xs text-muted-foreground truncate max-w-[200px]">{r.user_agent ?? ""}</div>
                       </TableCell>
                       <TableCell className="text-xs">{timeAgo(r.created_at)}</TableCell>
