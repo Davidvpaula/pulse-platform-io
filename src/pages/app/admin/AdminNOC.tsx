@@ -144,6 +144,37 @@ export default function AdminNOC() {
     refetchInterval: 60_000,
   });
 
+  // Painéis extras (F3.1) — janelas curtas, queries leves, RLS aplicado.
+  const { data: paineis } = useQuery({
+    queryKey: ["admin", "noc-paineis-extras"],
+    queryFn: async () => {
+      const agora = Date.now();
+      const h24 = new Date(agora - 24 * 60 * 60_000).toISOString();
+      const h2 = new Date(agora - 2 * 60 * 60_000).toISOString();
+      const [integ, finan, criticos] = await Promise.all([
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .like("tipo", "integracao_%").eq("status", "aberto").gte("created_at", h24),
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .like("tipo", "financeiro_%").eq("status", "aberto").gte("created_at", h24),
+        supabase.from("operacao_alertas" as never).select("id", { count: "exact", head: true })
+          .eq("severidade", "critico").gte("created_at", h2),
+      ]);
+      return {
+        falhas_integracao_24h: integ.count ?? 0,
+        alertas_financeiros_24h: finan.count ?? 0,
+        eventos_criticos_2h: criticos.count ?? 0,
+        errors: {
+          integ: integ.error?.message,
+          finan: finan.error?.message,
+          criticos: criticos.error?.message,
+        },
+      };
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+
   // Realtime alertas
   useEffect(() => {
     const ch = supabase
