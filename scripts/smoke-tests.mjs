@@ -23,6 +23,7 @@ const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const FUNCS = join(ROOT, "supabase", "functions");
 const JSON_OUT = process.argv.includes("--json");
+const STRICT = process.argv.includes("--strict");
 
 function walk(dir, exts = [".ts", ".tsx"]) {
   const out = [];
