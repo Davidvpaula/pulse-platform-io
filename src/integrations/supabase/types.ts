@@ -1672,10 +1672,59 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cobrancas_links_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "consultas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_atrasos_ativos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_consultas_em_andamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_consulta_id_fkey"
+            columns: ["consulta_id"]
+            isOneToOne: false
+            referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cobrancas_links_pagamento_id_fkey"
             columns: ["pagamento_id"]
             isOneToOne: false
             referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_financeiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_links_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3906,7 +3955,29 @@ export type Database = {
           valor_medico_centavos?: number
           valor_plataforma_centavos?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fechamentos_mensais_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fechamentos_mensais_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fechamentos_mensais_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+        ]
       }
       financeiro_alertas: {
         Row: {
@@ -7358,6 +7429,55 @@ export type Database = {
             columns: ["consulta_id"]
             isOneToOne: false
             referencedRelation: "vw_noc_fila_paciente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "pagamentos_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_financeiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_publicos"
             referencedColumns: ["id"]
           },
         ]

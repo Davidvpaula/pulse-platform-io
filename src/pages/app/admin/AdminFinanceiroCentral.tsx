@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl, downloadCSV } from "@/lib/relatorios/utils";
 import { NovaCobrancaDialog } from "@/components/financeiro/NovaCobrancaDialog";
+import { FinanceiroErrorBoundary } from "@/components/financeiro/FinanceiroErrorBoundary";
 
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
@@ -28,14 +29,21 @@ function useFinanceiroData(inicio: string, fim: string) {
     queryFn: async () => {
       const [dashRes, pagRes, reembRes, linksRes, repassesRes] = await Promise.all([
         supabase.rpc("financeiro_central_dashboard" as never, { _inicio: inicio, _fim: fim } as never),
-        supabase.from("pagamentos").select("*, paciente:pacientes(id,nome_completo), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500),
+        supabase.from("pagamentos").select("*, paciente:pacientes!pagamentos_paciente_id_fkey(id,nome_completo), medico:medicos!pagamentos_medico_id_fkey(id,nome), empresa:empresas!pagamentos_empresa_id_fkey(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500),
         supabase.from("reembolsos")
           .select("*, consulta:consultas!inner(inicio, paciente:pacientes!inner(nome_completo), medico:medicos!inner(nome)), pagamento:pagamentos!pagamento_id(provider_payment_id, gateway_ref), solicitante:profiles!actor_id(nome), analisador:profiles!analisado_por(nome)")
           .order("created_at", { ascending: false }).limit(200),
-        supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome_completo)").order("created_at", { ascending: false }).limit(500),
-        supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100),
+        supabase.from("cobrancas_links").select("*, paciente:pacientes!cobrancas_links_paciente_id_fkey(id,nome_completo)").order("created_at", { ascending: false }).limit(500),
+        supabase.from("fechamentos_mensais").select("*, medico:medicos!fechamentos_mensais_medico_id_fkey(nome)").order("created_at", { ascending: false }).limit(100),
       ]);
       if (dashRes.error) throw dashRes.error;
+
+      // Erros por aba são propagados, NÃO silenciados.
+      const errors: { pagamentos?: string; reembolsos?: string; links?: string; repasses?: string } = {};
+      if (pagRes.error) errors.pagamentos = pagRes.error.message;
+      if (reembRes.error) errors.reembolsos = reembRes.error.message;
+      if (linksRes.error) errors.links = linksRes.error.message;
+      if (repassesRes.error) errors.repasses = repassesRes.error.message;
 
       const reembolsos: ReembolsoRow[] = (reembRes.data || []).map((x: Record<string, unknown>) => {
         const consulta = x.consulta as Record<string, unknown> | null;
@@ -59,6 +67,7 @@ function useFinanceiroData(inicio: string, fim: string) {
         reembolsos,
         links: (linksRes.data || []) as LinkRow[],
         repasses: (repassesRes.data || []) as RepasseRow[],
+        errors,
       };
     },
     staleTime: 60_000,
@@ -234,48 +243,72 @@ export default function AdminFinanceiroCentral() {
             </TabsList>
 
             <TabsContent value="pagamentos">
-              <PagamentosTable
-                pagamentos={pagamentos}
-                pgBusca={pgBusca} setPgBusca={setPgBusca}
-                pgStatus={pgStatus} setPgStatus={setPgStatus}
-                pgPage={pgPage} setPgPage={setPgPage}
-                selecionados={selecionados} togglePagamento={togglePagamento}
-                todosPendentesSelecionados={todosPendentesSelecionados} toggleTodos={toggleTodos}
-                selecionadosPendentes={selecionadosPendentes}
-                loteRunning={loteRunning}
-                onAprovarLote={aprovarLote}
-                onCancelLoteOpen={() => setLoteCancelOpen(true)}
-                onLimparSelecao={() => setSelecionados(new Set())}
-                onConfirmar={confirmarPagamento}
-                onCancelar={(id) => { setCancelId(id); setCancelMotivo(""); }}
-                onDetalhe={abrirDetalhe}
-              />
+              <FinanceiroErrorBoundary label="Pagamentos" onRetry={() => refetch()}>
+                {data?.errors?.pagamentos ? (
+                  <AdminError message={data.errors.pagamentos} onRetry={() => refetch()} />
+                ) : (
+                  <PagamentosTable
+                    pagamentos={pagamentos}
+                    pgBusca={pgBusca} setPgBusca={setPgBusca}
+                    pgStatus={pgStatus} setPgStatus={setPgStatus}
+                    pgPage={pgPage} setPgPage={setPgPage}
+                    selecionados={selecionados} togglePagamento={togglePagamento}
+                    todosPendentesSelecionados={todosPendentesSelecionados} toggleTodos={toggleTodos}
+                    selecionadosPendentes={selecionadosPendentes}
+                    loteRunning={loteRunning}
+                    onAprovarLote={aprovarLote}
+                    onCancelLoteOpen={() => setLoteCancelOpen(true)}
+                    onLimparSelecao={() => setSelecionados(new Set())}
+                    onConfirmar={confirmarPagamento}
+                    onCancelar={(id) => { setCancelId(id); setCancelMotivo(""); }}
+                    onDetalhe={abrirDetalhe}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="reembolsos">
-              <ReembolsosTable
-                reembolsos={reembolsos}
-                onAprovar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: true })}
-                onRecusar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: false })}
-              />
+              <FinanceiroErrorBoundary label="Reembolsos" onRetry={() => refetch()}>
+                {data?.errors?.reembolsos ? (
+                  <AdminError message={data.errors.reembolsos} onRetry={() => refetch()} />
+                ) : (
+                  <ReembolsosTable
+                    reembolsos={reembolsos}
+                    onAprovar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: true })}
+                    onRecusar={(id) => setReembolsoModal({ id, motivo: "", observacao: "", aprovar: false })}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="links">
-              <CobrancasLinksTable
-                links={data?.links ?? []}
-                lkBusca={lkBusca} setLkBusca={setLkBusca}
-                lkStatus={lkStatus} setLkStatus={setLkStatus}
-                lkPage={lkPage} setLkPage={setLkPage}
-                onNovaCobranca={() => setNovaCobrancaOpen(true)}
-              />
+              <FinanceiroErrorBoundary label="Links" onRetry={() => refetch()}>
+                {data?.errors?.links ? (
+                  <AdminError message={data.errors.links} onRetry={() => refetch()} />
+                ) : (
+                  <CobrancasLinksTable
+                    links={data?.links ?? []}
+                    lkBusca={lkBusca} setLkBusca={setLkBusca}
+                    lkStatus={lkStatus} setLkStatus={setLkStatus}
+                    lkPage={lkPage} setLkPage={setLkPage}
+                    onNovaCobranca={() => setNovaCobrancaOpen(true)}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
 
             <TabsContent value="repasses">
-              <RepassesTable
-                repasses={data?.repasses ?? []}
-                onMarcarPago={marcarPagoRepasse}
-                onBloquear={bloquearRepasse}
-              />
+              <FinanceiroErrorBoundary label="Repasses" onRetry={() => refetch()}>
+                {data?.errors?.repasses ? (
+                  <AdminError message={data.errors.repasses} onRetry={() => refetch()} />
+                ) : (
+                  <RepassesTable
+                    repasses={data?.repasses ?? []}
+                    onMarcarPago={marcarPagoRepasse}
+                    onBloquear={bloquearRepasse}
+                  />
+                )}
+              </FinanceiroErrorBoundary>
             </TabsContent>
           </Tabs>
         </>

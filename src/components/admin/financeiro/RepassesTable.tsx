@@ -7,7 +7,7 @@ const brl = (v: number) => (v / 100).toLocaleString("pt-BR", { style: "currency"
 export interface RepasseRow {
   id: string;
   medico_id?: string;
-  medicos?: { nome?: string } | null;
+  medico?: { nome?: string } | null;
   competencia_mes: number;
   competencia_ano: number;
   valor_bruto_centavos: number;
@@ -38,7 +38,7 @@ export function RepassesTable({ repasses, onMarcarPago, onBloquear }: RepassesTa
         <tbody>
           {repasses.map(f => (
             <tr key={f.id} className="border-t">
-              <td className="p-2">{f.medicos?.nome || f.medico_id?.slice(0, 8)}</td>
+              <td className="p-2">{f.medico?.nome || f.medico_id?.slice(0, 8)}</td>
               <td className="p-2">{String(f.competencia_mes).padStart(2, "0")}/{f.competencia_ano}</td>
               <td className="p-2">{brl(f.valor_bruto_centavos)}</td>
               <td className="p-2">{brl(f.valor_medico_centavos)}</td>
