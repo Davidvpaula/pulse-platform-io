@@ -38,6 +38,19 @@ function timeAgo(iso: string) {
   return `${d} d atrás`;
 }
 
+function maskIp(ip: string | null): string {
+  if (!ip) return "—";
+  // IPv4: 192.168.1.10 -> 192.168.1.•••
+  const v4 = ip.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
+  if (v4) return `${v4[1]}.•••`;
+  // IPv6 simplificado: mascara dois últimos blocos
+  if (ip.includes(":")) {
+    const parts = ip.split(":");
+    if (parts.length > 2) return `${parts.slice(0, -2).join(":")}:••••:••••`;
+  }
+  return ip;
+}
+
 function useSessoes(showRevoked: boolean) {
   return useQuery<SessionRow[]>({
     queryKey: ["admin", "sessoes", showRevoked],
