@@ -195,7 +195,7 @@ export default function AdminSessoes() {
                         <div className="font-medium">{r.nome ?? "—"}</div>
                         <div className="text-xs text-muted-foreground">{r.email ?? r.user_id.slice(0, 8)}</div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{r.ip_address ?? "—"}</TableCell>
+                      <TableCell className="font-mono text-xs" title="IP mascarado (LGPD)">{maskIp(r.ip_address)}</TableCell>
                       <TableCell>
                         <div className="text-sm">{r.device_label ?? "—"}</div>
                         <div className="text-xs text-muted-foreground truncate max-w-[200px]">{r.user_agent ?? ""}</div>
