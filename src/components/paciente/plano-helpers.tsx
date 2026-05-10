@@ -189,7 +189,7 @@ export function PlanosDisponiveisSection({
   onSelecionar: (id: string) => void;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section id="planos-disponiveis" className="scroll-mt-24 rounded-2xl border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
           <Sparkles className="h-4 w-4 text-primary" /> Planos disponíveis
