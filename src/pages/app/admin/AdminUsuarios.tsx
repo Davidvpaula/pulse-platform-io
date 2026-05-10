@@ -407,7 +407,6 @@ export default function AdminUsuarios() {
                         : <Badge variant="outline">Particular</Badge>}
                     </td>
                     <td className="px-4 py-2.5">{statusContaBadge(p.status_conta)}</td>
-                    <td className="px-4 py-2.5">{feegowBadge(p.feegow_status)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{formatDate(p.ultima_consulta)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <DropdownMenu>
