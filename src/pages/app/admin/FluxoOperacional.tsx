@@ -1,171 +1,170 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, UserPlus, Database, Calendar, BellRing, Stethoscope, Building2, Activity, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  ArrowRight, UserPlus, Calendar, Stethoscope, FileText, CreditCard,
+  MessageSquare, ExternalLink, Activity, AlertCircle,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import type { Automacao, Paciente, Agendamento } from "@/lib/mock";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminEmpty } from "@/components/admin/AdminStates";
 import { cn } from "@/lib/utils";
 
-const fluxoEmpresa = [
-  { icon: Building2, title: "Empresa cadastra funcionário", actor: "RH · Construtora Horizonte", status: "feito" },
-  { icon: UserPlus, title: "Sistema cria paciente", actor: "Automação", status: "feito" },
-  { icon: Database, title: "Envio para Feegow", actor: "Integração", status: "andamento", note: "marcado como não sincronizado" },
-  { icon: CheckCircle2, title: "Feegow sincronizado", actor: "Feegow", status: "pendente", note: "aguardando retorno do ID externo" },
-  { icon: Calendar, title: "Empresa agenda consulta", actor: "RH · Construtora Horizonte", status: "pendente" },
-  { icon: BellRing, title: "Distribui para médico, secretaria, admin", actor: "Notificação", status: "pendente" },
+/**
+ * Fluxo operacional — visão interna da plataforma.
+ *
+ * IMPORTANTE: a Feegow é apenas SoR clínico EXTERNO (deep-link).
+ * Não aparece como passo operacional, fila ou dependência aqui.
+ */
+
+const fluxoOperacional = [
+  { icon: UserPlus,     title: "Cadastro do paciente",    actor: "Plataforma · auto/manual" },
+  { icon: Calendar,     title: "Agenda & reserva",        actor: "Paciente / Colaborador" },
+  { icon: CreditCard,   title: "Pagamento",               actor: "Stripe (sandbox)" },
+  { icon: Stethoscope,  title: "Atendimento",             actor: "Médico — presencial ou Meet" },
+  { icon: FileText,     title: "Documentos & financeiro", actor: "Plataforma — recibo, repasse" },
+  { icon: MessageSquare,title: "Comunicação & follow-up", actor: "Inbox interno + notificações" },
 ];
 
-const stepTone = {
-  feito: "bg-success text-success-foreground",
-  andamento: "bg-warning text-warning-foreground animate-pulse",
-  pendente: "bg-muted text-muted-foreground",
-} as const;
+type AgendaRow = {
+  id: string;
+  inicio: string;
+  status: string;
+  paciente_nome: string | null;
+  medico_nome: string | null;
+  modalidade: string | null;
+};
 
 export default function FluxoOperacional() {
-  // Dados carregados do banco — por enquanto vazio até integração Feegow
-  const novosPacientes: Paciente[] = [];
-  const ativosHoje: Agendamento[] = [];
-  const automacoesFluxo: Automacao[] = [];
+  const [loading, setLoading] = useState(true);
+  const [novosPacientesHoje, setNovosPacientesHoje] = useState(0);
+  const [agendaHoje, setAgendaHoje] = useState<AgendaRow[]>([]);
+  const [pendentesConfirmacao, setPendentesConfirmacao] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const inicioDia = new Date(); inicioDia.setHours(0, 0, 0, 0);
+      const fimDia = new Date();    fimDia.setHours(23, 59, 59, 999);
+
+      const [{ count: cNovos }, { data: agenda }, { count: cPend }] = await Promise.all([
+        supabase.from("pacientes").select("id", { count: "exact", head: true })
+          .gte("created_at", inicioDia.toISOString()),
+        supabase.from("consultas")
+          .select("id, inicio, status, modalidade, pacientes:paciente_id(nome_completo), medicos:medico_id(nome)")
+          .gte("inicio", inicioDia.toISOString())
+          .lte("inicio", fimDia.toISOString())
+          .order("inicio", { ascending: true })
+          .limit(8),
+        supabase.from("consultas").select("id", { count: "exact", head: true })
+          .in("status", ["agendada", "aguardando_pagamento"]),
+      ]);
+      if (cancelled) return;
+      setNovosPacientesHoje(cNovos ?? 0);
+      setAgendaHoje((agenda ?? []).map((c: any) => ({
+        id: c.id,
+        inicio: c.inicio,
+        status: c.status,
+        modalidade: c.modalidade,
+        paciente_nome: c.pacientes?.nome_completo ?? null,
+        medico_nome: c.medicos?.nome ?? null,
+      })));
+      setPendentesConfirmacao(cPend ?? 0);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Fluxo operacional"
-        description="Visualize o ciclo completo: cadastro → Feegow → agendamento → atendimento."
+        description="Visão interna da jornada: cadastro → agenda → atendimento → financeiro → comunicação."
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Pacientes em sincronização" value={String(novosPacientes.length)} icon={Database} hint="aguardando Feegow" />
-        <StatCard label="Agendamentos hoje" value={String(ativosHoje.length)} icon={Calendar} />
-        <StatCard label="Automações ativas" value={String(automacoesFluxo.filter(a => a.ativo).length)} icon={Activity} />
-        <StatCard label="Falhas em 24h" value="2" icon={AlertCircle} hint="reprocessamento manual" />
+        <StatCard label="Pacientes novos hoje" value={String(novosPacientesHoje)} icon={UserPlus} />
+        <StatCard label="Agendamentos hoje" value={String(agendaHoje.length)} icon={Calendar} />
+        <StatCard label="Aguardando confirmação" value={String(pendentesConfirmacao)} icon={AlertCircle} hint="agendada ou aguardando pagamento" />
+        <StatCard label="Operação" value={loading ? "…" : "OK"} icon={Activity} hint="dados em tempo real" />
       </div>
 
-      {/* Fluxo Empresarial - timeline horizontal */}
+      {/* Storyline interno */}
       <div className="card-elevated p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-display text-lg font-semibold">Fluxo empresarial completo</h3>
-            <p className="text-xs text-muted-foreground">Exemplo: Construtora Horizonte adicionando colaborador</p>
+            <h3 className="font-display text-lg font-semibold">Jornada operacional padrão</h3>
+            <p className="text-xs text-muted-foreground">
+              Plataforma é a fonte da verdade operacional. Prontuário clínico fica no provider externo via deep-link, ao final.
+            </p>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/app/empresa/dashboard">Ver empresa <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
-          </Button>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {fluxoEmpresa.map((step, i) => {
+          {fluxoOperacional.map((step, i) => {
             const Icon = step.icon;
             return (
               <div key={i} className="relative">
                 <div className="card-elevated h-full p-4">
-                  <span className={cn("inline-grid h-8 w-8 place-items-center rounded-lg", stepTone[step.status as keyof typeof stepTone])}>
+                  <span className="inline-grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                     <Icon className="h-4 w-4" />
                   </span>
                   <p className="mt-3 text-sm font-semibold leading-tight">{step.title}</p>
                   <p className="mt-1 text-[11px] text-muted-foreground">{step.actor}</p>
-                  {step.note && <p className="mt-1 text-[10px] text-warning">{step.note}</p>}
                 </div>
-                {i < fluxoEmpresa.length - 1 && (
+                {i < fluxoOperacional.length - 1 && (
                   <ArrowRight className="absolute right-[-14px] top-1/2 hidden h-4 w-4 -translate-y-1/2 text-muted-foreground lg:block" />
                 )}
               </div>
             );
           })}
         </div>
+
+        <div className="mt-6 flex items-start gap-3 rounded-lg border border-dashed border-border p-3">
+          <ExternalLink className="h-4 w-4 mt-0.5 text-muted-foreground" />
+          <div className="text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">Provider clínico externo (opcional)</p>
+            <p>
+              Após o atendimento, o médico pode abrir o prontuário no provider externo via deep-link
+              direto na ficha do paciente. Não há sincronização operacional, fila, espelhamento ou dependência.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Automações */}
+      {/* Agenda do dia */}
       <div className="card-elevated p-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-semibold">Automações de fluxo</h3>
-          <Button variant="outline" size="sm">Configurar</Button>
+          <h3 className="font-display text-lg font-semibold">Agenda de hoje</h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/admin/agendamentos">Ver agenda completa</Link>
+          </Button>
         </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="pb-2 pr-4">Trigger</th>
-                <th className="pb-2 pr-4">Ação</th>
-                <th className="pb-2 pr-4">Execuções (24h)</th>
-                <th className="pb-2 pr-4">Sucesso</th>
-                <th className="pb-2 pr-4">Último log</th>
-                <th className="pb-2">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {automacoesFluxo.map(a => (
-                <tr key={a.id} className="hover:bg-muted/40">
-                  <td className="py-3 pr-4 font-medium">{a.trigger}</td>
-                  <td className="py-3 pr-4 text-muted-foreground">→ {a.acao}</td>
-                  <td className="py-3 pr-4">{a.execucoes24h}</td>
-                  <td className="py-3 pr-4">
-                    <span className={cn("font-semibold", a.sucesso >= 90 ? "text-success" : a.sucesso >= 70 ? "text-warning" : "text-destructive")}>
-                      {a.sucesso}%
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 text-xs text-muted-foreground">{a.ultimoLog}</td>
-                  <td className="py-3">
-                    <span className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                      a.ativo ? "bg-success/10 text-success" : "bg-muted text-muted-foreground",
-                    )}>
-                      {a.ativo ? "Ativa" : "Desativada"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Status global de pacientes */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Pacientes em sincronização</h3>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/app/admin/pacientes">Ver todos</Link>
-            </Button>
-          </div>
+        {loading ? (
+          <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
+        ) : agendaHoje.length === 0 ? (
+          <AdminEmpty title="Sem agendamentos hoje" description="Nenhuma consulta marcada para o dia atual." />
+        ) : (
           <ul className="mt-4 space-y-2">
-            {novosPacientes.map(p => (
-              <li key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <p className="text-sm font-medium">{p.nome}</p>
-                  <p className="text-xs text-muted-foreground">{p.id} · {p.empresa ?? "Particular"}</p>
-                </div>
-                <StatusBadge status={p.status} />
-              </li>
-            ))}
-            {!novosPacientes.length && <p className="text-sm text-muted-foreground">Nenhum pendente.</p>}
-          </ul>
-        </div>
-
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Agendamentos de hoje</h3>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/app/admin/agendamentos">Ver agenda</Link>
-            </Button>
-          </div>
-          <ul className="mt-4 space-y-2">
-            {ativosHoje.map(a => (
+            {agendaHoje.map(a => (
               <li key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
                   <p className="text-sm font-medium">
                     <Stethoscope className="mr-1 inline h-3.5 w-3.5 text-primary" />
-                    {a.medico} · {a.hora}
+                    {a.medico_nome ?? "—"} · {new Date(a.inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </p>
-                  <p className="text-xs text-muted-foreground">{a.paciente} · {a.modalidade}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {a.paciente_nome ?? "—"} · {a.modalidade ?? "—"}
+                  </p>
                 </div>
-                <StatusBadge status={a.status} />
+                <StatusBadge status={a.status as any} />
               </li>
             ))}
           </ul>
-        </div>
+        )}
       </div>
     </div>
   );
