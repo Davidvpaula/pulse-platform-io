@@ -51,15 +51,21 @@ function useSessoes(showRevoked: boolean) {
       const { data, error } = await q;
       if (error) throw error;
       const ids = Array.from(new Set((data ?? []).map((r: Record<string, unknown>) => r.user_id as string)));
-      const { data: cols } = await supabase
-        .from("colaboradores")
-        .select("user_id,nome_completo,email")
-        .in("user_id", ids);
-      const map = new Map((cols ?? []).map((c: Record<string, unknown>) => [c.user_id as string, c]));
+      const map = new Map<string, { nome?: string; email?: string }>();
+      if (ids.length > 0) {
+        const [{ data: cols }, { data: meds }, { data: pats }] = await Promise.all([
+          supabase.from("colaboradores").select("user_id,nome_completo,email").in("user_id", ids),
+          supabase.from("medicos").select("user_id,nome,email").in("user_id", ids),
+          supabase.from("pacientes").select("user_id,nome_completo,email").in("user_id", ids),
+        ]);
+        for (const c of (cols ?? []) as Array<Record<string, string>>) map.set(c.user_id, { nome: c.nome_completo, email: c.email });
+        for (const m of (meds ?? []) as Array<Record<string, string>>) if (!map.has(m.user_id)) map.set(m.user_id, { nome: m.nome, email: m.email });
+        for (const p of (pats ?? []) as Array<Record<string, string>>) if (!map.has(p.user_id)) map.set(p.user_id, { nome: p.nome_completo, email: p.email });
+      }
       return (data ?? []).map((r: Record<string, unknown>) => ({
         ...r,
-        nome: (map.get(r.user_id as string) as Record<string, string> | undefined)?.nome_completo,
-        email: (map.get(r.user_id as string) as Record<string, string> | undefined)?.email,
+        nome: map.get(r.user_id as string)?.nome,
+        email: map.get(r.user_id as string)?.email,
       })) as SessionRow[];
     },
     staleTime: 30_000,
