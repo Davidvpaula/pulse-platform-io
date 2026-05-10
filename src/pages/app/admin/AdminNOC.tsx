@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
 import {
   Activity, RefreshCw, AlertTriangle, CheckCircle2, Users, Clock, PlayCircle,
-  Bell, Sparkles, Loader2,
+  Bell, Sparkles, Loader2, Plug, DollarSign, Siren,
 } from "lucide-react";
 import { toast } from "sonner";
 
