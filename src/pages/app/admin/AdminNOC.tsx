@@ -104,7 +104,7 @@ export default function AdminNOC() {
   const qc = useQueryClient();
   const [gerandoIA, setGerandoIA] = useState(false);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin", "noc-snapshot"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("fn_noc_snapshot" as never);
@@ -114,6 +114,7 @@ export default function AdminNOC() {
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
   const { data: alertas, refetch: refetchAlertas } = useQuery({
     queryKey: ["admin", "noc-alertas"],
@@ -213,10 +214,17 @@ export default function AdminNOC() {
           title="NOC — Operação"
           description="Central de monitoramento operacional em tempo real"
         />
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground">
+              Atualizado {lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
+          )}
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
