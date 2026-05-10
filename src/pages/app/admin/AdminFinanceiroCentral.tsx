@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { brl, downloadCSV } from "@/lib/relatorios/utils";
 import { NovaCobrancaDialog } from "@/components/financeiro/NovaCobrancaDialog";
+import { FinanceiroErrorBoundary } from "@/components/financeiro/FinanceiroErrorBoundary";
 
 const fmtData = (s?: string | null) => s ? new Date(s).toLocaleString("pt-BR") : "—";
 
@@ -36,6 +37,13 @@ function useFinanceiroData(inicio: string, fim: string) {
         supabase.from("fechamentos_mensais").select("*, medico:medicos!fechamentos_mensais_medico_id_fkey(nome)").order("created_at", { ascending: false }).limit(100),
       ]);
       if (dashRes.error) throw dashRes.error;
+
+      // Erros por aba são propagados, NÃO silenciados.
+      const errors: { pagamentos?: string; reembolsos?: string; links?: string; repasses?: string } = {};
+      if (pagRes.error) errors.pagamentos = pagRes.error.message;
+      if (reembRes.error) errors.reembolsos = reembRes.error.message;
+      if (linksRes.error) errors.links = linksRes.error.message;
+      if (repassesRes.error) errors.repasses = repassesRes.error.message;
 
       const reembolsos: ReembolsoRow[] = (reembRes.data || []).map((x: Record<string, unknown>) => {
         const consulta = x.consulta as Record<string, unknown> | null;
@@ -59,6 +67,7 @@ function useFinanceiroData(inicio: string, fim: string) {
         reembolsos,
         links: (linksRes.data || []) as LinkRow[],
         repasses: (repassesRes.data || []) as RepasseRow[],
+        errors,
       };
     },
     staleTime: 60_000,
