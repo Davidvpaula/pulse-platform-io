@@ -247,7 +247,7 @@ export default function AdminSessoes() {
                         )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  );})}
                 </TableBody>
               </Table>
             </div>
