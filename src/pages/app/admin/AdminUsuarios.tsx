@@ -54,8 +54,6 @@ const filtrosPrincipais = [
   { key: "pendente", label: "Pendentes" },
   { key: "particular", label: "Particular" },
   { key: "empresarial", label: "Empresarial" },
-  { key: "feegow_ok", label: "Sincronizado Feegow" },
-  { key: "feegow_pendente", label: "Pendente Feegow" },
   { key: "pgto_pendente", label: "Com pagamento pendente" },
 ] as const;
 
