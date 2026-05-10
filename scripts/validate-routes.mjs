@@ -93,7 +93,11 @@ const profilesSrc = readFileSync(join(SRC, "lib", "profiles.ts"), "utf8");
 const menuRe = /to:\s*["']([^"']+)["']/g;
 const menuLinks = [];
 while ((m = menuRe.exec(profilesSrc)) !== null) {
-  if (m[1].startsWith("/")) menuLinks.push(m[1]);
+  if (m[1].startsWith("/")) {
+    // Normaliza removendo querystring e anchor antes de validar
+    const clean = m[1].split("?")[0].split("#")[0];
+    menuLinks.push(clean);
+  }
 }
 
 /* ─── 4. Análise: matcher de rota dinâmica ─── */
