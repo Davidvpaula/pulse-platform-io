@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { ShieldCheck, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PlanoCard from "./PlanoCard";
 import { PlanosDisponiveisSection } from "./plano-helpers";
@@ -12,7 +12,15 @@ interface Props {
 }
 
 export default function PlanoPlataformaTab({ assinaturas, beneficiosMap, planosDisponiveis, onReload }: Props) {
+  const navigate = useNavigate();
   const planoIds = assinaturas.map(a => a.plano_id);
+
+  const handleSelecionar = (id: string) => navigate(`/app/paciente/assinar-plano/${id}`);
+
+  const scrollToDisponiveis = () => {
+    const el = document.getElementById("planos-disponiveis");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   if (assinaturas.length === 0) {
     return (
@@ -23,16 +31,18 @@ export default function PlanoPlataformaTab({ assinaturas, beneficiosMap, planosD
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
             Conheça nossos planos de saúde com cobertura e benefícios exclusivos.
           </p>
-          <Button className="mt-5" asChild>
-            <Link to="/planos">Ver planos disponíveis</Link>
-          </Button>
+          {planosDisponiveis.length > 0 && (
+            <Button className="mt-5" onClick={scrollToDisponiveis}>
+              Ver planos disponíveis
+            </Button>
+          )}
         </div>
 
         {planosDisponiveis.length > 0 && (
           <PlanosDisponiveisSection
             planos={planosDisponiveis}
             planoAtualIds={planoIds}
-            onSelecionar={() => {}}
+            onSelecionar={handleSelecionar}
           />
         )}
       </div>
@@ -55,7 +65,7 @@ export default function PlanoPlataformaTab({ assinaturas, beneficiosMap, planosD
         <PlanosDisponiveisSection
           planos={planosDisponiveis}
           planoAtualIds={planoIds}
-          onSelecionar={() => {}}
+          onSelecionar={handleSelecionar}
         />
       )}
     </div>
