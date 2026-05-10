@@ -381,7 +381,6 @@ export default function AdminUsuarios() {
                   <th className="px-4 py-2 text-left">E-mail</th>
                   <th className="px-4 py-2 text-left">Vínculo</th>
                   <th className="px-4 py-2 text-left">Conta</th>
-                  <th className="px-4 py-2 text-left">Feegow</th>
                   <th className="px-4 py-2 text-left">Última</th>
                   <th className="px-4 py-2 text-right">Ações</th>
                 </tr>
