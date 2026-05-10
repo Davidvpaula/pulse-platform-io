@@ -368,6 +368,7 @@ const App = () => (
               <Route path="admin/perfil" element={<G perm="admin.dashboard"><AdminPerfil /></G>} />
               <Route path="admin/permissoes" element={<G perm="colaboradores.alterar_permissoes"><Permissoes /></G>} />
               <Route path="admin/permissoes/log" element={<G perm="colaboradores.alterar_permissoes"><PermissoesLog /></G>} />
+              <Route path="admin/permissoes-log" element={<Navigate to="/app/admin/permissoes/log" replace />} />
               <Route path="admin/impersonar" element={<G perm="colaboradores.alterar_permissoes"><AdminImpersonar /></G>} />
               <Route path="admin/sessoes" element={<G perm="colaboradores.alterar_permissoes"><AdminSessoes /></G>} />
               <Route path="admin/seguranca" element={<G perm="colaboradores.alterar_permissoes"><AdminSeguranca /></G>} />
