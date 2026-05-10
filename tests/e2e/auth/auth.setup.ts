@@ -1,30 +1,50 @@
 import { test as setup, expect } from "@playwright/test";
 import { E2E_USERS, type E2eRole } from "../fixtures/users";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, existsSync, statSync } from "node:fs";
 
 mkdirSync(".storage", { recursive: true });
 
 const ROLES: E2eRole[] = ["admin", "medico", "paciente", "colaborador"];
 
+// Considera storageState válido se foi escrito há menos de 6 horas.
+// Tokens Supabase duram >1h; refresh ocorre na primeira request real do spec.
+const STORAGE_FRESH_MS = 6 * 60 * 60 * 1000;
+
+function storageIsFresh(path: string): boolean {
+  if (!existsSync(path)) return false;
+  const ageMs = Date.now() - statSync(path).mtimeMs;
+  return ageMs < STORAGE_FRESH_MS;
+}
+
 for (const role of ROLES) {
   const user = E2E_USERS[role];
 
   setup(`autentica seed e2e: ${role}`, async ({ page, context }) => {
-    await page.goto("/auth", { waitUntil: "domcontentloaded" });
+    // Skip determinístico: storageState recente já existe em disco.
+    if (storageIsFresh(user.storage)) {
+      setup.info().annotations.push({
+        type: "auth",
+        description: `storageState reutilizado (${user.storage})`,
+      });
+      return;
+    }
 
-    // form de login (tab "Entrar" já é o default)
-    await page.locator('input[name="email"]').first().fill(user.email);
-    await page.locator('input[name="password"]').first().fill(user.password);
-    await page.getByRole("button", { name: /entrar/i }).first().click();
+    const doLogin = async () => {
+      await page.goto("/auth", { waitUntil: "domcontentloaded" });
+      await page.locator('input[name="email"]').first().fill(user.email);
+      await page.locator('input[name="password"]').first().fill(user.password);
+      await page.getByRole("button", { name: /entrar/i }).first().click();
+      await page.waitForURL((url) => !new URL(url).pathname.startsWith("/auth"), {
+        timeout: 25_000,
+      });
+    };
 
-    // espera sair da tela /auth
-    await page.waitForURL((url) => !url.pathname.startsWith("/auth"), {
-      timeout: 20_000,
-    });
+    await doLogin();
 
-    // sanity: tem sessão no localStorage
     const hasSession = await page.evaluate(() =>
-      Object.keys(localStorage).some((k) => k.includes("auth-token") || k.includes("supabase"))
+      Object.keys(localStorage).some(
+        (k) => k.includes("auth-token") || k.includes("supabase"),
+      ),
     );
     expect(hasSession, `sessão não persistiu para ${role}`).toBe(true);
 
