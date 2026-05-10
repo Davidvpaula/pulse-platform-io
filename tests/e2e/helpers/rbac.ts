@@ -1,30 +1,52 @@
 import { expect, type Page } from "@playwright/test";
 
+const ACCESS_DENIED_REGEX = /acesso restrito|sem permiss|n[aã]o autorizado|forbidden/i;
+
 /**
  * Valida que o usuário não tem permissão para a rota atual.
- * Aceita 3 sinais (qualquer um basta):
- *  - texto "Acesso restrito" / "sem permissão"
- *  - redirect para /app (URL diferente da pedida)
- *  - redirect para /auth (sessão perdida — também conta como bloqueio)
+ *
+ * Determinístico: corre 2 condições em paralelo e ganha a primeira que resolver,
+ * em até `timeoutMs`:
+ *  1. URL muda (qualquer redirect — para /app, /auth, etc).
+ *  2. Texto de bloqueio aparece (acesso restrito / sem permissão / etc).
+ *
+ * Se nenhuma das duas acontecer dentro do timeout, falha com diagnóstico
+ * (URL final + snippet do <main>).
  */
-export async function expectAccessDenied(page: Page, originalPath: string) {
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(800); // dá tempo para guard fazer redirect
-  const currentUrl = new URL(page.url());
-  const onSamePath = currentUrl.pathname === originalPath;
+export async function expectAccessDenied(
+  page: Page,
+  originalPath: string,
+  timeoutMs = 8_000,
+) {
+  const urlChanged = page
+    .waitForURL(
+      (url) => new URL(url).pathname !== originalPath,
+      { timeout: timeoutMs },
+    )
+    .then(() => "url-changed" as const);
 
-  if (!onSamePath) {
-    // redirecionou — basta não estar mais na rota proibida
-    expect(currentUrl.pathname).not.toBe(originalPath);
+  const blockMessage = page
+    .getByText(ACCESS_DENIED_REGEX)
+    .first()
+    .waitFor({ state: "visible", timeout: timeoutMs })
+    .then(() => "block-message" as const);
+
+  try {
+    await Promise.race([urlChanged, blockMessage]);
     return;
+  } catch {
+    const finalUrl = page.url();
+    const mainText = await page
+      .locator("main")
+      .first()
+      .innerText()
+      .catch(() => "(sem <main>)");
+    expect.fail(
+      `expectAccessDenied falhou em ${originalPath}\n` +
+        `URL final: ${finalUrl}\n` +
+        `Snippet <main>: ${mainText.slice(0, 300)}`,
+    );
   }
-
-  // ficou na mesma rota → precisa mostrar mensagem de bloqueio
-  const body = await page.locator("body").innerText();
-  expect(
-    /acesso restrito|sem permiss|n[aã]o autorizado|forbidden/i.test(body),
-    `esperava bloqueio em ${originalPath}, mas a página renderizou conteúdo`
-  ).toBe(true);
 }
 
 /** Verifica que um item de menu (por texto) NÃO está visível na sidebar. */
