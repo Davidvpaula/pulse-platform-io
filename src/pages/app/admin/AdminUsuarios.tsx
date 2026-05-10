@@ -213,8 +213,6 @@ export default function AdminUsuarios() {
       if (filtro === "pendente" && r.status_conta !== "pendente") return false;
       if (filtro === "particular" && r.empresa_id) return false;
       if (filtro === "empresarial" && !r.empresa_id) return false;
-      if (filtro === "feegow_ok" && r.feegow_status !== "liberado") return false;
-      if (filtro === "feegow_pendente" && !["pendente", "nao_enviado", "erro"].includes(r.feegow_status)) return false;
       if (filtro === "pgto_pendente" && !r.tem_pagamento_pendente) return false;
 
       if (!q) return true;
