@@ -135,18 +135,60 @@ if (STRICT) {
   const gonePerms = [...basePerms].filter(k => !curPerms.has(k));
 
   const drift = newRpcs.length || goneRpcs.length || newPerms.length || gonePerms.length;
-  if (drift) {
-    console.error("\n❌ DRIFT contra baseline (scripts/baseline.json):");
-    if (newRpcs.length)  console.error("  + RPCs novos:    ", newRpcs.join(", "));
-    if (goneRpcs.length) console.error("  - RPCs removidos:", goneRpcs.join(", "));
-    if (newPerms.length) console.error("  + Perms novas:   ", newPerms.join(", "));
-    if (gonePerms.length)console.error("  - Perms removidas:", gonePerms.join(", "));
-    console.error("\n→ Se intencional, regenere a baseline com:");
-    console.error("    node scripts/smoke-tests.mjs --json > /tmp/s.json && \\");
-    console.error("    node -e \"...\" (ver F6) atualizando scripts/baseline.json");
+  const hasRouteIssues = !routesOk;
+
+  // Helpers de formatação
+  const sample = (set, n = 3) => {
+    if (!set) return [];
+    const arr = [...set];
+    const head = arr.slice(0, n);
+    const more = arr.length - head.length;
+    return more > 0 ? [...head, `… +${more} outros`] : head;
+  };
+  const printList = (label, items, locator) => {
+    console.error(`\n  ${label} (${items.length}):`);
+    for (const k of items.sort()) {
+      console.error(`    • ${k}`);
+      const locs = locator ? sample(locator.get(k)) : [];
+      for (const l of locs) console.error(`        ${l}`);
+    }
+  };
+
+  if (drift || hasRouteIssues) {
+    console.error("\n════════════════════════════════════════════════════════════");
+    console.error("  ❌ DRIFT DETECTADO contra scripts/baseline.json");
+    console.error("════════════════════════════════════════════════════════════");
+
+    if (newRpcs.length)   printList("+ RPCs NOVAS (chamadas no código, ausentes na baseline)", newRpcs, rpcMap);
+    if (goneRpcs.length)  printList("- RPCs REMOVIDAS (na baseline, sem chamada no código)", goneRpcs, null);
+    if (newPerms.length)  printList("+ PERMISSION KEYS NOVAS (usadas no código, ausentes na baseline)", newPerms, permMap);
+    if (gonePerms.length) printList("- PERMISSION KEYS REMOVIDAS (na baseline, sem uso no código)", gonePerms, null);
+
+    if (hasRouteIssues) {
+      console.error("\n  ❌ ROTAS / LINKS / MENU quebrados:");
+      // Extrai blocos relevantes do relatório de rotas
+      const blocks = routesReport.split(/\n(?=═|⚠️|❌)/);
+      for (const b of blocks) {
+        if (/❌/.test(b)) {
+          for (const line of b.split("\n")) console.error("    " + line);
+        }
+      }
+    }
+
+    console.error("\n────────────────────────────────────────────────────────────");
+    console.error("  Como interpretar:");
+    console.error("    • RPC NOVA  → criou função no código mas esqueceu migration / baseline");
+    console.error("    • RPC REMOVIDA → renomeou/apagou; verifique call-sites antes de aceitar");
+    console.error("    • PERM NOVA → adicionar em permissions_catalog (migration) + baseline");
+    console.error("    • PERM REMOVIDA → catálogo precisa ser limpo ou código restaurado");
+    console.error("    • ROTA QUEBRADA → link/menu aponta p/ path inexistente em App.tsx");
+    console.error("\n  Se a mudança é INTENCIONAL, regenere a baseline:");
+    console.error("    node scripts/smoke-tests.mjs --json > /tmp/smoke.json");
+    console.error("    # revisar diff e atualizar scripts/baseline.json");
+    console.error("    # ver scripts/README-baseline.md");
+    console.error("────────────────────────────────────────────────────────────\n");
     process.exit(1);
   }
-  if (!routesOk) process.exit(1);
   console.log("\n✅ Baseline OK — sem drift de rotas, RPCs ou permissões.\n");
   process.exit(0);
 }
