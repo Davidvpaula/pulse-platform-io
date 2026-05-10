@@ -137,7 +137,7 @@ export default function AdminSaquesMedicos() {
         title="Saques Médicos"
         description="Gerencie solicitações de saque dos médicos."
         actions={
-          <RequirePermission perm="financeiro.saques_config">
+          <RequirePermission perm="financeiro.saques.configurar">
             <Button variant="outline" onClick={() => setConfigOpen(true)}>
               <Settings className="mr-2 h-4 w-4" /> Configurar regras
             </Button>
@@ -211,22 +211,22 @@ export default function AdminSaquesMedicos() {
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex gap-1.5 flex-wrap">
-                          <RequirePermission perm="financeiro.dados_bancarios_ver">
+                          <RequirePermission perm="financeiro.ver_dados_bancarios_medico">
                             <Button size="sm" variant="ghost" onClick={() => openDetalhe(s)}>
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
                           </RequirePermission>
                           {(s.status === "solicitado" || s.status === "em_analise") && (
                             <>
-                              <RequirePermission perm="financeiro.saques_aprovar">
+                              <RequirePermission perm="financeiro.saques.aprovar">
                                 <Button size="sm" variant="outline" className="text-success border-success/40"
                                   onClick={() => mudarStatus(s.id, "aprovado")}>Aprovar</Button>
                               </RequirePermission>
-                              <RequirePermission perm="financeiro.saques_recusar">
+                              <RequirePermission perm="financeiro.saques.recusar">
                                 <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
                                   onClick={() => { setRecusarId(s.id); setMotivo(""); }}>Recusar</Button>
                               </RequirePermission>
-                              <RequirePermission perm="financeiro.saques_solicitar_correcao">
+                              <RequirePermission perm="financeiro.saques.solicitar_correcao">
                                 <Button size="sm" variant="outline" className="text-warning border-warning/40"
                                   onClick={() => { setCorrecaoId(s.id); setMotivo(""); }}>
                                   <RotateCcw className="h-3 w-3 mr-1" /> Correção
@@ -235,7 +235,7 @@ export default function AdminSaquesMedicos() {
                             </>
                           )}
                           {s.status === "aprovado" && (
-                            <RequirePermission perm="financeiro.saques_marcar_pago">
+                            <RequirePermission perm="financeiro.saques.marcar_pago">
                               <Button size="sm" variant="outline" className="text-success border-success/40"
                                 onClick={() => mudarStatus(s.id, "pago")}>Marcar pago</Button>
                             </RequirePermission>
