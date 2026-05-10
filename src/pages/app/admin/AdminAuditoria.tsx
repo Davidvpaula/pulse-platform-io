@@ -132,6 +132,9 @@ export default function AdminAuditoria() {
         p_busca: aplicado.busca.trim() || "",
         p_limit: PAGE,
         p_offset: (page - 1) * PAGE,
+        p_actor_tipo: aplicado.actorTipo || "todos",
+        p_categoria_financeira: aplicado.categoriaFinanceira.trim() || "",
+        p_correlation_id: aplicado.correlationId.trim() || "",
       });
       if (error) throw error;
       const lista = (data || []) as EventoAuditoria[];
