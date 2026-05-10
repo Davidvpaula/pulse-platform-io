@@ -156,6 +156,7 @@ export default function AdminAuditoria() {
       inicio: inicial.inicio, fim: inicial.fim,
       modulo: "todos", risco: "todos", origem: "todas",
       actor: null, entidadeId: null, acao: "", busca: "",
+      actorTipo: "todos", categoriaFinanceira: "", correlationId: "",
     };
     setFiltros(reset); setAplicado(reset); setPage(1);
   };
