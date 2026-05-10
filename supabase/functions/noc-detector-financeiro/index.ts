@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
             consulta_id: c.id,
             medico_id: c.medico_id,
             paciente_id: c.paciente_id,
-            payload: { status_consulta: c.status, data_consulta: c.data_consulta, pagamentos_encontrados: pg?.length ?? 0 },
+            payload: { status_consulta: c.status, inicio: c.inicio, valor_centavos: c.valor_centavos, pagamentos_encontrados: pg?.length ?? 0 },
           });
         }
       }
