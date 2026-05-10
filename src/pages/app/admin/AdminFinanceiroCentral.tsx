@@ -28,12 +28,12 @@ function useFinanceiroData(inicio: string, fim: string) {
     queryFn: async () => {
       const [dashRes, pagRes, reembRes, linksRes, repassesRes] = await Promise.all([
         supabase.rpc("financeiro_central_dashboard" as never, { _inicio: inicio, _fim: fim } as never),
-        supabase.from("pagamentos").select("*, paciente:pacientes(id,nome_completo), medico:medicos(id,nome), empresa:empresas(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500),
+        supabase.from("pagamentos").select("*, paciente:pacientes!pagamentos_paciente_id_fkey(id,nome_completo), medico:medicos!pagamentos_medico_id_fkey(id,nome), empresa:empresas!pagamentos_empresa_id_fkey(id,razao_social,nome_fantasia)").order("created_at", { ascending: false }).limit(500),
         supabase.from("reembolsos")
           .select("*, consulta:consultas!inner(inicio, paciente:pacientes!inner(nome_completo), medico:medicos!inner(nome)), pagamento:pagamentos!pagamento_id(provider_payment_id, gateway_ref), solicitante:profiles!actor_id(nome), analisador:profiles!analisado_por(nome)")
           .order("created_at", { ascending: false }).limit(200),
-        supabase.from("cobrancas_links").select("*, paciente:pacientes(id,nome_completo)").order("created_at", { ascending: false }).limit(500),
-        supabase.from("fechamentos_mensais").select("*, medicos(nome)").order("created_at", { ascending: false }).limit(100),
+        supabase.from("cobrancas_links").select("*, paciente:pacientes!cobrancas_links_paciente_id_fkey(id,nome_completo)").order("created_at", { ascending: false }).limit(500),
+        supabase.from("fechamentos_mensais").select("*, medico:medicos!fechamentos_mensais_medico_id_fkey(nome)").order("created_at", { ascending: false }).limit(100),
       ]);
       if (dashRes.error) throw dashRes.error;
 
