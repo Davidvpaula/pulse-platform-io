@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
         .from("cobrancas_links")
         .select("id, consulta_id, paciente_id, status, valor_centavos, created_at")
         .is("consulta_id", null)
-        .in("status", ["pago", "paid", "succeeded"])
+        .eq("status", "pago")
         .lt("created_at", corte)
         .limit(MAX_PER_RULE);
       if (error) skips.push("R3:" + error.message);
