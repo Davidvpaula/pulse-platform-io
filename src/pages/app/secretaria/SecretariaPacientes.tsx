@@ -242,7 +242,7 @@ export default function SecretariaPacientes() {
               ))}
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Após criar, o paciente entra na fila de envio para Feegow automaticamente.
+              Após criar, o paciente fica disponível na plataforma e pode ser agendado normalmente.
             </p>
           </div>
           <DialogFooter>
