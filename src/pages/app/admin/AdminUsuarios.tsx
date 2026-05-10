@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 
 type StatusConta = "ativo" | "suspenso" | "bloqueado" | "banido" | "pendente";
-type FeegowStatus = "nao_enviado" | "pendente" | "liberado" | "erro";
 
 type PacienteRow = {
   id: string;
@@ -38,7 +37,6 @@ type PacienteRow = {
   empresa_id: string | null;
   status_conta: StatusConta;
   status_motivo: string | null;
-  feegow_status: FeegowStatus;
   created_at: string;
   ultima_consulta?: string | null;
   proxima_consulta?: string | null;
