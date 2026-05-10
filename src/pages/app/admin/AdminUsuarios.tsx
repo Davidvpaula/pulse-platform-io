@@ -124,7 +124,7 @@ export default function AdminUsuarios() {
 
     const { data: pacientes, error } = await supabase
       .from("pacientes")
-      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,feegow_status,created_at,user_id")
+      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,status_motivo,created_at,user_id")
       .order("created_at", { ascending: false })
       .range(from, to);
 
