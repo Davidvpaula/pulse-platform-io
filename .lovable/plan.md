@@ -1,159 +1,75 @@
-# F7 Onda A — Playwright E2E (infra + Admin + Guards + CI)
+# Estabilização da Onda A — 6 ajustes pontuais
 
-Escopo desta entrega: **só a Onda A**. Médico, Paciente e regressão visual ficam para a Onda B, depois que a Onda A estiver verde por alguns dias.
+Escopo: **só helpers, setup e config de Playwright**. Zero código de produto, zero novo teste, zero mudança de RBAC.
 
-## Princípios
+## 1. Remover seletores frágeis
 
-- Poucos testes, fluxos completos, asserts funcionais.
-- Nada de pixel-perfect, nada de `waitForTimeout`, nada de mock excessivo.
-- Roda só no CI, headless, contra a URL de **preview Lovable**.
-- Seeds com prefixo `e2e_` — convivem com o banco do preview, nunca tocam dados reais.
-- Stripe coberto até o redirect; webhook de retorno simulado via fixture.
+Arquivos: `tests/e2e/admin/dashboard.spec.ts`, `admin/financeiro.spec.ts`, `admin/noc.spec.ts`.
 
-## 1. Estrutura de arquivos
+- Substituir `.card`, `[class*='Card']` (acoplados a Tailwind/shadcn) por âncoras estáveis: `main`, `<h1>/<h2>` visível, `nav a`, `role="link"`.
+- Trocar `cards.count() > 0` por uma expectativa concreta: existe `<main>` com texto não-vazio.
+- Para "sidebar tem links", manter `nav a, aside a` mas exigir `>= 1` em vez de `> 2` (a sidebar pode estar collapsed em viewport CI).
 
-```text
-playwright.config.ts
-tests/
-  e2e/
-    auth/
-      auth.setup.ts              # login dos 4 perfis, salva storageState
-    fixtures/
-      users.ts                   # emails/senhas dos seeds e2e_*
-      test.ts                    # extends base test com helpers tipados
-    helpers/
-      navigation.ts              # gotoApp, expectNoBlankScreen, expectNoLoaderForever
-      rbac.ts                    # expectAccessDenied, expectMenuItemHidden
-      stripe.ts                  # mockStripeRedirect, simulateWebhookSuccess
-    admin/
-      dashboard.spec.ts
-      financeiro.spec.ts
-      auditoria.spec.ts
-      noc.spec.ts
-      rbac.spec.ts
-    guards/
-      rotas.spec.ts              # rota inexistente, sem permissão, redirects
-.storage/
-  admin.json medico.json paciente.json colaborador.json   # gitignored
-```
+## 2. Melhorar `expectAccessDenied`
 
-## 2. Seeds (migration `e2e_seed_users`)
+Arquivo: `tests/e2e/helpers/rbac.ts`.
 
-Migration **idempotente** que garante 4 usuários de teste:
+Hoje: `waitForTimeout(800)` fixo + checagem.
+Novo: corrida de 2 condições, o que vier primeiro em até 8 s:
+- URL muda (`page.waitForURL(u => u.pathname !== originalPath)`), ou
+- texto de bloqueio aparece (`page.getByText(/acesso restrito|sem permiss|não autorizado|forbidden/i)`).
 
-| Email | Perfil | Observações |
-|---|---|---|
-| `e2e_admin@pulse.test` | admin | acesso total |
-| `e2e_medico@pulse.test` | medico | com `link_sala_padrao` configurado |
-| `e2e_paciente@pulse.test` | paciente | sem dependentes |
-| `e2e_colaborador@pulse.test` | colaborador | escopo limitado |
+Sem `waitForTimeout`. Mensagem de erro inclui a URL final e um snippet do `<main>` para diagnóstico.
 
-Senha fixa para todos (constante no fixture, **não** secret), pois rodam só contra preview. Migration usa `ON CONFLICT DO NOTHING` em `auth.users` + upsert nas tabelas de perfil.
+## 3. Endurecer `expectNoLoaderForever`
 
-Helper `resetEnvironment()` opcional (não destrutivo): apaga apenas linhas com `email LIKE 'e2e_%'` ou `created_by = e2e_admin`.
+Arquivo: `tests/e2e/helpers/navigation.ts`.
 
-## 3. Auth state reuse
+Hoje: poll com `waitForTimeout(250)` em loop — pode passar mesmo sem loader nenhum.
+Novo:
+- Se nenhum loader apareceu em 1 s, retorna OK (não é falha — só não há loader).
+- Se apareceu, usa `locator.first().waitFor({ state: "detached", timeout })`.
+- Sem `waitForTimeout` em loop.
 
-`auth.setup.ts` roda **uma vez** no início da suíte:
-- Login via UI (não via API direta — queremos pegar regressão de tela de login).
-- Salva `storageState` por perfil em `.storage/{perfil}.json`.
-- Os specs declaram `test.use({ storageState: '.storage/admin.json' })` e já entram logados.
+## 4. `auth.setup.ts` tolerante a sessão existente
 
-## 4. Testes da Onda A (~12-15 no total)
+Arquivo: `tests/e2e/auth/auth.setup.ts`.
 
-### admin/dashboard.spec.ts
-- Renderiza KPIs (assert: pelo menos N cards com valor numérico).
-- Sidebar abre e fecha.
-- CTA principal navega para destino esperado.
-- Não há tela branca nem loader > 10s (helpers).
+- Antes do login, `page.goto("/")` e ler `localStorage` — se já houver token Supabase válido para o email esperado, **pular** a tela de `/auth` e ir direto para `storageState({path})`.
+- Caso o storage exista em disco mas esteja expirado, capturar o erro de redirect para `/auth` e re-logar.
+- Idempotência: rodar `auth.setup.ts` 2x seguidas não deve dobrar o tempo.
 
-### admin/financeiro.spec.ts
-- Abas carregam sem runtime error.
-- KPIs de saldo aparecem (valor pode ser zero, mas o componente renderiza).
-- Página de ledger / observabilidade abre.
+## 5. Retry controlado só no setup
 
-### admin/auditoria.spec.ts
-- Filtros aplicam (verifica que URL muda).
-- `correlation_id` filtra (insere uma linha de teste, busca por ela).
-- Botão exportar CSV dispara download.
+Arquivo: `playwright.config.ts`.
 
-### admin/noc.spec.ts
-- KPIs operacionais renderizam.
-- Lista de alertas carrega (vazia ou com dados — ambos OK).
-- Timestamp "atualizado em" presente.
+- Manter `retries: 1` global no CI.
+- Project `setup` ganha override: `retries: 2`. Login pode falhar por jitter de rede do preview Lovable; o resto da suíte não merece esse benefício para não mascarar flakes reais.
+- Adicionar `timeout: 90_000` só no project `setup` (login pode ser lento em cold start).
 
-### admin/rbac.spec.ts
-- Admin vê menus admin.
-- Paciente logado em rota admin → "Acesso restrito".
-- Colaborador limitado não vê menu financeiro.
+## 6. Criar `tests/e2e/STABILITY.md`
 
-### guards/rotas.spec.ts
-- `/rota-que-nao-existe` → catch-all 404.
-- Rota protegida sem permissão → redirect ou tela de acesso restrito (não tela branca).
-- Sidebar coerente com perfil ativo.
+Documento operacional curto (1-2 páginas) cobrindo:
 
-## 5. Helpers principais
+- **Como interpretar uma falha**: passos para baixar o `playwright-report` artifact, abrir trace, identificar se é flake (passou no retry) ou regressão real.
+- **Critério de "flaky"**: falhou ≥ 2x em 10 runs consecutivas em main, sem mudança correlata de produto.
+- **Quarentena**: `test.fixme()` com comentário `// QUARENTENA <data> — motivo` e issue tracker rastreando. Nunca `test.skip()` silencioso.
+- **Sinais de instabilidade do preview**: padrões de erro recorrentes (504, cold start > 30 s) com ação recomendada (re-rodar / abrir ticket).
+- **O que NÃO fazer durante observação**: adicionar novos testes, tocar em produto pra "ajudar o teste", aumentar timeouts globalmente, desativar retry.
+- **Métricas a observar nos próximos 3-5 dias**: tempo total da suíte, taxa de falha por spec, tempo de cada step do `setup`.
 
-- **`expectNoBlankScreen(page)`**: garante que `body` tem conteúdo visível e que `#root` tem filhos renderizados.
-- **`expectNoLoaderForever(page, timeoutMs)`**: espera spinners/skeletons sumirem.
-- **`expectAccessDenied(page)`**: procura por texto "Acesso restrito" ou redirect para `/app`.
-- **`mockStripeRedirect(page)`**: intercepta `**/checkout.stripe.com/**` e simula sucesso/cancelamento.
+## Validação após os ajustes
 
-## 6. CI (`.github/workflows/ci.yml`)
+Rodar `bunx playwright test` localmente apontando para a URL de preview Lovable (`E2E_BASE_URL=https://pulse-platform-io.lovable.app`).
 
-Adiciona job `e2e` que roda **depois** do job atual:
+**Caveat honesto**: no sandbox eu posso rodar Playwright, mas o preview Lovable pode estar em cold start ou indisponível na hora do run — se isso acontecer, vou reportar exatamente o que aconteceu (timeout de navegação, 502, etc.) sem mascarar como sucesso. O dado real de estabilidade vem dos próximos dias de runs no CI; o run local é só smoke do meu próprio refactor.
 
-```yaml
-e2e:
-  needs: [build-and-test]
-  runs-on: ubuntu-latest
-  steps:
-    - checkout
-    - setup-node
-    - npm ci
-    - npx playwright install --with-deps chromium
-    - npx playwright test
-      env:
-        E2E_BASE_URL: https://pulse-platform-io.lovable.app
-        E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
-    - upload-artifact:
-        name: playwright-report
-        path: playwright-report/
-        if: failure()
-```
+Vou trazer:
+- Resultado por spec (passou / falhou / flaky-passou-no-retry).
+- Tempo total e tempo do step `setup`.
+- Quais asserts ficaram mais resilientes (ex.: removi `.card`, `expectAccessDenied` agora é determinístico).
+- Riscos / trade-offs identificados (ex.: tolerar sessão existente esconde regressões na tela de login? — discutir).
 
-Config:
-- `retries: 1` no CI, `0` local.
-- `workers: 2` (suíte é pequena, paralelismo controlado).
-- `screenshot: 'only-on-failure'`, `trace: 'retain-on-failure'`, vídeo desligado.
-- Timeout global por teste: 60s.
+## Fora de escopo (reafirmado)
 
-## 7. Critérios de aceite (Onda A)
-
-- Suíte Playwright roda no CI e fica verde.
-- Falha do CI mostra: screenshot + trace + URL + console errors.
-- Os 4 storageStates são gerados em < 30s.
-- Suíte total roda em < 4 min no CI.
-- Nenhum dado fora de `e2e_*` é tocado.
-- README curto em `tests/e2e/README.md` explicando: como rodar local, como adicionar teste, como atualizar seed.
-
-## 8. Fora de escopo (Onda B, depois)
-
-- E2E completo de Médico (agenda, consulta, sala, upload).
-- E2E completo de Paciente (agendamento → checkout → documentos → dependentes).
-- Detector de regressão visual operacional (tela branca em todas as rotas).
-- Cobertura de fluxo de saque, retorno gratuito, cupons.
-
-## 9. Riscos e mitigação
-
-| Risco | Mitigação |
-|---|---|
-| Preview cair durante CI | Job `e2e` marcado como `continue-on-error: false` mas com 1 retry. Se cair 2x, falha clara. |
-| Seeds sujarem o banco | Prefixo `e2e_` + script de cleanup opcional. Nunca `DELETE` sem `WHERE email LIKE 'e2e_%'`. |
-| Senha em secret do GitHub | Pedirei `E2E_PASSWORD` via add_secret na implementação. Single secret, único uso. |
-| Lentidão do preview | Timeouts generosos (60s por teste, 10s para loaders). Sem `waitForTimeout` fixo. |
-
-## 10. O que vou pedir antes de começar a implementar
-
-1. Criar o secret `E2E_PASSWORD` no GitHub Actions (vou pedir via add_secret).
-2. Aprovação da migration de seed `e2e_seed_users` (vai pelo fluxo padrão de migration).
+- Onda B, médico, paciente, checkout real, upload real, integrações externas, novos mocks, mudança de produto.
