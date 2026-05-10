@@ -80,16 +80,6 @@ function statusContaBadge(s: StatusConta) {
   return <Badge variant="outline" className={v.cls}>{v.label}</Badge>;
 }
 
-function feegowBadge(s: FeegowStatus) {
-  const map: Record<FeegowStatus, { label: string; cls: string }> = {
-    nao_enviado: { label: "Não enviado", cls: "border-muted-foreground/30 text-muted-foreground" },
-    pendente:    { label: "Pendente",    cls: "border-warning/40 text-warning" },
-    liberado:    { label: "Sincronizado", cls: "border-success/40 text-success" },
-    erro:        { label: "Erro",        cls: "border-destructive/40 text-destructive" },
-  };
-  const c = map[s] ?? map.nao_enviado;
-  return <Badge variant="outline" className={c.cls}>{c.label}</Badge>;
-}
 
 function formatDate(d?: string | null) {
   if (!d) return "—";
