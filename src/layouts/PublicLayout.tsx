@@ -69,7 +69,7 @@ export default function PublicLayout() {
           </Button>
 
           {open && (
-            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md lg:hidden">
+            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md md:hidden">
               {links.map((l, i) => (
                 <Link
                   key={`m-${l.to}-${i}`}
