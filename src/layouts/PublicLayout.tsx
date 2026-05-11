@@ -25,7 +25,7 @@ export default function PublicLayout() {
         <div className="container flex h-16 items-center justify-between gap-6">
           <Logo size="md" />
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-0.5 md:flex">
             {links.map((l, i) => (
               <NavLink
                 key={`${l.to}-${i}`}
@@ -33,7 +33,7 @@ export default function PublicLayout() {
                 end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-full px-3.5 py-2 text-sm font-medium tracking-tight transition-colors",
+                    "rounded-full px-2.5 py-2 text-sm font-medium tracking-tight transition-colors whitespace-nowrap",
                     isActive
                       ? "font-semibold text-foreground"
                       : "text-foreground/65 hover:text-foreground",
@@ -45,11 +45,11 @@ export default function PublicLayout() {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-1 md:flex">
             <Button
               asChild
               size="sm"
-              className="rounded-full bg-primary px-5 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+              className="rounded-full bg-primary px-4 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               <Link to="/auth?mode=signup">Cadastre-se</Link>
             </Button>
@@ -61,7 +61,7 @@ export default function PublicLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full lg:hidden"
+            className="rounded-full md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Abrir menu"
           >
@@ -69,7 +69,7 @@ export default function PublicLayout() {
           </Button>
 
           {open && (
-            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md lg:hidden">
+            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md md:hidden">
               {links.map((l, i) => (
                 <Link
                   key={`m-${l.to}-${i}`}
