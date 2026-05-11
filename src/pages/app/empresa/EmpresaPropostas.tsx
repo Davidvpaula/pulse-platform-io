@@ -103,6 +103,7 @@ export default function EmpresaPropostas() {
           .from("especialidades")
           .select("id, nome")
           .eq("ativo", true)
+          .order("ordem")
           .order("nome"),
         supabase
           .from("termos_condicoes")
