@@ -43,7 +43,7 @@ export default function ServicoDetalhe() {
       setLoading(true);
       const { data: s } = await (supabase as any)
         .from("servicos_publicos")
-        .select("id,nome,descricao_publica,duracao_min,valor_paciente_centavos,ativo")
+        .select("id,nome,tipo,subtitulo,descricao_publica,duracao_min,valor_paciente_centavos,imagem_url,icone,ativo")
         .eq("slug", slug)
         .maybeSingle();
       if (!s || !(s as any).ativo) {
