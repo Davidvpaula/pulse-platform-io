@@ -138,19 +138,24 @@ export default function Sobre() {
         </section>
 
         {/* CTA final */}
-        <section className="card-elevated overflow-hidden">
-          <div className="bg-gradient-to-br from-primary to-primary/80 p-8 text-primary-foreground sm:p-12">
-            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <section className="relative overflow-hidden rounded-2xl shadow-deep">
+          <div className="relative bg-gradient-deep-vibrant p-8 text-deep-foreground sm:p-12">
+            <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
+            <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-primary-soft/20 blur-3xl" aria-hidden />
+            <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-xl">
-                <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white ring-1 ring-white/20 backdrop-blur">
+                  Comece agora
+                </span>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
                   Pronto para cuidar da sua saúde com quem entende?
                 </h2>
-                <p className="mt-3 text-sm leading-relaxed text-primary-foreground/85 sm:text-base">
+                <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
                   Agende uma consulta online com um dos nossos médicos verificados em poucos cliques.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg" variant="secondary" className="font-semibold">
+                <Button asChild size="lg" className="rounded-[10px] bg-white px-6 font-semibold text-deep shadow-elegant hover:bg-white/95">
                   <Link to="/medicos">
                     Agendar consulta <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
@@ -159,7 +164,7 @@ export default function Sobre() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="rounded-[10px] border-white/40 bg-white/10 font-semibold text-white backdrop-blur hover:bg-white/20 hover:text-white"
                 >
                   <Link to="/faq">Tire suas dúvidas</Link>
                 </Button>
