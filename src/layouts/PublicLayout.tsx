@@ -18,6 +18,8 @@ export default function PublicLayout() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      {/* faixa fina decorativa Lasmar */}
+      <div className="h-1 w-full bg-gradient-deep-vibrant" aria-hidden />
       {/* ─── HEADER SÓLIDO FULL-WIDTH ─── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 shadow-[0_1px_0_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(15,42,68,0.08)] backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="container flex h-16 items-center justify-between gap-4">
@@ -104,8 +106,9 @@ export default function PublicLayout() {
       <main className="flex-1"><Outlet /></main>
 
       {/* ─── FOOTER ─── */}
-      <footer className="relative mt-12 border-t border-border bg-foreground text-background/90">
-        <div className="container grid gap-10 py-16 md:grid-cols-12">
+      <footer className="relative mt-12 border-t border-deep/40 bg-deep text-deep-foreground/90">
+        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
+        <div className="container relative grid gap-10 py-16 md:grid-cols-12">
           {/* Brand */}
           <div className="md:col-span-4">
             <Logo variant="white" size="md" />

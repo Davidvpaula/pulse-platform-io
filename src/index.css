@@ -100,9 +100,18 @@
     --gradient-primary: linear-gradient(135deg, hsl(198 76% 42%), hsl(206 100% 50%));
     --gradient-soft: linear-gradient(180deg, hsl(198 100% 97%), hsl(40 50% 98%));
     --gradient-hero: linear-gradient(135deg, hsl(200 80% 23%) 0%, hsl(198 76% 42%) 55%, hsl(198 100% 80%) 100%);
+
+    /* Deep — petrol oficial Cor 10 #0C4B6A para faixas escuras */
+    --deep: 200 80% 18%;
+    --deep-foreground: 40 50% 98%;
+    --deep-soft: 200 60% 28%;
+    --gradient-deep: linear-gradient(135deg, hsl(200 80% 14%) 0%, hsl(200 80% 23%) 45%, hsl(198 76% 38%) 100%);
+    --gradient-deep-vibrant: linear-gradient(120deg, hsl(200 80% 18%) 0%, hsl(204 95% 32%) 55%, hsl(206 100% 48%) 100%);
+
     --shadow-card: 0 1px 2px hsl(200 80% 12% / 0.04), 0 4px 16px hsl(198 50% 25% / 0.06);
     --shadow-elegant: 0 10px 30px -10px hsl(198 76% 42% / 0.25);
     --shadow-glow: 0 0 40px hsl(206 100% 55% / 0.30);
+    --shadow-deep: 0 24px 48px -16px hsl(200 80% 12% / 0.45);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 200 25% 28%;
@@ -143,6 +152,14 @@
     --sidebar-accent: 200 40% 15%;
     --sidebar-accent-foreground: 198 90% 75%;
     --sidebar-border: 200 35% 16%;
+
+    /* Deep — dark mode */
+    --deep: 200 80% 6%;
+    --deep-foreground: 40 50% 96%;
+    --deep-soft: 200 60% 14%;
+    --gradient-deep: linear-gradient(135deg, hsl(200 80% 4%) 0%, hsl(200 80% 14%) 45%, hsl(198 70% 28%) 100%);
+    --gradient-deep-vibrant: linear-gradient(120deg, hsl(200 80% 8%) 0%, hsl(204 90% 28%) 55%, hsl(206 95% 45%) 100%);
+    --shadow-deep: 0 24px 48px -16px hsl(0 0% 0% / 0.6);
   }
 }
 
@@ -161,11 +178,25 @@
   .gradient-hero { background: var(--gradient-hero); }
   .gradient-primary { background: var(--gradient-primary); }
   .gradient-soft { background: var(--gradient-soft); }
+  .gradient-deep { background: var(--gradient-deep); }
+  .gradient-deep-vibrant { background: var(--gradient-deep-vibrant); }
   .text-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* Texturas decorativas para faixas escuras */
+  .bg-grid-soft {
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .bg-dot-soft {
+    background-image: radial-gradient(hsl(0 0% 100% / 0.10) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   /* ─── B2B / B2C flow indicators ─── */

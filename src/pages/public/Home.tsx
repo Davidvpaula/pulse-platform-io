@@ -188,20 +188,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 6. DÚVIDAS ─── */}
-      <section className="bg-background">
-        <div className="container px-4 py-16">
-          <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
+      {/* ─── 5b. NÚMEROS — banda petrol ─── */}
+      <section className="relative overflow-hidden bg-gradient-deep-vibrant text-deep-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-25" aria-hidden />
+        <div className="container relative z-10 grid gap-8 px-4 py-16 sm:grid-cols-3 md:py-20">
+          <BigStat icon={Stethoscope} value={stats.medicos} label="Médicos verificados" />
+          <BigStat icon={Users} value={stats.pacientes} label="Pacientes atendidos" plus />
+          <BigStat icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
+        </div>
+      </section>
+
+      {/* ─── 6. DÚVIDAS — banda escura ─── */}
+      <section className="relative overflow-hidden bg-gradient-deep text-deep-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
+        <div className="pointer-events-none absolute -top-32 right-0 h-80 w-80 rounded-full bg-primary/30 blur-3xl" aria-hidden />
+        <div className="container relative z-10 px-4 py-20">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm md:p-12">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="flex items-start gap-5">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft/20 text-white ring-1 ring-white/20">
                   <HelpCircle className="h-7 w-7" />
                 </span>
                 <div>
                   <h2 className="font-display text-3xl font-bold tracking-tight">
                     Dúvidas?
                   </h2>
-                  <p className="mt-1 max-w-xl text-muted-foreground">
+                  <p className="mt-1 max-w-xl text-white/80">
                     Reunimos as perguntas mais comuns sobre consultas, planos e atendimento.
                   </p>
                 </div>
@@ -209,7 +221,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-[10px] bg-primary px-7 font-semibold text-primary-foreground hover:bg-primary/90"
+                className="rounded-[10px] bg-white px-7 font-semibold text-deep shadow-elegant hover:bg-white/95"
               >
                 <Link to="/faq">
                   Tirar dúvidas <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -230,6 +242,34 @@ export default function Home() {
 }
 
 /* ───── Subcomponentes ───── */
+
+function BigStat({
+  icon: Icon,
+  value,
+  label,
+  plus,
+}: {
+  icon: typeof Stethoscope;
+  value: number;
+  label: string;
+  plus?: boolean;
+}) {
+  const display = useCountUp(value);
+  const formatted = display.toLocaleString("pt-BR");
+  return (
+    <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-primary-soft ring-1 ring-white/20 backdrop-blur">
+        <Icon className="h-6 w-6" strokeWidth={1.75} />
+      </span>
+      <p className="mt-4 font-display text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+        {plus ? "+" : ""}{formatted}
+      </p>
+      <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-soft/90">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 function HeroCounter({
   icon: Icon,
