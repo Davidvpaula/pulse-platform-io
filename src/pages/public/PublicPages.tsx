@@ -557,7 +557,7 @@ export const Agendar = () => {
     if (!espId) return;
     (async () => {
       setLoadingMedicos(true);
-      setExpandedId(null);
+
 
       // 1. Vinculos médico-especialidade
       const { data: vinculos } = await supabase
