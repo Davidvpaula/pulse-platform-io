@@ -20,12 +20,12 @@ export default function PublicLayout() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* ─── HEADER SÓLIDO FIXO ─── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
-        <div className="container flex h-16 items-center justify-between gap-6">
+      {/* ─── HEADER FLUTUANTE (cápsula estilo Figma) ─── */}
+      <header className="sticky top-4 z-50 w-full px-4">
+        <div className="relative mx-auto flex h-[68px] max-w-[1180px] items-center justify-between gap-4 rounded-[28px] border border-white/60 bg-[#f5efe4]/95 px-5 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.18)] backdrop-blur-md">
           <Logo size="md" />
 
-          <nav className="hidden items-center gap-0.5 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {links.map((l, i) => (
               <NavLink
                 key={`${l.to}-${i}`}
@@ -33,10 +33,10 @@ export default function PublicLayout() {
                 end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-full px-2.5 py-2 text-sm font-medium tracking-tight transition-colors whitespace-nowrap",
+                    "rounded-full px-2.5 py-2 text-[13px] tracking-tight transition-colors whitespace-nowrap",
                     isActive
-                      ? "font-semibold text-foreground"
-                      : "text-foreground/65 hover:text-foreground",
+                      ? "font-bold text-foreground"
+                      : "font-medium text-foreground/70 hover:text-foreground",
                   )
                 }
               >
@@ -45,15 +45,14 @@ export default function PublicLayout() {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-1 md:flex">
+          <div className="hidden items-center gap-2 md:flex">
             <Button
               asChild
-              size="sm"
-              className="rounded-full bg-primary px-4 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+              className="h-[42px] rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               <Link to="/auth?mode=signup">Cadastre-se</Link>
             </Button>
-            <Button asChild variant="ghost" size="sm" className="rounded-full font-medium">
+            <Button asChild variant="ghost" className="h-[42px] rounded-full px-3 text-sm font-medium">
               <Link to="/auth">Login</Link>
             </Button>
           </div>
@@ -69,13 +68,13 @@ export default function PublicLayout() {
           </Button>
 
           {open && (
-            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md md:hidden">
+            <nav className="absolute left-0 right-0 top-[calc(100%+8px)] flex flex-col gap-1 rounded-2xl border border-white/60 bg-[#f5efe4]/98 p-3 shadow-lg backdrop-blur-md md:hidden">
               {links.map((l, i) => (
                 <Link
                   key={`m-${l.to}-${i}`}
                   to={l.to}
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                  className="rounded-md px-4 py-2.5 text-sm font-medium text-foreground hover:bg-black/5"
                 >
                   {l.label}
                 </Link>
@@ -83,7 +82,7 @@ export default function PublicLayout() {
               <div className="mt-2 flex gap-2 px-1">
                 <Button
                   asChild
-                  className="flex-1 bg-primary font-semibold hover:bg-primary/90"
+                  className="flex-1 rounded-full bg-primary font-semibold hover:bg-primary/90"
                   onClick={() => setOpen(false)}
                 >
                   <Link to="/auth?mode=signup">Cadastre-se</Link>
@@ -91,7 +90,7 @@ export default function PublicLayout() {
                 <Button
                   asChild
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 rounded-full"
                   onClick={() => setOpen(false)}
                 >
                   <Link to="/auth">Login</Link>
@@ -102,7 +101,7 @@ export default function PublicLayout() {
         </div>
       </header>
 
-      <main className="flex-1"><Outlet /></main>
+      <main className="-mt-[76px] flex-1 pt-[76px]"><Outlet /></main>
 
       {/* ─── FOOTER ─── */}
       <footer className="relative mt-12 border-t border-border bg-foreground text-background/90">
