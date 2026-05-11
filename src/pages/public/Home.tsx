@@ -205,19 +205,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 3. STATS / MILESTONES ─── */}
-      <section className="bg-gradient-to-r from-primary via-primary to-primary-glow">
-        <div className="container grid grid-cols-1 gap-px overflow-hidden rounded-none px-0 md:grid-cols-3">
-          <Milestone icon={Stethoscope} number="+10" label="Médicos credenciados" />
-          <Milestone
-            icon={Users}
-            number="+2.600"
-            label="Pacientes cadastrados"
-            highlight
-          />
-          <Milestone icon={CalendarDays} number="+3.500" label="Consultas realizadas" />
-        </div>
-      </section>
+      {/* ─── (faixa de stats removida — contadores movidos para o Hero) ─── */}
+
 
       {/* ─── 4. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}
       <section className="bg-[hsl(200_80%_18%)] text-white">
