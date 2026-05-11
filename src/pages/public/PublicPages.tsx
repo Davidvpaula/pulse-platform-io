@@ -85,7 +85,6 @@ export const Medicos = () => {
   const [busca, setBusca] = useState("");
   const [espFiltro, setEspFiltro] = useState<string>(() => searchParams.get("esp") || "todas");
   const [sort, setSort] = useState<SortOption>("ranking");
-  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
 
   // Sincroniza ?esp= na URL
   useEffect(() => {
