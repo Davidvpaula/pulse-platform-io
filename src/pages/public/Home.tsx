@@ -32,6 +32,7 @@ import diffMomento from "@/assets/home/diferencial-qualquer-momento.jpg";
 
 export default function Home() {
   const { especialidades, loading: loadingEsps } = useEspecialidadesPublicas();
+  const stats = usePublicHomeStats();
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
 
   return (
