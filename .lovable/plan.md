@@ -1,25 +1,36 @@
-## Mudanças em `src/layouts/AppLayout.tsx`
+## Página "Sobre nós" — `/sobre`
 
-Reorganizar a estrutura para que o **header fique fixo no topo cobrindo toda a largura** (incluindo a área do sidebar) e o sidebar comece **abaixo do header**, empurrando o conteúdo principal junto.
+Criar uma página pública institucional baseada no conteúdo oficial de telemedlasmar.com/sobre-nós, adaptada ao design system do projeto (PageShell, semantic tokens, sem cores hardcoded).
 
-### Estrutura nova
+### Conteúdo (puxado do site oficial)
 
-```text
-┌──────────────────────── HEADER FIXO (full width, sticky) ────────────────────────┐
-├──────────┬───────────────────────────────────────────────────────────────────────┤
-│ SIDEBAR  │                              MAIN                                     │
-│ (abaixo  │                                                                       │
-│  header) │                                                                       │
-└──────────┴───────────────────────────────────────────────────────────────────────┘
-```
+1. **Hero** — "O que é a Lasmar TeleMed?"
+   > "A Telemed Lasmar é uma plataforma inovadora de telemedicina que conecta pacientes a médicos e profissionais de saúde especializados. Oferecemos consultas online com praticidade, segurança e conforto."
 
-### Passos
+2. **Por que escolher a Lasmar?** — Subtítulo: "Há 2 anos transformando o acesso à saúde no Brasil com 99,9% de aprovação."
+   - Parágrafo introdutório sobre tecnologia a serviço do cuidado humano + +4.000 pacientes desde 2024.
+   - Grid de 4 cards com diferenciais (cada um com ícone Lucide):
+     - ⭐ **Referência em Satisfação** — +600 avaliações 5 estrelas no Google.
+     - ⏱️ **Pontualidade de 90%** — assiduidade médica garantida.
+     - 🛡️ **Transparência e Ética** — corpo clínico verificado, CRM público conforme CFM.
+     - 👨‍⚕️ **Atendimento Humanizado** — atestados, receitas e exames em poucos cliques.
 
-1. **Mover o `<header>`** para fora do container interno e colocá-lo como primeiro filho do layout, ocupando 100% da largura. Manter `sticky top-0 z-40`.
-2. **Remover o `<Logo>` duplicado dentro do `SidebarBody`** (linhas 294-296) — o header já mostra a logo. O sidebar passa a começar direto pelo card de contexto (Admin / Médico / etc.).
-3. **Sidebar começa abaixo do header**: o wrapper `flex flex-1` fica embaixo do header; o `<aside>` desktop perde o "flow-stripe" topo-zero e mantém apenas o conteúdo do menu (sem cabeçalho próprio).
-4. **Botão de recolher/expandir**: ajustar `top-20` → algo como `top-[4.5rem]` para continuar alinhado logo abaixo do header (fica igual visualmente, mas garantido).
-5. **Sidebar mobile (drawer)**: também passa a começar abaixo do header (`top-16` em vez de `top-0`), preservando o comportamento sem backdrop bloqueante.
-6. **ImpersonationBanner**: continua acima do header (já é o primeiro elemento do layout).
+3. **Números** (3 stats em destaque):
+   - +10 Médicos credenciados
+   - +3.900 Pacientes cadastrados
+   - +5.800 Consultas realizadas
 
-Sem mudanças em rotas, permissões ou conteúdo do menu — é só restruturação visual do shell.
+4. **Reconhecimentos e Certificações** — selo Reclame Aqui + nota Google (texto curto + 2 badges visuais simples).
+
+5. **CTA final** — botões "Agendar consulta" (`/medicos`) e "Falar conosco" (`/faq`).
+
+Sem depoimentos detalhados (são feed dinâmico do Google no site original — fora do escopo deste passo).
+
+### Implementação
+
+- Novo arquivo: `src/pages/public/Sobre.tsx` usando `PageShell` (mesmo padrão de Empresas/Faq).
+- Rota em `src/App.tsx`: `<Route path="/sobre" element={<Sobre />} />` dentro do `PublicLayout`.
+- Menu superior em `src/layouts/PublicLayout.tsx`: adicionar `{ to: "/sobre", label: "Sobre" }` (entre "Empresas" e "FAQ", ou logo após Médicos — escolho entre Empresas e FAQ por ordem natural).
+- Footer em `PublicLayout.tsx`: adicionar `<FooterLink to="/sobre">Sobre nós</FooterLink>` na coluna "Plataforma".
+
+Sem mudanças de backend.

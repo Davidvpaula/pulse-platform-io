@@ -10,6 +10,7 @@ const links = [
   { to: "/servicos", label: "Serviços" },
   { to: "/planos", label: "Planos" },
   { to: "/empresas", label: "Empresas" },
+  { to: "/sobre", label: "Sobre" },
   { to: "/faq", label: "FAQ" },
 ];
 
@@ -158,6 +159,7 @@ export default function PublicLayout() {
               Suporte
             </h4>
             <ul className="mt-4 space-y-2.5 text-sm">
+              <FooterLink to="/sobre">Sobre nós</FooterLink>
               <FooterLink to="/faq">Perguntas frequentes</FooterLink>
               <FooterLink to="/auth">Entrar</FooterLink>
               <FooterLink to="/cadastro-medico">Cadastrar-se</FooterLink>

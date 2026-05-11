@@ -21,6 +21,7 @@ import {
 import CadastroMedico from "@/pages/public/CadastroMedico";
 import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
 import Servicos from "@/pages/public/Servicos";
+import Sobre from "@/pages/public/Sobre";
 import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
 import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
 import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
@@ -207,6 +208,7 @@ const App = () => (
               <Route path="/planos" element={<Planos />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/para-medicos" element={<ParaMedicos />} />
+              <Route path="/sobre" element={<Sobre />} />
               <Route path="/faq" element={<Faq />} />
               {/* /login removed — use /auth */}
               <Route path="/cadastro/medico" element={<CadastroMedico />} />
