@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
+import { usePublicHomeStats } from "@/hooks/usePublicHomeStats";
 import EmBreveDialog from "@/components/EmBreveDialog";
 
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
