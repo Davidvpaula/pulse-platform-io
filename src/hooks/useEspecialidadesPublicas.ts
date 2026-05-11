@@ -25,6 +25,7 @@ export function useEspecialidadesPublicas() {
         .from("especialidades")
         .select("id, nome, slug, descricao, icone, ativo")
         .eq("ativo", true)
+        .order("ordem", { ascending: true })
         .order("nome", { ascending: true });
 
       if (!esps?.length) {
