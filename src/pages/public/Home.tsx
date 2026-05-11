@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
 import { usePublicHomeStats } from "@/hooks/usePublicHomeStats";
 import EmBreveDialog from "@/components/EmBreveDialog";
+import ServicosCarousel from "@/components/public/ServicosCarousel";
 
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
 import diffHumanizado from "@/assets/home/diferencial-humanizado.jpg";
