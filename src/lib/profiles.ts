@@ -252,6 +252,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
       },
       { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
       { label: "FAQ do Site", to: "/app/admin/faq", icon: HelpCircle },
+      { label: "Feedbacks do site", to: "/app/admin/feedbacks", icon: Inbox },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/admin/perfil", icon: User },
     ],
