@@ -97,8 +97,53 @@ export default function AppLayout() {
   return (
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
+
+      {/* HEADER FIXO FULL-WIDTH */}
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
+        <Link to="/" aria-label="Ir para a home" className="flex items-center">
+          <Logo size="sm" />
+        </Link>
+
+        {/* Flow context badge */}
+        <span className="flow-badge hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
+          <flow.icon className="h-3 w-3" />
+          {flow.label}
+        </span>
+
+        <div className="flex-1" />
+
+        <NotificationsBell />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-muted">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
+                {user.avatarInitials}
+              </span>
+              <span className="hidden text-left sm:block">
+                <span className="block text-sm font-medium leading-tight">{user.name}</span>
+                <span className="block text-[11px] text-muted-foreground leading-tight">{user.role}</span>
+              </span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            {session && (
+              <>
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
+                  {session.user.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" /> Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
       <div className="flex flex-1 w-full relative">
-        {/* Sidebar persistente (tablet/desktop) — anima largura. Fechada = mini com ícones, aberta = completa */}
+        {/* Sidebar persistente (tablet/desktop) — anima largura */}
         <aside
           className={cn(
             "hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-out",
@@ -119,9 +164,9 @@ export default function AppLayout() {
           )}
         </aside>
 
-        {/* Sidebar mobile sem backdrop bloqueante */}
+        {/* Sidebar mobile — drawer abaixo do header, sem backdrop bloqueante */}
         {sidebarOpen && (
-          <div className="fixed inset-0 z-50 pointer-events-none md:hidden">
+          <div className="fixed inset-x-0 top-16 bottom-0 z-30 pointer-events-none md:hidden">
             <aside className="pointer-events-auto absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col shadow-xl">
               <div className="flow-stripe w-full" />
               <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
@@ -129,15 +174,14 @@ export default function AppLayout() {
           </div>
         )}
 
-        {/* Aba flutuante de Recolher / Expandir (apenas mobile usa o expandir; desktop usa a do sidebar) */}
+        {/* Aba flutuante de Recolher / Expandir */}
         <button
           type="button"
           onClick={() => setSidebarOpen((v) => !v)}
           aria-label={sidebarOpen ? "Recolher menu" : "Expandir menu"}
           title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
           className={cn(
-            "fixed z-40 top-20 grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:text-primary",
-            // Posicionamento: alinhado à borda direita do sidebar
+            "fixed z-40 top-[5rem] grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:text-primary",
             sidebarOpen
               ? "md:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]"
               : "md:left-[calc(4rem-0.875rem)] left-1.5",
@@ -146,56 +190,11 @@ export default function AppLayout() {
           {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </button>
 
-      <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
-          <Link to="/" aria-label="Ir para a home" className="flex items-center">
-            <Logo size="sm" />
-          </Link>
-
-          {/* Flow context badge */}
-          <span className="flow-badge hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
-            <flow.icon className="h-3 w-3" />
-            {flow.label}
-          </span>
-
-          <div className="flex-1" />
-
-          <NotificationsBell />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-muted">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
-                  {user.avatarInitials}
-                </span>
-                <span className="hidden text-left sm:block">
-                  <span className="block text-sm font-medium leading-tight">{user.name}</span>
-                  <span className="block text-[11px] text-muted-foreground leading-tight">{user.role}</span>
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              {session && (
-                <>
-                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
-                    {session.user.email}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </header>
-
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 p-4 md:p-8 min-w-0">
           <ProtectedRoute>
             <Outlet />
           </ProtectedRoute>
         </main>
-      </div>
       </div>
     </div>
   );
@@ -291,10 +290,6 @@ function SidebarBody({
 
   return (
     <>
-      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
-        <Logo />
-      </div>
-
       <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
         <flow.icon className="h-4 w-4 flow-icon shrink-0" />
         <span className="flex-1">
