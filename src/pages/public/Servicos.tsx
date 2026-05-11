@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import * as Lucide from "lucide-react";
 import { Loader2, Clock, ArrowRight, Activity } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Badge } from "@/components/ui/badge";
@@ -11,10 +12,19 @@ type Servico = {
   nome: string;
   tipo: string;
   descricao_publica: string | null;
+  subtitulo: string | null;
+  imagem_url: string | null;
+  icone: string | null;
   duracao_min: number;
   valor_paciente_centavos: number;
   prioridade: number;
 };
+
+function getIcon(name: string | null) {
+  if (!name) return Activity;
+  const Lib = Lucide as unknown as Record<string, React.ComponentType<any>>;
+  return Lib[name] ?? Activity;
+}
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
