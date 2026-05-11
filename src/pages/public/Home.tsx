@@ -243,6 +243,34 @@ export default function Home() {
 
 /* ───── Subcomponentes ───── */
 
+function BigStat({
+  icon: Icon,
+  value,
+  label,
+  plus,
+}: {
+  icon: typeof Stethoscope;
+  value: number;
+  label: string;
+  plus?: boolean;
+}) {
+  const display = useCountUp(value);
+  const formatted = display.toLocaleString("pt-BR");
+  return (
+    <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-primary-soft ring-1 ring-white/20 backdrop-blur">
+        <Icon className="h-6 w-6" strokeWidth={1.75} />
+      </span>
+      <p className="mt-4 font-display text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+        {plus ? "+" : ""}{formatted}
+      </p>
+      <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-soft/90">
+        {label}
+      </p>
+    </div>
+  );
+}
+
 function HeroCounter({
   icon: Icon,
   value,
