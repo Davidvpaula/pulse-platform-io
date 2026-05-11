@@ -164,7 +164,7 @@ export default function Home() {
       </section>
 
       {/* ─── 5. DIFERENCIAIS (3 cards-imagem) ─── */}
-      <section className="bg-[hsl(200_80%_18%)] text-white">
+      <section className="bg-background">
         <div className="container space-y-6 px-4 py-20">
           <Diferencial
             image={diffHumanizado}
@@ -295,7 +295,7 @@ function Diferencial({
 }) {
   return (
     <article
-      className={`grid overflow-hidden rounded-3xl bg-[hsl(200_60%_22%)] md:grid-cols-2 ${
+      className={`grid overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md md:grid-cols-2 ${
         reverse ? "md:[&>div:first-child]:order-2" : ""
       }`}
     >
@@ -310,13 +310,13 @@ function Diferencial({
         />
       </div>
       <div className="flex flex-col justify-center gap-4 p-8 md:p-12">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 text-white">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
           <Icon className="h-6 w-6" strokeWidth={1.75} />
         </span>
-        <h3 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
+        <h3 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
           {title}
         </h3>
-        <p className="text-white/85">{text}</p>
+        <p className="text-muted-foreground">{text}</p>
       </div>
     </article>
   );
