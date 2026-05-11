@@ -390,6 +390,7 @@ export default function Auth() {
         <p className="text-center text-xs text-muted-foreground mt-6">
           Ao continuar, você aceita nossos termos de uso e política de privacidade.
         </p>
+        </div>
       </div>
     </div>
   );
