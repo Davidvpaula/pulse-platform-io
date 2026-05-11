@@ -50,12 +50,12 @@ export default function PublicLayout() {
 
           {/* CTAs */}
           <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <Button asChild variant="ghost" className="h-10 rounded-full px-4 text-sm font-medium text-foreground/80 hover:text-foreground">
+            <Button asChild variant="ghost" className="h-10 rounded-[10px] px-4 text-sm font-medium text-foreground/80 hover:text-foreground">
               <Link to="/auth">Entrar</Link>
             </Button>
             <Button
               asChild
-              className="h-10 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
+              className="h-10 rounded-[10px] bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
             >
               <Link to="/auth?mode=signup">Cadastre-se</Link>
             </Button>
@@ -65,7 +65,7 @@ export default function PublicLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full md:hidden"
+            className="rounded-[10px] md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Abrir menu"
           >
@@ -85,12 +85,12 @@ export default function PublicLayout() {
                 </Link>
               ))}
               <div className="mt-3 flex gap-2">
-                <Button asChild variant="outline" className="flex-1 rounded-full" onClick={() => setOpen(false)}>
+                <Button asChild variant="outline" className="flex-1 rounded-[10px]" onClick={() => setOpen(false)}>
                   <Link to="/auth">Entrar</Link>
                 </Button>
                 <Button
                   asChild
-                  className="flex-1 rounded-full bg-primary font-semibold hover:bg-primary/90"
+                  className="flex-1 rounded-[10px] bg-primary font-semibold hover:bg-primary/90"
                   onClick={() => setOpen(false)}
                 >
                   <Link to="/auth?mode=signup">Cadastre-se</Link>
