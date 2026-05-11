@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
 import EmBreveDialog from "@/components/EmBreveDialog";
-import heroCouple from "@/assets/home/hero-couple.png";
+
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
 import diffHumanizado from "@/assets/home/diferencial-humanizado.jpg";
 import diffLugar from "@/assets/home/diferencial-qualquer-lugar.jpg";
