@@ -37,14 +37,27 @@ export default function Home() {
     <>
       {/* ─── 1. HERO ─── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))] to-[hsl(215_70%_18%)]">
-        {/* Decoração: ícone redondo flutuante */}
-        <div className="pointer-events-none absolute right-6 top-24 hidden h-40 w-40 items-center justify-center rounded-full bg-white/10 ring-8 ring-white/5 backdrop-blur-sm md:flex lg:right-24 lg:top-28 lg:h-56 lg:w-56">
-          <Stethoscope className="h-20 w-20 text-white/80 lg:h-28 lg:w-28" strokeWidth={1.5} />
-        </div>
         {/* Brilho radial sutil */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,hsl(var(--primary-soft)/0.18),transparent_60%)]" />
 
-        <div className="container relative grid gap-10 px-4 pb-24 pt-32 md:min-h-[640px] md:grid-cols-2 md:pb-28 md:pt-36">
+        {/* Ícones decorativos espalhados (escondidos no mobile) */}
+        <div className="pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden="true">
+          {/* Estetoscópio principal — reposicionado para topo central, longe do card */}
+          <div className="absolute left-[42%] top-10 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 ring-4 ring-white/5 backdrop-blur-sm lg:left-[46%] lg:top-14 lg:h-32 lg:w-32">
+            <Stethoscope className="h-12 w-12 text-white/70 lg:h-16 lg:w-16" strokeWidth={1.5} />
+          </div>
+          <Heart className="absolute left-8 top-16 h-10 w-10 text-white/15 lg:h-14 lg:w-14" strokeWidth={1.5} />
+          <Plus className="absolute left-[12%] top-[55%] h-8 w-8 text-white/20 lg:h-10 lg:w-10" strokeWidth={2} />
+          <Activity className="absolute bottom-16 left-[6%] h-12 w-12 text-white/15 lg:h-16 lg:w-16" strokeWidth={1.5} />
+          <Cross className="absolute left-[35%] top-[58%] h-7 w-7 rotate-12 text-white/15 lg:h-9 lg:w-9" strokeWidth={2} />
+          <Sparkles className="absolute left-[55%] top-[28%] h-6 w-6 text-white/25 lg:h-8 lg:w-8" strokeWidth={1.5} />
+          <ShieldCheck className="absolute right-[8%] top-[6%] h-9 w-9 text-white/15 lg:h-12 lg:w-12" strokeWidth={1.5} />
+          <Pill className="absolute right-[14%] bottom-[18%] h-8 w-8 -rotate-12 text-white/15 lg:h-10 lg:w-10" strokeWidth={1.5} />
+          <CalendarDays className="absolute right-[4%] bottom-8 h-9 w-9 text-white/15 lg:h-12 lg:w-12" strokeWidth={1.5} />
+          <Syringe className="absolute left-[28%] bottom-10 h-7 w-7 -rotate-45 text-white/15 lg:h-9 lg:w-9" strokeWidth={1.5} />
+        </div>
+
+        <div className="container relative z-10 grid gap-10 px-4 pb-24 pt-32 md:min-h-[640px] md:grid-cols-2 md:pb-28 md:pt-36">
           {/* Texto */}
           <div className="relative z-10 flex max-w-xl flex-col justify-center text-white">
             <h1 className="font-display text-5xl font-extrabold leading-[1.02] tracking-tight md:text-6xl lg:text-[64px]">
