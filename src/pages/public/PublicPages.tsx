@@ -356,18 +356,19 @@ export const MedicoDetalhe = () => {
     );
   }
 
+  const principal = (medico.especialidade ?? "Clínica Geral").trim().toLowerCase();
+  const principalEsp = espInfo.find((e) => e.nome.trim().toLowerCase() === principal);
+  const outras = espInfo.filter((e) => e.nome.trim().toLowerCase() !== principal);
+  const precosValidos = espInfo.map((e) => e.preco_centavos).filter((p) => p > 0);
+  const precoConsulta = principalEsp?.preco_centavos && principalEsp.preco_centavos > 0
+    ? principalEsp.preco_centavos
+    : (precosValidos.length ? Math.min(...precosValidos) : 0);
+
   return (
     <PageShell>
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         {/* 1. Hero card */}
         {(() => {
-          const principal = (medico.especialidade ?? "Clínica Geral").trim().toLowerCase();
-          const principalEsp = espInfo.find((e) => e.nome.trim().toLowerCase() === principal);
-          const outras = espInfo.filter((e) => e.nome.trim().toLowerCase() !== principal);
-          const precosValidos = espInfo.map((e) => e.preco_centavos).filter((p) => p > 0);
-          const precoConsulta = principalEsp?.preco_centavos && principalEsp.preco_centavos > 0
-            ? principalEsp.preco_centavos
-            : (precosValidos.length ? Math.min(...precosValidos) : 0);
           return (
             <div className="card-elevated overflow-hidden">
               <div className="relative bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
