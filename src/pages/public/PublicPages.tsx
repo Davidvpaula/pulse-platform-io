@@ -536,7 +536,7 @@ export const Agendar = () => {
   const [medicosEsp, setMedicosEsp] = useState<MedicoComSlot[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  
   const [sheetMedico, setSheetMedico] = useState<MedicoComSlot | null>(null);
   const isMobile = useIsMobile();
 
@@ -646,13 +646,6 @@ export const Agendar = () => {
     setEspId(newEspId);
   };
 
-  const toggleExpand = (m: MedicoComSlot) => {
-    if (isMobile) {
-      setSheetMedico(m);
-    } else {
-      setExpandedId(expandedId === m.id ? null : m.id);
-    }
-  };
 
   const espAtual = especialidades.find((e) => e.id === espId);
 
