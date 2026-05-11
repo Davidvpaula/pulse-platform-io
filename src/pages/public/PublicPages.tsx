@@ -64,68 +64,37 @@ function iniciais(nome: string) {
   return nome.split(" ").filter(s => s.length > 1).map(s => s[0]).slice(0, 2).join("").toUpperCase();
 }
 
-/* ── Especialidades ── */
+/* ── Especialidades (legado: redireciona para /medicos) ── */
 
 export const Especialidades = () => {
-  const { especialidades, loading } = useEspecialidadesPublicas();
-  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
-
-  return (
-    <PageShell title="Especialidades" subtitle="Profissionais qualificados em diversas áreas da medicina.">
-      {loading ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
-        </div>
-      ) : especialidades.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-12">Nenhuma especialidade disponível no momento.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {especialidades.map((e) => {
-            const temMedicos = e.total_medicos > 0;
-            return temMedicos ? (
-              <Link key={e.id} to={`/agendar?esp=${e.id}`} className="card-elevated p-6 hover:shadow-elegant transition">
-                <div className="text-3xl">{e.icone ?? "🩺"}</div>
-                <p className="mt-3 font-semibold">{e.nome}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {e.total_medicos} {e.total_medicos === 1 ? "médico" : "médicos"} disponíveis
-                </p>
-              </Link>
-            ) : (
-              <button
-                key={e.id}
-                onClick={() => setEmBreveNome(e.nome)}
-                className="card-elevated p-6 text-left opacity-60 hover:opacity-80 transition cursor-pointer"
-              >
-                <div className="text-3xl grayscale">{e.icone ?? "🩺"}</div>
-                <p className="mt-3 font-semibold">{e.nome}</p>
-                <Badge className="mt-1.5 bg-muted text-muted-foreground text-[10px]">
-                  <Clock className="mr-1 h-3 w-3" /> Em breve
-                </Badge>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <EmBreveDialog
-        open={!!emBreveNome}
-        onOpenChange={(v) => { if (!v) setEmBreveNome(null); }}
-        especialidade={emBreveNome ?? ""}
-      />
-    </PageShell>
-  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate("/medicos", { replace: true });
+  }, [navigate]);
+  return null;
 };
 
-/* ── Médicos ── */
+/* ── Médicos (página unificada: especialidades + médicos) ── */
 
 type SortOption = "ranking" | "avaliacao" | "nome";
 
 export const Medicos = () => {
   const { medicos, loading } = useMedicosDestaque(100);
   const { especialidades } = useEspecialidadesPublicas();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [busca, setBusca] = useState("");
-  const [espFiltro, setEspFiltro] = useState("todas");
+  const [espFiltro, setEspFiltro] = useState<string>(() => searchParams.get("esp") || "todas");
   const [sort, setSort] = useState<SortOption>("ranking");
+  const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
+
+  // Sincroniza ?esp= na URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (espFiltro && espFiltro !== "todas") params.set("esp", espFiltro);
+    else params.delete("esp");
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [espFiltro]);
 
   const [medicoEsps, setMedicoEsps] = useState<Map<string, string[]>>(new Map());
   useEffect(() => {
