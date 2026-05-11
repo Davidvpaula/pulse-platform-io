@@ -1,86 +1,90 @@
 ## Objetivo
 
-Transformar o card estático "Pronto Atendimento" do hero em um **carrossel interno** que cicla entre 3 serviços já existentes (Atendimento Imediato → Saúde Mental → Pediátrica), mantendo **exatamente** as mesmas dimensões e estética premium do card atual. Setas e dots ficam **dentro do próprio card**.
+Três ajustes de polimento na camada pública de serviços:
 
-A seção autônoma "Nossos serviços" (criada antes, abaixo da Hero) é **removida** porque agora vive embutida no hero.
+1. **Atendimento Imediato** ganha o mesmo card visual (`ServicoHero`) usado pelos demais serviços.
+2. **Páginas de serviço** (incluindo `/atendimento-imediato`) param de duplicar o título — o H1 sai do `PageShell` e fica apenas dentro do card.
+3. A frase **"Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."** desce para dentro do **rodapé do card**, como nota fina e elegante.
+
+Limpeza visual de tabela (header redundante removido, espaços recompostos).
 
 ## O que muda visualmente
 
 ```text
-┌───────────────────────────────┐
-│       imagem do serviço       │  ← mesma área 4:3 do card atual
-│                               │
-│  ‹                         ›  │  ← setas internas (sobre a imagem, base)
-└───────────────────────────────┘
-│ [badge tipo]                  │
-│ Nome do serviço               │
-│ Subtítulo / descrição curta   │
-│ A partir de R$ XX  [CTA]      │
-│        • • •                  │  ← dots internos, no rodapé do card
-└───────────────────────────────┘
+ANTES  (Servico / Atendimento Imediato)
+┌ LASMAR TELEMED
+│ Consulta Pediátrica Online        ← H1 grande do PageShell
+│ Calendário compartilhado — ...    ← subtitle do PageShell
+│
+│ ┌ CARD ─────────────────────┐
+│ │ [img]   LASMAR TELEMED    │
+│ │         Consulta Pediátrica  ← duplicado
+│ │         ...
+│ └───────────────────────────┘
+│ 23 horários livres hoje
+│ [aviso azul]
+│ [calendário]
+
+DEPOIS
+┌ (sem cabeçalho do PageShell)
+│
+│ ┌ CARD ─────────────────────┐
+│ │ [img]   LASMAR TELEMED · CONSULTA
+│ │         Consulta Pediátrica Online
+│ │         Acompanhe a saúde do seu filho sem sair de casa.
+│ │         R$ 149,00 · 30 min   [Ver horários ↓]
+│ │         ─────────────────────────
+│ │         Calendário compartilhado — escolha o horário,
+│ │         o sistema escolhe o profissional.
+│ └───────────────────────────┘
+│ 23 horários livres hoje
+│ [aviso azul]
+│ [calendário]
 ```
 
-- Mesma largura/altura do card atual (`max-w-md`, imagem `aspect-[4/3]`, padding `p-5`).
-- Setas circulares brancas sobre a imagem, cantos esquerdo/direito (overlay leve).
-- Dots discretos no rodapé do card, abaixo do CTA.
-- Transição suave (fade + slide via Embla padrão).
-- **Sem autoplay** (mantém regra premium institucional já acordada).
-- Swipe/drag funcionam normalmente.
+## Arquivos a alterar
 
-## Conteúdo dos slides
+### 1. `src/components/PageShell.tsx`
+- Tornar `title` opcional. Quando `title` e `subtitle` estiverem ambos ausentes, **não renderizar** o bloco do cabeçalho (eyebrow + H1 + subtitle). O `<section>` e o `mt-12` do conteúdo são preservados, mas o padding é reduzido (`py-8 md:py-10`) quando não há header — mantém o espaçamento institucional sem buraco.
 
-Ordem fixa, na sequência pedida:
+### 2. `src/components/public/ServicoHero.tsx`
+- Nova prop opcional `footerNota?: string` (ou `nota?: ReactNode`).
+- Quando presente, renderiza dentro do card, **abaixo do CTA**, separado por um `border-t border-border/60`, como linha discreta `text-xs text-muted-foreground` (icone `CalendarDays` opcional à esquerda).
+- Sem mudança nos slots existentes (imagem, descrição, valor, CTA).
 
-1. **Atendimento Imediato Clínico** (slug `atendimento-imediato`) — CTA "Agende agora" → `/atendimento-imediato`. Badge "Disponível agora" (verde, igual hoje).
-2. **Saúde Mental · Acolhimento** (slug `saude-mental-acolhimento`) — CTA "Ver detalhes" → `/servicos/saude-mental-acolhimento`. Badge neutro do tipo do serviço.
-3. **Consulta Pediátrica Online** (slug `pediatria-online`) — CTA "Ver detalhes" → `/servicos/pediatria-online`. Badge neutro do tipo.
+### 3. `src/pages/public/ServicoDetalhe.tsx`
+- Remover `title` e `subtitle` do `PageShell` (passar somente `children`).
+- Passar `footerNota="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."` para o `ServicoHero`.
+- O parágrafo "**N** horários livres …" fica como está, logo abaixo do card.
 
-Slides usam dados reais do `servicos_publicos` (nome, subtítulo, valor, duração, imagem). Se um serviço não tiver imagem, cai no fallback de gradiente + ícone (já existente). Para o slide do Atendimento Imediato, mantemos a imagem padrão atual (`@/assets/home/pronto-atendimento.jpg`) como fallback se o admin ainda não publicou imagem própria, para não regredir visualmente.
-
-## Implementação técnica
-
-### Arquivos
-
-- **Criar** `src/components/public/HeroServicoCarousel.tsx`
-  - Recebe a lista de slugs alvo: `["atendimento-imediato", "saude-mental-acolhimento", "pediatria-online"]`.
-  - Usa `useServicosPublicos()` (hook existente, sem alteração) e filtra/ordena por slug nessa ordem.
-  - Renderiza um único card no formato visual idêntico ao bloco atual `lines 105–145` de `Home.tsx`.
-  - Embla Carousel com `loop: true`, sem autoplay, dragFree=false, align=start.
-  - Setas (`CarouselPrevious`/`CarouselNext`) posicionadas absolute sobre a base da imagem (cantos), estilo branco translúcido, hover sólido.
-  - Dots internos no rodapé do conteúdo, abaixo do bloco preço/CTA.
-  - Fallback: enquanto carrega → skeleton com mesmas dimensões; sem dados → mostra slide estático "Pronto Atendimento" (estado degradado seguro, igual hoje).
-  - Para slide PA, exige badge "Disponível agora" + CTA "Agende agora" → `/atendimento-imediato`. Demais slides: badge neutro do `tipo` (ex.: "Consulta") + CTA "Ver detalhes" → `/servicos/{slug}`.
-
-- **Editar** `src/pages/public/Home.tsx`
-  - Substituir o bloco do card estático (linhas ~104–146) por `<HeroServicoCarousel />`.
-  - **Remover** o `<ServicosCarousel />` solto (linha ~210) e seu import (linha ~27).
-
-- **Manter sem mudanças**: `useServicosPublicos.ts`, `ServicosCarousel.tsx` (fica disponível caso queira reutilizar em outra página), demais seções da Home, rotas, banco, RLS, admin.
-
-### Regras de UX
-
-- **Tamanho do card**: idêntico (`w-full max-w-md`, imagem `aspect-[4/3]`, conteúdo `p-5`).
-- **Altura constante**: bloco de conteúdo usa `min-h` calculado para evitar pulo entre slides com textos de tamanhos diferentes.
-- **Texto longo**: `line-clamp-2` no nome, `line-clamp-2` no subtítulo.
-- **Setas**: visíveis apenas ≥ md; mobile usa só swipe + dots.
-- **Dots ativos**: mesma régua já usada no `ServicosCarousel` (barra alongada azul para o ativo).
-- **Acessibilidade**: `aria-label` por seta e dot, foco visível, ordem de tab natural.
+### 4. `src/pages/public/AtendimentoImediato.tsx`
+- Adicionar fetch único do row completo em `servicos_publicos` quando `cfg?.servico_id` resolve, para obter `nome`, `subtitulo`, `descricao_publica`, `imagem_url`, `icone`, `tipo` (mantém o `cfg` atual para `preco_centavos`/`duracao_min`, fallback se a row não existir).
+- Substituir o bloco custom "header de status" (`card-elevated` com gradiente, badge "Pronto Atendimento", contagem de horários, valor/duração, legendas) por:
+  - `<ServicoHero ...>` com prop `footerNota="Calendário compartilhado — escolha o horário, o sistema escolhe o médico."`
+  - Logo abaixo do card, uma linha de status compacta:
+    `<Activity verde> 23 horários livres hoje · [Livre] [Lotado]` (mesmo conteúdo que existia no header antigo, agora num strip leve, sem caixa pesada).
+- Remover `title` e `subtitle` do `PageShell`.
+- Estado de loading: enquanto a row de serviço não chega, mostrar `<ServicoHeroSkeleton />` no lugar do card.
 
 ### Sem mudanças em
+- Banco de dados, RLS, RPCs, hooks, fluxo de reserva/checkout.
+- Calendário (`CalendarioFila`), aviso azul e demais blocos abaixo do card.
+- Outros consumidores de `PageShell` (continuam funcionando — `title` segue suportado).
+- `HeroServicoCarousel` e Home.
 
-- Banco de dados / migrações.
-- Hook `useServicosPublicos`.
-- Páginas `Servicos.tsx` e `ServicoDetalhe.tsx`.
-- Admin (`AdminServicos.tsx`).
-- Rotas, auth, permissões, financeiro.
+## Limpeza visual aplicada
+
+- Sai o H1 duplicado de cada página de serviço.
+- Sai o eyebrow "LASMAR TELEMED" do `PageShell` quando há `ServicoHero` (o eyebrow já vive dentro do card).
+- A frase do calendário passa a ser uma nota institucional dentro do card, em vez de subtítulo solto no topo.
+- Em `/atendimento-imediato`, sai a caixa redundante de header de status e fica um strip horizontal único e leve (vagas + legenda).
 
 ## Riscos e mitigação
 
-- Diferença de altura entre slides → `min-h` no bloco de conteúdo + `line-clamp`.
-- Slug renomeado no admin → fallback procura por `slug` nos 3 alvos; se faltar, o slide é omitido sem quebrar.
-- Imagem ausente em slides 2/3 → fallback gradiente+ícone já implementado.
-- Loop com 3 slides + Embla → setting `loop: true` testado; dots refletem snap atual.
+- `PageShell` usado em muitas páginas → mudança 100% retrocompatível (`title` apenas vira opcional).
+- `servicos_publicos` pode não ter `imagem_url` para o serviço PA → fallback de gradiente + ícone (já existe no `ServicoHero`).
+- Se `cfg.servico_id` for nulo (porta pública desativada), mantemos o aviso atual ("Porta pública desativada pelo admin") em vez do card.
 
 ## Resultado
 
-Hero mantém a mesma silhueta visual e peso institucional, mas agora comunica três pilares de serviço de forma elegante, com navegação interna discreta. A página ganha foco, sem a seção extra de carrossel logo abaixo.
+Páginas de serviço ficam mais limpas, sem repetição de título, com hierarquia visual única (o card é o herói absoluto). Atendimento Imediato passa a se comunicar com a mesma linguagem dos demais serviços, mantendo seus elementos operacionais (vagas, legenda, calendário) no formato compacto.

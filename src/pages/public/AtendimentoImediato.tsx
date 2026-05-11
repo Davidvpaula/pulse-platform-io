@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Users, Info, Loader2 } from "lucide-react";
+import { Activity, Loader2 } from "lucide-react";
 import PageShell from "@/components/PageShell";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import CalendarioFila from "@/components/atendimento-imediato/CalendarioFila";
 import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
 import type { PASlot } from "@/lib/pa-types";
-import { brl } from "@/lib/format";
 import {
   getServicoAtendimentoImediato,
   ATENDIMENTO_IMEDIATO_CONFIG_CHANNEL,
@@ -15,12 +13,26 @@ import {
 } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import ServicoHero, { ServicoHeroSkeleton } from "@/components/public/ServicoHero";
+
+type ServicoRow = {
+  id: string;
+  nome: string;
+  tipo: string | null;
+  subtitulo: string | null;
+  descricao_publica: string | null;
+  duracao_min: number;
+  valor_paciente_centavos: number;
+  imagem_url: string | null;
+  icone: string | null;
+};
 
 export default function AtendimentoImediato() {
   const navigate = useNavigate();
   const { session } = useSession();
   const [cfg, setCfg] = useState<AtendimentoImediatoConfig | null>(null);
   const [cfgLoaded, setCfgLoaded] = useState(false);
+  const [servico, setServico] = useState<ServicoRow | null>(null);
   const [slots, setSlots] = useState<PASlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [agora, setAgora] = useState(() => Date.now());
@@ -51,6 +63,24 @@ export default function AtendimentoImediato() {
     }
     return () => { alive = false; };
   }, []);
+
+  // Carregar row pública do serviço PA (para compor o card)
+  useEffect(() => {
+    if (!cfg?.servico_id) {
+      setServico(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("servicos_publicos")
+        .select("id,nome,tipo,subtitulo,descricao_publica,duracao_min,valor_paciente_centavos,imagem_url,icone")
+        .eq("id", cfg.servico_id)
+        .maybeSingle();
+      if (alive) setServico((data as ServicoRow) ?? null);
+    })();
+    return () => { alive = false; };
+  }, [cfg?.servico_id]);
 
   // Carregar slots reais
   async function carregarSlots() {
@@ -86,13 +116,11 @@ export default function AtendimentoImediato() {
     return () => clearInterval(interval);
   }, []);
 
-  // Tick para atualizar estado visual (passado/livre)
   useEffect(() => {
     const t = setInterval(() => setAgora(Date.now()), 5000);
     return () => clearInterval(t);
   }, []);
 
-  // Estado visual dos slots
   const estadoPorSlot = useMemo(() => {
     const map = new Map<string, { estado: SlotEstado; vagas: number; capacidade: number }>();
     for (const s of slots) {
@@ -101,17 +129,11 @@ export default function AtendimentoImediato() {
       if (fimMs < agora) estado = "passado";
       else if ((s.total_vagas ?? 0) === 0) estado = "lotado";
       else estado = "livre";
-
       map.set(s.key, { estado, vagas: s.total_vagas ?? 0, capacidade: s.total_vagas ?? 0 });
     }
     return map;
   }, [slots, agora]);
 
-  /**
-   * Ao clicar num slot, navega direto para a rota unificada de confirmação.
-   * A reserva real (15 min) acontece quando o paciente submete o formulário.
-   * Isso é idêntico ao fluxo dos Serviços da Plataforma.
-   */
   function selecionarSlot(slot: PASlot) {
     if (!cfg?.servico_id) {
       toast.error("Atendimento Imediato não está configurado.");
@@ -129,7 +151,7 @@ export default function AtendimentoImediato() {
 
   if (loading) {
     return (
-      <PageShell title="Atendimento imediato">
+      <PageShell>
         <div className="flex justify-center py-20">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
@@ -137,64 +159,65 @@ export default function AtendimentoImediato() {
     );
   }
 
+  // Porta pública desativada
+  if (cfgLoaded && !cfg) {
+    return (
+      <PageShell title="Atendimento imediato">
+        <div className="card-elevated p-10 text-center text-muted-foreground">
+          Porta pública desativada pelo admin — nenhum serviço de Pronto Atendimento configurado.
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
-    <PageShell
-      title="Atendimento imediato"
-      subtitle="Calendário compartilhado — escolha o horário, o sistema escolhe o médico."
-    >
+    <PageShell>
       <div className="space-y-6">
-        {/* header de status */}
-        <div className="card-elevated overflow-hidden">
-          <div className="gradient-soft flex flex-wrap items-center justify-between gap-4 p-6">
-            <div>
-              <Badge className="mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                <Activity className="mr-1 h-3 w-3" /> Pronto Atendimento
-              </Badge>
-              <p className="text-sm text-muted-foreground">
-                <Users className="mr-1 inline h-3.5 w-3.5" />
-                <strong>{totalLivres}</strong> horários livres hoje
-              </p>
-              {cfgLoaded && cfg && (
-                <p className="mt-1 text-sm font-medium">
-                  Valor por atendimento: <span className="tabular-nums">{brl(cfg.preco_centavos)}</span>{" "}
-                  · Duração: <span className="tabular-nums">{cfg.duracao_min} min</span>
-                </p>
-              )}
-              {cfgLoaded && !cfg && (
-                <p className="mt-1 text-xs text-warning">
-                  Porta pública desativada pelo admin — nenhum serviço de PA configurado.
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <Legenda cor="bg-card border border-primary/30" texto="Livre" />
-              <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
-            </div>
-          </div>
-        </div>
-
-        {/* aviso */}
-        <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <span>
-            Ao selecionar um horário, você será levado ao formulário de confirmação.
-            O sistema atribui automaticamente o melhor médico disponível pelo <strong>ranking</strong>.
-            A reserva é garantida por <strong>15 minutos</strong> para você concluir o pagamento.
-          </span>
-        </div>
-
-        {slots.length === 0 ? (
-          <div className="card-elevated p-10 text-center text-muted-foreground">
-            Nenhum horário disponível no momento. Tente novamente mais tarde.
-          </div>
-        ) : (
-          <CalendarioFila
-            slots={slots}
-            estadoPorSlot={estadoPorSlot}
-            destacar={null}
-            onPick={selecionarSlot}
+        {servico ? (
+          <ServicoHero
+            nome={servico.nome}
+            subtitulo={servico.subtitulo}
+            descricao={servico.descricao_publica}
+            imagemUrl={servico.imagem_url}
+            icone={servico.icone}
+            tipo={servico.tipo ?? "Pronto Atendimento"}
+            valorCentavos={servico.valor_paciente_centavos ?? cfg?.preco_centavos ?? 0}
+            duracaoMin={servico.duracao_min ?? cfg?.duracao_min ?? 15}
+            footerNota="Calendário compartilhado — escolha o horário, o sistema escolhe o médico."
           />
+        ) : (
+          <ServicoHeroSkeleton />
         )}
+
+        {/* Strip de status compacto */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-sm">
+          <div className="inline-flex items-center gap-2">
+            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>
+              <strong className="tabular-nums">{totalLivres}</strong>{" "}
+              <span className="text-muted-foreground">horários livres hoje</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Legenda cor="bg-card border border-primary/30" texto="Livre" />
+            <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
+          </div>
+        </div>
+
+        <div id="calendario" className="scroll-mt-24">
+          {slots.length === 0 ? (
+            <div className="card-elevated p-10 text-center text-muted-foreground">
+              Nenhum horário disponível no momento. Tente novamente mais tarde.
+            </div>
+          ) : (
+            <CalendarioFila
+              slots={slots}
+              estadoPorSlot={estadoPorSlot}
+              destacar={null}
+              onPick={selecionarSlot}
+            />
+          )}
+        </div>
       </div>
     </PageShell>
   );
