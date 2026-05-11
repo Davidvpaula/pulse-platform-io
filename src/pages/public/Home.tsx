@@ -165,7 +165,7 @@ export default function Home() {
 
       {/* ─── 5. DIFERENCIAIS (3 cards-imagem) ─── */}
       <section className="bg-[hsl(200_80%_18%)] text-white">
-        <div className="container space-y-6 px-4 pb-20">
+        <div className="container space-y-6 px-4 py-20">
           <Diferencial
             image={diffHumanizado}
             icon={Heart}
