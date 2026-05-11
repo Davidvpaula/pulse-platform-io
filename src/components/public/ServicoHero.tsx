@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import * as Lucide from "lucide-react";
-import { Activity, Clock, ArrowDown } from "lucide-react";
+import { Activity, Clock, ArrowDown, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ interface Props {
   tipo?: string | null;
   valorCentavos: number;
   duracaoMin: number;
+  footerNota?: ReactNode;
 }
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -58,6 +59,7 @@ export default function ServicoHero({
   tipo,
   valorCentavos,
   duracaoMin,
+  footerNota,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const Icon = getIcon(icone);
@@ -148,6 +150,13 @@ export default function ServicoHero({
               </a>
             </Button>
           </div>
+
+          {footerNota && (
+            <div className="mt-2 flex items-start gap-2 border-t border-border/60 pt-4 text-xs text-muted-foreground">
+              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
+              <span>{footerNota}</span>
+            </div>
+          )}
         </div>
       </div>
     </section>
