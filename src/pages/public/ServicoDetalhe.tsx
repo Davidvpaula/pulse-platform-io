@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { brl, fmtHora, dataLabel } from "@/lib/format";
+import { fmtHora, dataLabel } from "@/lib/format";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Info, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import PageShell from "@/components/PageShell";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
@@ -11,13 +10,18 @@ import CalendarioFila from "@/components/atendimento-imediato/CalendarioFila";
 import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
 import type { PASlot } from "@/lib/pa-types";
 import { Button } from "@/components/ui/button";
+import ServicoHero, { ServicoHeroSkeleton } from "@/components/public/ServicoHero";
 
 type Servico = {
   id: string;
   nome: string;
+  tipo: string | null;
+  subtitulo: string | null;
   descricao_publica: string | null;
   duracao_min: number;
   valor_paciente_centavos: number;
+  imagem_url: string | null;
+  icone: string | null;
 };
 
 function dataKey(d: Date) {
