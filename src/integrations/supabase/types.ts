@@ -3744,6 +3744,7 @@ export type Database = {
           icone: string | null
           id: string
           nome: string
+          ordem: number
           slug: string
           updated_at: string
         }
@@ -3754,6 +3755,7 @@ export type Database = {
           icone?: string | null
           id?: string
           nome: string
+          ordem?: number
           slug: string
           updated_at?: string
         }
@@ -3764,6 +3766,7 @@ export type Database = {
           icone?: string | null
           id?: string
           nome?: string
+          ordem?: number
           slug?: string
           updated_at?: string
         }
