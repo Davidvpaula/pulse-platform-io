@@ -155,10 +155,10 @@ export const Medicos = () => {
           <Select value={espFiltro} onValueChange={setEspFiltro}>
             <SelectTrigger className="w-[180px]">
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue placeholder="Especialidade" />
+              <SelectValue placeholder="Especialidades" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todas">Todas especialidades</SelectItem>
+              <SelectItem value="todas">Especialidades</SelectItem>
               {especialidades.map(e => (<SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>))}
             </SelectContent>
           </Select>
