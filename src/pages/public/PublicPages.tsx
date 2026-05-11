@@ -176,6 +176,61 @@ export const Medicos = () => {
         </div>
       </div>
 
+      {/* Faixa de especialidades (chips) */}
+      {especialidades.length > 0 && (
+        <div className="mb-6 -mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
+          <button
+            type="button"
+            onClick={() => setEspFiltro("todas")}
+            className={cn(
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition",
+              espFiltro === "todas"
+                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                : "bg-card text-foreground border-border hover:border-primary/40"
+            )}
+          >
+            Todas
+          </button>
+          {especialidades.map((e) => {
+            const ativa = espFiltro === e.id;
+            const temMedicos = e.total_medicos > 0;
+            if (!temMedicos) {
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => setEmBreveNome(e.nome)}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition"
+                >
+                  <span className="grayscale">{e.icone ?? "🩺"}</span>
+                  {e.nome}
+                  <Clock className="ml-0.5 h-3 w-3" />
+                </button>
+              );
+            }
+            return (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => setEspFiltro(ativa ? "todas" : e.id)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition",
+                  ativa
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-foreground border-border hover:border-primary/40"
+                )}
+              >
+                <span>{e.icone ?? "🩺"}</span>
+                {e.nome}
+                <span className={cn("ml-0.5 text-[10px]", ativa ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                  {e.total_medicos}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando…
