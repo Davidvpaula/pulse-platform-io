@@ -137,7 +137,7 @@ export default function MedicoSlotsPanel({
   const visibleSlots = showAll ? slotsOfDay : slotsOfDay.slice(0, 8);
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[0.95fr_1fr_0.85fr]">
+    <div className="grid gap-3 md:grid-cols-[0.95fr_1fr_0.9fr]">
       {/* ─── Calendário ─── */}
       <div className="rounded-lg border border-border bg-card p-2">
         <div className="flex items-center justify-between mb-1">
