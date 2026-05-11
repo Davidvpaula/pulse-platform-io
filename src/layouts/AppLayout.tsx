@@ -70,7 +70,7 @@ export default function AppLayout() {
   const flow = getFlowContext(profileKey, pathname);
 
   useEffect(() => {
-    try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch {}
+    try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch { void 0; }
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
@@ -98,10 +98,10 @@ export default function AppLayout() {
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
       <div className="flex flex-1 w-full relative">
-        {/* Sidebar persistente (desktop) — anima largura. Fechada = mini com ícones, aberta = completa */}
+        {/* Sidebar persistente (tablet/desktop) — anima largura. Fechada = mini com ícones, aberta = completa */}
         <aside
           className={cn(
-            "hidden lg:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-out",
+            "hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-out",
             sidebarOpen ? "w-64" : "w-16",
           )}
         >
@@ -119,11 +119,10 @@ export default function AppLayout() {
           )}
         </aside>
 
-        {/* Sidebar overlay (mobile) */}
+        {/* Sidebar mobile sem backdrop bloqueante */}
         {sidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-foreground/40" onClick={() => setSidebarOpen(false)} />
-            <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
+          <div className="fixed inset-0 z-50 pointer-events-none md:hidden">
+            <aside className="pointer-events-auto absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col shadow-xl">
               <div className="flow-stripe w-full" />
               <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
             </aside>
@@ -140,8 +139,8 @@ export default function AppLayout() {
             "fixed z-40 top-20 grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:text-primary",
             // Posicionamento: alinhado à borda direita do sidebar
             sidebarOpen
-              ? "lg:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]"
-              : "lg:left-[calc(4rem-0.875rem)] left-1.5",
+              ? "md:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]"
+              : "md:left-[calc(4rem-0.875rem)] left-1.5",
           )}
         >
           {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
