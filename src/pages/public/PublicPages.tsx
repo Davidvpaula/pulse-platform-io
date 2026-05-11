@@ -224,12 +224,6 @@ export const Medicos = () => {
           </div>
         </>
       )}
-
-      <EmBreveDialog
-        open={!!emBreveNome}
-        onOpenChange={(v) => { if (!v) setEmBreveNome(null); }}
-        especialidade={emBreveNome ?? ""}
-      />
     </PageShell>
   );
 };
