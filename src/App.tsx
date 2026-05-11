@@ -127,6 +127,7 @@ import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro
 // AdminRelatorioAuditoria unificado com AdminAuditoria — rota redireciona via Navigate
 import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
 import AdminFaq from "@/pages/app/admin/AdminFaq";
+import AdminFeedbacks from "@/pages/app/admin/AdminFeedbacks";
 import AdminComunicacaoOperacao from "@/pages/app/admin/AdminComunicacaoOperacao";
 import AdminProducaoCockpit from "@/pages/app/admin/AdminProducaoCockpit";
 import AdminWhatsappCloudTest from "@/pages/app/admin/AdminWhatsappCloudTest";
@@ -397,6 +398,7 @@ const App = () => (
               <Route path="admin/whatsapp-cloud-test" element={<G perm="admin.dashboard"><AdminWhatsappCloudTest /></G>} />
               <Route path="admin/observabilidade" element={<G perm="observabilidade.ver"><AdminObservabilidade /></G>} />
               <Route path="admin/faq" element={<G perm="admin.dashboard"><AdminFaq /></G>} />
+              <Route path="admin/feedbacks" element={<G perm="admin.dashboard"><AdminFeedbacks /></G>} />
               <Route path="admin/saude" element={<G perm="admin.dashboard"><AdminSaude /></G>} />
               <Route path="admin/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
               <Route path="admin/feegow" element={<G perm="integracoes.configurar_feegow"><FeegowIntegracao /></G>} />

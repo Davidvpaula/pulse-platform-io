@@ -27,6 +27,7 @@ import { useMedicosDestaque, type MedicoDestaque } from "@/hooks/useMedicosDesta
 import { useIsMobile } from "@/hooks/use-mobile";
 import EmBreveDialog from "@/components/EmBreveDialog";
 import MedicoSlotsPanel from "@/components/public/MedicoSlotsPanel";
+import FaqContactForms from "@/components/public/FaqContactForms";
 import { brl } from "@/lib/format";
 
 /* ── helpers ── */
@@ -1136,6 +1137,9 @@ export const Faq = () => {
             </details>
           ))
         )}
+      </div>
+      <div className="max-w-3xl">
+        <FaqContactForms />
       </div>
     </PageShell>
   );
