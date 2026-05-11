@@ -20,10 +20,10 @@ export default function PublicLayout() {
     <div className="flex min-h-screen flex-col bg-background">
       {/* ─── HEADER SÓLIDO FULL-WIDTH ─── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 shadow-[0_1px_0_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(15,42,68,0.08)] backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <div className="container flex h-20 items-center justify-between gap-6">
+        <div className="container flex h-16 items-center justify-between gap-4">
           {/* Logo — alinhado à esquerda, tamanho legível */}
           <Link to="/" aria-label="Lasmar Telemed — início" className="flex shrink-0 items-center">
-            <Logo size="lg" />
+            <Logo size="md" />
           </Link>
 
           {/* Navegação principal */}
