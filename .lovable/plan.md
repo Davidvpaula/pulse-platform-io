@@ -1,63 +1,68 @@
 ## Objetivo
 
-Permitir que o admin defina manualmente a ordem em que as especialidades aparecem na home pública (e demais listagens públicas), em **Configurações da plataforma → Especialidades**.
+No layout interno (`/app/...`):
+
+1. **Sidebar persistente** — sempre visível por padrão (em qualquer largura de tela), controlada por um único estado `open`.
+2. **Botão para esconder/mostrar** — o ícone "hambúrguer" do header passa a alternar a sidebar em qualquer viewport (não só mobile).
+3. **Logo no topo do header** — voltar com o logotipo à esquerda do header (como era antes), clicável → leva para a home pública (`/`).
 
 ---
 
-## 1. Banco (migration)
+## Mudanças em `src/layouts/AppLayout.tsx`
 
-Adicionar coluna de ordem na tabela `especialidades`:
+### Estado e comportamento
 
-- `ordem` (integer, NOT NULL, default `999`) — quanto menor, mais cedo aparece.
-- Inicializar com valores incrementais (10, 20, 30…) seguindo a ordem alfabética atual, deixando "saltos" para inserções futuras.
-- Índice `idx_especialidades_ordem (ordem, nome)` para ordenação rápida.
+- Substituir `mobileOpen` por um único estado `sidebarOpen` (default `true`), persistido em `localStorage` (`app:sidebar-open`) para lembrar a preferência do usuário entre sessões.
+- Remover a regra `hidden lg:flex` da `<aside>` persistente — passa a ser sempre renderizada.
+- Quando `sidebarOpen === false`, a sidebar some (largura `0`) com `transition-all` suave; quando `true`, retorna a `w-64`. Sem overlay/backdrop em desktop — o conteúdo simplesmente reflui.
+- Em mobile (`<lg`), aplicar comportamento overlay: posição fixed, backdrop escurecido, fechar ao clicar fora ou em um link (mantém a UX atual de drawer).
+- O botão de hambúrguer no header passa a ser visível em todas as larguras (`lg:` removido) e simplesmente faz `setSidebarOpen(v => !v)`.
 
-Sem mudança de RLS (admin já gerencia tudo, leitura pública continua igual).
+### Logo no header
 
----
+- À direita do botão de hambúrguer, adicionar:
+  ```tsx
+  <Link to="/" aria-label="Ir para a home">
+    <Logo size="sm" />
+  </Link>
+  ```
+- Manter também o `<Logo />` que já existe no topo da própria sidebar (não muda).
+- Mover o badge de fluxo (`flow.icon` + `flow.label`) para depois do logo, mantendo a hierarquia atual.
 
-## 2. UI Admin — `AdminConfiguracoes.tsx`
+### Sem novas dependências
 
-Na tabela atual de especialidades (Nome / Descrição / Ativo / Ações), incluir:
-
-- **Botões ↑ / ↓** em cada linha (coluna nova "Ordem", antes de "Ativo"), que trocam o `ordem` com o vizinho.
-- Linhas exibidas ordenadas por `ordem ASC, nome ASC`.
-- Pequeno selo numérico (`#1`, `#2`…) opcional ao lado do nome para feedback visual.
-- Botão "Reordenar alfabeticamente" no header da seção (reseta `ordem` para múltiplos de 10 segundo o nome).
-
-Implementação simples, sem drag-and-drop (mantém leveza, sem nova dependência). Cada clique em ↑/↓ faz um único `UPDATE` em 2 linhas via RPC ou dois updates sequenciais.
-
----
-
-## 3. Leitura pública
-
-Atualizar todos os pontos que listam especialidades para usuário final / médico:
-
-- `src/hooks/useEspecialidadesPublicas.ts` — trocar `.order("nome")` por `.order("ordem").order("nome")` e selecionar `ordem` no select.
-- `src/components/GlobalSearch.tsx` — mesma troca.
-- `src/lib/cupons.ts` (linha 111) — idem.
-- `src/pages/app/admin/AdminServicos.tsx`, `AdminPlanosEmpresariais.tsx`, `BeneficioSelector.tsx`, `MedicoHorarios.tsx`, `EmpresaPropostas.tsx`: ordenar por `ordem, nome`.
-
-A home (`Home.tsx`) já consome `useEspecialidadesPublicas`, então passa a respeitar a ordem automaticamente. O `slice(0, 8)` continua válido — admin agora controla quais aparecem primeiro.
+- Continua usando o componente custom já existente (não migrar para `shadcn/ui sidebar`).
+- Animação via `transition-[width] duration-200 ease-out` já suportada pelo Tailwind.
 
 ---
 
-## 4. Detalhes técnicos
+## Diagrama (desktop)
 
 ```text
-especialidades
-├─ ordem INT NOT NULL DEFAULT 999
-└─ INDEX (ordem, nome)
-```
+┌────────────────────────────────────────────────────┐
+│ [☰] [Logo→/]  [Badge Fluxo]            🔔  Avatar │  header
+├──────────────┬─────────────────────────────────────┤
+│              │                                     │
+│  Sidebar     │     conteúdo (Outlet)               │
+│  persistente │                                     │
+│  w-64        │                                     │
+│              │                                     │
+└──────────────┴─────────────────────────────────────┘
 
-- Toggle ativo, criação e exclusão continuam iguais.
-- Nova especialidade criada via formulário recebe `ordem = max(ordem)+10` para entrar no fim.
-- Sem alteração em `medico_especialidades`, `consultas` ou ledger.
+Quando o usuário clica no ☰:
+┌────────────────────────────────────────────────────┐
+│ [☰] [Logo→/]  [Badge Fluxo]            🔔  Avatar │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│      conteúdo (Outlet) — full width                │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 5. Fora de escopo
+## Fora de escopo
 
-- Drag-and-drop visual (pode entrar depois com `@dnd-kit` se necessário).
-- Reordenar serviços (`servicos_financeiros`) — outra tabela, outro pedido.
-- Categorias / agrupamentos.
+- Variante "mini" com só ícones (a sidebar some por completo quando recolhida — mais simples e rápido).
+- Reorganização do menu / menuCatalog.
+- Mudanças em `PublicLayout.tsx` (já tem logo correto).
