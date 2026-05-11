@@ -36,7 +36,7 @@ export function GlobalSearch() {
     (async () => {
       const [medRes, espRes] = await Promise.all([
         supabase.from("medicos").select("id, nome, especialidade, crm").eq("status", "aprovado").order("nome").limit(10),
-        supabase.from("especialidades").select("id, nome, slug, icone").eq("ativo", true).order("nome"),
+        supabase.from("especialidades").select("id, nome, slug, icone").eq("ativo", true).order("ordem").order("nome"),
       ]);
 
       setMedicos((medRes.data ?? []) as MedicoResult[]);

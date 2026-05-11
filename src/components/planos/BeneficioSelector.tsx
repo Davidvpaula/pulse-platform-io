@@ -48,6 +48,7 @@ export function BeneficioSelector({ tipo, selectedId, selectedLabel, onSelect }:
           .from("especialidades")
           .select("id, nome")
           .eq("ativo", true)
+          .order("ordem")
           .order("nome");
         opts = (data ?? []).map(e => ({ id: e.id, label: e.nome }));
       } else if (tipo === "servico") {

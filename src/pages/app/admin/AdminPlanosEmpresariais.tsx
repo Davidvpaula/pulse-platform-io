@@ -47,7 +47,7 @@ export default function AdminPlanosEmpresariais() {
           .select("*, empresas(id, razao_social)")
           .or("publico.eq.empresa,publico.eq.ambos,categoria.eq.empresarial")
           .order("created_at", { ascending: false }),
-        supabase.from("especialidades").select("id, nome").eq("ativo", true).order("nome"),
+        supabase.from("especialidades").select("id, nome").eq("ativo", true).order("ordem").order("nome"),
       ]);
       setPlanos(ps ?? []);
       setEspecialidades(especs ?? []);
