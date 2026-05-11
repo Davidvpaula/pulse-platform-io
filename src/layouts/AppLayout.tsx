@@ -410,3 +410,114 @@ function AccordionNav({
     </nav>
   );
 }
+
+/* ─── Compact (icon-only) sidebar shown when collapsed ─── */
+function CompactSidebar({
+  profileKey,
+  flow,
+  onExpand,
+}: {
+  profileKey: ProfileKey;
+  flow: FlowContext;
+  onExpand: () => void;
+}) {
+  const profile = profiles[profileKey];
+  const { pathname } = useLocation();
+
+  const keysNeeded = useMemo(() => {
+    if (profileKey === "colaborador" || profileKey === "secretaria") return collectMenuKeys(colaboradorMenu);
+    const set = new Set<string>();
+    for (const item of profile.nav) {
+      if (item.requiresCapability) set.add(item.requiresCapability);
+      for (const c of item.children ?? []) {
+        if (c.requiresCapability) set.add(c.requiresCapability);
+      }
+    }
+    return [...set];
+  }, [profileKey, profile.nav]);
+
+  const { has } = usePermissionsBatch(keysNeeded);
+  const allow = (key?: string) => !key || has(key);
+
+  const items: { label: string; icon: MenuNode["icon"]; to?: string; hasChildren?: boolean; firstChild?: string }[] = useMemo(() => {
+    if (profileKey === "colaborador" || profileKey === "secretaria") {
+      const out: typeof items = [];
+      for (const node of colaboradorMenu) {
+        if (node.children?.length) {
+          const visible = node.children.filter((c) => allow(c.key));
+          if (!visible.length) continue;
+          out.push({ label: node.label, icon: node.icon, hasChildren: true, firstChild: visible[0].to });
+        } else {
+          if (!allow(node.key)) continue;
+          out.push({ label: node.label, icon: node.icon, to: node.to });
+        }
+      }
+      return out;
+    }
+    const out: typeof items = [];
+    for (const item of profile.nav) {
+      if (item.children?.length) {
+        if (item.requiresCapability && !allow(item.requiresCapability)) continue;
+        const visible = item.children.filter((c) => allow(c.requiresCapability));
+        if (!visible.length) continue;
+        out.push({ label: item.label, icon: item.icon, hasChildren: true, firstChild: visible[0].to });
+      } else {
+        if (!allow(item.requiresCapability)) continue;
+        out.push({ label: item.label, icon: item.icon, to: item.to });
+      }
+    }
+    return out;
+  }, [profileKey, profile.nav, has]);
+
+  return (
+    <div className="flex flex-1 flex-col min-h-0 w-16">
+      <div className="flex h-16 items-center justify-center border-b border-sidebar-border">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+          <flow.icon className="h-4 w-4" />
+        </span>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto py-3">
+        <ul className="space-y-1 px-2">
+          {items.map((item) => {
+            const target = item.to ?? item.firstChild ?? "/app";
+            const isActive = item.to
+              ? pathname === item.to
+              : item.hasChildren
+                ? pathname.startsWith(target.split("/").slice(0, 4).join("/"))
+                : false;
+            return (
+              <li key={item.label}>
+                <NavLink
+                  to={target}
+                  onClick={item.hasChildren ? onExpand : undefined}
+                  title={item.label}
+                  aria-label={item.label}
+                  className={cn(
+                    "grid h-10 w-full place-items-center rounded-lg transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="border-t border-sidebar-border p-2">
+        <button
+          onClick={onExpand}
+          title="Expandir menu"
+          aria-label="Expandir menu"
+          className="grid h-10 w-full place-items-center rounded-lg bg-gradient-primary text-primary-foreground hover:opacity-90 transition"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
