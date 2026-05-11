@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Menu, LogOut, ShieldCheck, ChevronDown,
+  LogOut, ShieldCheck, ChevronDown, ChevronLeft, ChevronRight,
   Building2, Heart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -97,7 +97,7 @@ export default function AppLayout() {
   return (
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
-      <div className="flex flex-1 w-full">
+      <div className="flex flex-1 w-full relative">
         {/* Sidebar persistente (desktop) — anima largura */}
         <aside
           className={cn(
@@ -123,17 +123,22 @@ export default function AppLayout() {
           </div>
         )}
 
+        {/* Aba flutuante de Recolher / Expandir */}
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((v) => !v)}
+          aria-label={sidebarOpen ? "Recolher menu" : "Expandir menu"}
+          title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
+          className={cn(
+            "fixed z-40 top-20 grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:text-primary",
+            sidebarOpen ? "lg:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]" : "left-1.5",
+          )}
+        >
+          {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </button>
+
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen((v) => !v)}
-            aria-label={sidebarOpen ? "Esconder menu" : "Mostrar menu"}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-
           <Link to="/" aria-label="Ir para a home" className="flex items-center">
             <Logo size="sm" />
           </Link>
