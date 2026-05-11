@@ -106,7 +106,7 @@ export default function PublicLayout() {
       <main className="flex-1"><Outlet /></main>
 
       {/* ─── FOOTER ─── */}
-      <footer className="relative border-t border-deep/40 bg-deep text-deep-foreground/90">
+      <footer className="relative border-t border-black/30 text-deep-foreground/90" style={{ background: "linear-gradient(180deg, hsl(200 85% 10%) 0%, hsl(200 90% 6%) 100%)" }}>
         <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
         <div className="container relative grid gap-10 py-16 md:grid-cols-12">
           {/* Brand */}
