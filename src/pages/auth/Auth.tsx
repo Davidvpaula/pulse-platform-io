@@ -9,7 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Loader2, Stethoscope } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { validatePassword } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
@@ -215,15 +216,9 @@ export default function Auth() {
   return (
     <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted/30 px-4 py-10">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Stethoscope className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-lg font-bold tracking-tight">Lasmar</div>
-            <div className="text-xs text-muted-foreground -mt-1">TELEMED</div>
-          </div>
-        </Link>
+        <div className="flex items-center justify-center mb-8">
+          <Logo size="lg" />
+        </div>
 
         <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
           <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
