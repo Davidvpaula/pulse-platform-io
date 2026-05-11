@@ -1,4 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+/* ─── Omnes — tipografia oficial Lasmar Telemed ─── */
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-Hairline.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Omnes';
+  src: url('/src/assets/fonts/omnes/Omnes-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -6,31 +48,35 @@
 
 @layer base {
   :root {
-    /* Healthtech palette — calm petrol + mint accent */
-    --background: 210 30% 98%;
-    --foreground: 210 30% 12%;
+    /* ─── Lasmar Telemed — paleta oficial ─── */
+    /* Cor 1 #FDFBF6 off-white | Cor 4/9 #198BBC azul Lasmar | Cor 12 #0088FF azul vibrante
+       Cor 6 #0376BC | Cor 7 #094BCC | Cor 8 #96DFFF soft | Cor 10 #0C4B6A petrol */
+
+    --background: 40 50% 98%;          /* #FDFBF6 */
+    --foreground: 200 80% 12%;         /* petrol escuro p/ texto */
 
     --card: 0 0% 100%;
-    --card-foreground: 210 30% 12%;
+    --card-foreground: 200 80% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 12%;
+    --popover-foreground: 200 80% 12%;
 
-    /* Primary = deep petrol/teal — trustworthy clinical blue */
-    --primary: 196 78% 28%;
-    --primary-foreground: 210 40% 98%;
-    --primary-soft: 196 70% 94%;
-    --primary-glow: 188 80% 42%;
+    /* Primary = azul Lasmar #198BBC */
+    --primary: 198 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 198 100% 80%;      /* #96DFFF */
+    --primary-glow: 206 100% 50%;      /* #0088FF */
 
-    /* Secondary = mint accent for medical wellness */
-    --secondary: 162 48% 94%;
-    --secondary-foreground: 165 60% 22%;
+    /* Secondary = azul mais escuro #0376BC */
+    --secondary: 204 95% 38%;
+    --secondary-foreground: 0 0% 100%;
 
-    --accent: 165 70% 42%;
+    /* Accent = azul royal #094BCC */
+    --accent: 222 91% 42%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 210 30% 96%;
-    --muted-foreground: 210 12% 46%;
+    --muted: 0 0% 94%;                 /* #F0F0F0 */
+    --muted-foreground: 200 15% 38%;
 
     --destructive: 358 75% 56%;
     --destructive-foreground: 0 0% 100%;
@@ -41,69 +87,70 @@
     --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
 
-    --info: 210 90% 52%;
+    --info: 198 76% 42%;
     --info-foreground: 0 0% 100%;
 
-    --border: 210 24% 90%;
-    --input: 210 24% 90%;
-    --ring: 196 78% 28%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 198 76% 42%;
 
     --radius: 0.75rem;
 
-    /* Gradients & shadows */
-    --gradient-primary: linear-gradient(135deg, hsl(196 78% 28%), hsl(188 80% 42%));
-    --gradient-soft: linear-gradient(180deg, hsl(196 70% 97%), hsl(210 30% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(196 78% 22%) 0%, hsl(188 75% 38%) 60%, hsl(165 70% 50%) 100%);
-    --shadow-card: 0 1px 2px hsl(210 30% 12% / 0.04), 0 4px 16px hsl(196 50% 20% / 0.06);
-    --shadow-elegant: 0 10px 30px -10px hsl(196 78% 28% / 0.25);
-    --shadow-glow: 0 0 40px hsl(188 80% 55% / 0.35);
+    /* Gradients & shadows — Lasmar */
+    --gradient-primary: linear-gradient(135deg, hsl(198 76% 42%), hsl(206 100% 50%));
+    --gradient-soft: linear-gradient(180deg, hsl(198 100% 97%), hsl(40 50% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(200 80% 23%) 0%, hsl(198 76% 42%) 55%, hsl(198 100% 80%) 100%);
+    --shadow-card: 0 1px 2px hsl(200 80% 12% / 0.04), 0 4px 16px hsl(198 50% 25% / 0.06);
+    --shadow-elegant: 0 10px 30px -10px hsl(198 76% 42% / 0.25);
+    --shadow-glow: 0 0 40px hsl(206 100% 55% / 0.30);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 20% 30%;
-    --sidebar-primary: 196 78% 28%;
+    --sidebar-foreground: 200 25% 28%;
+    --sidebar-primary: 198 76% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 196 70% 96%;
-    --sidebar-accent-foreground: 196 78% 22%;
-    --sidebar-border: 210 24% 92%;
-    --sidebar-ring: 196 78% 28%;
+    --sidebar-accent: 198 100% 96%;
+    --sidebar-accent-foreground: 198 76% 28%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 198 76% 42%;
   }
 
   .dark {
-    --background: 210 30% 8%;
-    --foreground: 210 30% 96%;
-    --card: 210 28% 11%;
-    --card-foreground: 210 30% 96%;
-    --popover: 210 28% 11%;
-    --popover-foreground: 210 30% 96%;
-    --primary: 188 80% 55%;
-    --primary-foreground: 210 30% 8%;
-    --primary-soft: 196 50% 18%;
-    --secondary: 165 30% 16%;
-    --secondary-foreground: 162 60% 80%;
-    --accent: 165 70% 50%;
-    --accent-foreground: 210 30% 8%;
-    --muted: 210 25% 14%;
-    --muted-foreground: 210 15% 65%;
+    --background: 200 80% 8%;          /* petrol profundo */
+    --foreground: 40 50% 96%;
+    --card: 200 60% 11%;
+    --card-foreground: 40 50% 96%;
+    --popover: 200 60% 11%;
+    --popover-foreground: 40 50% 96%;
+    --primary: 198 90% 55%;
+    --primary-foreground: 200 80% 8%;
+    --primary-soft: 200 60% 18%;
+    --primary-glow: 206 100% 60%;
+    --secondary: 204 80% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 222 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 200 35% 14%;
+    --muted-foreground: 200 15% 65%;
     --destructive: 358 70% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 25% 18%;
-    --input: 210 25% 18%;
-    --ring: 188 80% 55%;
-    --sidebar-background: 210 28% 10%;
-    --sidebar-foreground: 210 20% 80%;
-    --sidebar-primary: 188 80% 55%;
-    --sidebar-primary-foreground: 210 30% 8%;
-    --sidebar-accent: 210 25% 15%;
-    --sidebar-accent-foreground: 188 80% 70%;
-    --sidebar-border: 210 25% 16%;
+    --border: 200 35% 18%;
+    --input: 200 35% 18%;
+    --ring: 198 90% 55%;
+    --sidebar-background: 200 60% 10%;
+    --sidebar-foreground: 200 20% 80%;
+    --sidebar-primary: 198 90% 55%;
+    --sidebar-primary-foreground: 200 80% 8%;
+    --sidebar-accent: 200 40% 15%;
+    --sidebar-accent-foreground: 198 90% 75%;
+    --sidebar-border: 200 35% 16%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
-  html { font-family: 'Inter', system-ui, sans-serif; }
+  html { font-family: 'Omnes', system-ui, -apple-system, sans-serif; }
   body { @apply bg-background text-foreground antialiased; font-feature-settings: 'cv11','ss01'; }
-  h1,h2,h3,h4,h5 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; @apply tracking-tight; }
+  h1,h2,h3,h4,h5 { font-family: 'Omnes', system-ui, sans-serif; @apply tracking-tight; font-weight: 700; }
 }
 
 @layer components {
@@ -122,14 +169,14 @@
   }
 
   /* ─── B2B / B2C flow indicators ─── */
-  .flow-b2b { --flow-accent: 250 65% 55%; --flow-accent-soft: 250 60% 95%; --flow-label: "B2B"; }
-  .flow-b2c { --flow-accent: 188 80% 42%; --flow-accent-soft: 188 70% 94%; --flow-label: "B2C"; }
-  .flow-admin { --flow-accent: 196 78% 28%; --flow-accent-soft: 196 70% 94%; --flow-label: "Admin"; }
+  .flow-b2b { --flow-accent: 222 91% 42%; --flow-accent-soft: 222 80% 95%; --flow-label: "B2B"; }
+  .flow-b2c { --flow-accent: 198 76% 42%; --flow-accent-soft: 198 100% 95%; --flow-label: "B2C"; }
+  .flow-admin { --flow-accent: 200 80% 23%; --flow-accent-soft: 198 70% 94%; --flow-label: "Admin"; }
   .flow-medico { --flow-accent: 152 60% 40%; --flow-accent-soft: 152 55% 93%; --flow-label: "Médico"; }
   .flow-secretaria { --flow-accent: 35 92% 52%; --flow-accent-soft: 35 80% 94%; --flow-label: "Operação"; }
-  .dark .flow-b2b { --flow-accent: 250 70% 65%; --flow-accent-soft: 250 40% 18%; }
-  .dark .flow-b2c { --flow-accent: 188 80% 55%; --flow-accent-soft: 188 40% 15%; }
-  .dark .flow-admin { --flow-accent: 196 78% 55%; --flow-accent-soft: 196 40% 15%; }
+  .dark .flow-b2b { --flow-accent: 222 80% 65%; --flow-accent-soft: 222 40% 18%; }
+  .dark .flow-b2c { --flow-accent: 198 90% 55%; --flow-accent-soft: 198 40% 15%; }
+  .dark .flow-admin { --flow-accent: 198 90% 55%; --flow-accent-soft: 200 40% 15%; }
   .dark .flow-medico { --flow-accent: 152 60% 55%; --flow-accent-soft: 152 35% 15%; }
   .dark .flow-secretaria { --flow-accent: 35 92% 55%; --flow-accent-soft: 35 40% 15%; }
 
