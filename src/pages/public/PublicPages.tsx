@@ -357,207 +357,195 @@ export const MedicoDetalhe = () => {
   }
 
   return (
-    <PageShell title={formatNomeMedico(medico.tratamento, medico.nome)} subtitle="">
-      <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        {/* Main info */}
-        <div className="space-y-6">
-          {/* Hero card */}
-          {(() => {
-            const principal = (medico.especialidade ?? "Clínica Geral").trim().toLowerCase();
-            const outras = espInfo.filter((e) => e.nome.trim().toLowerCase() !== principal);
-            return (
-              <div className="card-elevated overflow-hidden">
-                <div className="relative bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
-                  <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-                    {medico.foto_url ? (
-                      <img
-                        src={medico.foto_url}
-                        alt={medico.nome}
-                        className="h-32 w-32 sm:h-40 sm:w-40 rounded-full object-cover shrink-0 ring-4 ring-primary/10 shadow-md"
-                      />
-                    ) : (
-                      <div className="grid h-32 w-32 sm:h-40 sm:w-40 place-items-center rounded-full bg-gradient-primary text-primary-foreground text-4xl font-bold shrink-0 ring-4 ring-primary/10 shadow-md">
-                        {iniciais(medico.nome)}
+    <PageShell>
+      <div className="mx-auto max-w-4xl space-y-6">
+        {/* 1. Hero card */}
+        {(() => {
+          const principal = (medico.especialidade ?? "Clínica Geral").trim().toLowerCase();
+          const principalEsp = espInfo.find((e) => e.nome.trim().toLowerCase() === principal);
+          const outras = espInfo.filter((e) => e.nome.trim().toLowerCase() !== principal);
+          const precosValidos = espInfo.map((e) => e.preco_centavos).filter((p) => p > 0);
+          const precoConsulta = principalEsp?.preco_centavos && principalEsp.preco_centavos > 0
+            ? principalEsp.preco_centavos
+            : (precosValidos.length ? Math.min(...precosValidos) : 0);
+          return (
+            <div className="card-elevated overflow-hidden">
+              <div className="relative bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
+                <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
+                  {medico.foto_url ? (
+                    <img
+                      src={medico.foto_url}
+                      alt={medico.nome}
+                      className="h-32 w-32 sm:h-40 sm:w-40 rounded-full object-cover shrink-0 ring-4 ring-primary/10 shadow-md"
+                    />
+                  ) : (
+                    <div className="grid h-32 w-32 sm:h-40 sm:w-40 place-items-center rounded-full bg-gradient-primary text-primary-foreground text-4xl font-bold shrink-0 ring-4 ring-primary/10 shadow-md">
+                      {iniciais(medico.nome)}
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs uppercase tracking-wider text-primary font-semibold">
+                      {medico.especialidade ?? "Clínica Geral"}
+                    </p>
+                    <h1 className="mt-1 font-display text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
+                      {formatNomeMedico(medico.tratamento, medico.nome)}
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">CRM {medico.crm}</p>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-warning">
+                        <Star className="h-4 w-4 fill-current" />
+                        {medico.avaliacao_media > 0 ? medico.avaliacao_media.toFixed(1) : "5.0"}
+                        {medico.total_avaliacoes > 0 && (
+                          <span className="text-xs font-normal text-muted-foreground">
+                            ({medico.total_avaliacoes})
+                          </span>
+                        )}
+                      </span>
+                      {medico.online && (
+                        <Badge className="bg-success/10 text-success border-success/20 text-[10px]">
+                          Disponível agora
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-[10px]">
+                        <Video className="mr-1 h-3 w-3" /> Telemedicina
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        <ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado
+                      </Badge>
+                    </div>
+
+                    {precoConsulta > 0 && (
+                      <div className="mt-4 inline-flex items-baseline gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Consulta a partir de</span>
+                        <span className="text-2xl font-extrabold text-primary">{brl(precoConsulta)}</span>
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs uppercase tracking-wider text-primary font-semibold">
-                        {medico.especialidade ?? "Clínica Geral"}
+                    {medico.bio && (
+                      <p className="mt-4 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                        {medico.bio}
                       </p>
-                      <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">
-                        {formatNomeMedico(medico.tratamento, medico.nome)}
-                      </h2>
-                      <p className="mt-1 text-sm text-muted-foreground">CRM {medico.crm}</p>
-
-                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-warning">
-                          <Star className="h-4 w-4 fill-current" />
-                          {medico.avaliacao_media > 0 ? medico.avaliacao_media.toFixed(1) : "5.0"}
-                          {medico.total_avaliacoes > 0 && (
-                            <span className="text-xs font-normal text-muted-foreground">
-                              ({medico.total_avaliacoes})
-                            </span>
-                          )}
-                        </span>
-                        {medico.online && (
-                          <Badge className="bg-success/10 text-success border-success/20 text-[10px]">
-                            Disponível agora
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-[10px]">
-                          <Video className="mr-1 h-3 w-3" /> Telemedicina
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px]">
-                          <ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado
-                        </Badge>
-                      </div>
-
-                      {medico.bio && (
-                        <p className="mt-4 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                          {medico.bio}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-
-                {outras.length > 0 && (
-                  <div className="border-t border-border bg-muted/20 px-6 sm:px-8 py-5">
-                    <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-3">
-                      Atendimentos que também realiza
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {outras.map((e, i) => (
-                        <Badge
-                          key={i}
-                          variant="secondary"
-                          className="rounded-full px-3 py-1 text-xs font-medium"
-                        >
-                          <Stethoscope className="mr-1.5 h-3 w-3 text-primary" />
-                          {e.nome}
-                          {e.especialista && e.rqe && (
-                            <span className="ml-1.5 text-[10px] text-muted-foreground">
-                              · RQE {e.rqe}
-                            </span>
-                          )}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Info grid */}
-          <div className="card-elevated p-6">
-            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
-              <div>
-                <p className="text-muted-foreground text-xs">Modalidade</p>
-                <p className="font-semibold">Online (Telemedicina)</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">CRM</p>
-                <p className="font-semibold">{medico.crm}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Atendimento</p>
-                <p className="font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Todo Brasil</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Planos do médico */}
-          {planosMedico.length > 0 && (
-            <div className="card-elevated p-6">
-              <h3 className="text-sm font-semibold mb-4">Planos deste profissional</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {planosMedico.map((p: any) => (
-                  <div key={p.id} className="rounded-xl border border-border bg-background/50 p-5 hover:border-primary/30 transition">
-                    <p className="font-medium">{p.nome}</p>
-                    {p.descricao_comercial && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.descricao_comercial}</p>
-                    )}
-                    <p className="mt-2 text-xl font-semibold">
-                      {brl(p.valor_mensal_centavos)}
-                      <span className="text-xs font-normal text-muted-foreground">/mês</span>
-                    </p>
-                    {p.plano_beneficios && p.plano_beneficios.length > 0 && (
-                      <ul className="mt-3 space-y-1.5 text-sm">
-                        {p.plano_beneficios.slice(0, 4).map((b: any, i: number) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
-                            <span>{b.nome}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <Button className="mt-4 w-full" size="sm" asChild>
-                      <Link to="/app/paciente/plano">
-                        Assinar <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Avaliações públicas */}
-          {avaliacoesPublicas.length > 0 && (
-            <div className="card-elevated p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold">Avaliações de pacientes</h3>
-                <Badge variant="secondary" className="text-[10px]">{avaliacoesPublicas.length} {avaliacoesPublicas.length === 1 ? "avaliação" : "avaliações"}</Badge>
               </div>
 
-              {/* Nota média */}
-              {medico.avaliacao_media > 0 && (
-                <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} className={cn("h-5 w-5", s <= Math.round(medico.avaliacao_media) ? "fill-warning text-warning" : "text-muted-foreground/30")} />
+              {outras.length > 0 && (
+                <div className="border-t border-border bg-muted/20 px-6 sm:px-8 py-5">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+                    Atendimentos que também realiza
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {outras.map((e, i) => (
+                      <Badge
+                        key={i}
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs font-medium"
+                      >
+                        <Stethoscope className="mr-1.5 h-3 w-3 text-primary" />
+                        {e.nome}
+                        {e.especialista && e.rqe && (
+                          <span className="ml-1.5 text-[10px] text-muted-foreground">
+                            · RQE {e.rqe}
+                          </span>
+                        )}
+                      </Badge>
                     ))}
                   </div>
-                  <span className="text-lg font-bold">{medico.avaliacao_media.toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground">({medico.total_avaliacoes} {medico.total_avaliacoes === 1 ? "avaliação" : "avaliações"})</span>
                 </div>
               )}
-
-              <div className="space-y-4">
-                {avaliacoesPublicas.map((av: any) => (
-                  <div key={av.id} className="rounded-lg border border-border p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map(s => (
-                            <Star key={s} className={cn("h-3.5 w-3.5", s <= av.nota ? "fill-warning text-warning" : "text-muted-foreground/30")} />
-                          ))}
-                        </div>
-                        <span className="text-xs font-medium">{(av.paciente_nome ?? "Paciente").split(" ")[0]}</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(av.created_at).toLocaleDateString("pt-BR")}
-                      </span>
-                    </div>
-                    {av.comentario && (
-                      <p className="text-sm text-muted-foreground">{av.comentario}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
+          );
+        })()}
+
+        {/* 2. Agenda */}
+        <div className="card-elevated p-6">
+          <p className="text-sm font-semibold mb-4">Agendar consulta</p>
+          <MedicoSlotsPanel medicoId={medico.id} medicoNome={medico.nome} />
         </div>
 
-        {/* Sidebar – agenda */}
-        <div className="space-y-4">
-          <div className="card-elevated p-6 h-fit">
-            <p className="text-sm font-semibold mb-4">Agendar consulta</p>
-            <MedicoSlotsPanel medicoId={medico.id} medicoNome={medico.nome} />
+        {/* 3. Planos do médico */}
+        {planosMedico.length > 0 && (
+          <div className="card-elevated p-6">
+            <h3 className="text-sm font-semibold mb-4">Planos deste profissional</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {planosMedico.map((p: any) => (
+                <div key={p.id} className="rounded-xl border border-border bg-background/50 p-5 hover:border-primary/30 transition">
+                  <p className="font-medium">{p.nome}</p>
+                  {p.descricao_comercial && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.descricao_comercial}</p>
+                  )}
+                  <p className="mt-2 text-xl font-semibold">
+                    {brl(p.valor_mensal_centavos)}
+                    <span className="text-xs font-normal text-muted-foreground">/mês</span>
+                  </p>
+                  {p.plano_beneficios && p.plano_beneficios.length > 0 && (
+                    <ul className="mt-3 space-y-1.5 text-sm">
+                      {p.plano_beneficios.slice(0, 4).map((b: any, i: number) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
+                          <span>{b.nome}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button className="mt-4 w-full" size="sm" asChild>
+                    <Link to="/app/paciente/plano">
+                      Assinar <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* 4. Avaliações públicas */}
+        {avaliacoesPublicas.length > 0 && (
+          <div className="card-elevated p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">Avaliações de pacientes</h3>
+              <Badge variant="secondary" className="text-[10px]">{avaliacoesPublicas.length} {avaliacoesPublicas.length === 1 ? "avaliação" : "avaliações"}</Badge>
+            </div>
+
+            {medico.avaliacao_media > 0 && (
+              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Star key={s} className={cn("h-5 w-5", s <= Math.round(medico.avaliacao_media) ? "fill-warning text-warning" : "text-muted-foreground/30")} />
+                  ))}
+                </div>
+                <span className="text-lg font-bold">{medico.avaliacao_media.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">({medico.total_avaliacoes} {medico.total_avaliacoes === 1 ? "avaliação" : "avaliações"})</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {avaliacoesPublicas.map((av: any) => (
+                <div key={av.id} className="rounded-lg border border-border p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <Star key={s} className={cn("h-3.5 w-3.5", s <= av.nota ? "fill-warning text-warning" : "text-muted-foreground/30")} />
+                        ))}
+                      </div>
+                      <span className="text-xs font-medium">{(av.paciente_nome ?? "Paciente").split(" ")[0]}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(av.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                  {av.comentario && (
+                    <p className="text-sm text-muted-foreground">{av.comentario}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </PageShell>
   );
