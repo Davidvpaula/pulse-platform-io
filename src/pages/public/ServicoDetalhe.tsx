@@ -161,9 +161,7 @@ export default function ServicoDetalhe() {
   if (loading) {
     return (
       <PageShell title="Carregando…">
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
+        <ServicoHeroSkeleton />
       </PageShell>
     );
   }
@@ -188,32 +186,21 @@ export default function ServicoDetalhe() {
       subtitle="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."
     >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="card-elevated overflow-hidden">
-          <div className="gradient-soft flex flex-wrap items-center justify-between gap-4 p-6">
-            <div>
-              <Badge className="mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                <Activity className="mr-1 h-3 w-3" /> Serviço da Plataforma
-              </Badge>
-              {servico.descricao_publica && (
-                <p className="text-sm text-muted-foreground mb-2">{servico.descricao_publica}</p>
-              )}
-              <p className="text-sm font-medium">
-                Valor: <span className="tabular-nums">{brl(servico.valor_paciente_centavos)}</span>{" "}
-                · Duração: <span className="tabular-nums">{servico.duracao_min} min</span>
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                <Users className="mr-1 inline h-3.5 w-3.5" />
-                <strong>{totalLivres}</strong> horários livres{" "}
-                {diaSelecionado ? dataLabel(diaSelecionado).toLowerCase() : ""}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Legenda cor="bg-card border border-primary/30" texto="Livre" />
-              <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
-            </div>
-          </div>
-        </div>
+        <ServicoHero
+          nome={servico.nome}
+          subtitulo={servico.subtitulo}
+          descricao={servico.descricao_publica}
+          imagemUrl={servico.imagem_url}
+          icone={servico.icone}
+          tipo={servico.tipo}
+          valorCentavos={servico.valor_paciente_centavos}
+          duracaoMin={servico.duracao_min}
+        />
+
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground tabular-nums">{totalLivres}</strong> horários livres{" "}
+          {diaSelecionado ? dataLabel(diaSelecionado).toLowerCase() : ""}
+        </p>
 
         {/* Aviso */}
         <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
