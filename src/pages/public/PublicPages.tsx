@@ -361,50 +361,93 @@ export const MedicoDetalhe = () => {
         {/* Main info */}
         <div className="space-y-6">
           {/* Hero card */}
-          <div className="card-elevated p-6">
-            <div className="flex items-start gap-5">
-              {medico.foto_url ? (
-                <img src={medico.foto_url} alt={medico.nome} className="h-20 w-20 rounded-2xl object-cover shrink-0" />
-              ) : (
-                <div className="grid h-20 w-20 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground text-2xl font-bold shrink-0">
-                  {iniciais(medico.nome)}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold">{formatNomeMedico(medico.tratamento, medico.nome)}</h2>
-                <p className="text-sm text-muted-foreground">{medico.especialidade ?? "Clínica Geral"} · CRM {medico.crm}</p>
+          {(() => {
+            const principal = (medico.especialidade ?? "Clínica Geral").trim().toLowerCase();
+            const outras = espInfo.filter((e) => e.nome.trim().toLowerCase() !== principal);
+            return (
+              <div className="card-elevated overflow-hidden">
+                <div className="relative bg-gradient-to-br from-primary/5 via-background to-background p-6 sm:p-8">
+                  <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
+                    {medico.foto_url ? (
+                      <img
+                        src={medico.foto_url}
+                        alt={medico.nome}
+                        className="h-32 w-32 sm:h-40 sm:w-40 rounded-full object-cover shrink-0 ring-4 ring-primary/10 shadow-md"
+                      />
+                    ) : (
+                      <div className="grid h-32 w-32 sm:h-40 sm:w-40 place-items-center rounded-full bg-gradient-primary text-primary-foreground text-4xl font-bold shrink-0 ring-4 ring-primary/10 shadow-md">
+                        {iniciais(medico.nome)}
+                      </div>
+                    )}
 
-                {espInfo.map((e, i) => (
-                  <p key={i} className="text-xs text-muted-foreground mt-1">
-                    {e.nome}: {e.especialista ? `Especialista (RQE: ${e.rqe ?? "—"})` : "Clínico geral"}
-                  </p>
-                ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs uppercase tracking-wider text-primary font-semibold">
+                        {medico.especialidade ?? "Clínica Geral"}
+                      </p>
+                      <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">
+                        {formatNomeMedico(medico.tratamento, medico.nome)}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">CRM {medico.crm}</p>
 
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1 text-sm text-warning">
-                    <Star className="h-4 w-4 fill-current" />
-                    {medico.avaliacao_media > 0 ? medico.avaliacao_media.toFixed(1) : "5.0"}
-                  </span>
-                  {medico.online && (
-                    <Badge className="bg-success/10 text-success border-success/20 text-[10px]">Disponível agora</Badge>
-                  )}
+                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-warning">
+                          <Star className="h-4 w-4 fill-current" />
+                          {medico.avaliacao_media > 0 ? medico.avaliacao_media.toFixed(1) : "5.0"}
+                          {medico.total_avaliacoes > 0 && (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              ({medico.total_avaliacoes})
+                            </span>
+                          )}
+                        </span>
+                        {medico.online && (
+                          <Badge className="bg-success/10 text-success border-success/20 text-[10px]">
+                            Disponível agora
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px]">
+                          <Video className="mr-1 h-3 w-3" /> Telemedicina
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px]">
+                          <ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado
+                        </Badge>
+                      </div>
+
+                      {medico.bio && (
+                        <p className="mt-4 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                          {medico.bio}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="text-[10px]"><Video className="mr-1 h-3 w-3" /> Telemedicina</Badge>
-                  <Badge variant="outline" className="text-[10px]"><ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado</Badge>
-                </div>
+                {outras.length > 0 && (
+                  <div className="border-t border-border bg-muted/20 px-6 sm:px-8 py-5">
+                    <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+                      Atendimentos que também realiza
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {outras.map((e, i) => (
+                        <Badge
+                          key={i}
+                          variant="secondary"
+                          className="rounded-full px-3 py-1 text-xs font-medium"
+                        >
+                          <Stethoscope className="mr-1.5 h-3 w-3 text-primary" />
+                          {e.nome}
+                          {e.especialista && e.rqe && (
+                            <span className="ml-1.5 text-[10px] text-muted-foreground">
+                              · RQE {e.rqe}
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
-
-          {/* Bio */}
-          {medico.bio && (
-            <div className="card-elevated p-6">
-              <h3 className="text-sm font-semibold mb-2">Sobre o profissional</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{medico.bio}</p>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Info grid */}
           <div className="card-elevated p-6">
