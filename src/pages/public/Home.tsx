@@ -90,6 +90,13 @@ export default function Home() {
                 <Link to="/atendimento-imediato">Atendimento imediato</Link>
               </Button>
             </div>
+
+            {/* Contadores em tempo real */}
+            <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-6 border-t border-white/15 pt-6">
+              <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
+              <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
+              <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
+            </div>
           </div>
 
           {/* Card flutuante: Pronto Atendimento */}
