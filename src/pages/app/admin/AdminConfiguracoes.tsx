@@ -236,7 +236,23 @@ export default function AdminConfiguracoes() {
       </Section>
 
       {/* Especialidades */}
-      <Section icon={Stethoscope} title="Especialidades cadastradas">
+      <Section
+        icon={Stethoscope}
+        title="Especialidades cadastradas"
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={reordenarAlfabetico}
+            disabled={loading || esps.length < 2}
+            className="h-8"
+            title="Recolocar todas em ordem alfabética"
+          >
+            <ArrowDownAZ className="mr-1.5 h-3.5 w-3.5" />
+            Ordem A–Z
+          </Button>
+        }
+      >
         <div className="space-y-4">
           {/* Form de criação */}
           <div className="rounded-lg border border-dashed border-border p-4">
@@ -254,6 +270,9 @@ export default function AdminConfiguracoes() {
                 </Button>
               </div>
             </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              A ordem definida aqui controla a exibição na home pública e nas listagens de especialidades.
+            </p>
           </div>
 
           {/* Lista */}
@@ -268,20 +287,45 @@ export default function AdminConfiguracoes() {
           ) : (
             <div className="overflow-hidden rounded-lg border border-border">
               <div className="grid grid-cols-12 gap-2 bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <div className="col-span-4">Nome</div>
-                <div className="col-span-5">Descrição</div>
-                <div className="col-span-2 text-center">Ativo</div>
+                <div className="col-span-1 text-center">#</div>
+                <div className="col-span-3">Nome</div>
+                <div className="col-span-4">Descrição</div>
+                <div className="col-span-2 text-center">Ordem</div>
+                <div className="col-span-1 text-center">Ativo</div>
                 <div className="col-span-1 text-right">Ações</div>
               </div>
               <div className="divide-y divide-border">
-                {esps.map((e) => (
+                {esps.map((e, i) => (
                   <div key={e.id} className={cn("grid grid-cols-12 items-center gap-2 px-3 py-2.5 text-sm", !e.ativo && "opacity-60")}>
-                    <div className="col-span-4">
+                    <div className="col-span-1 text-center">
+                      <span className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-full bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground">
+                        {i + 1}
+                      </span>
+                    </div>
+                    <div className="col-span-3">
                       <p className="font-medium">{e.nome}</p>
                       <p className="text-[11px] text-muted-foreground">{e.slug}</p>
                     </div>
-                    <div className="col-span-5 text-muted-foreground">{e.descricao || "—"}</div>
-                    <div className="col-span-2 flex justify-center">
+                    <div className="col-span-4 text-muted-foreground">{e.descricao || "—"}</div>
+                    <div className="col-span-2 flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => moverEspecialidade(i, -1)}
+                        disabled={i === 0}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                        title="Mover para cima"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => moverEspecialidade(i, 1)}
+                        disabled={i === esps.length - 1}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                        title="Mover para baixo"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="col-span-1 flex justify-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4 accent-primary"
