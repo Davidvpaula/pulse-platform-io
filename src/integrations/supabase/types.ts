@@ -11461,6 +11461,7 @@ export type Database = {
       }
       producao_pode_ativar: { Args: never; Returns: Json }
       promote_to_admin: { Args: { _email: string }; Returns: Json }
+      public_home_stats: { Args: never; Returns: Json }
       recalcular_ranking_medico: {
         Args: { p_medico_id: string }
         Returns: undefined
