@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Settings, Stethoscope, Zap, Plus, Trash2, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight } from "lucide-react";
+import { Settings, Stethoscope, Zap, Plus, Trash2, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight, ArrowUp, ArrowDown, ArrowDownAZ } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
