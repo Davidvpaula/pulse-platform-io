@@ -284,7 +284,7 @@ export const MedicoDetalhe = () => {
         // Load specialization details
         const { data: esps } = await supabase
           .from("medico_especialidades")
-          .select("especialidades!inner(nome), especialista, rqe")
+          .select("especialidades!inner(nome), especialista, rqe, preco_centavos")
           .eq("medico_id", med.id)
           .eq("ativo", true);
 
@@ -293,6 +293,7 @@ export const MedicoDetalhe = () => {
             nome: e.especialidades?.nome ?? "",
             especialista: e.especialista ?? false,
             rqe: e.rqe ?? null,
+            preco_centavos: e.preco_centavos ?? 0,
           }))
         );
 
