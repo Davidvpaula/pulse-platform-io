@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { brl, fmtHora, dataLabel } from "@/lib/format";
+import { dataLabel } from "@/lib/format";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Loader2, Users, Info, Activity, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Info, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import PageShell from "@/components/PageShell";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
@@ -11,13 +10,18 @@ import CalendarioFila from "@/components/atendimento-imediato/CalendarioFila";
 import type { SlotEstado } from "@/components/atendimento-imediato/SlotCelula";
 import type { PASlot } from "@/lib/pa-types";
 import { Button } from "@/components/ui/button";
+import ServicoHero, { ServicoHeroSkeleton } from "@/components/public/ServicoHero";
 
 type Servico = {
   id: string;
   nome: string;
+  tipo: string | null;
+  subtitulo: string | null;
   descricao_publica: string | null;
   duracao_min: number;
   valor_paciente_centavos: number;
+  imagem_url: string | null;
+  icone: string | null;
 };
 
 function dataKey(d: Date) {
@@ -39,7 +43,7 @@ export default function ServicoDetalhe() {
       setLoading(true);
       const { data: s } = await (supabase as any)
         .from("servicos_publicos")
-        .select("id,nome,descricao_publica,duracao_min,valor_paciente_centavos,ativo")
+        .select("id,nome,tipo,subtitulo,descricao_publica,duracao_min,valor_paciente_centavos,imagem_url,icone,ativo")
         .eq("slug", slug)
         .maybeSingle();
       if (!s || !(s as any).ativo) {
@@ -157,9 +161,7 @@ export default function ServicoDetalhe() {
   if (loading) {
     return (
       <PageShell title="Carregando…">
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
+        <ServicoHeroSkeleton />
       </PageShell>
     );
   }
@@ -184,32 +186,21 @@ export default function ServicoDetalhe() {
       subtitle="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."
     >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="card-elevated overflow-hidden">
-          <div className="gradient-soft flex flex-wrap items-center justify-between gap-4 p-6">
-            <div>
-              <Badge className="mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                <Activity className="mr-1 h-3 w-3" /> Serviço da Plataforma
-              </Badge>
-              {servico.descricao_publica && (
-                <p className="text-sm text-muted-foreground mb-2">{servico.descricao_publica}</p>
-              )}
-              <p className="text-sm font-medium">
-                Valor: <span className="tabular-nums">{brl(servico.valor_paciente_centavos)}</span>{" "}
-                · Duração: <span className="tabular-nums">{servico.duracao_min} min</span>
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                <Users className="mr-1 inline h-3.5 w-3.5" />
-                <strong>{totalLivres}</strong> horários livres{" "}
-                {diaSelecionado ? dataLabel(diaSelecionado).toLowerCase() : ""}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Legenda cor="bg-card border border-primary/30" texto="Livre" />
-              <Legenda cor="bg-destructive/10 border border-destructive/40" texto="Lotado" />
-            </div>
-          </div>
-        </div>
+        <ServicoHero
+          nome={servico.nome}
+          subtitulo={servico.subtitulo}
+          descricao={servico.descricao_publica}
+          imagemUrl={servico.imagem_url}
+          icone={servico.icone}
+          tipo={servico.tipo}
+          valorCentavos={servico.valor_paciente_centavos}
+          duracaoMin={servico.duracao_min}
+        />
+
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground tabular-nums">{totalLivres}</strong> horários livres{" "}
+          {diaSelecionado ? dataLabel(diaSelecionado).toLowerCase() : ""}
+        </p>
 
         {/* Aviso */}
         <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
@@ -220,81 +211,75 @@ export default function ServicoDetalhe() {
           </span>
         </div>
 
-        {/* Date navigation */}
-        {diasComSlots.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              disabled={idxDia <= 0}
-              onClick={() => {
-                if (idxDia > 0) setDiaSelecionado(diasComSlots[idxDia - 1][0]);
-              }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+        {/* Date navigation + calendário */}
+        <div id="calendario" className="space-y-6 scroll-mt-24">
+          {diasComSlots.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                disabled={idxDia <= 0}
+                onClick={() => {
+                  if (idxDia > 0) setDiaSelecionado(diasComSlots[idxDia - 1][0]);
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
 
-            <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
-              {diasComSlots.map(([dk, daySlots]) => (
-                <button
-                  key={dk}
-                  onClick={() => setDiaSelecionado(dk)}
-                  className={`flex flex-col items-center rounded-lg border px-4 py-2 text-xs transition-all shrink-0 ${
-                    dk === diaSelecionado
-                      ? "border-primary bg-primary/10 text-primary font-semibold"
-                      : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  <Calendar className="mb-1 h-3.5 w-3.5" />
-                  <span className="font-medium">{dataLabel(dk)}</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {daySlots.length} horário{daySlots.length !== 1 ? "s" : ""}
-                  </span>
-                </button>
-              ))}
+              <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
+                {diasComSlots.map(([dk, daySlots]) => (
+                  <button
+                    key={dk}
+                    onClick={() => setDiaSelecionado(dk)}
+                    className={`flex flex-col items-center rounded-lg border px-4 py-2 text-xs transition-all shrink-0 ${
+                      dk === diaSelecionado
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border bg-card hover:border-primary/40"
+                    }`}
+                  >
+                    <Calendar className="mb-1 h-3.5 w-3.5" />
+                    <span className="font-medium">{dataLabel(dk)}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {daySlots.length} horário{daySlots.length !== 1 ? "s" : ""}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                disabled={idxDia >= diasComSlots.length - 1}
+                onClick={() => {
+                  if (idxDia < diasComSlots.length - 1) setDiaSelecionado(diasComSlots[idxDia + 1][0]);
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
+          )}
 
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              disabled={idxDia >= diasComSlots.length - 1}
-              onClick={() => {
-                if (idxDia < diasComSlots.length - 1) setDiaSelecionado(diasComSlots[idxDia + 1][0]);
-              }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {slots.length === 0 ? (
-          <div className="card-elevated p-10 text-center text-muted-foreground">
-            Nenhum horário disponível no momento. Tente novamente mais tarde.
-          </div>
-        ) : slotsNoDia.length === 0 ? (
-          <div className="card-elevated p-10 text-center text-muted-foreground">
-            Selecione um dia acima para ver os horários.
-          </div>
-        ) : (
-          <CalendarioFila
-            slots={slotsNoDia}
-            estadoPorSlot={estadoPorSlot}
-            destacar={null}
-            onPick={escolherSlot}
-          />
-        )}
+          {slots.length === 0 ? (
+            <div className="card-elevated p-10 text-center text-muted-foreground">
+              Nenhum horário disponível no momento. Tente novamente mais tarde.
+            </div>
+          ) : slotsNoDia.length === 0 ? (
+            <div className="card-elevated p-10 text-center text-muted-foreground">
+              Selecione um dia acima para ver os horários.
+            </div>
+          ) : (
+            <CalendarioFila
+              slots={slotsNoDia}
+              estadoPorSlot={estadoPorSlot}
+              destacar={null}
+              onPick={escolherSlot}
+            />
+          )}
+        </div>
       </div>
     </PageShell>
   );
 }
 
-function Legenda({ cor, texto }: { cor: string; texto: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-      <span className={`inline-block h-3 w-3 rounded ${cor}`} />
-      {texto}
-    </span>
-  );
-}

@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
 import { usePublicHomeStats } from "@/hooks/usePublicHomeStats";
 import EmBreveDialog from "@/components/EmBreveDialog";
+import ServicosCarousel from "@/components/public/ServicosCarousel";
 
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
 import diffHumanizado from "@/assets/home/diferencial-humanizado.jpg";
@@ -205,7 +206,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── (faixa de stats removida — contadores movidos para o Hero) ─── */}
+      {/* ─── 3. CARROSSEL DE SERVIÇOS (dinâmico, via Admin) ─── */}
+      <ServicosCarousel />
 
 
       {/* ─── 4. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}

@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil } from "lucide-react";
 import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 import { broadcastAtendimentoImediatoConfigChanged } from "@/lib/clinico";
+import ServicoImagemUploader from "@/components/admin/ServicoImagemUploader";
 
 type Tipo = "consulta" | "pronto_atendimento" | "pacote";
 type Modelo = "percentual" | "valor_fixo";
@@ -41,6 +42,9 @@ type Servico = {
   descricao: string | null;
   descricao_publica: string | null;
   icone: string | null;
+  imagem_url: string | null;
+  subtitulo: string | null;
+  destacar_na_home: boolean;
 };
 
 type Esp = { id: string; nome: string };
@@ -55,6 +59,7 @@ const empty: Partial<Servico> = {
   prioridade: 100,
   ativo: true,
   requer_aprovacao_medico: false,
+  destacar_na_home: true,
 };
 
 
@@ -144,6 +149,9 @@ export default function AdminServicos() {
       descricao: editing.descricao || null,
       descricao_publica: editing.descricao_publica || null,
       icone: editing.icone || null,
+      imagem_url: editing.imagem_url || null,
+      subtitulo: editing.subtitulo || null,
+      destacar_na_home: editing.destacar_na_home ?? true,
     };
     let error;
     if (editing.id) {
@@ -428,6 +436,38 @@ export default function AdminServicos() {
 
               <TabsContent value="publicacao" className="space-y-4 mt-4">
                 <div className="space-y-2">
+                  <Label>Imagem do serviço</Label>
+                  <ServicoImagemUploader
+                    servicoId={editing.id}
+                    value={editing.imagem_url ?? null}
+                    onChange={(url) => setEditing({ ...editing, imagem_url: url })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Subtítulo (opcional)</Label>
+                  <Input
+                    maxLength={120}
+                    placeholder="Ex.: Fale com um clínico em minutos"
+                    value={editing.subtitulo ?? ""}
+                    onChange={(e) => setEditing({ ...editing, subtitulo: e.target.value.slice(0, 120) })}
+                  />
+                  <p className="text-[11px] text-muted-foreground text-right">
+                    {(editing.subtitulo?.length ?? 0)}/120
+                  </p>
+                </div>
+                <div className="flex items-center justify-between rounded border p-3">
+                  <div>
+                    <Label>Destacar na Home</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Quando ligado, o serviço aparece no carrossel da Home.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.destacar_na_home ?? true}
+                    onCheckedChange={(v) => setEditing({ ...editing, destacar_na_home: v })}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Slug (URL)</Label>
                   <Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })} />
                   <p className="text-xs text-muted-foreground">/servicos/{editing.slug || "..."}</p>
@@ -438,11 +478,18 @@ export default function AdminServicos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Descrição pública (site)</Label>
-                  <Textarea value={editing.descricao_publica ?? ""} onChange={(e) => setEditing({ ...editing, descricao_publica: e.target.value })} />
+                  <Textarea
+                    rows={4}
+                    value={editing.descricao_publica ?? ""}
+                    onChange={(e) => setEditing({ ...editing, descricao_publica: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Ícone (lucide name)</Label>
                   <Input placeholder="Stethoscope" value={editing.icone ?? ""} onChange={(e) => setEditing({ ...editing, icone: e.target.value })} />
+                  <p className="text-[11px] text-muted-foreground">
+                    Usado como fallback visual quando o serviço não tem imagem.
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>
