@@ -98,18 +98,25 @@ export default function AppLayout() {
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
       <div className="flex flex-1 w-full relative">
-        {/* Sidebar persistente (desktop) — anima largura */}
+        {/* Sidebar persistente (desktop) — anima largura. Fechada = mini com ícones, aberta = completa */}
         <aside
           className={cn(
             "hidden lg:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-out",
-            sidebarOpen ? "w-64" : "w-0 border-r-0",
+            sidebarOpen ? "w-64" : "w-16",
           )}
-          aria-hidden={!sidebarOpen}
         >
           <div className="flow-stripe w-full" />
-          <div className="w-64 flex flex-col flex-1 min-h-0">
-            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
-          </div>
+          {sidebarOpen ? (
+            <div className="w-64 flex flex-col flex-1 min-h-0">
+              <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
+            </div>
+          ) : (
+            <CompactSidebar
+              profileKey={profileKey}
+              flow={flow}
+              onExpand={() => setSidebarOpen(true)}
+            />
+          )}
         </aside>
 
         {/* Sidebar overlay (mobile) */}
@@ -123,7 +130,7 @@ export default function AppLayout() {
           </div>
         )}
 
-        {/* Aba flutuante de Recolher / Expandir */}
+        {/* Aba flutuante de Recolher / Expandir (apenas mobile usa o expandir; desktop usa a do sidebar) */}
         <button
           type="button"
           onClick={() => setSidebarOpen((v) => !v)}
@@ -131,7 +138,10 @@ export default function AppLayout() {
           title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
           className={cn(
             "fixed z-40 top-20 grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:text-primary",
-            sidebarOpen ? "lg:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]" : "left-1.5",
+            // Posicionamento: alinhado à borda direita do sidebar
+            sidebarOpen
+              ? "lg:left-[calc(16rem-0.875rem)] left-[calc(18rem-0.875rem)]"
+              : "lg:left-[calc(4rem-0.875rem)] left-1.5",
           )}
         >
           {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
