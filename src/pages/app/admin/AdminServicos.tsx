@@ -58,6 +58,7 @@ const empty: Partial<Servico> = {
   prioridade: 100,
   ativo: true,
   requer_aprovacao_medico: false,
+  destacar_na_home: true,
 };
 
 
