@@ -290,10 +290,6 @@ function SidebarBody({
 
   return (
     <>
-      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
-        <Logo />
-      </div>
-
       <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 flow-sidebar-card">
         <flow.icon className="h-4 w-4 flow-icon shrink-0" />
         <span className="flex-1">
