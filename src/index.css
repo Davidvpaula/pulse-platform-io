@@ -152,6 +152,14 @@
     --sidebar-accent: 200 40% 15%;
     --sidebar-accent-foreground: 198 90% 75%;
     --sidebar-border: 200 35% 16%;
+
+    /* Deep — dark mode */
+    --deep: 200 80% 6%;
+    --deep-foreground: 40 50% 96%;
+    --deep-soft: 200 60% 14%;
+    --gradient-deep: linear-gradient(135deg, hsl(200 80% 4%) 0%, hsl(200 80% 14%) 45%, hsl(198 70% 28%) 100%);
+    --gradient-deep-vibrant: linear-gradient(120deg, hsl(200 80% 8%) 0%, hsl(204 90% 28%) 55%, hsl(206 95% 45%) 100%);
+    --shadow-deep: 0 24px 48px -16px hsl(0 0% 0% / 0.6);
   }
 }
 
