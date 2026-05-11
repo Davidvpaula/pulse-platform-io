@@ -61,8 +61,9 @@ export default function AdminConfiguracoes() {
     const { data } = await supabase
       .from("especialidades")
       .select("*")
+      .order("ordem", { ascending: true })
       .order("nome", { ascending: true });
-    setEsps(data ?? []);
+    setEsps((data ?? []) as Especialidade[]);
     setProvider(await getProviderAtual());
     setLoading(false);
   };
@@ -72,11 +73,13 @@ export default function AdminConfiguracoes() {
   const criarEspecialidade = async () => {
     if (!novoNome.trim()) { toast.error("Informe o nome."); return; }
     setCriando(true);
-    const { error } = await supabase.from("especialidades").insert({
+    const maxOrdem = esps.reduce((m, e) => Math.max(m, (e as any).ordem ?? 0), 0);
+    const { error } = await (supabase.from("especialidades") as any).insert({
       nome: novoNome.trim(),
       slug: slugify(novoNome),
       descricao: novaDescricao.trim() || null,
       ativo: true,
+      ordem: maxOrdem + 10,
     });
     setCriando(false);
     if (error) {
@@ -85,6 +88,43 @@ export default function AdminConfiguracoes() {
     }
     toast.success("Especialidade criada.");
     setNovoNome(""); setNovaDescricao("");
+    load();
+  };
+
+  const moverEspecialidade = async (index: number, direcao: -1 | 1) => {
+    const alvo = esps[index];
+    const vizinho = esps[index + direcao];
+    if (!alvo || !vizinho) return;
+    const ordemAlvo = (alvo as any).ordem ?? (index + 1) * 10;
+    const ordemVizinho = (vizinho as any).ordem ?? (index + 1 + direcao) * 10;
+
+    // Atualização otimista
+    const novoArr = [...esps];
+    novoArr[index] = { ...alvo, ordem: ordemVizinho } as any;
+    novoArr[index + direcao] = { ...vizinho, ordem: ordemAlvo } as any;
+    novoArr.sort((a: any, b: any) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.nome.localeCompare(b.nome));
+    setEsps(novoArr);
+
+    const [r1, r2] = await Promise.all([
+      (supabase.from("especialidades") as any).update({ ordem: ordemVizinho }).eq("id", alvo.id),
+      (supabase.from("especialidades") as any).update({ ordem: ordemAlvo }).eq("id", vizinho.id),
+    ]);
+    if (r1.error || r2.error) {
+      toast.error("Não foi possível reordenar.");
+      load();
+    }
+  };
+
+  const reordenarAlfabetico = async () => {
+    if (!confirm("Recolocar todas as especialidades em ordem alfabética?")) return;
+    const ordenado = [...esps].sort((a, b) => a.nome.localeCompare(b.nome));
+    setEsps(ordenado.map((e, i) => ({ ...(e as any), ordem: (i + 1) * 10 })));
+    await Promise.all(
+      ordenado.map((e, i) =>
+        (supabase.from("especialidades") as any).update({ ordem: (i + 1) * 10 }).eq("id", e.id),
+      ),
+    );
+    toast.success("Ordem alfabética aplicada.");
     load();
   };
 
