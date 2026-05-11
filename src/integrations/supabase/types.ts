@@ -9410,16 +9410,19 @@ export type Database = {
           created_by: string | null
           descricao: string | null
           descricao_publica: string | null
+          destacar_na_home: boolean
           duracao_min: number
           especialidade_id: string | null
           icone: string | null
           id: string
+          imagem_url: string | null
           modelo: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome: string
           ordem: number
           prioridade: number
           requer_aprovacao_medico: boolean
           slug: string | null
+          subtitulo: string | null
           tipo: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at: string
           valor_fixo_centavos: number | null
@@ -9432,16 +9435,19 @@ export type Database = {
           created_by?: string | null
           descricao?: string | null
           descricao_publica?: string | null
+          destacar_na_home?: boolean
           duracao_min?: number
           especialidade_id?: string | null
           icone?: string | null
           id?: string
+          imagem_url?: string | null
           modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome: string
           ordem?: number
           prioridade?: number
           requer_aprovacao_medico?: boolean
           slug?: string | null
+          subtitulo?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at?: string
           valor_fixo_centavos?: number | null
@@ -9454,16 +9460,19 @@ export type Database = {
           created_by?: string | null
           descricao?: string | null
           descricao_publica?: string | null
+          destacar_na_home?: boolean
           duracao_min?: number
           especialidade_id?: string | null
           icone?: string | null
           id?: string
+          imagem_url?: string | null
           modelo?: Database["public"]["Enums"]["servico_financeiro_modelo"]
           nome?: string
           ordem?: number
           prioridade?: number
           requer_aprovacao_medico?: boolean
           slug?: string | null
+          subtitulo?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"]
           updated_at?: string
           valor_fixo_centavos?: number | null
@@ -10085,33 +10094,45 @@ export type Database = {
         Row: {
           ativo: boolean | null
           descricao_publica: string | null
+          destacar_na_home: boolean | null
           duracao_min: number | null
+          icone: string | null
           id: string | null
+          imagem_url: string | null
           nome: string | null
           prioridade: number | null
           slug: string | null
+          subtitulo: string | null
           tipo: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
           valor_paciente_centavos: number | null
         }
         Insert: {
           ativo?: boolean | null
           descricao_publica?: string | null
+          destacar_na_home?: boolean | null
           duracao_min?: number | null
+          icone?: string | null
           id?: string | null
+          imagem_url?: string | null
           nome?: string | null
           prioridade?: number | null
           slug?: string | null
+          subtitulo?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
           valor_paciente_centavos?: number | null
         }
         Update: {
           ativo?: boolean | null
           descricao_publica?: string | null
+          destacar_na_home?: boolean | null
           duracao_min?: number | null
+          icone?: string | null
           id?: string | null
+          imagem_url?: string | null
           nome?: string | null
           prioridade?: number | null
           slug?: string | null
+          subtitulo?: string | null
           tipo?: Database["public"]["Enums"]["servico_financeiro_tipo"] | null
           valor_paciente_centavos?: number | null
         }
