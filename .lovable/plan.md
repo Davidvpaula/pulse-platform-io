@@ -1,20 +1,16 @@
-## Mudar fundo dos cards "Atendimento Humanizado" e "Em qualquer lugar"
+## Colocar os 3 blocos lado a lado
 
-Trocar o azul escuro por um visual claro/branco com borda sutil, mantendo a foto lateral.
+O grid atual usa `md:grid-cols-2 lg:grid-cols-[0.95fr_1fr_0.85fr]`. Como o breakpoint `lg` é 1024px e a viewport está em 948px, o terceiro card (Detalhes da consulta) cai pra baixo.
 
-### Alterações em `src/pages/public/Home.tsx`
+### Alteração em `src/components/public/MedicoSlotsPanel.tsx` (linha 140)
 
-1. **Seção que envolve os cards (linha 167)**
-   - De: `bg-[hsl(200_80%_18%)] text-white`
-   - Para: `bg-background` (fundo neutro da página, sem faixa escura)
+Mudar:
+```
+grid gap-3 md:grid-cols-2 lg:grid-cols-[0.95fr_1fr_0.85fr]
+```
+Para:
+```
+grid gap-3 md:grid-cols-[0.95fr_1fr_0.9fr]
+```
 
-2. **Card individual (linha 298, componente do card)**
-   - De: `bg-[hsl(200_60%_22%)]` com texto branco
-   - Para: `bg-card border border-border` com `text-foreground`
-   - Ícone: badge passa de translúcido escuro para `bg-primary/10 text-primary`
-   - Título: `text-foreground`
-   - Descrição: `text-muted-foreground`
-   - Adicionar `shadow-sm hover:shadow-md transition-shadow` para dar leveza
-
-### Resultado visual
-Cards brancos com borda sutil, ícone destacado em primary, foto lateral preservada — alinhado ao restante da home clara.
+Assim, a partir de 768px (md), os 3 blocos (Calendário, Horários, Detalhes) ficam lado a lado em uma única linha. Em telas menores que md continuam empilhados.
