@@ -86,7 +86,7 @@ export default function AdminServicos() {
     setLoading(true);
     const [{ data: s }, { data: e }, { data: ms }, { data: cfg }] = await Promise.all([
       supabase.from("servicos_financeiros").select("*").order("prioridade").order("nome"),
-      supabase.from("especialidades").select("id,nome").order("nome"),
+      supabase.from("especialidades").select("id,nome").order("ordem").order("nome"),
       supabase.from("medico_servicos").select("servico_id").eq("ativo", true).eq("status", "ativo"),
       supabase.from("app_settings").select("value").eq("key", "atendimento_imediato.servico_id").maybeSingle(),
     ]);
