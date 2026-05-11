@@ -100,7 +100,7 @@ export default function Servicos() {
             Nenhum serviço disponível no momento.
           </div>
         ) : (
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
             {servicos.map((s) => {
               const isPA = paServicoId === s.id;
               const Icon = getIcon(s.icone);
