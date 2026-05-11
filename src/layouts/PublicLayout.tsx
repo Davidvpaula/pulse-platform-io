@@ -35,7 +35,7 @@ export default function PublicLayout() {
               <NavLink
                 key={`${l.to}-${i}`}
                 to={l.to}
-                end={l.end}
+                end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
                     "rounded-full px-3.5 py-2 text-sm font-medium tracking-tight transition-colors",
