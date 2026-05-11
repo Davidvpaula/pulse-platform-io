@@ -335,7 +335,7 @@ export default function Home() {
       <EmBreveDialog
         open={!!emBreveNome}
         onOpenChange={(o) => !o && setEmBreveNome(null)}
-        nome={emBreveNome ?? ""}
+        especialidade={emBreveNome ?? ""}
       />
     </>
   );
