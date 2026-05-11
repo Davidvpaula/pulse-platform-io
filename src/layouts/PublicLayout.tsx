@@ -5,13 +5,15 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// TODO: criar página /sobre na próxima onda institucional. Por ora aponta para /.
 const links = [
-  { to: "/", label: "Início", end: true },
-  { to: "/atendimento-imediato", label: "Pronto Atendimento" },
-  { to: "/agendar", label: "Agendar Consulta" },
-  { to: "/", label: "Sobre Nós" },
-  { to: "/faq", label: "Ajuda" },
+  { to: "/atendimento-imediato", label: "Atendimento imediato" },
+  { to: "/especialidades", label: "Especialidades" },
+  { to: "/servicos", label: "Serviços" },
+  { to: "/medicos", label: "Médicos" },
+  { to: "/planos", label: "Planos" },
+  { to: "/empresas", label: "Empresas" },
+  { to: "/para-medicos", label: "Para médicos" },
+  { to: "/faq", label: "FAQ" },
 ];
 
 export default function PublicLayout() {
@@ -33,7 +35,7 @@ export default function PublicLayout() {
               <NavLink
                 key={`${l.to}-${i}`}
                 to={l.to}
-                end={l.end}
+                end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
                     "rounded-full px-3.5 py-2 text-sm font-medium tracking-tight transition-colors",
