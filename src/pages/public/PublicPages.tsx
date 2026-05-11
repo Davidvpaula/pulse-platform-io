@@ -264,7 +264,7 @@ export const Medicos = () => {
 export const MedicoDetalhe = () => {
   const { slug } = useParams();
   const [medico, setMedico] = useState<any>(null);
-  const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null }[]>([]);
+  const [espInfo, setEspInfo] = useState<{ nome: string; especialista: boolean; rqe: string | null; preco_centavos: number }[]>([]);
   const [planosMedico, setPlanosMedico] = useState<any[]>([]);
   const [avaliacoesPublicas, setAvaliacoesPublicas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
