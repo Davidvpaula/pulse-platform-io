@@ -1,28 +1,18 @@
-## Padronizar raio dos botões para 10px (global)
+## Trocar fundo do Hero por azul gradiente + ícone
 
-Aplicar `border-radius: 10px` em todos os botões da plataforma, conforme as imagens de referência (Cadastre-se, Agende agora!, Conheça a Lasmar).
+Remover a foto do casal idoso (`hero-couple.png`) do Hero da Home e substituir por um fundo de cor azul mesclado (azul-claro → azul-escuro), com o ícone/logo redondo decorativo aparecendo no canto direito (como antes).
 
-### Mudanças
+### Mudanças em `src/pages/public/Home.tsx`
 
-**1. `src/components/ui/button.tsx` (componente base)**
-- Trocar `rounded-md` por `rounded-[10px]` na classe base do `cva`
-- Trocar `rounded-md` por `rounded-[10px]` nas variantes `size.sm` e `size.lg`
-- Resultado: todo `<Button />` da plataforma (paciente, médico, admin, colaborador, empresa, público) passa a ter 10px de raio por padrão
+1. **Remover** o `<img src={heroCouple} … />` e o gradiente preto sobreposto (linhas 36–45).
+2. **Substituir** `bg-[#f5efe4]` da `<section>` por um gradiente azul usando tokens do design system:
+   - `bg-gradient-to-br from-primary via-primary to-[hsl(215_60%_18%)]` (azul → azul escuro), ou usar `--gradient-primary` já definido em `index.css` se existir.
+3. **Manter** todo o conteúdo (H1, subtítulo, botões, card flutuante "Pronto Atendimento") intacto, com texto branco.
+4. **Adicionar** um ícone/logo decorativo redondo flutuante no lado direito (atrás do card), reproduzindo o "logotipo desenhado" anterior — círculo `bg-primary-soft/20` com o ícone `Stethoscope` ou `Heart` em branco/soft, posicionado absoluto no topo direito.
+5. **Remover** o import `heroCouple` que ficará órfão.
 
-**2. Sobrescritas pontuais com `rounded-full` em CTAs**
-Substituir por `rounded-[10px]` apenas nos botões/CTAs (não em avatares, badges, switches, sliders, progress, carousel, etc.):
-- `src/layouts/PublicLayout.tsx` — botões "Entrar" e "Cadastre-se" do header + drawer mobile
-- `src/pages/public/Home.tsx` — CTAs "Agende agora!", "Conheça a Lasmar", "Tirar dúvidas", etc.
-- `src/pages/public/PublicPages.tsx` — CTAs públicos
-- `src/pages/public/CadastroMedico.tsx` — botão de envio
-
-### Fora de escopo (mantém `rounded-full`)
-Elementos não-botão que dependem do círculo perfeito:
-- `avatar.tsx`, `badge.tsx`, `progress.tsx`, `slider.tsx`, `radio-group.tsx`, `switch.tsx`, `scroll-area.tsx`, `drawer.tsx`, `carousel.tsx`
-- Indicadores de status, dots de timeline, sino de notificações (NotificationsBell), FAB do WhatsApp flutuante (formato circular intencional)
-- Badges/pills de status (`StatusBadge`, etc.)
+### Limpeza opcional
+- Manter o arquivo `src/assets/home/hero-couple.png` (não deletar — pode ser reutilizado).
 
 ### Validação
-- Abrir Home (`/`) e conferir Cadastre-se, Agende agora, Conheça a Lasmar com cantos 10px
-- Abrir uma rota interna (ex.: `/app/paciente`) e conferir botões padrão
-- Confirmar que avatares e badges continuam circulares
+- Abrir `/` e conferir Hero com fundo azul mesclado, sem foto do casal, ícone redondo no canto direito, botões e card "Pronto Atendimento" preservados.

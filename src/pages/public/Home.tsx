@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
 import EmBreveDialog from "@/components/EmBreveDialog";
-import heroCouple from "@/assets/home/hero-couple.png";
+
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
 import diffHumanizado from "@/assets/home/diferencial-humanizado.jpg";
 import diffLugar from "@/assets/home/diferencial-qualquer-lugar.jpg";
@@ -31,18 +31,13 @@ export default function Home() {
   return (
     <>
       {/* ─── 1. HERO ─── */}
-      <section className="relative overflow-hidden bg-[#f5efe4]">
-        {/* Imagem de fundo (casal idoso) */}
-        <div className="absolute inset-0">
-          <img
-            src={heroCouple}
-            alt="Casal idoso sorrindo enquanto usam o aplicativo Lasmar Telemed em casa"
-            className="h-full w-full object-cover object-center"
-            fetchPriority="high"
-          />
-          {/* Gradiente para legibilidade do texto à esquerda */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))] to-[hsl(215_70%_18%)]">
+        {/* Decoração: ícone redondo flutuante */}
+        <div className="pointer-events-none absolute right-6 top-24 hidden h-40 w-40 items-center justify-center rounded-full bg-white/10 ring-8 ring-white/5 backdrop-blur-sm md:flex lg:right-24 lg:top-28 lg:h-56 lg:w-56">
+          <Stethoscope className="h-20 w-20 text-white/80 lg:h-28 lg:w-28" strokeWidth={1.5} />
         </div>
+        {/* Brilho radial sutil */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,hsl(var(--primary-soft)/0.18),transparent_60%)]" />
 
         <div className="container relative grid gap-10 px-4 pb-24 pt-32 md:min-h-[640px] md:grid-cols-2 md:pb-28 md:pt-36">
           {/* Texto */}
