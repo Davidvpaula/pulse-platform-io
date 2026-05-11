@@ -255,45 +255,45 @@ export default function MedicoSlotsPanel({
       </div>
 
       {/* ─── Detalhes da consulta ─── */}
-      <div className="rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-5 flex flex-col">
-        <p className="text-sm font-semibold mb-3">Detalhes da consulta</p>
+      <div className="rounded-lg bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-3.5 flex flex-col">
+        <p className="text-xs font-semibold mb-2.5">Detalhes da consulta</p>
 
-        <div className="space-y-2.5 text-sm flex-1">
+        <div className="space-y-2 text-xs flex-1">
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Profissional</p>
-            <p className="font-medium">{medicoNome}</p>
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Profissional</p>
+            <p className="font-medium leading-tight">{medicoNome}</p>
           </div>
 
           {especialidadeNome && (
             <div>
-              <p className="text-[11px] uppercase tracking-wider opacity-70">Especialidade</p>
-              <p className="font-medium">{especialidadeNome}</p>
+              <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Especialidade</p>
+              <p className="font-medium leading-tight">{especialidadeNome}</p>
             </div>
           )}
 
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Modalidade</p>
-            <p className="font-medium inline-flex items-center gap-1">
-              <Video className="h-3.5 w-3.5" /> Telemedicina
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Modalidade</p>
+            <p className="font-medium inline-flex items-center gap-1 leading-tight">
+              <Video className="h-3 w-3" /> Telemedicina
             </p>
           </div>
 
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Data e horário</p>
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Data e horário</p>
             {selectedSlot ? (
-              <p className="font-semibold inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
+              <p className="font-semibold inline-flex items-center gap-1 leading-tight">
+                <Clock className="h-3 w-3" />
                 {format(new Date(selectedSlot.inicio), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
               </p>
             ) : (
-              <p className="text-xs opacity-70 italic">Selecione um horário</p>
+              <p className="text-[11px] opacity-70 italic">Selecione um horário</p>
             )}
           </div>
 
           {precoCentavos && precoCentavos > 0 && (
-            <div className="pt-2 border-t border-primary-foreground/20">
-              <p className="text-[11px] uppercase tracking-wider opacity-70">Valor</p>
-              <p className="text-xl font-extrabold">{brl(precoCentavos)}</p>
+            <div className="pt-1.5 border-t border-primary-foreground/20">
+              <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Valor</p>
+              <p className="text-base font-extrabold leading-tight">{brl(precoCentavos)}</p>
             </div>
           )}
         </div>
@@ -301,11 +301,12 @@ export default function MedicoSlotsPanel({
         <Button
           onClick={escolher}
           disabled={!selectedSlot}
-          className="mt-4 w-full bg-background text-foreground hover:bg-background/90 font-semibold"
+          size="sm"
+          className="mt-3 w-full bg-background text-foreground hover:bg-background/90 font-semibold h-8 text-xs"
         >
           {selectedSlot ? (
             <>
-              <Check className="mr-1.5 h-4 w-4" /> Agendar
+              <Check className="mr-1 h-3.5 w-3.5" /> Agendar
             </>
           ) : (
             "Selecione um horário"
