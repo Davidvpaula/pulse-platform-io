@@ -60,7 +60,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-full bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95"
+                className="rounded-[10px] bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95"
               >
                 <Link to="/agendar">
                   Agendar consulta <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -70,7 +70,7 @@ export default function Home() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-full border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                className="rounded-[10px] border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
               >
                 <Link to="/atendimento-imediato">Atendimento imediato</Link>
               </Button>
@@ -113,7 +113,7 @@ export default function Home() {
                   </div>
                   <Button
                     asChild
-                    className="rounded-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+                    className="rounded-[10px] bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
                   >
                     <Link to="/atendimento-imediato">Agende agora</Link>
                   </Button>
@@ -139,7 +139,7 @@ export default function Home() {
                 Dezenas de especialidades médicas disponíveis para você.
               </p>
             </div>
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-[10px]">
               <Link to="/especialidades">Ver todas</Link>
             </Button>
           </div>
@@ -212,7 +212,7 @@ export default function Home() {
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              className="rounded-[10px] border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
             >
               <Link to="/sobre">Ver todas</Link>
             </Button>
@@ -321,7 +321,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-full bg-primary px-7 font-semibold text-primary-foreground hover:bg-primary/90"
+                className="rounded-[10px] bg-primary px-7 font-semibold text-primary-foreground hover:bg-primary/90"
               >
                 <Link to="/faq">
                   Tirar dúvidas <ArrowRight className="ml-1.5 h-4 w-4" />
