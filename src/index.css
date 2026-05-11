@@ -178,11 +178,25 @@
   .gradient-hero { background: var(--gradient-hero); }
   .gradient-primary { background: var(--gradient-primary); }
   .gradient-soft { background: var(--gradient-soft); }
+  .gradient-deep { background: var(--gradient-deep); }
+  .gradient-deep-vibrant { background: var(--gradient-deep-vibrant); }
   .text-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* Texturas decorativas para faixas escuras */
+  .bg-grid-soft {
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .bg-dot-soft {
+    background-image: radial-gradient(hsl(0 0% 100% / 0.10) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   /* ─── B2B / B2C flow indicators ─── */
