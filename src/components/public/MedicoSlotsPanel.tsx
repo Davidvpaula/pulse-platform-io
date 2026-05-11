@@ -1,10 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, Loader2, Video, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Video, ChevronLeft, ChevronRight, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtHora, dataLabel } from "@/lib/format";
+import { fmtHora } from "@/lib/format";
+import {
+  addMonths,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 type Slot = {
   id: string;
@@ -17,32 +30,32 @@ type Props = {
   medicoId: string;
   medicoNome: string;
   especialidadeId?: string;
+  precoCentavos?: number;
+  especialidadeNome?: string;
 };
 
+const brl = (centavos: number) =>
+  (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-
-function groupByDate(slots: Slot[]): Map<string, Slot[]> {
-  const map = new Map<string, Slot[]>();
-  for (const s of slots) {
-    const key = new Date(s.inicio).toLocaleDateString("pt-BR");
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(s);
-  }
-  return map;
-}
-
-export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId }: Props) {
+export default function MedicoSlotsPanel({
+  medicoId,
+  medicoNome,
+  especialidadeId,
+  precoCentavos,
+  especialidadeNome,
+}: Props) {
   const navigate = useNavigate();
   const { session } = useSession();
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const DAYS_PER_PAGE = 5;
+  const [monthCursor, setMonthCursor] = useState<Date>(startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setPage(0);
       const { data } = await supabase
         .from("agenda_slots")
         .select("id, inicio, fim, modalidade")
@@ -51,17 +64,51 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId
         .eq("status", "disponivel")
         .gte("inicio", new Date().toISOString())
         .order("inicio", { ascending: true })
-        .limit(100);
-      setSlots((data ?? []) as Slot[]);
+        .limit(500);
+      const list = (data ?? []) as Slot[];
+      setSlots(list);
+      // pré-seleciona o primeiro dia disponível
+      if (list.length > 0) {
+        const first = startOfDay(new Date(list[0].inicio));
+        setSelectedDate(first);
+        setMonthCursor(startOfMonth(first));
+      }
       setLoading(false);
     })();
   }, [medicoId]);
 
-  const escolher = (slotId: string) => {
+  // Conjunto de datas disponíveis (chave YYYY-MM-DD)
+  const availableDateKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of slots) set.add(format(new Date(s.inicio), "yyyy-MM-dd"));
+    return set;
+  }, [slots]);
+
+  // Slots do dia selecionado
+  const slotsOfDay = useMemo(() => {
+    if (!selectedDate) return [];
+    return slots.filter((s) => isSameDay(new Date(s.inicio), selectedDate));
+  }, [slots, selectedDate]);
+
+  // Geração das células do mês (matriz semana)
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(monthCursor), { weekStartsOn: 0 });
+    const end = endOfWeek(endOfMonth(monthCursor), { weekStartsOn: 0 });
+    const days: Date[] = [];
+    let d = start;
+    while (d <= end) {
+      days.push(d);
+      d = new Date(d.getTime() + 24 * 60 * 60 * 1000);
+    }
+    return days;
+  }, [monthCursor]);
+
+  const escolher = () => {
+    if (!selectedSlot) return;
     const qs = especialidadeId
       ? `?tipo=especialidade&ref=${especialidadeId}`
       : "?tipo=especialidade";
-    const url = `/app/agendamento/confirmar/${slotId}${qs}`;
+    const url = `/app/agendamento/confirmar/${selectedSlot.id}${qs}`;
     if (!session) {
       navigate(`/auth?redirect=${encodeURIComponent(url)}`);
       return;
@@ -71,7 +118,7 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8 text-muted-foreground">
+      <div className="flex items-center justify-center py-10 text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando horários…
       </div>
     );
@@ -79,77 +126,191 @@ export default function MedicoSlotsPanel({ medicoId, medicoNome, especialidadeId
 
   if (slots.length === 0) {
     return (
-      <div className="py-6 text-center text-sm text-muted-foreground">
-        <Calendar className="mx-auto mb-2 h-6 w-6 opacity-50" />
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        <CalendarIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />
         Nenhum horário disponível no momento.
       </div>
     );
   }
 
-  const grouped = groupByDate(slots);
-  const days = Array.from(grouped.entries());
-  const totalPages = Math.ceil(days.length / DAYS_PER_PAGE);
-  const visibleDays = days.slice(page * DAYS_PER_PAGE, (page + 1) * DAYS_PER_PAGE);
+  const today = startOfDay(new Date());
+  const visibleSlots = showAll ? slotsOfDay : slotsOfDay.slice(0, 8);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Horários de {medicoNome.split(" ")[0]}
-        </p>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-[10px] text-muted-foreground min-w-[3rem] text-center">
-              {page + 1}/{totalPages}
+    <div className="grid gap-5 md:grid-cols-[1fr_1fr] lg:grid-cols-[1.1fr_1fr_0.9fr]">
+      {/* ─── Calendário ─── */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setMonthCursor((m) => addMonths(m, -1))}
+            disabled={monthCursor <= startOfMonth(new Date())}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <p className="text-sm font-semibold capitalize">
+            {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setMonthCursor((m) => addMonths(m, 1))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 text-center mb-1">
+          {["dom", "seg", "ter", "qua", "qui", "sex", "sáb"].map((d) => (
+            <span key={d} className="text-[10px] uppercase tracking-wider text-muted-foreground py-1">
+              {d}
             </span>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage(p => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((d, i) => {
+            const key = format(d, "yyyy-MM-dd");
+            const inMonth = isSameMonth(d, monthCursor);
+            const isPast = d < today;
+            const isAvailable = availableDateKeys.has(key) && !isPast;
+            const isSelected = selectedDate && isSameDay(d, selectedDate);
+            return (
+              <button
+                key={i}
+                disabled={!isAvailable}
+                onClick={() => {
+                  setSelectedDate(d);
+                  setSelectedSlot(null);
+                  setShowAll(false);
+                }}
+                className={cn(
+                  "aspect-square flex items-center justify-center rounded-lg text-sm transition relative",
+                  !inMonth && "text-muted-foreground/40",
+                  inMonth && !isAvailable && "text-muted-foreground/40 cursor-not-allowed",
+                  isAvailable && !isSelected && "hover:bg-primary/10 text-foreground font-medium",
+                  isSelected && "bg-primary text-primary-foreground font-semibold shadow-sm",
+                )}
+              >
+                {format(d, "d")}
+                {isAvailable && !isSelected && (
+                  <span className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Horários ─── */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="text-sm font-semibold mb-1">
+          {selectedDate
+            ? `Disponibilidade para ${format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}`
+            : "Selecione um dia"}
+        </p>
+        <p className="text-[11px] text-muted-foreground mb-4">
+          Horário de Brasília (GMT-3)
+        </p>
+
+        {slotsOfDay.length === 0 ? (
+          <div className="py-6 text-center text-xs text-muted-foreground">
+            Nenhum horário neste dia.
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {visibleSlots.map((s) => {
+                const isSel = selectedSlot?.id === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedSlot(s)}
+                    className={cn(
+                      "rounded-lg border px-3 py-2.5 text-center transition font-mono text-sm font-semibold",
+                      isSel
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border bg-background hover:border-primary hover:bg-primary/5",
+                    )}
+                  >
+                    {fmtHora(s.inicio)}
+                  </button>
+                );
+              })}
+            </div>
+
+            {slotsOfDay.length > 8 && (
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                className="mt-3 w-full text-center text-xs text-primary hover:underline font-medium"
+              >
+                {showAll ? "Mostrar menos" : `Mostrar todos os horários (${slotsOfDay.length})`}
+              </button>
+            )}
+          </>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {visibleDays.map(([dateKey, daySlots]) => (
-          <div key={dateKey} className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs font-semibold text-center text-foreground mb-2 pb-2 border-b border-border">
-              <Calendar className="inline h-3 w-3 mr-1 -mt-0.5" />
-              {dataLabel(daySlots[0].inicio)}
-            </p>
-            <div className="space-y-1.5">
-              {daySlots.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => escolher(s.id)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center transition hover:border-primary hover:bg-primary/5 hover:shadow-sm group"
-                >
-                  <p className="font-mono text-sm font-bold group-hover:text-primary transition-colors">
-                    {fmtHora(s.inicio)}
-                  </p>
-                  <div className="flex items-center justify-center gap-1 mt-0.5">
-                    <Video className="h-2.5 w-2.5 text-primary" />
-                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground">Online</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+      {/* ─── Detalhes da consulta ─── */}
+      <div className="rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-5 flex flex-col">
+        <p className="text-sm font-semibold mb-3">Detalhes da consulta</p>
+
+        <div className="space-y-2.5 text-sm flex-1">
+          <div>
+            <p className="text-[11px] uppercase tracking-wider opacity-70">Profissional</p>
+            <p className="font-medium">{medicoNome}</p>
           </div>
-        ))}
+
+          {especialidadeNome && (
+            <div>
+              <p className="text-[11px] uppercase tracking-wider opacity-70">Especialidade</p>
+              <p className="font-medium">{especialidadeNome}</p>
+            </div>
+          )}
+
+          <div>
+            <p className="text-[11px] uppercase tracking-wider opacity-70">Modalidade</p>
+            <p className="font-medium inline-flex items-center gap-1">
+              <Video className="h-3.5 w-3.5" /> Telemedicina
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[11px] uppercase tracking-wider opacity-70">Data e horário</p>
+            {selectedSlot ? (
+              <p className="font-semibold inline-flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                {format(new Date(selectedSlot.inicio), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
+              </p>
+            ) : (
+              <p className="text-xs opacity-70 italic">Selecione um horário</p>
+            )}
+          </div>
+
+          {precoCentavos && precoCentavos > 0 && (
+            <div className="pt-2 border-t border-primary-foreground/20">
+              <p className="text-[11px] uppercase tracking-wider opacity-70">Valor</p>
+              <p className="text-xl font-extrabold">{brl(precoCentavos)}</p>
+            </div>
+          )}
+        </div>
+
+        <Button
+          onClick={escolher}
+          disabled={!selectedSlot}
+          className="mt-4 w-full bg-background text-foreground hover:bg-background/90 font-semibold"
+        >
+          {selectedSlot ? (
+            <>
+              <Check className="mr-1.5 h-4 w-4" /> Agendar
+            </>
+          ) : (
+            "Selecione um horário"
+          )}
+        </Button>
       </div>
     </div>
   );
