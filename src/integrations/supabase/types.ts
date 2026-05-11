@@ -3982,6 +3982,51 @@ export type Database = {
           },
         ]
       }
+      feedbacks_site: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          lido_em: string | null
+          lido_por: string | null
+          mensagem: string | null
+          nome: string | null
+          sobrenome: string | null
+          status: Database["public"]["Enums"]["feedback_status"]
+          telefone: string | null
+          tipo: Database["public"]["Enums"]["feedback_tipo"]
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          lido_em?: string | null
+          lido_por?: string | null
+          mensagem?: string | null
+          nome?: string | null
+          sobrenome?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          telefone?: string | null
+          tipo: Database["public"]["Enums"]["feedback_tipo"]
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          lido_em?: string | null
+          lido_por?: string | null
+          mensagem?: string | null
+          nome?: string | null
+          sobrenome?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          telefone?: string | null
+          tipo?: Database["public"]["Enums"]["feedback_tipo"]
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       financeiro_alertas: {
         Row: {
           created_at: string
@@ -12227,6 +12272,8 @@ export type Database = {
         | "em_processamento"
         | "bloqueado"
         | "contestado"
+      feedback_status: "novo" | "lido" | "arquivado"
+      feedback_tipo: "contato" | "feedback"
       feegow_status: "nao_enviado" | "pendente" | "liberado" | "erro"
       funcao_interna:
         | "secretaria"
@@ -12807,6 +12854,8 @@ export const Constants = {
         "bloqueado",
         "contestado",
       ],
+      feedback_status: ["novo", "lido", "arquivado"],
+      feedback_tipo: ["contato", "feedback"],
       feegow_status: ["nao_enviado", "pendente", "liberado", "erro"],
       funcao_interna: [
         "secretaria",
