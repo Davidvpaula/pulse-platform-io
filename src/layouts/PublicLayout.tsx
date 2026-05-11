@@ -20,14 +20,9 @@ export default function PublicLayout() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* ─── HEADER FLUTUANTE (cápsula) ─── */}
-      <header className="sticky top-4 z-50 px-4 md:px-8">
-        <div
-          className={cn(
-            "mx-auto flex max-w-7xl items-center justify-between gap-6 border border-border/40 bg-background/95 px-4 py-2.5 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all md:px-6",
-            open ? "rounded-3xl" : "rounded-full",
-          )}
-        >
+      {/* ─── HEADER SÓLIDO FIXO ─── */}
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
+        <div className="container flex h-16 items-center justify-between gap-6">
           <Logo size="md" />
 
           <nav className="hidden items-center gap-1 lg:flex">
