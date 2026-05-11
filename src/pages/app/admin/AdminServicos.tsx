@@ -41,6 +41,9 @@ type Servico = {
   descricao: string | null;
   descricao_publica: string | null;
   icone: string | null;
+  imagem_url: string | null;
+  subtitulo: string | null;
+  destacar_na_home: boolean;
 };
 
 type Esp = { id: string; nome: string };
