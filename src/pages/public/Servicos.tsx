@@ -77,17 +77,18 @@ export default function Servicos() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-primary via-primary to-primary/90 text-primary-foreground">
-      <section className="container py-16 md:py-20">
-        <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground/80">
+    <div className="bg-gradient-deep text-deep-foreground">
+      <section className="container relative py-16 md:py-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-dot-soft opacity-50" aria-hidden />
+        <div className="relative max-w-3xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white ring-1 ring-white/20 backdrop-blur">
             Lasmar Telemed
-          </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
+          </span>
+          <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
             Serviços
           </h1>
-          <p className="mt-4 text-lg text-primary-foreground/85">
-            Conheça os serviços disponíveis na plataforma.
+          <p className="mt-4 text-lg text-white/85">
+            Conheça os serviços disponíveis na plataforma — telemedicina ágil, com médicos verificados.
           </p>
         </div>
 
