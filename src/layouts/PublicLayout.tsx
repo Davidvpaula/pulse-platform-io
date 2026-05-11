@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/especialidades", label: "Especialidades" },
-  { to: "/servicos", label: "Serviços" },
   { to: "/medicos", label: "Médicos" },
+  { to: "/servicos", label: "Serviços" },
   { to: "/planos", label: "Planos" },
   { to: "/empresas", label: "Empresas" },
   { to: "/faq", label: "FAQ" },
