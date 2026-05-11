@@ -133,7 +133,6 @@ export default function PublicLayout() {
               Plataforma
             </h4>
             <ul className="mt-4 space-y-2.5 text-sm">
-              <FooterLink to="/especialidades">Especialidades</FooterLink>
               <FooterLink to="/medicos">Médicos</FooterLink>
               <FooterLink to="/servicos">Serviços</FooterLink>
               <FooterLink to="/planos">Planos</FooterLink>
