@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
+import { usePublicHomeStats } from "@/hooks/usePublicHomeStats";
 import EmBreveDialog from "@/components/EmBreveDialog";
 
 import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
@@ -31,6 +32,7 @@ import diffMomento from "@/assets/home/diferencial-qualquer-momento.jpg";
 
 export default function Home() {
   const { especialidades, loading: loadingEsps } = useEspecialidadesPublicas();
+  const stats = usePublicHomeStats();
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
 
   return (
@@ -87,6 +89,13 @@ export default function Home() {
               >
                 <Link to="/atendimento-imediato">Atendimento imediato</Link>
               </Button>
+            </div>
+
+            {/* Contadores em tempo real */}
+            <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-6 border-t border-white/15 pt-6">
+              <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
+              <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
+              <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
             </div>
           </div>
 
@@ -196,19 +205,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 3. STATS / MILESTONES ─── */}
-      <section className="bg-gradient-to-r from-primary via-primary to-primary-glow">
-        <div className="container grid grid-cols-1 gap-px overflow-hidden rounded-none px-0 md:grid-cols-3">
-          <Milestone icon={Stethoscope} number="+10" label="Médicos credenciados" />
-          <Milestone
-            icon={Users}
-            number="+2.600"
-            label="Pacientes cadastrados"
-            highlight
-          />
-          <Milestone icon={CalendarDays} number="+3.500" label="Consultas realizadas" />
-        </div>
-      </section>
+      {/* ─── (faixa de stats removida — contadores movidos para o Hero) ─── */}
+
 
       {/* ─── 4. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}
       <section className="bg-[hsl(200_80%_18%)] text-white">
@@ -356,32 +354,53 @@ export default function Home() {
 
 /* ───── Subcomponentes ───── */
 
-function Milestone({
+function HeroCounter({
   icon: Icon,
-  number,
+  value,
   label,
-  highlight,
+  plus,
 }: {
   icon: typeof Stethoscope;
-  number: string;
+  value: number;
   label: string;
-  highlight?: boolean;
+  plus?: boolean;
 }) {
+  const display = useCountUp(value);
+  const formatted = display.toLocaleString("pt-BR");
   return (
-    <div
-      className={`flex flex-col items-center gap-3 px-6 py-16 text-center ${
-        highlight ? "bg-white/15 backdrop-blur-sm" : ""
-      }`}
-    >
-      <Icon className="h-10 w-10 text-white" strokeWidth={1.5} />
-      <p className="font-display text-5xl font-extrabold tracking-tight text-white md:text-6xl">
-        {number}
+    <div className="flex flex-col items-start text-white">
+      <Icon className="mb-2 h-5 w-5 text-white/80 sm:h-6 sm:w-6" strokeWidth={1.75} />
+      <p className="font-display text-2xl font-extrabold leading-none tracking-tight sm:text-3xl md:text-4xl">
+        {plus ? "+" : ""}
+        {formatted}
       </p>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/85">
+      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 sm:text-xs">
         {label}
       </p>
     </div>
   );
+}
+
+function useCountUp(target: number, durationMs = 1500) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!target) {
+      setValue(0);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(from + (target - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return value;
 }
 
 function Diferencial({
