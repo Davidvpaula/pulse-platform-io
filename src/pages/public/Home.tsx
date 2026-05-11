@@ -13,6 +13,11 @@ import {
   Loader2,
   HelpCircle,
   Sparkles,
+  Plus,
+  Activity,
+  Pill,
+  Cross,
+  Syringe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
