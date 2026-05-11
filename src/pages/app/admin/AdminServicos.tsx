@@ -149,6 +149,9 @@ export default function AdminServicos() {
       descricao: editing.descricao || null,
       descricao_publica: editing.descricao_publica || null,
       icone: editing.icone || null,
+      imagem_url: editing.imagem_url || null,
+      subtitulo: editing.subtitulo || null,
+      destacar_na_home: editing.destacar_na_home ?? true,
     };
     let error;
     if (editing.id) {
