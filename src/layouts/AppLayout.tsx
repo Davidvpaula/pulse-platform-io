@@ -70,7 +70,7 @@ export default function AppLayout() {
   const flow = getFlowContext(profileKey, pathname);
 
   useEffect(() => {
-    try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch {}
+    try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch { void 0; }
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
