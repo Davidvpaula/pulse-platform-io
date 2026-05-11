@@ -137,41 +137,41 @@ export default function MedicoSlotsPanel({
   const visibleSlots = showAll ? slotsOfDay : slotsOfDay.slice(0, 8);
 
   return (
-    <div className="grid gap-5 md:grid-cols-[1fr_1fr] lg:grid-cols-[1.1fr_1fr_0.9fr]">
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[0.95fr_1fr_0.85fr]">
       {/* ─── Calendário ─── */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="rounded-lg border border-border bg-card p-3">
+        <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={() => setMonthCursor((m) => addMonths(m, -1))}
             disabled={monthCursor <= startOfMonth(new Date())}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <p className="text-sm font-semibold capitalize">
-            {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+          <p className="text-xs font-semibold capitalize">
+            {format(monthCursor, "MMM 'de' yyyy", { locale: ptBR })}
           </p>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={() => setMonthCursor((m) => addMonths(m, 1))}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center mb-1">
-          {["dom", "seg", "ter", "qua", "qui", "sex", "sáb"].map((d) => (
-            <span key={d} className="text-[10px] uppercase tracking-wider text-muted-foreground py-1">
+        <div className="grid grid-cols-7 text-center">
+          {["d", "s", "t", "q", "q", "s", "s"].map((d, i) => (
+            <span key={i} className="text-[9px] uppercase tracking-wider text-muted-foreground py-0.5">
               {d}
             </span>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {calendarDays.map((d, i) => {
             const key = format(d, "yyyy-MM-dd");
             const inMonth = isSameMonth(d, monthCursor);
@@ -188,8 +188,8 @@ export default function MedicoSlotsPanel({
                   setShowAll(false);
                 }}
                 className={cn(
-                  "aspect-square flex items-center justify-center rounded-lg text-sm transition relative",
-                  !inMonth && "text-muted-foreground/40",
+                  "h-7 flex items-center justify-center rounded-md text-xs transition relative",
+                  !inMonth && "text-muted-foreground/30",
                   inMonth && !isAvailable && "text-muted-foreground/40 cursor-not-allowed",
                   isAvailable && !isSelected && "hover:bg-primary/10 text-foreground font-medium",
                   isSelected && "bg-primary text-primary-foreground font-semibold shadow-sm",
@@ -197,7 +197,7 @@ export default function MedicoSlotsPanel({
               >
                 {format(d, "d")}
                 {isAvailable && !isSelected && (
-                  <span className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
+                  <span className="absolute bottom-0.5 h-[3px] w-[3px] rounded-full bg-primary" />
                 )}
               </button>
             );
@@ -206,23 +206,23 @@ export default function MedicoSlotsPanel({
       </div>
 
       {/* ─── Horários ─── */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <p className="text-sm font-semibold mb-1">
+      <div className="rounded-lg border border-border bg-card p-3">
+        <p className="text-xs font-semibold leading-tight">
           {selectedDate
-            ? `Disponibilidade para ${format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}`
+            ? format(selectedDate, "EEEE, d 'de' MMM", { locale: ptBR })
             : "Selecione um dia"}
         </p>
-        <p className="text-[11px] text-muted-foreground mb-4">
+        <p className="text-[10px] text-muted-foreground mb-3">
           Horário de Brasília (GMT-3)
         </p>
 
         {slotsOfDay.length === 0 ? (
-          <div className="py-6 text-center text-xs text-muted-foreground">
+          <div className="py-4 text-center text-xs text-muted-foreground">
             Nenhum horário neste dia.
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {visibleSlots.map((s) => {
                 const isSel = selectedSlot?.id === s.id;
                 return (
@@ -230,7 +230,7 @@ export default function MedicoSlotsPanel({
                     key={s.id}
                     onClick={() => setSelectedSlot(s)}
                     className={cn(
-                      "rounded-lg border px-3 py-2.5 text-center transition font-mono text-sm font-semibold",
+                      "rounded-md border px-2 py-1.5 text-center transition font-mono text-xs font-semibold",
                       isSel
                         ? "border-primary bg-primary text-primary-foreground shadow-sm"
                         : "border-border bg-background hover:border-primary hover:bg-primary/5",
@@ -245,9 +245,9 @@ export default function MedicoSlotsPanel({
             {slotsOfDay.length > 8 && (
               <button
                 onClick={() => setShowAll((v) => !v)}
-                className="mt-3 w-full text-center text-xs text-primary hover:underline font-medium"
+                className="mt-2 w-full text-center text-[11px] text-primary hover:underline font-medium"
               >
-                {showAll ? "Mostrar menos" : `Mostrar todos os horários (${slotsOfDay.length})`}
+                {showAll ? "Mostrar menos" : `Mostrar todos (${slotsOfDay.length})`}
               </button>
             )}
           </>
@@ -255,45 +255,45 @@ export default function MedicoSlotsPanel({
       </div>
 
       {/* ─── Detalhes da consulta ─── */}
-      <div className="rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-5 flex flex-col">
-        <p className="text-sm font-semibold mb-3">Detalhes da consulta</p>
+      <div className="rounded-lg bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-3.5 flex flex-col">
+        <p className="text-xs font-semibold mb-2.5">Detalhes da consulta</p>
 
-        <div className="space-y-2.5 text-sm flex-1">
+        <div className="space-y-2 text-xs flex-1">
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Profissional</p>
-            <p className="font-medium">{medicoNome}</p>
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Profissional</p>
+            <p className="font-medium leading-tight">{medicoNome}</p>
           </div>
 
           {especialidadeNome && (
             <div>
-              <p className="text-[11px] uppercase tracking-wider opacity-70">Especialidade</p>
-              <p className="font-medium">{especialidadeNome}</p>
+              <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Especialidade</p>
+              <p className="font-medium leading-tight">{especialidadeNome}</p>
             </div>
           )}
 
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Modalidade</p>
-            <p className="font-medium inline-flex items-center gap-1">
-              <Video className="h-3.5 w-3.5" /> Telemedicina
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Modalidade</p>
+            <p className="font-medium inline-flex items-center gap-1 leading-tight">
+              <Video className="h-3 w-3" /> Telemedicina
             </p>
           </div>
 
           <div>
-            <p className="text-[11px] uppercase tracking-wider opacity-70">Data e horário</p>
+            <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Data e horário</p>
             {selectedSlot ? (
-              <p className="font-semibold inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
+              <p className="font-semibold inline-flex items-center gap-1 leading-tight">
+                <Clock className="h-3 w-3" />
                 {format(new Date(selectedSlot.inicio), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
               </p>
             ) : (
-              <p className="text-xs opacity-70 italic">Selecione um horário</p>
+              <p className="text-[11px] opacity-70 italic">Selecione um horário</p>
             )}
           </div>
 
           {precoCentavos && precoCentavos > 0 && (
-            <div className="pt-2 border-t border-primary-foreground/20">
-              <p className="text-[11px] uppercase tracking-wider opacity-70">Valor</p>
-              <p className="text-xl font-extrabold">{brl(precoCentavos)}</p>
+            <div className="pt-1.5 border-t border-primary-foreground/20">
+              <p className="text-[9px] uppercase tracking-wider opacity-70 leading-none mb-0.5">Valor</p>
+              <p className="text-base font-extrabold leading-tight">{brl(precoCentavos)}</p>
             </div>
           )}
         </div>
@@ -301,11 +301,12 @@ export default function MedicoSlotsPanel({
         <Button
           onClick={escolher}
           disabled={!selectedSlot}
-          className="mt-4 w-full bg-background text-foreground hover:bg-background/90 font-semibold"
+          size="sm"
+          className="mt-3 w-full bg-background text-foreground hover:bg-background/90 font-semibold h-8 text-xs"
         >
           {selectedSlot ? (
             <>
-              <Check className="mr-1.5 h-4 w-4" /> Agendar
+              <Check className="mr-1 h-3.5 w-3.5" /> Agendar
             </>
           ) : (
             "Selecione um horário"
