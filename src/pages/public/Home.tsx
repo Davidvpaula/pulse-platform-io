@@ -188,20 +188,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 6. DÚVIDAS ─── */}
-      <section className="bg-background">
-        <div className="container px-4 py-16">
-          <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
+      {/* ─── 6. DÚVIDAS — banda escura ─── */}
+      <section className="relative overflow-hidden bg-gradient-deep text-deep-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
+        <div className="pointer-events-none absolute -top-32 right-0 h-80 w-80 rounded-full bg-primary/30 blur-3xl" aria-hidden />
+        <div className="container relative z-10 px-4 py-20">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm md:p-12">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="flex items-start gap-5">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft/20 text-white ring-1 ring-white/20">
                   <HelpCircle className="h-7 w-7" />
                 </span>
                 <div>
                   <h2 className="font-display text-3xl font-bold tracking-tight">
                     Dúvidas?
                   </h2>
-                  <p className="mt-1 max-w-xl text-muted-foreground">
+                  <p className="mt-1 max-w-xl text-white/80">
                     Reunimos as perguntas mais comuns sobre consultas, planos e atendimento.
                   </p>
                 </div>
@@ -209,7 +211,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-[10px] bg-primary px-7 font-semibold text-primary-foreground hover:bg-primary/90"
+                className="rounded-[10px] bg-white px-7 font-semibold text-deep shadow-elegant hover:bg-white/95"
               >
                 <Link to="/faq">
                   Tirar dúvidas <ArrowRight className="ml-1.5 h-4 w-4" />

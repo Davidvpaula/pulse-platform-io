@@ -214,11 +214,39 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-background to-muted/30 px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <Logo size="lg" />
+    <div className="min-h-screen grid lg:grid-cols-[1.05fr_1fr] bg-background">
+      {/* Painel esquerdo — banda Lasmar petrol */}
+      <aside className="relative hidden overflow-hidden bg-gradient-deep text-deep-foreground lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-40" aria-hidden />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary-soft/20 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-primary/30 blur-3xl" aria-hidden />
+
+        <div className="relative">
+          <Logo variant="white" size="lg" />
         </div>
+        <div className="relative max-w-md">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+            Lasmar Telemed
+          </p>
+          <h2 className="mt-3 font-display text-4xl font-extrabold leading-tight tracking-tight">
+            Saúde a distância,<br/>
+            <span className="text-primary-soft">cuidado próximo.</span>
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-white/80">
+            Acesse sua conta para agendar consultas, falar com médicos verificados e cuidar de quem você ama — em poucos cliques.
+          </p>
+        </div>
+        <p className="relative text-xs text-white/60">
+          © {new Date().getFullYear()} Lasmar Telemed
+        </p>
+      </aside>
+
+      {/* Painel direito — formulário */}
+      <div className="flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="flex items-center justify-center mb-8 lg:hidden">
+            <Logo size="lg" />
+          </div>
 
         <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
           <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
