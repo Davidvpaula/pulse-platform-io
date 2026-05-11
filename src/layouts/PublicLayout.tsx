@@ -69,13 +69,13 @@ export default function PublicLayout() {
           </Button>
 
           {open && (
-            <nav className="absolute left-4 right-4 top-full mt-2 flex flex-col gap-1 rounded-3xl border border-border/40 bg-background/98 p-3 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-md lg:hidden">
+            <nav className="absolute left-0 right-0 top-full flex flex-col gap-1 border-b border-border bg-background p-3 shadow-md lg:hidden">
               {links.map((l, i) => (
                 <Link
                   key={`m-${l.to}-${i}`}
                   to={l.to}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                  className="rounded-md px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
                 >
                   {l.label}
                 </Link>
@@ -83,7 +83,7 @@ export default function PublicLayout() {
               <div className="mt-2 flex gap-2 px-1">
                 <Button
                   asChild
-                  className="flex-1 rounded-full bg-primary font-semibold hover:bg-primary/90"
+                  className="flex-1 bg-primary font-semibold hover:bg-primary/90"
                   onClick={() => setOpen(false)}
                 >
                   <Link to="/auth?mode=signup">Cadastre-se</Link>
@@ -91,7 +91,7 @@ export default function PublicLayout() {
                 <Button
                   asChild
                   variant="outline"
-                  className="flex-1 rounded-full"
+                  className="flex-1"
                   onClick={() => setOpen(false)}
                 >
                   <Link to="/auth">Login</Link>
@@ -102,7 +102,7 @@ export default function PublicLayout() {
         </div>
       </header>
 
-      <main className="flex-1 pt-6"><Outlet /></main>
+      <main className="flex-1"><Outlet /></main>
 
       {/* ─── FOOTER ─── */}
       <footer className="relative mt-12 border-t border-border bg-foreground text-background/90">
