@@ -38,7 +38,7 @@ export default function Servicos() {
       const [{ data }, { data: paCfg }] = await Promise.all([
         (supabase as any)
           .from("servicos_publicos")
-          .select("id,slug,nome,tipo,descricao_publica,duracao_min,valor_paciente_centavos,prioridade")
+          .select("id,slug,nome,tipo,descricao_publica,subtitulo,imagem_url,icone,duracao_min,valor_paciente_centavos,prioridade")
           .order("prioridade")
           .order("nome"),
         supabase
