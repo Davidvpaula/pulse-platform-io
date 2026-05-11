@@ -108,7 +108,7 @@ export async function listMedicosResumo(): Promise<{ id: string; nome: string }[
 }
 
 export async function listEspecialidadesResumo(): Promise<{ id: string; nome: string }[]> {
-  const { data } = await supabase.from("especialidades").select("id, nome").eq("ativo", true).order("nome");
+  const { data } = await supabase.from("especialidades").select("id, nome").eq("ativo", true).order("ordem").order("nome");
   return (data ?? []) as { id: string; nome: string }[];
 }
 
