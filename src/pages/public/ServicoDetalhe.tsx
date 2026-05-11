@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { fmtHora, dataLabel } from "@/lib/format";
+import { dataLabel } from "@/lib/format";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Loader2, Info, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Info, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
