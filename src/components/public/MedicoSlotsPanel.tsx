@@ -139,39 +139,39 @@ export default function MedicoSlotsPanel({
   return (
     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[0.95fr_1fr_0.85fr]">
       {/* ─── Calendário ─── */}
-      <div className="rounded-lg border border-border bg-card p-3">
-        <div className="flex items-center justify-between mb-2">
+      <div className="rounded-lg border border-border bg-card p-2">
+        <div className="flex items-center justify-between mb-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-5 w-5"
             onClick={() => setMonthCursor((m) => addMonths(m, -1))}
             disabled={monthCursor <= startOfMonth(new Date())}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3 w-3" />
           </Button>
-          <p className="text-xs font-semibold capitalize">
+          <p className="text-[11px] font-semibold capitalize">
             {format(monthCursor, "MMM 'de' yyyy", { locale: ptBR })}
           </p>
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-5 w-5"
             onClick={() => setMonthCursor((m) => addMonths(m, 1))}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
 
         <div className="grid grid-cols-7 text-center">
           {["d", "s", "t", "q", "q", "s", "s"].map((d, i) => (
-            <span key={i} className="text-[9px] uppercase tracking-wider text-muted-foreground py-0.5">
+            <span key={i} className="text-[8px] uppercase tracking-wider text-muted-foreground">
               {d}
             </span>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-7 gap-px">
           {calendarDays.map((d, i) => {
             const key = format(d, "yyyy-MM-dd");
             const inMonth = isSameMonth(d, monthCursor);
@@ -188,7 +188,7 @@ export default function MedicoSlotsPanel({
                   setShowAll(false);
                 }}
                 className={cn(
-                  "h-7 flex items-center justify-center rounded-md text-xs transition relative",
+                  "h-6 flex items-center justify-center rounded text-[11px] transition relative",
                   !inMonth && "text-muted-foreground/30",
                   inMonth && !isAvailable && "text-muted-foreground/40 cursor-not-allowed",
                   isAvailable && !isSelected && "hover:bg-primary/10 text-foreground font-medium",
@@ -197,7 +197,7 @@ export default function MedicoSlotsPanel({
               >
                 {format(d, "d")}
                 {isAvailable && !isSelected && (
-                  <span className="absolute bottom-0.5 h-[3px] w-[3px] rounded-full bg-primary" />
+                  <span className="absolute bottom-px h-[2px] w-[2px] rounded-full bg-primary" />
                 )}
               </button>
             );
