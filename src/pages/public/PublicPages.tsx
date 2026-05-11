@@ -1137,6 +1137,9 @@ export const Faq = () => {
           ))
         )}
       </div>
+      <div className="max-w-3xl">
+        <FaqContactForms />
+      </div>
     </PageShell>
   );
 };
