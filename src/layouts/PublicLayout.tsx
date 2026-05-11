@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/atendimento-imediato", label: "Atendimento imediato" },
   { to: "/especialidades", label: "Especialidades" },
   { to: "/servicos", label: "Serviços" },
   { to: "/medicos", label: "Médicos" },
   { to: "/planos", label: "Planos" },
   { to: "/empresas", label: "Empresas" },
-  { to: "/para-medicos", label: "Para médicos" },
   { to: "/faq", label: "FAQ" },
 ];
 
