@@ -72,8 +72,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        display: ['Omnes', 'system-ui', '-apple-system, sans-serif'],
-        sans: ['Omnes', 'system-ui', '-apple-system, sans-serif'],
+        display: ['Omnes', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Omnes', 'system-ui', '-apple-system', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
