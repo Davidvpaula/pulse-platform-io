@@ -464,7 +464,12 @@ export const MedicoDetalhe = () => {
         {/* 2. Agenda */}
         <div className="card-elevated p-6">
           <p className="text-sm font-semibold mb-4">Agendar consulta</p>
-          <MedicoSlotsPanel medicoId={medico.id} medicoNome={medico.nome} />
+          <MedicoSlotsPanel
+            medicoId={medico.id}
+            medicoNome={formatNomeMedico(medico.tratamento, medico.nome)}
+            precoCentavos={precoConsulta}
+            especialidadeNome={medico.especialidade ?? undefined}
+          />
         </div>
 
         {/* 3. Planos do médico */}
