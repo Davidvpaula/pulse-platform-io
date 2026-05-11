@@ -1,18 +1,24 @@
-## Trocar fundo do Hero por azul gradiente + ícone
+## Preencher Hero com ícones decorativos
 
-Remover a foto do casal idoso (`hero-couple.png`) do Hero da Home e substituir por um fundo de cor azul mesclado (azul-claro → azul-escuro), com o ícone/logo redondo decorativo aparecendo no canto direito (como antes).
+Adicionar ícones flutuantes espalhados pelo fundo azul do Hero para reduzir o vazio, e reposicionar o ícone atual do estetoscópio (que está sendo escondido pelo card "Pronto Atendimento" à direita).
 
 ### Mudanças em `src/pages/public/Home.tsx`
 
-1. **Remover** o `<img src={heroCouple} … />` e o gradiente preto sobreposto (linhas 36–45).
-2. **Substituir** `bg-[#f5efe4]` da `<section>` por um gradiente azul usando tokens do design system:
-   - `bg-gradient-to-br from-primary via-primary to-[hsl(215_60%_18%)]` (azul → azul escuro), ou usar `--gradient-primary` já definido em `index.css` se existir.
-3. **Manter** todo o conteúdo (H1, subtítulo, botões, card flutuante "Pronto Atendimento") intacto, com texto branco.
-4. **Adicionar** um ícone/logo decorativo redondo flutuante no lado direito (atrás do card), reproduzindo o "logotipo desenhado" anterior — círculo `bg-primary-soft/20` com o ícone `Stethoscope` ou `Heart` em branco/soft, posicionado absoluto no topo direito.
-5. **Remover** o import `heroCouple` que ficará órfão.
+1. **Reposicionar o `Stethoscope`** atual:
+   - Mover do canto direito (onde colide com o card) para o **topo central / acima do card**, em tamanho menor (ex.: `top-8 right-1/3`, `h-24 w-24`).
 
-### Limpeza opcional
-- Manter o arquivo `src/assets/home/hero-couple.png` (não deletar — pode ser reutilizado).
+2. **Adicionar ~5-7 ícones decorativos** espalhados em posições absolutas, todos com `pointer-events-none`, opacidade baixa (`text-white/15` a `text-white/25`) e tamanhos variados:
+   - `Heart` — canto superior esquerdo, médio
+   - `Plus` (cruz médica) — meio esquerdo, pequeno
+   - `Activity` (linha de ECG) — base esquerda, médio
+   - `Pill` — entre o texto e o card, pequeno
+   - `Shield` ou `ShieldCheck` — topo direito alto, pequeno
+   - `Calendar` — base direita, pequeno
+   - `Sparkles` — pontual, decorativo
+
+3. **Esconder os ícones decorativos no mobile** (`hidden md:block`) para não poluir telas pequenas onde o texto já ocupa quase todo o espaço.
+
+4. **Garantir z-index** correto: ícones decorativos com `-z-0`/`z-0`, conteúdo (texto e card) com `z-10`, para que nada seja coberto.
 
 ### Validação
-- Abrir `/` e conferir Hero com fundo azul mesclado, sem foto do casal, ícone redondo no canto direito, botões e card "Pronto Atendimento" preservados.
+- Abrir `/`, conferir Hero com fundo azul, ícones espalhados sutis (não competem com o texto), estetoscópio visível (não escondido), card "Pronto Atendimento" intacto sobre tudo.
