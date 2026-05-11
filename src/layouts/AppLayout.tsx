@@ -54,14 +54,24 @@ function getFlowContext(profileKey: ProfileKey, pathname: string): FlowContext {
   return { cls: "flow-admin", label: "Admin", icon: ShieldCheck, description: "Plataforma" };
 }
 
+const SIDEBAR_STORAGE_KEY = "app:sidebar-open";
+
 export default function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const v = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    return v === null ? true : v === "1";
+  });
   const { profileKey, setProfileKey, user } = useAuth();
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
   const flow = getFlowContext(profileKey, pathname);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch {}
+  }, [sidebarOpen]);
 
   const handleLogout = async () => {
     if (session) {
@@ -72,35 +82,61 @@ export default function AppLayout() {
 
   const switchProfile = (k: ProfileKey) => {
     setProfileKey(k);
-    setMobileOpen(false);
+    setSidebarOpen(true);
     const first = profiles[k].nav.find(n => n.to)?.to ?? "/app";
     navigate(first);
+  };
+
+  // Em mobile, fechar a sidebar ao trocar de rota (comportamento de drawer).
+  const handleNavClick = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
       <div className="flex flex-1 w-full">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <div className="flow-stripe w-full" />
-        <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => {}} switchProfile={switchProfile} />
-      </aside>
+        {/* Sidebar persistente (desktop) — anima largura */}
+        <aside
+          className={cn(
+            "hidden lg:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-[width] duration-200 ease-out",
+            sidebarOpen ? "w-64" : "w-0 border-r-0",
+          )}
+          aria-hidden={!sidebarOpen}
+        >
+          <div className="flow-stripe w-full" />
+          <div className="w-64 flex flex-col flex-1 min-h-0">
+            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
+          </div>
+        </aside>
 
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
-            <div className="flow-stripe w-full" />
-            <SidebarBody profileKey={profileKey} flow={flow} onNavigate={() => setMobileOpen(false)} switchProfile={switchProfile} />
-          </aside>
-        </div>
-      )}
+        {/* Sidebar overlay (mobile) */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-foreground/40" onClick={() => setSidebarOpen(false)} />
+            <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar border-r border-sidebar-border flex flex-col">
+              <div className="flow-stripe w-full" />
+              <SidebarBody profileKey={profileKey} flow={flow} onNavigate={handleNavClick} switchProfile={switchProfile} />
+            </aside>
+          </div>
+        )}
 
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? "Esconder menu" : "Mostrar menu"}
+          >
             <Menu className="h-5 w-5" />
           </Button>
+
+          <Link to="/" aria-label="Ir para a home" className="flex items-center">
+            <Logo size="sm" />
+          </Link>
 
           {/* Flow context badge */}
           <span className="flow-badge hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
