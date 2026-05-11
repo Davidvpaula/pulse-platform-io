@@ -536,7 +536,7 @@ export const Agendar = () => {
   const [medicosEsp, setMedicosEsp] = useState<MedicoComSlot[]>([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  
   const [sheetMedico, setSheetMedico] = useState<MedicoComSlot | null>(null);
   const isMobile = useIsMobile();
 
@@ -557,7 +557,7 @@ export const Agendar = () => {
     if (!espId) return;
     (async () => {
       setLoadingMedicos(true);
-      setExpandedId(null);
+
 
       // 1. Vinculos médico-especialidade
       const { data: vinculos } = await supabase
@@ -646,13 +646,6 @@ export const Agendar = () => {
     setEspId(newEspId);
   };
 
-  const toggleExpand = (m: MedicoComSlot) => {
-    if (isMobile) {
-      setSheetMedico(m);
-    } else {
-      setExpandedId(expandedId === m.id ? null : m.id);
-    }
-  };
 
   const espAtual = especialidades.find((e) => e.id === espId);
 
@@ -663,11 +656,13 @@ export const Agendar = () => {
   return (
     <PageShell title="Agendar consulta" subtitle="Escolha a especialidade e o profissional.">
       {/* Selector de especialidade */}
-      <div className="card-elevated p-6">
-        <label className="flex flex-col gap-1.5 max-w-md">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Especialidade</span>
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Especialidade
+          </span>
           <select
-            className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             value={espId}
             onChange={(e) => handleEspChange(e.target.value)}
             disabled={loadingEspHook}
@@ -685,9 +680,9 @@ export const Agendar = () => {
       {/* Lista de médicos */}
       <div className="mt-6">
         {loadingMedicos ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="card-elevated p-6 space-y-3">
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-start gap-4">
                   <Skeleton className="h-14 w-14 rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -696,7 +691,7 @@ export const Agendar = () => {
                     <Skeleton className="h-3 w-1/3" />
                   </div>
                 </div>
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="mt-4 h-9 w-full" />
               </div>
             ))}
           </div>
@@ -715,132 +710,119 @@ export const Agendar = () => {
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted-foreground mb-4">
-              {medicosEsp.length} {medicosEsp.length === 1 ? "médico disponível" : "médicos disponíveis"}
+            <p className="mb-4 text-xs text-muted-foreground">
+              <strong className="text-foreground tabular-nums">{medicosEsp.length}</strong>{" "}
+              {medicosEsp.length === 1 ? "médico disponível" : "médicos disponíveis"}
             </p>
-            <div className="space-y-4">
+
+            <div className="grid gap-4 md:grid-cols-2">
               {medicosEsp.map((m) => (
-                <div key={m.id} className="space-y-0">
-                  {/* Card do médico */}
-                  <div className={`card-elevated p-5 transition ${expandedId === m.id ? "rounded-b-none border-b-0" : ""}`}>
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                      {/* Avatar */}
-                      {m.foto_url ? (
-                        <img src={m.foto_url} alt={m.nome} className="h-16 w-16 rounded-full object-cover shrink-0" />
-                      ) : (
-                        <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-primary text-primary-foreground text-lg font-bold shrink-0">
-                          {iniciais(m.nome)}
-                        </div>
-                      )}
+                <article
+                  key={m.id}
+                  className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                >
+                  {/* Header: avatar + nome + status */}
+                  <div className="flex items-start gap-3">
+                    {m.foto_url ? (
+                      <img
+                        src={m.foto_url}
+                        alt={m.nome}
+                        className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-primary/10"
+                      />
+                    ) : (
+                      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-gradient-primary text-base font-bold text-primary-foreground">
+                        {iniciais(m.nome)}
+                      </div>
+                    )}
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-base">{formatNomeMedico(m.tratamento, m.nome)}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Especialidade: {m.especialista ? `RQE ${m.rqe ?? "—"}` : "Não especialista"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              CRM: {m.crm}
-                            </p>
-                          </div>
-                          {m.proximo_slot ? (
-                            <Badge className="bg-success/10 text-success border-success/20 text-[10px] shrink-0 whitespace-nowrap">
-                              Disponível
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
-                              Sem horário
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Rating */}
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 text-xs text-warning">
-                            <Star className="h-3.5 w-3.5 fill-current" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="truncate font-semibold leading-tight">
+                          {formatNomeMedico(m.tratamento, m.nome)}
+                        </p>
+                        {m.proximo_slot ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Disponível
+                          </span>
+                        ) : (
+                          <span className="inline-flex shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                            Sem horário
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {m.especialista ? `Especialista · RQE ${m.rqe ?? "—"}` : "Não especialista"}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 text-warning">
+                          <Star className="h-3 w-3 fill-current" />
+                          <span className="font-semibold tabular-nums text-foreground">
                             {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "5.0"}
                           </span>
-                        </div>
-
-                        {/* Tags */}
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          <Badge variant="outline" className="text-[10px]">
-                            <Video className="mr-1 h-3 w-3" /> Telemedicina
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px]">
-                            <ShieldCheck className="mr-1 h-3 w-3" /> CRM verificado
-                          </Badge>
-                        </div>
-
-                        {/* Bio */}
-                        {m.bio && (
-                          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                            {truncateBio(m.bio)}
-                          </p>
-                        )}
-
-                        {/* Próx. horário + preço */}
-                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3.5 w-3.5" />
-                            {proxHorarioLabel(m.proximo_slot)}
-                          </span>
-                          {m.preco_centavos > 0 && (
-                            <span className="text-lg font-bold text-primary">
-                              {fmtPreco(m.preco_centavos)}
-                            </span>
-                          )}
-                        </div>
+                        </span>
+                        <span className="text-border">·</span>
+                        <span>CRM {m.crm}</span>
                       </div>
-                    </div>
-
-                    {/* Ações */}
-                    <div className="mt-4 flex items-center gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        asChild
-                      >
-                        <Link to={`/medicos/${medicoSlug(m.nome)}`}>
-                          <User className="mr-1.5 h-3.5 w-3.5" /> Ver perfil
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
-                        onClick={() => toggleExpand(m)}
-                      >
-                        <Calendar className="mr-1.5 h-3.5 w-3.5" />
-                        Agendar
-                        {!isMobile && (
-                          expandedId === m.id
-                            ? <ChevronUp className="ml-1 h-3 w-3" />
-                            : <ChevronDown className="ml-1 h-3 w-3" />
-                        )}
-                      </Button>
                     </div>
                   </div>
 
-                  {/* Accordion – slots (desktop) */}
-                  {!isMobile && expandedId === m.id && (
-                    <div className="card-elevated rounded-t-none border-t border-dashed border-border p-5 bg-muted/20 animate-accordion-down">
-                      <MedicoSlotsPanel medicoId={m.id} medicoNome={m.nome} especialidadeId={espId || undefined} />
+                  {/* Tags compactas */}
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      <Video className="h-3 w-3" /> Telemedicina
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3" /> CRM verificado
+                    </span>
+                  </div>
+
+                  {/* Próx horário + preço */}
+                  <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                    <div className="min-w-0">
+                      <p className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {proxHorarioLabel(m.proximo_slot)}
+                      </p>
+                      {m.preco_centavos > 0 && (
+                        <p className="font-display text-xl font-extrabold leading-none text-primary tabular-nums">
+                          {fmtPreco(m.preco_centavos)}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="mt-4 grid grid-cols-[auto_1fr] gap-2">
+                    <Button size="sm" variant="outline" asChild className="rounded-[10px]">
+                      <Link to={`/medicos/${medicoSlug(m.nome)}`}>
+                        <User className="mr-1 h-3.5 w-3.5" /> Perfil
+                      </Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="rounded-[10px] bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                      onClick={() => setSheetMedico(m)}
+                      disabled={!m.proximo_slot}
+                    >
+                      <Calendar className="mr-1 h-3.5 w-3.5" />
+                      {m.proximo_slot ? "Ver horários" : "Sem horários"}
+                    </Button>
+                  </div>
+                </article>
               ))}
             </div>
           </>
         )}
       </div>
 
-      {/* Sheet (mobile) */}
+      {/* Painel de horários — Sheet (mobile bottom, desktop right) */}
       <Sheet open={!!sheetMedico} onOpenChange={(o) => { if (!o) setSheetMedico(null); }}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+        <SheetContent
+          side={isMobile ? "bottom" : "right"}
+          className={isMobile ? "max-h-[85vh] overflow-y-auto" : "w-full sm:max-w-lg overflow-y-auto"}
+        >
           <SheetHeader>
-            <SheetTitle>{sheetMedico?.nome ?? "Horários"}</SheetTitle>
+            <SheetTitle>{sheetMedico ? formatNomeMedico(sheetMedico.tratamento, sheetMedico.nome) : "Horários"}</SheetTitle>
           </SheetHeader>
           <div className="mt-4">
             {sheetMedico && (
