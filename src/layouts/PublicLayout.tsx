@@ -65,7 +65,7 @@ export default function PublicLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full md:hidden"
+            className="rounded-[10px] md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Abrir menu"
           >
