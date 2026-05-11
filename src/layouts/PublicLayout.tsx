@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/especialidades", label: "Especialidades" },
-  { to: "/servicos", label: "Serviços" },
   { to: "/medicos", label: "Médicos" },
+  { to: "/servicos", label: "Serviços" },
   { to: "/planos", label: "Planos" },
   { to: "/empresas", label: "Empresas" },
   { to: "/faq", label: "FAQ" },
@@ -134,7 +133,6 @@ export default function PublicLayout() {
               Plataforma
             </h4>
             <ul className="mt-4 space-y-2.5 text-sm">
-              <FooterLink to="/especialidades">Especialidades</FooterLink>
               <FooterLink to="/medicos">Médicos</FooterLink>
               <FooterLink to="/servicos">Serviços</FooterLink>
               <FooterLink to="/planos">Planos</FooterLink>
