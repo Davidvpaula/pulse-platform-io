@@ -1,24 +1,47 @@
-## Preencher Hero com ícones decorativos
+## Contadores em tempo real no Hero (com fallback mínimo)
 
-Adicionar ícones flutuantes espalhados pelo fundo azul do Hero para reduzir o vazio, e reposicionar o ícone atual do estetoscópio (que está sendo escondido pelo card "Pronto Atendimento" à direita).
+### O que muda
 
-### Mudanças em `src/pages/public/Home.tsx`
+1. **Remover** a seção atual `STATS / MILESTONES` (faixa azul gigante com "+10 / +2.600 / +3.500", linhas 199–211) e o subcomponente `Milestone` se não for mais usado.
 
-1. **Reposicionar o `Stethoscope`** atual:
-   - Mover do canto direito (onde colide com o card) para o **topo central / acima do card**, em tamanho menor (ex.: `top-8 right-1/3`, `h-24 w-24`).
+2. **Adicionar** uma linha compacta de 3 contadores no **próprio Hero**, logo abaixo dos botões "Agendar consulta / Atendimento imediato":
+   - Layout horizontal: ícone pequeno + número + rótulo abaixo, separados por divisores verticais sutis (`border-white/20`).
+   - Texto branco/translúcido, números em destaque (`text-3xl font-extrabold`), rótulos em `text-xs uppercase tracking-wider text-white/70`.
+   - Animação de "count up" suave ao entrar em viewport (de 0 até o valor final, ~1,5s) — implementação leve com `requestAnimationFrame`, sem libs novas.
+   - Esconde no mobile só se ficar apertado; tenta manter visível em coluna se necessário.
 
-2. **Adicionar ~5-7 ícones decorativos** espalhados em posições absolutas, todos com `pointer-events-none`, opacidade baixa (`text-white/15` a `text-white/25`) e tamanhos variados:
-   - `Heart` — canto superior esquerdo, médio
-   - `Plus` (cruz médica) — meio esquerdo, pequeno
-   - `Activity` (linha de ECG) — base esquerda, médio
-   - `Pill` — entre o texto e o card, pequeno
-   - `Shield` ou `ShieldCheck` — topo direito alto, pequeno
-   - `Calendar` — base direita, pequeno
-   - `Sparkles` — pontual, decorativo
+3. **Itens e fontes de dados** (mínimos garantidos por regra de negócio):
+   - **Médicos cadastrados** — `count(*)` de `medicos` ativos (real, sem floor mínimo).
+   - **Pacientes cadastrados** — `max(3000, count(*) de pacientes)` — começa em 3.000+.
+   - **Consultas realizadas** — `max(5000, count(*) de consultas onde status='concluida')` — começa em 5.000+.
 
-3. **Esconder os ícones decorativos no mobile** (`hidden md:block`) para não poluir telas pequenas onde o texto já ocupa quase todo o espaço.
+### Backend (Lovable Cloud)
 
-4. **Garantir z-index** correto: ícones decorativos com `-z-0`/`z-0`, conteúdo (texto e card) com `z-10`, para que nada seja coberto.
+Criar **RPC pública `public_home_stats()`** (`SECURITY DEFINER`, `STABLE`, `search_path = public`) que retorna JSON:
+```json
+{ "medicos": <int>, "pacientes": <int>, "consultas": <int> }
+```
+- Lê apenas counts agregados — não expõe linhas.
+- Aplica os pisos (3000 / 5000) já no SQL.
+- `GRANT EXECUTE ... TO anon, authenticated;`
+
+Atualização **a cada ~60s** via `setInterval` no hook (não precisa Realtime — é só contador agregado e Realtime em count consumiria recursos sem benefício real). Cache em memória para evitar refetch entre re-renders.
+
+### Frontend
+
+- Novo hook `src/hooks/usePublicHomeStats.ts`:
+  - `supabase.rpc('public_home_stats')` no mount + intervalo de 60s.
+  - Retorna `{ medicos, pacientes, consultas, loading }`.
+  - Valores iniciais (antes do fetch): `{ 0, 3000, 5000 }` para evitar pulo visual.
+- Novo subcomponente em `Home.tsx`: `HeroCounters` que recebe os valores e renderiza ícone + número (com count-up) + rótulo.
+- Ícones: `Stethoscope` / `Users` / `CalendarDays` (mesmos atuais).
+
+### Fora do escopo
+- Não mexer nos demais blocos do Home (Especialidades, Reconhecimentos, Diferenciais, Dúvidas).
+- Não criar tabelas novas, não criar edge function (RPC já basta).
 
 ### Validação
-- Abrir `/`, conferir Hero com fundo azul, ícones espalhados sutis (não competem com o texto), estetoscópio visível (não escondido), card "Pronto Atendimento" intacto sobre tudo.
+- `/` mostra Hero com 3 contadores animando do início até o valor real.
+- Faixa azul gigante de stats sumiu.
+- Trocar manualmente o status de uma consulta para `concluida` aumenta o número após ~60s (ou refresh).
+- Lighthouse/console sem erros, sem queries pesadas — RPC retorna em <100ms.
