@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil } from "lucide-react";
 import { RepasseSplitInput } from "@/components/financeiro/RepasseSplitInput";
 import { broadcastAtendimentoImediatoConfigChanged } from "@/lib/clinico";
+import ServicoImagemUploader from "@/components/admin/ServicoImagemUploader";
 
 type Tipo = "consulta" | "pronto_atendimento" | "pacote";
 type Modelo = "percentual" | "valor_fixo";
