@@ -163,38 +163,56 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 5. DIFERENCIAIS (3 cards-imagem) ─── */}
-      <section className="bg-background">
-        <div className="container space-y-6 px-4 py-20">
-          <Diferencial
-            image={diffHumanizado}
-            icon={Heart}
-            title="Atendimento Humanizado"
-            text="Médicos que escutam de verdade. Consultas sem pressa, com foco em você e na sua história clínica."
-          />
-          <Diferencial
-            image={diffLugar}
-            icon={MapPin}
-            title="Em qualquer lugar"
-            text="De casa, do trabalho ou em viagem. Tudo o que você precisa é uma conexão de internet — sem deslocamento, sem filas."
-            reverse
-          />
-          <Diferencial
-            image={diffMomento}
-            icon={Clock}
-            title="A qualquer momento"
-            text="Agenda inteligente com horários ampliados. Encaixes, retornos e pronto atendimento quando você precisar."
-          />
-        </div>
-      </section>
+      {/* ─── 5+6. FAIXA AZUL CONTÍNUA: Diferenciais → Dúvidas → (rodapé) ─── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(to bottom, hsl(198 100% 92%) 0%, hsl(198 85% 70%) 22%, hsl(204 80% 42%) 55%, hsl(200 80% 22%) 100%)",
+        }}
+      >
+        {/* textura de quadradinhos contínua */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(0 0% 100% / 0.18) 1px, transparent 1px), linear-gradient(to bottom, hsl(0 0% 100% / 0.18) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+          aria-hidden
+        />
+        {/* brilhos suaves */}
+        <div className="pointer-events-none absolute -top-24 left-10 h-72 w-72 rounded-full bg-white/30 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute bottom-40 right-0 h-80 w-80 rounded-full bg-primary-glow/30 blur-3xl" aria-hidden />
 
-      {/* (faixa de números removida a pedido) */}
+        {/* DIFERENCIAIS */}
+        <section className="relative z-10">
+          <div className="container space-y-6 px-4 py-20">
+            <Diferencial
+              image={diffHumanizado}
+              icon={Heart}
+              title="Atendimento Humanizado"
+              text="Médicos que escutam de verdade. Consultas sem pressa, com foco em você e na sua história clínica."
+            />
+            <Diferencial
+              image={diffLugar}
+              icon={MapPin}
+              title="Em qualquer lugar"
+              text="De casa, do trabalho ou em viagem. Tudo o que você precisa é uma conexão de internet — sem deslocamento, sem filas."
+              reverse
+            />
+            <Diferencial
+              image={diffMomento}
+              icon={Clock}
+              title="A qualquer momento"
+              text="Agenda inteligente com horários ampliados. Encaixes, retornos e pronto atendimento quando você precisar."
+            />
+          </div>
+        </section>
 
-      {/* ─── 6. DÚVIDAS — banda escura ─── */}
-      <section className="relative overflow-hidden bg-gradient-deep text-deep-foreground">
-        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-30" aria-hidden />
-        <div className="pointer-events-none absolute -top-32 right-0 h-80 w-80 rounded-full bg-primary/30 blur-3xl" aria-hidden />
-        <div className="container relative z-10 px-4 py-20">
+        {/* DÚVIDAS — sobre a mesma faixa, parte mais escura */}
+        <section className="relative z-10 text-deep-foreground">
+          <div className="container relative px-4 pb-24 pt-4">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm md:p-12">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="flex items-start gap-5">
