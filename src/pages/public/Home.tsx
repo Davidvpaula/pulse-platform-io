@@ -24,9 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { useEspecialidadesPublicas } from "@/hooks/useEspecialidadesPublicas";
 import { usePublicHomeStats } from "@/hooks/usePublicHomeStats";
 import EmBreveDialog from "@/components/EmBreveDialog";
-import ServicosCarousel from "@/components/public/ServicosCarousel";
+import HeroServicoCarousel from "@/components/public/HeroServicoCarousel";
 
-import prontoAtendimentoImg from "@/assets/home/pronto-atendimento.jpg";
 import diffHumanizado from "@/assets/home/diferencial-humanizado.jpg";
 import diffLugar from "@/assets/home/diferencial-qualquer-lugar.jpg";
 import diffMomento from "@/assets/home/diferencial-qualquer-momento.jpg";
@@ -100,50 +99,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Card flutuante: Pronto Atendimento */}
-          <div className="relative z-10 flex items-end md:justify-end">
-            <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-elegant ring-1 ring-black/5">
-              <div className="relative aspect-[4/3] w-full overflow-hidden">
-                <img
-                  src={prontoAtendimentoImg}
-                  alt="Mulher sorrindo enquanto agenda consulta pelo celular"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                  width={800}
-                  height={600}
-                />
-              </div>
-              <div className="p-5">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
-                    <Clock className="h-3 w-3" /> Disponível agora
-                  </span>
-                </div>
-                <h3 className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground">
-                  Pronto Atendimento
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Conecte-se em minutos com o primeiro médico disponível.
-                </p>
-                <div className="mt-4 flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      A partir de
-                    </p>
-                    <p className="font-display text-3xl font-extrabold leading-none text-primary">
-                      R$ 49,90
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    className="rounded-[10px] bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Link to="/atendimento-imediato">Agende agora</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Card flutuante: Carrossel de serviços (mesma silhueta do antigo card PA) */}
+          <HeroServicoCarousel />
         </div>
       </section>
 
@@ -206,11 +163,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 3. CARROSSEL DE SERVIÇOS (dinâmico, via Admin) ─── */}
-      <ServicosCarousel />
-
-
-      {/* ─── 4. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}
+      {/* ─── 3. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}
       <section className="bg-[hsl(200_80%_18%)] text-white">
         <div className="container px-4 py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
