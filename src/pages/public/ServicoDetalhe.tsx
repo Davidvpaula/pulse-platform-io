@@ -160,7 +160,7 @@ export default function ServicoDetalhe() {
 
   if (loading) {
     return (
-      <PageShell title="Carregando…">
+      <PageShell>
         <ServicoHeroSkeleton />
       </PageShell>
     );
@@ -181,10 +181,7 @@ export default function ServicoDetalhe() {
   const idxDia = diasComSlots.findIndex(([dk]) => dk === diaSelecionado);
 
   return (
-    <PageShell
-      title={servico.nome}
-      subtitle="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."
-    >
+    <PageShell>
       <div className="space-y-6">
         <ServicoHero
           nome={servico.nome}
@@ -195,6 +192,7 @@ export default function ServicoDetalhe() {
           tipo={servico.tipo}
           valorCentavos={servico.valor_paciente_centavos}
           duracaoMin={servico.duracao_min}
+          footerNota="Calendário compartilhado — escolha o horário, o sistema escolhe o profissional."
         />
 
         <p className="text-sm text-muted-foreground">
