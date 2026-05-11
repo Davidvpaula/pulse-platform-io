@@ -188,15 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 5b. NÚMEROS — banda petrol ─── */}
-      <section className="relative overflow-hidden bg-gradient-deep-vibrant text-deep-foreground">
-        <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-25" aria-hidden />
-        <div className="container relative z-10 grid gap-8 px-4 py-16 sm:grid-cols-3 md:py-20">
-          <BigStat icon={Stethoscope} value={stats.medicos} label="Médicos verificados" />
-          <BigStat icon={Users} value={stats.pacientes} label="Pacientes atendidos" plus />
-          <BigStat icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
-        </div>
-      </section>
+      {/* (faixa de números removida a pedido) */}
 
       {/* ─── 6. DÚVIDAS — banda escura ─── */}
       <section className="relative overflow-hidden bg-gradient-deep text-deep-foreground">
