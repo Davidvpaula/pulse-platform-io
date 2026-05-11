@@ -73,36 +73,55 @@ export default function Servicos() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {servicos.map((s) => {
             const isPA = paServicoId === s.id;
+            const Icon = getIcon(s.icone);
+            const subtitulo = s.subtitulo || s.descricao_publica;
             return (
               <Link
                 key={s.id}
                 to={linkParaServico(s)}
-                className="card-elevated p-5 hover:shadow-elegant transition group"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:-translate-y-0.5 hover:shadow-elegant"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  {isPA ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                      <Activity className="mr-1 h-3 w-3" /> Atendimento Imediato
-                    </Badge>
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+                  {s.imagem_url ? (
+                    <img
+                      src={s.imagem_url}
+                      alt={s.nome}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
                   ) : (
-                    <Badge variant="outline">{s.tipo}</Badge>
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-primary/5">
+                      <Icon className="h-12 w-12 text-primary/60" strokeWidth={1.4} />
+                    </div>
                   )}
                 </div>
-                <h3 className="font-display text-lg font-semibold">{s.nome}</h3>
-                {s.descricao_publica && (
-                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{s.descricao_publica}</p>
-                )}
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">A partir de</p>
-                    <p className="font-bold">{brl(s.valor_paciente_centavos)}</p>
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    {isPA ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                        <Activity className="mr-1 h-3 w-3" /> Atendimento Imediato
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">{s.tipo}</Badge>
+                    )}
                   </div>
-                  <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {s.duracao_min} min
-                  </span>
-                </div>
-                <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:underline">
-                  {isPA ? "Acessar calendário" : "Ver detalhes"} <ArrowRight className="h-3 w-3" />
+                  <h3 className="font-display text-lg font-semibold line-clamp-2 min-h-[3.25rem]">{s.nome}</h3>
+                  {subtitulo && (
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{subtitulo}</p>
+                  )}
+                  <div className="mt-auto pt-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">A partir de</p>
+                      <p className="font-bold tabular-nums">{brl(s.valor_paciente_centavos)}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {s.duracao_min} min
+                    </span>
+                  </div>
+                  <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary group-hover:underline">
+                    {isPA ? "Acessar calendário" : "Ver detalhes"} <ArrowRight className="h-3 w-3" />
+                  </div>
                 </div>
               </Link>
             );
@@ -112,3 +131,4 @@ export default function Servicos() {
     </PageShell>
   );
 }
+
