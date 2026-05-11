@@ -1,75 +1,81 @@
-# Estabilização da Onda A — 6 ajustes pontuais
+## Objetivo
 
-Escopo: **só helpers, setup e config de Playwright**. Zero código de produto, zero novo teste, zero mudança de RBAC.
+Substituir o header atual do **PublicLayout** pelo design do Figma: navbar flutuante em formato de cápsula branca, com nova estrutura de links e botão CTA azul.
 
-## 1. Remover seletores frágeis
+Escopo restrito ao site público (`PublicLayout.tsx`). Nada no AppLayout interno, nada de backend, rotas ou lógica.
 
-Arquivos: `tests/e2e/admin/dashboard.spec.ts`, `admin/financeiro.spec.ts`, `admin/noc.spec.ts`.
+---
 
-- Substituir `.card`, `[class*='Card']` (acoplados a Tailwind/shadcn) por âncoras estáveis: `main`, `<h1>/<h2>` visível, `nav a`, `role="link"`.
-- Trocar `cards.count() > 0` por uma expectativa concreta: existe `<main>` com texto não-vazio.
-- Para "sidebar tem links", manter `nav a, aside a` mas exigir `>= 1` em vez de `> 2` (a sidebar pode estar collapsed em viewport CI).
+## Mudanças visuais
 
-## 2. Melhorar `expectAccessDenied`
+**Container flutuante**
+- Header com `position: sticky top-4`, margens laterais (`mx-4 md:mx-8`), `max-w-7xl mx-auto`.
+- Cápsula: fundo `bg-background/95` + `backdrop-blur-md`, `rounded-full`, `shadow-lg` suave, borda sutil.
+- Padding interno generoso (`px-6 py-3`), altura ~64px.
 
-Arquivo: `tests/e2e/helpers/rbac.ts`.
+**Conteúdo (3 zonas)**
+- **Esquerda**: Logo Lasmar TeleMed (componente `<Logo />` já existente).
+- **Centro**: links de navegação com peso medium, item ativo em `font-bold text-foreground`, demais em `text-foreground/70 hover:text-foreground`.
+- **Direita**: botão **"Cadastre-se"** (pill, `bg-primary` azul celeste, `rounded-full`) + link **"Login"** ghost.
 
-Hoje: `waitForTimeout(800)` fixo + checagem.
-Novo: corrida de 2 condições, o que vier primeiro em até 8 s:
-- URL muda (`page.waitForURL(u => u.pathname !== originalPath)`), ou
-- texto de bloqueio aparece (`page.getByText(/acesso restrito|sem permiss|não autorizado|forbidden/i)`).
+**Mobile**
+- Mantém cápsula, mas só logo + botão hamburger.
+- Drawer desce abaixo da cápsula com os mesmos links + CTAs.
 
-Sem `waitForTimeout`. Mensagem de erro inclui a URL final e um snippet do `<main>` para diagnóstico.
+---
 
-## 3. Endurecer `expectNoLoaderForever`
+## Nova estrutura de links
 
-Arquivo: `tests/e2e/helpers/navigation.ts`.
+Substitui os 8 links atuais pelos 5 do Figma:
 
-Hoje: poll com `waitForTimeout(250)` em loop — pode passar mesmo sem loader nenhum.
-Novo:
-- Se nenhum loader apareceu em 1 s, retorna OK (não é falha — só não há loader).
-- Se apareceu, usa `locator.first().waitFor({ state: "detached", timeout })`.
-- Sem `waitForTimeout` em loop.
+| Label Figma        | Rota destino                |
+|--------------------|-----------------------------|
+| Início             | `/`                         |
+| Pronto Atendimento | `/atendimento-imediato`     |
+| Agendar Consulta   | `/agendar`                  |
+| Sobre Nós          | `/sobre` *(ver nota abaixo)* |
+| Ajuda              | `/faq`                      |
 
-## 4. `auth.setup.ts` tolerante a sessão existente
+CTAs à direita:
+- **Cadastre-se** → `/auth?mode=signup` (ou `/auth`)
+- **Login** → `/auth`
 
-Arquivo: `tests/e2e/auth/auth.setup.ts`.
+> Observação: a rota `/sobre` ainda não existe no projeto. Posso (a) apontar temporariamente para `/` ou `/faq`, ou (b) criar uma página placeholder `/sobre`. **Sugiro (a) apontar para `/` por enquanto** e deixar `/sobre` como TODO para a próxima onda de páginas institucionais. Confirme se prefere outro caminho.
 
-- Antes do login, `page.goto("/")` e ler `localStorage` — se já houver token Supabase válido para o email esperado, **pular** a tela de `/auth` e ir direto para `storageState({path})`.
-- Caso o storage exista em disco mas esteja expirado, capturar o erro de redirect para `/auth` e re-logar.
-- Idempotência: rodar `auth.setup.ts` 2x seguidas não deve dobrar o tempo.
+> Os links removidos do header (Especialidades, Serviços, Médicos, Planos, Empresas, Para médicos, FAQ) **continuam existindo no footer**, então nada de navegação se perde.
 
-## 5. Retry controlado só no setup
+---
 
-Arquivo: `playwright.config.ts`.
+## Tokens de design (do Figma)
 
-- Manter `retries: 1` global no CI.
-- Project `setup` ganha override: `retries: 2`. Login pode falhar por jitter de rede do preview Lovable; o resto da suíte não merece esse benefício para não mascarar flakes reais.
-- Adicionar `timeout: 90_000` só no project `setup` (login pode ser lento em cold start).
+Já cobertos pela Onda 1 do rebrand:
+- Azul Celeste `#21a3d6` → `--primary`
+- Creme `#fdfbf6` → `--background`
+- Cinza 85% `#262626` → `--foreground`
 
-## 6. Criar `tests/e2e/STABILITY.md`
+Nenhum token novo necessário. Todas as cores via classes semânticas (`bg-primary`, `text-foreground`, etc.).
 
-Documento operacional curto (1-2 páginas) cobrindo:
+---
 
-- **Como interpretar uma falha**: passos para baixar o `playwright-report` artifact, abrir trace, identificar se é flake (passou no retry) ou regressão real.
-- **Critério de "flaky"**: falhou ≥ 2x em 10 runs consecutivas em main, sem mudança correlata de produto.
-- **Quarentena**: `test.fixme()` com comentário `// QUARENTENA <data> — motivo` e issue tracker rastreando. Nunca `test.skip()` silencioso.
-- **Sinais de instabilidade do preview**: padrões de erro recorrentes (504, cold start > 30 s) com ação recomendada (re-rodar / abrir ticket).
-- **O que NÃO fazer durante observação**: adicionar novos testes, tocar em produto pra "ajudar o teste", aumentar timeouts globalmente, desativar retry.
-- **Métricas a observar nos próximos 3-5 dias**: tempo total da suíte, taxa de falha por spec, tempo de cada step do `setup`.
+## Arquivo único alterado
 
-## Validação após os ajustes
+- `src/layouts/PublicLayout.tsx` — apenas o `<header>` (e o array `links`). Footer e demais áreas intocados.
 
-Rodar `bunx playwright test` localmente apontando para a URL de preview Lovable (`E2E_BASE_URL=https://pulse-platform-io.lovable.app`).
+---
 
-**Caveat honesto**: no sandbox eu posso rodar Playwright, mas o preview Lovable pode estar em cold start ou indisponível na hora do run — se isso acontecer, vou reportar exatamente o que aconteceu (timeout de navegação, 502, etc.) sem mascarar como sucesso. O dado real de estabilidade vem dos próximos dias de runs no CI; o run local é só smoke do meu próprio refactor.
+## Detalhes técnicos
 
-Vou trazer:
-- Resultado por spec (passou / falhou / flaky-passou-no-retry).
-- Tempo total e tempo do step `setup`.
-- Quais asserts ficaram mais resilientes (ex.: removi `.card`, `expectAccessDenied` agora é determinístico).
-- Riscos / trade-offs identificados (ex.: tolerar sessão existente esconde regressões na tela de login? — discutir).
+- A cápsula flutua sobre o conteúdo: removo a borda inferior do header e adiciono `pt-4` no início do `<main>` para compensar.
+- Item ativo detectado via `NavLink` (`isActive`), com pill sutil `bg-primary/10 text-primary` ao invés de só negrito (mais legível em cápsula clara).
+- Z-index do header sobe para `z-50` para garantir flutuação sobre seções com gradiente.
+- Mobile drawer continua dentro da mesma cápsula, expandindo verticalmente com `rounded-3xl` em vez de `rounded-full` quando aberto.
 
-## Fora de escopo (reafirmado)
+---
 
-- Onda B, médico, paciente, checkout real, upload real, integrações externas, novos mocks, mudança de produto.
+## Fora de escopo (não tocar)
+
+- AppLayout interno, sidebar, qualquer rota `/app/*`.
+- Footer público.
+- Hero, Home, demais seções da landing.
+- Backend, permissões, lógica.
+- Criação de página `/sobre` (vai virar TODO).

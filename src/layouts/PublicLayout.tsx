@@ -1,106 +1,111 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Activity, Mail, Phone, MapPin } from "lucide-react";
+import { Menu, X, Mail, Phone, MapPin } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// TODO: criar página /sobre na próxima onda institucional. Por ora aponta para /.
 const links = [
-  { to: "/atendimento-imediato", label: "Atendimento imediato", highlight: true },
-  { to: "/especialidades", label: "Especialidades" },
-  { to: "/servicos", label: "Serviços" },
-  { to: "/medicos", label: "Médicos" },
-  { to: "/planos", label: "Planos" },
-  { to: "/empresas", label: "Empresas" },
-  { to: "/para-medicos", label: "Para médicos" },
-  { to: "/faq", label: "FAQ" },
+  { to: "/", label: "Início", end: true },
+  { to: "/atendimento-imediato", label: "Pronto Atendimento" },
+  { to: "/agendar", label: "Agendar Consulta" },
+  { to: "/", label: "Sobre Nós" },
+  { to: "/faq", label: "Ajuda" },
 ];
 
 export default function PublicLayout() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* ─── HEADER ─── */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
-        <div className="container flex h-[72px] items-center justify-between gap-8">
+      {/* ─── HEADER FLUTUANTE (cápsula) ─── */}
+      <header className="sticky top-4 z-50 px-4 md:px-8">
+        <div
+          className={cn(
+            "mx-auto flex max-w-7xl items-center justify-between gap-6 border border-border/40 bg-background/95 px-4 py-2.5 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all md:px-6",
+            open ? "rounded-3xl" : "rounded-full",
+          )}
+        >
           <Logo size="md" />
 
           <nav className="hidden items-center gap-1 lg:flex">
-            {links.map((l) =>
-              l.highlight ? (
-                <NavLink
-                  key={l.to}
-                  to={l.to}
-                  className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
-                >
-                  <Activity className="h-3.5 w-3.5" />
-                  {l.label}
-                </NavLink>
-              ) : (
-                <NavLink
-                  key={l.to}
-                  to={l.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "rounded-md px-3 py-2 text-[13px] font-medium tracking-tight transition-colors",
-                      isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground",
-                    )
-                  }
-                >
-                  {l.label}
-                </NavLink>
-              ),
-            )}
+            {links.map((l, i) => (
+              <NavLink
+                key={`${l.to}-${i}`}
+                to={l.to}
+                end={l.end}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-full px-3.5 py-2 text-sm font-medium tracking-tight transition-colors",
+                    isActive
+                      ? "font-semibold text-foreground"
+                      : "text-foreground/65 hover:text-foreground",
+                  )
+                }
+              >
+                {l.label}
+              </NavLink>
+            ))}
           </nav>
 
-          <div className="hidden items-center gap-2 lg:flex">
-            <Button asChild variant="ghost" size="sm" className="font-medium">
-              <Link to="/auth">Entrar</Link>
+          <div className="hidden items-center gap-1 lg:flex">
+            <Button
+              asChild
+              size="sm"
+              className="rounded-full bg-primary px-5 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Link to="/auth?mode=signup">Cadastre-se</Link>
             </Button>
-            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-sm">
-              <Link to="/agendar">Agendar consulta</Link>
+            <Button asChild variant="ghost" size="sm" className="rounded-full font-medium">
+              <Link to="/auth">Login</Link>
             </Button>
           </div>
 
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full lg:hidden"
+            onClick={() => setOpen(!open)}
+            aria-label="Abrir menu"
+          >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
-        </div>
 
-        {open && (
-          <div className="border-t border-border bg-background lg:hidden">
-            <nav className="container flex flex-col gap-1 py-4">
-              {links.map((l) => (
+          {open && (
+            <nav className="absolute left-4 right-4 top-full mt-2 flex flex-col gap-1 rounded-3xl border border-border/40 bg-background/98 p-3 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-md lg:hidden">
+              {links.map((l, i) => (
                 <Link
-                  key={l.to}
+                  key={`m-${l.to}-${i}`}
                   to={l.to}
                   onClick={() => setOpen(false)}
-                  className={cn(
-                    "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                    l.highlight
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground hover:bg-muted",
-                  )}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
                 >
                   {l.label}
                 </Link>
               ))}
-              <div className="mt-3 flex gap-2">
-                <Button asChild variant="outline" className="flex-1" onClick={() => setOpen(false)}>
-                  <Link to="/auth">Entrar</Link>
+              <div className="mt-2 flex gap-2 px-1">
+                <Button
+                  asChild
+                  className="flex-1 rounded-full bg-primary font-semibold hover:bg-primary/90"
+                  onClick={() => setOpen(false)}
+                >
+                  <Link to="/auth?mode=signup">Cadastre-se</Link>
                 </Button>
-                <Button asChild className="flex-1 bg-primary hover:bg-primary/90" onClick={() => setOpen(false)}>
-                  <Link to="/agendar">Agendar</Link>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => setOpen(false)}
+                >
+                  <Link to="/auth">Login</Link>
                 </Button>
               </div>
             </nav>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
-      <main className="flex-1"><Outlet /></main>
+      <main className="flex-1 pt-6"><Outlet /></main>
 
       {/* ─── FOOTER ─── */}
       <footer className="relative mt-12 border-t border-border bg-foreground text-background/90">
