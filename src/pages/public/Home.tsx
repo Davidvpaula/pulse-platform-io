@@ -206,7 +206,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── (faixa de stats removida — contadores movidos para o Hero) ─── */}
+      {/* ─── 3. CARROSSEL DE SERVIÇOS (dinâmico, via Admin) ─── */}
+      <ServicosCarousel />
 
 
       {/* ─── 4. RECONHECIMENTOS E CERTIFICAÇÕES ─── */}
