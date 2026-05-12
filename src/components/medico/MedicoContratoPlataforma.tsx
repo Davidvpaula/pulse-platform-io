@@ -70,9 +70,17 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
   async function handleBaixar() {
     setDownloading(true);
     try {
-      await gerarContratoMedicoPdf(medicoId);
+      if (modeloAtivo) {
+        const { data, error } = await supabase.storage
+          .from("contratos-modelo").createSignedUrl(modeloAtivo.arquivo_path, 60);
+        if (error) throw error;
+        window.open(data.signedUrl, "_blank");
+      } else {
+        // fallback: gera PDF dinâmico a partir do texto
+        await gerarContratoMedicoPdf(medicoId);
+      }
     } catch (e: any) {
-      toast.error(e.message ?? "Erro ao gerar contrato");
+      toast.error(e.message ?? "Erro ao baixar contrato");
     } finally {
       setDownloading(false);
     }
