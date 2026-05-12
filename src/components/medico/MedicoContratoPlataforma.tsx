@@ -185,7 +185,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
             <Button
               variant="outline"
               onClick={handleBaixar}
-              disabled={downloading || !versaoAtiva}
+              disabled={downloading || (!versaoAtiva && !modeloAtivo)}
             >
               <Download className="mr-2 h-4 w-4" />
               {downloading ? "Gerando…" : "Baixar contrato (PDF)"}
