@@ -51,7 +51,7 @@ export default function AdminMedicosContratos() {
     setLoading(true);
     const { data, error } = await supabase
       .from("medicos_contratos")
-      .select("*, medicos(nome,crm,crm_estado), termos_condicoes(versao,titulo)")
+      .select("*, medicos(nome,crm,crm_estado), termos_condicoes(versao,titulo), contratos_modelo(versao,titulo)")
       .order("enviado_em", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data as any) ?? []);
