@@ -22,6 +22,7 @@ import CadastroMedico from "@/pages/public/CadastroMedico";
 import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
 import Servicos from "@/pages/public/Servicos";
 import Sobre from "@/pages/public/Sobre";
+import { TermosPublico, PrivacidadePublica, LgpdPublico } from "@/pages/public/TermoPublico";
 import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
 import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
 import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
