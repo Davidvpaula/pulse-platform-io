@@ -160,7 +160,11 @@ export default function AdminMedicosContratos() {
                 <tr key={r.id} className="border-b last:border-0 hover:bg-muted/20">
                   <td className="p-3 font-medium">{r.medicos?.nome ?? "—"}</td>
                   <td className="p-3 text-xs">{r.medicos?.crm ?? "—"}/{r.medicos?.crm_estado ?? "—"}</td>
-                  <td className="p-3 text-xs">v{r.termos_condicoes?.versao ?? "—"}</td>
+                  <td className="p-3 text-xs">
+                    {r.contratos_modelo
+                      ? <Badge variant="outline" className="font-normal">Modelo {r.contratos_modelo.versao}</Badge>
+                      : <span className="text-muted-foreground">v{r.termos_condicoes?.versao ?? "—"} (texto)</span>}
+                  </td>
                   <td className="p-3 text-xs">{new Date(r.enviado_em).toLocaleString("pt-BR")}</td>
                   <td className="p-3">
                     <Badge className={cn("font-normal", STATUS_CLS[r.status])} variant="outline">
