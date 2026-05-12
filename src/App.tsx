@@ -27,6 +27,7 @@ import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
 import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
 import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
 import AdminMedicosContratos from "@/pages/app/admin/AdminMedicosContratos";
+import AdminContratosModelo from "@/pages/app/admin/AdminContratosModelo";
 import MedicoGuard from "@/components/MedicoGuard";
 import PacienteGuard from "@/components/PacienteGuard";
 
