@@ -6729,6 +6729,80 @@ export type Database = {
           },
         ]
       }
+      medicos_contratos: {
+        Row: {
+          arquivo_nome: string
+          arquivo_path: string
+          created_at: string
+          enviado_em: string
+          id: string
+          medico_id: string
+          motivo_reprovacao: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          status: Database["public"]["Enums"]["medico_contrato_status"]
+          termo_id: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_path: string
+          created_at?: string
+          enviado_em?: string
+          id?: string
+          medico_id: string
+          motivo_reprovacao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["medico_contrato_status"]
+          termo_id: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_path?: string
+          created_at?: string
+          enviado_em?: string
+          id?: string
+          medico_id?: string
+          motivo_reprovacao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["medico_contrato_status"]
+          termo_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicos_contratos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicos_contratos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicos_contratos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "mv_medico_saldo"
+            referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "medicos_contratos_termo_id_fkey"
+            columns: ["termo_id"]
+            isOneToOne: false
+            referencedRelation: "termos_condicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_templates: {
         Row: {
           active: boolean
@@ -12314,6 +12388,11 @@ export type Database = {
         | "sistema"
       internal_thread_prioridade: "baixa" | "normal" | "alta"
       internal_thread_status: "aberta" | "respondida" | "resolvida"
+      medico_contrato_status:
+        | "pendente"
+        | "em_analise"
+        | "aprovado"
+        | "reprovado"
       medico_servico_status: "ativo" | "pendente" | "recusado" | "desativado"
       medico_status:
         | "pendente"
@@ -12903,6 +12982,12 @@ export const Constants = {
       ],
       internal_thread_prioridade: ["baixa", "normal", "alta"],
       internal_thread_status: ["aberta", "respondida", "resolvida"],
+      medico_contrato_status: [
+        "pendente",
+        "em_analise",
+        "aprovado",
+        "reprovado",
+      ],
       medico_servico_status: ["ativo", "pendente", "recusado", "desativado"],
       medico_status: [
         "pendente",
