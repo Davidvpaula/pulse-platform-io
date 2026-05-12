@@ -389,8 +389,8 @@ export default function AdminTermosCondicoes() {
               <Input value={createTitulo} onChange={e => setCreateTitulo(e.target.value)} placeholder="Ex: Termos de uso da plataforma" maxLength={200} />
             </div>
             <div>
-              <Label>Conteúdo (suporta HTML)</Label>
-              <Textarea value={createConteudo} onChange={e => setCreateConteudo(e.target.value)} rows={12} placeholder="Conteúdo completo do termo..." />
+              <Label>Conteúdo (suporta HTML — sem limite de caracteres)</Label>
+              <Textarea value={createConteudo} onChange={e => setCreateConteudo(e.target.value)} rows={20} placeholder="Conteúdo completo do termo..." />
             </div>
             <div>
               <Label>Status inicial</Label>
