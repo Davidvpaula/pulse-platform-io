@@ -36,10 +36,11 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
   const [uploading, setUploading] = useState(false);
   const [contrato, setContrato] = useState<ContratoRow | null>(null);
   const [versaoAtiva, setVersaoAtiva] = useState<number | null>(null);
+  const [modeloAtivo, setModeloAtivo] = useState<{ id: string; versao: string; titulo: string; arquivo_path: string; arquivo_nome: string } | null>(null);
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data: rows }, termo] = await Promise.all([
+    const [{ data: rows }, termo, { data: modelo }] = await Promise.all([
       supabase
         .from("medicos_contratos")
         .select("*")
@@ -47,9 +48,15 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
         .order("enviado_em", { ascending: false })
         .limit(1),
       buscarTermoAtivo("contrato_medico" as any),
+      supabase
+        .from("contratos_modelo")
+        .select("id,versao,titulo,arquivo_path,arquivo_nome")
+        .eq("ativo", true)
+        .maybeSingle(),
     ]);
     setContrato((rows?.[0] as ContratoRow) ?? null);
     setVersaoAtiva(termo?.versao ?? null);
+    setModeloAtivo((modelo as any) ?? null);
     setLoading(false);
   }, [medicoId]);
 
