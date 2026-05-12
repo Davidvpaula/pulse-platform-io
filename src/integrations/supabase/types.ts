@@ -2392,6 +2392,48 @@ export type Database = {
         }
         Relationships: []
       }
+      contratos_modelo: {
+        Row: {
+          arquivo_nome: string
+          arquivo_path: string
+          ativo: boolean
+          created_at: string
+          id: string
+          observacoes: string | null
+          publicado_em: string | null
+          publicado_por: string | null
+          titulo: string
+          updated_at: string
+          versao: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_path: string
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          titulo: string
+          updated_at?: string
+          versao: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_path?: string
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          titulo?: string
+          updated_at?: string
+          versao?: string
+        }
+        Relationships: []
+      }
       conversation_ai_intents: {
         Row: {
           confidence: number | null
@@ -6737,6 +6779,7 @@ export type Database = {
           enviado_em: string
           id: string
           medico_id: string
+          modelo_id: string | null
           motivo_reprovacao: string | null
           revisado_em: string | null
           revisado_por: string | null
@@ -6751,6 +6794,7 @@ export type Database = {
           enviado_em?: string
           id?: string
           medico_id: string
+          modelo_id?: string | null
           motivo_reprovacao?: string | null
           revisado_em?: string | null
           revisado_por?: string | null
@@ -6765,6 +6809,7 @@ export type Database = {
           enviado_em?: string
           id?: string
           medico_id?: string
+          modelo_id?: string | null
           motivo_reprovacao?: string | null
           revisado_em?: string | null
           revisado_por?: string | null
@@ -6793,6 +6838,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "mv_medico_saldo"
             referencedColumns: ["medico_id"]
+          },
+          {
+            foreignKeyName: "medicos_contratos_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "contratos_modelo"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "medicos_contratos_termo_id_fkey"

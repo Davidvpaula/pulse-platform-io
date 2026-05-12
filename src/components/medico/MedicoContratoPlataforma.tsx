@@ -36,10 +36,11 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
   const [uploading, setUploading] = useState(false);
   const [contrato, setContrato] = useState<ContratoRow | null>(null);
   const [versaoAtiva, setVersaoAtiva] = useState<number | null>(null);
+  const [modeloAtivo, setModeloAtivo] = useState<{ id: string; versao: string; titulo: string; arquivo_path: string; arquivo_nome: string } | null>(null);
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data: rows }, termo] = await Promise.all([
+    const [{ data: rows }, termo, { data: modelo }] = await Promise.all([
       supabase
         .from("medicos_contratos")
         .select("*")
@@ -47,9 +48,15 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
         .order("enviado_em", { ascending: false })
         .limit(1),
       buscarTermoAtivo("contrato_medico" as any),
+      supabase
+        .from("contratos_modelo")
+        .select("id,versao,titulo,arquivo_path,arquivo_nome")
+        .eq("ativo", true)
+        .maybeSingle(),
     ]);
     setContrato((rows?.[0] as ContratoRow) ?? null);
     setVersaoAtiva(termo?.versao ?? null);
+    setModeloAtivo((modelo as any) ?? null);
     setLoading(false);
   }, [medicoId]);
 
@@ -63,9 +70,17 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
   async function handleBaixar() {
     setDownloading(true);
     try {
-      await gerarContratoMedicoPdf(medicoId);
+      if (modeloAtivo) {
+        const { data, error } = await supabase.storage
+          .from("contratos-modelo").createSignedUrl(modeloAtivo.arquivo_path, 60);
+        if (error) throw error;
+        window.open(data.signedUrl, "_blank");
+      } else {
+        // fallback: gera PDF dinâmico a partir do texto
+        await gerarContratoMedicoPdf(medicoId);
+      }
     } catch (e: any) {
-      toast.error(e.message ?? "Erro ao gerar contrato");
+      toast.error(e.message ?? "Erro ao baixar contrato");
     } finally {
       setDownloading(false);
     }
@@ -103,6 +118,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
       const { error: insErr } = await supabase.from("medicos_contratos").insert({
         medico_id: medicoId,
         termo_id: termo.id,
+        modelo_id: modeloAtivo?.id ?? null,
         arquivo_path: path,
         arquivo_nome: file.name,
         status: "pendente",
@@ -123,9 +139,11 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <FileText className="h-4 w-4 text-primary" />
         <h3 className="font-display text-lg font-semibold">Contrato da plataforma</h3>
-        {versaoAtiva && (
-          <Badge variant="outline" className="ml-auto text-[10px]">Versão ativa: v{versaoAtiva}</Badge>
-        )}
+        {modeloAtivo ? (
+          <Badge variant="outline" className="ml-auto text-[10px]">Modelo ativo: {modeloAtivo.versao}</Badge>
+        ) : versaoAtiva ? (
+          <Badge variant="outline" className="ml-auto text-[10px]">Versão texto: v{versaoAtiva}</Badge>
+        ) : null}
       </div>
 
       {loading ? (
@@ -167,7 +185,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
             <Button
               variant="outline"
               onClick={handleBaixar}
-              disabled={downloading || !versaoAtiva}
+              disabled={downloading || (!versaoAtiva && !modeloAtivo)}
             >
               <Download className="mr-2 h-4 w-4" />
               {downloading ? "Gerando…" : "Baixar contrato (PDF)"}
@@ -192,7 +210,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
             )}
           </div>
 
-          {!versaoAtiva && (
+          {!versaoAtiva && !modeloAtivo && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
               A administração ainda não publicou um contrato ativo. Aguarde para baixar e assinar.
             </p>
