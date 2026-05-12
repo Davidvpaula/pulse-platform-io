@@ -181,44 +181,7 @@ export default function AdminConfiguracoes() {
         description="Especialidades disponíveis no site e atalhos para módulos de gestão."
       />
 
-      {/* Atalho: Repasse financeiro (apenas com capability) */}
-      {podeRepasse && (
-        <Link
-          to="/app/admin/financeiro/repasse"
-          className="card-elevated group flex items-center justify-between gap-4 p-5 transition hover:border-primary/40"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-display text-base font-semibold">Repasse financeiro · Médicos</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Defina o % de repasse global das consultas particulares e configure exceções por médico.
-              </p>
-            </div>
-          </div>
-          <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-        </Link>
-      )}
-      {/* Atalho: Atendimento imediato */}
-      <Link
-        to="/app/admin/atendimento-imediato"
-        className="card-elevated group flex items-center justify-between gap-4 p-5 transition hover:border-emerald-400/60"
-      >
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-700 dark:bg-emerald-950/40">
-            <Zap className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-display text-base font-semibold">Atendimento imediato</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Edite preço, duração e repasse do serviço público — reflete no calendário compartilhado em tempo real.
-            </p>
-          </div>
-        </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
-      </Link>
+      {/* Atalhos removidos visualmente — acessos continuam pelo menu lateral */}
       {/* Pagamentos */}
       <Section
         icon={CreditCard}
