@@ -469,8 +469,8 @@ export default function AdminTermosCondicoes() {
               <Input value={editTitulo} onChange={e => setEditTitulo(e.target.value)} maxLength={200} />
             </div>
             <div>
-              <Label>Conteúdo (suporta HTML)</Label>
-              <Textarea value={editConteudo} onChange={e => setEditConteudo(e.target.value)} rows={12} />
+              <Label>Conteúdo (suporta HTML — sem limite de caracteres)</Label>
+              <Textarea value={editConteudo} onChange={e => setEditConteudo(e.target.value)} rows={20} />
             </div>
           </div>
           <DialogFooter>
