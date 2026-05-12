@@ -118,6 +118,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
       const { error: insErr } = await supabase.from("medicos_contratos").insert({
         medico_id: medicoId,
         termo_id: termo.id,
+        modelo_id: modeloAtivo?.id ?? null,
         arquivo_path: path,
         arquivo_nome: file.name,
         status: "pendente",
