@@ -123,7 +123,8 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         label: "Cadastros",
         icon: UserCog,
         children: [
-          { label: "Médicos", to: "/app/admin/medicos" },
+          { label: "Médicos — Aprovação", to: "/app/admin/medicos" },
+          { label: "Médicos — Contratos", to: "/app/admin/medicos/contratos" },
           { label: "Colaboradores", to: "/app/admin/colaboradores" },
         ],
       },
