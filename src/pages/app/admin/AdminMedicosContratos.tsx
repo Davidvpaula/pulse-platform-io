@@ -16,6 +16,7 @@ type Row = {
   id: string;
   medico_id: string;
   termo_id: string;
+  modelo_id: string | null;
   arquivo_path: string;
   arquivo_nome: string;
   status: "pendente" | "em_analise" | "aprovado" | "reprovado";
@@ -24,6 +25,7 @@ type Row = {
   motivo_reprovacao: string | null;
   medicos: { nome: string; crm: string; crm_estado: string | null } | null;
   termos_condicoes: { versao: number; titulo: string } | null;
+  contratos_modelo: { versao: string; titulo: string } | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
