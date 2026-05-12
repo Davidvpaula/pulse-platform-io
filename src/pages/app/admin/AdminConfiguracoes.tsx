@@ -139,9 +139,37 @@ export default function AdminConfiguracoes() {
   };
 
   const excluir = async (e: Especialidade) => {
-    if (!confirm(`Excluir "${e.nome}"? Vínculos médicos podem quebrar.`)) return;
+    // Verifica vínculos antes
+    const { count: vinculosCount } = await supabase
+      .from("medico_especialidades")
+      .select("*", { count: "exact", head: true })
+      .eq("especialidade_id", e.id);
+
+    if ((vinculosCount ?? 0) > 0) {
+      const ok = confirm(
+        `"${e.nome}" está vinculada a ${vinculosCount} médico(s).\n\n` +
+        `Excluir vai remover esses vínculos também. Deseja continuar?\n\n` +
+        `(Dica: você também pode apenas DESATIVAR a especialidade.)`
+      );
+      if (!ok) return;
+      const { error: errVinc } = await supabase
+        .from("medico_especialidades")
+        .delete()
+        .eq("especialidade_id", e.id);
+      if (errVinc) { toast.error("Falha ao remover vínculos: " + errVinc.message); return; }
+    } else {
+      if (!confirm(`Excluir "${e.nome}"?`)) return;
+    }
+
     const { error } = await supabase.from("especialidades").delete().eq("id", e.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(
+        error.message.includes("foreign key")
+          ? "Não foi possível excluir: ainda existem registros vinculados a esta especialidade. Tente desativá-la."
+          : error.message
+      );
+      return;
+    }
     toast.success("Excluída.");
     load();
   };
