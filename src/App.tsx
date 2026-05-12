@@ -211,6 +211,9 @@ const App = () => (
               <Route path="/para-medicos" element={<ParaMedicos />} />
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/faq" element={<Faq />} />
+              <Route path="/termos" element={<TermosPublico />} />
+              <Route path="/privacidade" element={<PrivacidadePublica />} />
+              <Route path="/lgpd" element={<LgpdPublico />} />
               {/* /login removed — use /auth */}
               <Route path="/cadastro/medico" element={<CadastroMedico />} />
               <Route path="/auth" element={<Auth />} />
