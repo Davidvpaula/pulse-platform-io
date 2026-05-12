@@ -214,7 +214,6 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Impersonar usuário", to: "/app/admin/impersonar" },
         ],
       },
-      { label: "Termos & Condições", to: "/app/admin/termos-condicoes", icon: FileText },
       {
         label: "Análises",
         icon: TrendingUp,
@@ -250,8 +249,6 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
           { label: "Relatório Médico IA", to: "/app/admin/ia-medicos" },
         ],
       },
-      { label: "Treinamento", to: "/app/admin/treinamentos", icon: BookOpen },
-      { label: "FAQ do Site", to: "/app/admin/faq", icon: HelpCircle },
       { label: "Feedbacks do site", to: "/app/admin/feedbacks", icon: Inbox },
       { label: "Configurações", to: "/app/admin/configuracoes", icon: Settings },
       { label: "Perfil", to: "/app/admin/perfil", icon: User },

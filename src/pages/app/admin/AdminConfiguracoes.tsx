@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Settings, Stethoscope, Zap, Plus, Trash2, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight, ArrowUp, ArrowDown, ArrowDownAZ } from "lucide-react";
+import { Settings, Stethoscope, Zap, Plus, Trash2, Loader2, CreditCard, AlertTriangle, Wallet, ArrowRight, ArrowUp, ArrowDown, ArrowDownAZ, FileText, BookOpen, HelpCircle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -181,7 +181,30 @@ export default function AdminConfiguracoes() {
         description="Especialidades disponíveis no site e atalhos para módulos de gestão."
       />
 
-      {/* Atalhos removidos visualmente — acessos continuam pelo menu lateral */}
+      {/* Atalhos administrativos */}
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          { to: "/app/admin/termos-condicoes", icon: FileText, title: "Termos & Condições", desc: "Versionamento e aceites auditáveis" },
+          { to: "/app/admin/treinamentos", icon: BookOpen, title: "Treinamento", desc: "Conteúdos e materiais para a equipe" },
+          { to: "/app/admin/faq", icon: HelpCircle, title: "FAQ do Site", desc: "Perguntas frequentes da página pública" },
+        ].map(({ to, icon: Icon, title, desc }) => (
+          <Link
+            key={to}
+            to={to}
+            className="group card-elevated flex items-center gap-3 p-4 transition-all hover:border-primary/40 hover:shadow-md"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm">{title}</p>
+              <p className="truncate text-xs text-muted-foreground">{desc}</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          </Link>
+        ))}
+      </div>
+
       {/* Pagamentos */}
       <Section
         icon={CreditCard}
