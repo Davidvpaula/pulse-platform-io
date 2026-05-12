@@ -139,9 +139,11 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <FileText className="h-4 w-4 text-primary" />
         <h3 className="font-display text-lg font-semibold">Contrato da plataforma</h3>
-        {versaoAtiva && (
-          <Badge variant="outline" className="ml-auto text-[10px]">Versão ativa: v{versaoAtiva}</Badge>
-        )}
+        {modeloAtivo ? (
+          <Badge variant="outline" className="ml-auto text-[10px]">Modelo ativo: {modeloAtivo.versao}</Badge>
+        ) : versaoAtiva ? (
+          <Badge variant="outline" className="ml-auto text-[10px]">Versão texto: v{versaoAtiva}</Badge>
+        ) : null}
       </div>
 
       {loading ? (
