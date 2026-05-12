@@ -210,7 +210,7 @@ export default function MedicoContratoPlataforma({ medicoId }: { medicoId: strin
             )}
           </div>
 
-          {!versaoAtiva && (
+          {!versaoAtiva && !modeloAtivo && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
               A administração ainda não publicou um contrato ativo. Aguarde para baixar e assinar.
             </p>
