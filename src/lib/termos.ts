@@ -21,10 +21,12 @@ export const TERMO_TIPO_LABELS: Record<TermoTipo, string> = {
   proposta_empresa: "Termos de proposta comercial (Empresa)",
   proposta_medico: "Termos de proposta comercial (Médico)",
   cancelamento_reembolso: "Termos de cancelamento e reembolso",
+  termos_uso_plataforma: "Termos de uso da plataforma (geral)",
+  lgpd: "LGPD — Lei Geral de Proteção de Dados",
 };
 
 export const TERMO_CATEGORIAS = {
-  paciente: ["consulta_paciente", "privacidade", "plano_plataforma", "plano_medico", "cancelamento_reembolso"] as TermoTipo[],
+  paciente: ["termos_uso_plataforma", "consulta_paciente", "privacidade", "lgpd", "plano_plataforma", "plano_medico", "cancelamento_reembolso"] as TermoTipo[],
   medico: ["contrato_medico", "gamificacao_premium", "criacao_plano_medico", "uso_feegow", "proposta_medico"] as TermoTipo[],
   empresa: ["proposta_empresa"] as TermoTipo[],
 };
