@@ -12489,6 +12489,8 @@ export type Database = {
         | "proposta_empresa"
         | "proposta_medico"
         | "cancelamento_reembolso"
+        | "termos_uso_plataforma"
+        | "lgpd"
       tipo_conta_bancaria: "corrente" | "poupanca"
       tipo_paciente: "titular" | "dependente"
       tipo_pessoa: "pf" | "pj"
@@ -13095,6 +13097,8 @@ export const Constants = {
         "proposta_empresa",
         "proposta_medico",
         "cancelamento_reembolso",
+        "termos_uso_plataforma",
+        "lgpd",
       ],
       tipo_conta_bancaria: ["corrente", "poupanca"],
       tipo_paciente: ["titular", "dependente"],
