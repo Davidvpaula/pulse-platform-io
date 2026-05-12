@@ -1,131 +1,104 @@
-# Relatório de alinhamento — Termos & Contrato do Médico
 
-Antes de implementar, confirmo o entendimento e mapeio cada peça contra o código atual.
+# Plano — Contrato Médico em PDF (modelo enviado pelo Admin)
 
-## 1. Princípio (não negociável)
+## Contexto e diagnóstico
 
-- **Aprovação do cadastro do médico ≠ aprovação do contrato.** São camadas separadas.
-- O contrato **NÃO bloqueia** login, dashboard, agenda, consultas, perfil ou pagamentos.
-- É uma **camada documental paralela**, puramente informativa/administrativa.
-- Tudo que existe hoje continua intocado.
+Hoje temos 3 camadas de "termos" para o médico, e elas estão misturadas conceitualmente. Proponho separá-las de forma explícita:
 
-## 2. O que NÃO será alterado
+| Camada | O que é | Onde vive hoje | Formato |
+|---|---|---|---|
+| **1. Termo de Adesão (cadastro)** | Texto curto de ciência/aceite inicial no cadastro do médico (autonomia, regularidade, ausência de vínculo, etc.) | `termos_condicoes` tipo `cadastro_medico` (texto rico) | Texto exibido em modal, aceite registrado em `user_terms_acceptance` |
+| **2. Contrato Formal** | PDF completo de parceria, assinado pelo médico e reenviado | Hoje gerado dinamicamente via `gerarContratoMedicoPdf.ts` (jsPDF) a partir do texto `contrato_medico` | **PRECISA virar PDF modelo enviado pelo Admin** |
+| **3. Termos de extensão** | Gamificação, Planos, Feegow, LGPD, Premium etc. — aceites adicionais que estendem o contrato | `termos_condicoes` em vários `termo_tipo` | Texto + aceite em `user_terms_acceptance` |
 
-| Item | Status |
-|---|---|
-| Rota `/app/medico/perfil` | mantida |
-| Componente `MeusAceites` | mantido sem alteração |
-| `TermsAcceptanceDialog`, `TermosPendentesBanner` | mantidos |
-| Tabelas `termos_condicoes` e `user_terms_acceptance` | inalteradas |
-| RLS de termos e aceites | inalterada |
-| Bucket `medico-docs` e suas policies | inalterado (já permite `<user_id>/...` p/ médico e tudo p/ admin) |
-| Enum `termo_tipo.contrato_medico` | já existe, será reutilizado |
-| Rota `/app/admin/termos-condicoes` | mantida |
-| `MedicosAprovacao` em `/app/admin/medicos` | inalterado (continua sendo aprovação de cadastro) |
-| `medicos.status` / `aprovado_em` / `aprovado_por` | inalterados |
+A camada 1 e a 3 já funcionam bem (texto + aceite). O problema é a **camada 2**: o admin não consegue anexar o PDF oficial do contrato; o sistema gera um PDF improvisado. É isso que o plano corrige.
 
-## 3. Fase 1 — Médico
+## Sugestão de arquitetura (recomendada)
 
-### 3.1 Mudança mínima em `MedicoPerfil.tsx`
-- Renomear apenas o label da aba: `"Termos"` → `"Termos & Contrato"`.
-- Dentro do `TabsContent value="termos"`:
-  - **Seção 1**: `<MeusAceites />` (igual hoje).
-  - **Seção 2**: `<MedicoContratoPlataforma medicoId={medico.id} />` (novo).
+**Decoupling**: tratar "Contrato Formal" como um documento próprio, não mais como um `termo_tipo`. Isso evita poluir a tela de Termos & Condições (que é editor de texto) com upload de PDF.
 
-### 3.2 Novo componente `src/components/medico/MedicoContratoPlataforma.tsx`
-Funções:
-- Mostra status atual (`nao_enviado | pendente | em_analise | aprovado | reprovado`) com badge.
-- Botão **"Baixar contrato (PDF)"** → chama `gerarContratoMedicoPdf()`.
-- Botão **"Enviar contrato assinado"** → upload PDF para `medico-docs/<user_id>/contratos/<uuid>.pdf`, grava registro em `medicos_contratos` (status = `pendente`).
-- Mostra: versão do termo aceito, data de envio, data de revisão, motivo de reprovação (se houver).
-- Se status = `reprovado`, libera novo upload (cria nova linha, mantém histórico).
-- Se status = `aprovado`, somente leitura + botão de baixar o assinado.
+### Nova entidade: `contratos_modelo`
 
-### 3.3 Novo `src/lib/gerarContratoMedicoPdf.ts`
-- Reutiliza padrão de `src/lib/gerarFaturaPdf.ts` (jsPDF/pdfmake já no projeto).
-- Busca `termos_condicoes` ativo do tipo `contrato_medico` + dados do médico (nome, CRM/UF, especialidade, data atual).
-- Renderiza HTML do termo (sanitizado) + bloco de assinatura no final.
-- Download direto no navegador (não persiste no Storage).
-
-## 4. Fase 2 — Admin
-
-### 4.1 Nova rota `/app/admin/medicos/contratos`
-Componente novo: `src/pages/app/admin/AdminMedicosContratos.tsx`.
-
-Funções:
-- Lista médicos com contratos pendentes / em análise / aprovados / reprovados (filtros).
-- Para cada linha: nome, CRM, status, versão do termo, data de envio.
-- Ações: **Baixar PDF assinado**, **Aprovar**, **Reprovar com motivo**.
-- Ao aprovar/reprovar: atualiza `medicos_contratos.status`, grava `revisado_por`, `revisado_em`, `motivo_reprovacao`.
-- Notificação opcional via tabela `notificacoes` existente (médico recebe sino).
-
-### 4.2 Menu admin
-Em `src/lib/profiles.ts`, transformar a entrada atual em submenu:
+Tabela dedicada para versões do PDF oficial do contrato, gerenciada pelo Admin.
 
 ```text
-Cadastros
- └── Médicos
-      ├── Aprovação de cadastro     → /app/admin/medicos          (atual)
-      └── Contratos médicos          → /app/admin/medicos/contratos (novo)
- └── Colaboradores                   (atual)
+contratos_modelo
+├── id
+├── versao              (ex: "v1.0", "v2.0")
+├── titulo              ("Contrato de Parceria — Médico Pessoa Física")
+├── arquivo_path        (storage: contratos-modelo/<uuid>.pdf)
+├── arquivo_nome
+├── ativo               (apenas 1 ativo por vez)
+├── publicado_em
+├── publicado_por
+└── observacoes
 ```
 
-> Observação: hoje só existem `Médicos` e `Colaboradores` em "Cadastros". Sub-itens "Especialidades" e "Escalas" mencionados no seu texto **não existem** como rota — não vamos inventá-los agora; ficam fora do escopo. Se quiser, criamos depois.
+Quando o Admin marca uma nova versão como `ativa`, ela passa a ser o modelo que o médico baixa. Versões antigas continuam acessíveis para auditoria (médicos que já assinaram a v1 não são forçados a re-assinar a v2 — opcional).
 
-## 5. Banco de dados (1 migration nova, isolada)
+### Fluxo final do médico
 
-```sql
-create type public.medico_contrato_status as enum
-  ('nao_enviado','pendente','em_analise','aprovado','reprovado');
-
-create table public.medicos_contratos (
-  id uuid primary key default gen_random_uuid(),
-  medico_id uuid not null references public.medicos(id) on delete cascade,
-  termo_id  uuid not null references public.termos_condicoes(id),
-  arquivo_path text not null,        -- ex: <user_id>/contratos/<uuid>.pdf
-  arquivo_nome text not null,
-  status public.medico_contrato_status not null default 'pendente',
-  enviado_em timestamptz not null default now(),
-  revisado_em timestamptz,
-  revisado_por uuid references auth.users(id),
-  motivo_reprovacao text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create index idx_medicos_contratos_medico on public.medicos_contratos(medico_id);
-create index idx_medicos_contratos_status on public.medicos_contratos(status);
+```text
+Cadastro
+   └── aceita Termo de Adesão (texto curto)         ← já existe
+        └── cria perfil
+             └── em /app/medico/perfil → aba "Termos & Contrato"
+                  ├── Bloco "Contrato da Plataforma"
+                  │    ├── Baixar contrato modelo (PDF do Admin)  ← NOVO
+                  │    ├── Assinar fora do sistema
+                  │    ├── Anexar PDF assinado                    ← já existe
+                  │    └── Status: pendente / em_analise / aprovado / reprovado
+                  └── Bloco "Outros aceites" (gamificação, planos, feegow, lgpd)
 ```
 
-### RLS (apenas na tabela nova)
-- `medico_select_own` — médico vê linhas onde `medico_id` corresponde ao seu `medicos.id` (via `medicos.user_id = auth.uid()`).
-- `medico_insert_own` — médico insere apenas para si.
-- `admin_all` — `has_role(auth.uid(),'admin')` para SELECT/UPDATE/DELETE.
-- Bucket `medico-docs`: **nenhuma alteração** (path `<user_id>/contratos/...` já cai na policy existente do bucket).
+### Fluxo final do admin
 
-## 6. Status semântica
+```text
+/app/admin/medicos/contratos-modelo   ← NOVA tela
+   ├── Lista de versões do contrato
+   ├── Upload de novo PDF modelo + versão + título
+   ├── Marcar como ativo
+   └── Histórico
 
-- **`nao_enviado`** = não há linha em `medicos_contratos` (estado virtual, calculado no front).
-- **`pendente`** = médico enviou, aguardando admin pegar.
-- **`em_analise`** = admin abriu / marcou para análise (opcional — pode ser dispensado e ir direto para aprovado/reprovado).
-- **`aprovado`** = final positivo.
-- **`reprovado`** = médico pode reenviar (cria nova linha; a antiga fica como histórico).
+/app/admin/medicos/contratos          ← já existe
+   ├── Lista de contratos enviados pelos médicos
+   ├── Visualizar PDF assinado
+   ├── Aprovar / reprovar com motivo
+   └── Mostra qual versão do modelo foi baixada (rastreabilidade)
+```
 
-## 7. O que será entregue (etapas)
+## Mudanças concretas
 
-1. Migration: enum + tabela `medicos_contratos` + RLS.
-2. `gerarContratoMedicoPdf.ts`.
-3. `MedicoContratoPlataforma.tsx`.
-4. Ajuste mínimo em `MedicoPerfil.tsx` (label da aba + render do novo componente).
-5. `AdminMedicosContratos.tsx` + rota em `App.tsx`.
-6. Submenu em `profiles.ts` (Cadastros → Médicos → submenu).
-7. (Opcional) gatilho que insere `notificacoes` para o médico ao aprovar/reprovar.
+### Backend
+1. **Novo bucket** `contratos-modelo` (privado; admin escreve, médicos leem via signed URL).
+2. **Nova tabela** `contratos_modelo` (campos acima) + RLS (admin full, médico select dos ativos).
+3. **Coluna nova** em `medicos_contratos`: `modelo_id` (referência à versão baixada — rastreabilidade).
+4. **Trigger** garantindo no máximo 1 modelo `ativo=true`.
 
-## 8. Pontos a confirmar antes de começar
+### Frontend
+5. **Nova rota** `/app/admin/medicos/contratos-modelo` (`AdminContratosModelo.tsx`): upload, lista, ativar.
+6. **Item de menu** Admin → Cadastros → Médicos → "Contrato modelo" (acima de "Contratos").
+7. **Editar** `MedicoContratoPlataforma.tsx`: botão "Baixar contrato" passa a baixar do bucket `contratos-modelo` (modelo ativo). Se nenhum modelo ativo existir, fallback para o `gerarContratoMedicoPdf.ts` atual (mantém retrocompatibilidade).
+8. **Editar** `AdminMedicosContratos.tsx`: exibir badge "Modelo v1.0" ao lado de cada contrato enviado.
 
-1. **Tipo de contrato (versão)**: o termo `contrato_medico` ativo é a referência. Se Admin publicar nova versão, **médicos com contrato já `aprovado` continuam válidos** (não invalidamos automaticamente). OK?
-2. **Status `em_analise`**: incluir ou simplificar para só `pendente → aprovado/reprovado`? Sugiro **manter os 5** conforme você pediu.
-3. **Notificação** ao médico (sino) na aprovação/reprovação: incluir já na fase 2 ou deixar para depois? Sugiro **incluir** — é barato e usa a infra já pronta.
-4. **Permissão admin** para a nova rota: reuso `medicos.aprovar` ou crio `medicos.contratos`? Sugiro **reusar `medicos.aprovar`** para não inflar a matriz agora.
+### O que NÃO muda
+- Tela `/app/admin/termos-condicoes` continua só com **texto** (Termo de Adesão, gamificação, planos, feegow, lgpd, etc.).
+- `MeusAceites` do médico continua igual.
+- `gerarContratoMedicoPdf.ts` permanece como fallback (não removemos).
+- Permissões existentes intactas.
 
-Confirma esses 4 pontos (ou aceita as sugestões) que eu sigo a implementação na ordem da seção 7, sem tocar em nada do que está funcionando.
+## Por que essa separação é melhor
+
+- **Conceitualmente correto**: termo de aceite (texto) ≠ contrato formal (PDF jurídico).
+- **Admin não precisa abrir editor de texto rico** para gerenciar contrato — só sobe o PDF que o jurídico produziu.
+- **Versionamento limpo**: cada PDF é uma versão imutável; texto dos termos pode evoluir sem afetar contratos já assinados.
+- **Rastreabilidade**: sabemos exatamente qual versão o médico baixou e assinou.
+- **Não quebra nada**: tudo é aditivo; fallback mantém compatibilidade enquanto o admin não sobe nenhum modelo.
+
+## Alternativa mais simples (se preferir)
+
+Adicionar apenas um campo `arquivo_modelo_path` na tabela `termos_condicoes` para o tipo `contrato_medico`. Mais rápido, menos limpo (mistura PDF dentro do editor de texto), sem versionamento dedicado.
+
+---
+
+**Pergunta antes de implementar**: vai com a **arquitetura recomendada** (`contratos_modelo` dedicada, com versionamento) ou com a **alternativa simples** (campo no `termos_condicoes`)?
