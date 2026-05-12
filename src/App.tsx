@@ -345,6 +345,7 @@ const App = () => (
               <Route path="admin/usuarios" element={<Navigate to="/app/admin/pacientes" replace />} />
               <Route path="admin/medicos" element={<G perm={["medicos.ver","medicos.aprovar"]}><MedicosAprovacao /></G>} />
               <Route path="admin/medicos/contratos" element={<G perm={["medicos.ver","medicos.aprovar"]}><AdminMedicosContratos /></G>} />
+              <Route path="admin/medicos/contratos-modelo" element={<G perm={["medicos.ver","medicos.aprovar"]}><AdminContratosModelo /></G>} />
               <Route path="admin/colaboradores" element={<G perm="colaboradores.ver"><AdminColaboradores /></G>} />
               <Route path="admin/secretaria" element={<Navigate to="/app/admin/colaboradores" replace />} />
               <Route path="admin/empresas" element={<G perm="empresas.ver"><AdminEmpresas /></G>} />
