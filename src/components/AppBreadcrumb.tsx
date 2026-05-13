@@ -58,8 +58,12 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   // ── Admin: Pacientes ──
   "/app/admin/pacientes":      [admin(), { label: "Pacientes" }, { label: "Gestão de pacientes" }],
   // ── Admin: Cadastros ──
-  "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos" }],
+  "/app/admin/medicos":        [admin(), { label: "Cadastros" }, { label: "Médicos — Aprovação" }],
   "/app/admin/colaboradores":  [admin(), { label: "Cadastros" }, { label: "Colaboradores" }],
+  // ── Admin: Jurídico & Termos ──
+  "/app/admin/termos-condicoes":            [admin(), { label: "Jurídico & Termos" }, { label: "Termos & Condições" }],
+  "/app/admin/medicos/contratos-modelo":    [admin(), { label: "Jurídico & Termos" }, { label: "Contrato modelo médico" }],
+  "/app/admin/medicos/contratos":           [admin(), { label: "Jurídico & Termos" }, { label: "Contratos médicos assinados" }],
   "/app/admin/empresas":        [admin(), { label: "Empresas" }, { label: "Cadastro" }],
   "/app/admin/gestao-b2b":      [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Gestão B2B" }],
   "/app/admin/relatorios-b2b":  [admin(), { label: "Empresas", to: "/app/admin/empresas" }, { label: "Relatórios" }],
