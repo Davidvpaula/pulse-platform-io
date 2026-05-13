@@ -133,7 +133,7 @@ const BREADCRUMB_MAP: Record<string, Crumb[]> = {
   "/app/admin/atendimento-imediato": [admin(), { label: "Atendimento imediato" }],
   "/app/admin/cupons":               [admin(), { label: "Cupons" }],
   "/app/admin/cupons/log":           [admin(), { label: "Cupons", to: "/app/admin/cupons" }, { label: "Log de uso" }],
-  "/app/admin/termos-condicoes":     [admin(), { label: "Termos & Condições" }],
+  
   "/app/admin/treinamentos":         [admin(), { label: "Treinamento" }],
   "/app/admin/auditoria":            [admin(), { label: "Auditoria" }],
   "/app/admin/fluxo":                [admin(), { label: "Fluxo operacional" }],
