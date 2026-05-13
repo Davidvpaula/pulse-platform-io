@@ -124,9 +124,16 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
         icon: UserCog,
         children: [
           { label: "Médicos — Aprovação", to: "/app/admin/medicos" },
-          { label: "Médicos — Contrato modelo", to: "/app/admin/medicos/contratos-modelo" },
-          { label: "Médicos — Contratos", to: "/app/admin/medicos/contratos" },
           { label: "Colaboradores", to: "/app/admin/colaboradores" },
+        ],
+      },
+      {
+        label: "Jurídico & Termos",
+        icon: Scale,
+        children: [
+          { label: "Termos & Condições", to: "/app/admin/termos-condicoes" },
+          { label: "Contrato modelo médico", to: "/app/admin/medicos/contratos-modelo" },
+          { label: "Contratos médicos assinados", to: "/app/admin/medicos/contratos" },
         ],
       },
       { label: "Agendamentos", to: "/app/admin/agendamentos", icon: Calendar },
