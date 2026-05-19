@@ -544,7 +544,7 @@ export const Agendar = () => {
   const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [emBreveNome, setEmBreveNome] = useState<string | null>(null);
   
-  const [sheetMedico, setSheetMedico] = useState<MedicoComSlot | null>(null);
+  const [expandedMedicoId, setExpandedMedicoId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   // Set initial esp from URL
