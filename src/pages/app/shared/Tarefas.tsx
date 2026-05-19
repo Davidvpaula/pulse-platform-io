@@ -37,7 +37,7 @@ const initial: Task[] = [
     vinculo: { tipo: "empresa", id: "E-001", label: "Construtora Horizonte" } },
   { id: "T-104", titulo: "Reenviar consulta para Feegow", responsavel: "Renata Albuquerque", prioridade: "media", prazo: "Amanhã", prazoHoras: 18, status: "andamento",
     vinculo: { tipo: "consulta", id: "C-1110", label: "Patrícia Nunes · 10:30" } },
-  { id: "T-105", titulo: "Treinar equipe no novo bot", responsavel: "Fernanda Lasmar", prioridade: "baixa", prazo: "02/Mai", prazoHoras: 96, status: "concluida" },
+  { id: "T-105", titulo: "Treinar equipe no novo bot", responsavel: "Fernanda Nova Saúde", prioridade: "baixa", prazo: "02/Mai", prazoHoras: 96, status: "concluida" },
 ];
 
 const statusMeta: Record<TaskStatus, { label: string; tone: string; icon: typeof Clock }> = {

@@ -936,7 +936,7 @@ export const Planos = () => {
             </span>
             <h2 className="mt-4 font-display text-2xl font-bold md:text-3xl">Cobertura completa para seu cuidado</h2>
             <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm">
-              Planos criados pela Lasmar Telemed com benefícios exclusivos, acesso a múltiplos profissionais e descontos progressivos.
+              Planos criados pela Nova Saúde com benefícios exclusivos, acesso a múltiplos profissionais e descontos progressivos.
             </p>
           </div>
           <div className={`grid gap-6 ${planosPlataforma.length === 1 ? "max-w-md mx-auto" : planosPlataforma.length === 2 ? "md:grid-cols-2 max-w-3xl mx-auto" : "md:grid-cols-3"}`}>
@@ -1066,7 +1066,7 @@ export const Planos = () => {
 /* ── Empresas ── */
 
 export const Empresas = () => (
-  <PageShell title="Lasmar para empresas" subtitle="Saúde corporativa para sua equipe, com relatórios e gestão de uso.">
+  <PageShell title="Nova Saúde para empresas" subtitle="Saúde corporativa para sua equipe, com relatórios e gestão de uso.">
     <div className="grid gap-5 md:grid-cols-3">
       {[
         { t: "Funcionários ilimitados", d: "Adicione e remova pela área RH." },
@@ -1083,7 +1083,7 @@ export const Empresas = () => (
 /* ── Para Médicos ── */
 
 export const ParaMedicos = () => (
-  <PageShell title="Lasmar para médicos" subtitle="Atenda online com agenda integrada, prontuário e pagamentos.">
+  <PageShell title="Nova Saúde para médicos" subtitle="Atenda online com agenda integrada, prontuário e pagamentos.">
     <div className="grid gap-5 md:grid-cols-3">
       {[
         { t: "Agenda inteligente", d: "Sincronize Google Agenda e Meet." },

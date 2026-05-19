@@ -54,7 +54,7 @@ export function gerarReciboPdf(d: DadosRecibo) {
   doc.text("Recibo de Pagamento", m, 45);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text("Lasmar Telemed", m, 65);
+  doc.text("Nova Saúde", m, 65);
   doc.setFontSize(9);
   doc.text(`Emitido em: ${fmtData(new Date().toISOString())}`, W - m - 200, 65);
 
@@ -167,7 +167,7 @@ export function gerarReciboPdf(d: DadosRecibo) {
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   doc.text(
-    "Este documento foi gerado automaticamente pela plataforma Lasmar Telemed e possui validade fiscal.",
+    "Este documento foi gerado automaticamente pela plataforma Nova Saúde e possui validade fiscal.",
     m,
     H - 40,
   );

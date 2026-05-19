@@ -80,7 +80,7 @@ const SLA_OPTIONS = [
   ["vip", "VIP"],
 ] as const;
 
-const REGRA_USO_PADRAO = "Consultas realizadas dentro do plano seguem a política padrão da plataforma Lasmar Telemed. " +
+const REGRA_USO_PADRAO = "Consultas realizadas dentro do plano seguem a política padrão da plataforma Nova Saúde. " +
   "O paciente pode agendar conforme a disponibilidade do médico. " +
   "Consultas não utilizadas no mês não são acumuláveis. " +
   "Cancelamento segue a política global da plataforma.";

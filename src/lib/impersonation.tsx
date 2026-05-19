@@ -11,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, R
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileKey } from "./profiles";
 
-const STORAGE_KEY = "lasmar.impersonation";
+const STORAGE_KEY = "nova-saude.impersonation";
 const MAX_DURATION_MS = 60 * 60 * 1000; // 60 min
 
 type Target = {

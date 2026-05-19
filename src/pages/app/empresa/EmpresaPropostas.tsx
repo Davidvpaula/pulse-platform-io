@@ -170,7 +170,7 @@ export default function EmpresaPropostas() {
         termo_empresa_versao: termoVersao,
       });
       if (error) throw error;
-      toast.success("Proposta enviada com sucesso! Será analisada pela Lasmar Telemed.");
+      toast.success("Proposta enviada com sucesso! Será analisada pela Nova Saúde.");
       setShowForm(false);
       resetForm();
       carregarDados();
@@ -328,7 +328,7 @@ export default function EmpresaPropostas() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Este valor será analisado pela Lasmar Telemed antes de ser encaminhado ao médico.
+              Este valor será analisado pela Nova Saúde antes de ser encaminhado ao médico.
             </p>
           </CardContent>
         </Card>
@@ -339,7 +339,7 @@ export default function EmpresaPropostas() {
             {termoConteudo && (
               <div className="rounded-lg border border-border bg-muted/30 p-4 max-h-40 overflow-auto text-xs leading-relaxed">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Termos e Condições — Lasmar Telemed
+                  Termos e Condições — Nova Saúde
                 </p>
                 {termoConteudo}
               </div>
@@ -356,7 +356,7 @@ export default function EmpresaPropostas() {
                 onCheckedChange={v => setFormTermoAceito(v === true)}
               />
               <Label htmlFor="termo-empresa" className="text-xs">
-                Li e aceito os termos de proposta comercial da Lasmar Telemed
+                Li e aceito os termos de proposta comercial da Nova Saúde
               </Label>
             </div>
           </CardContent>

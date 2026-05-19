@@ -62,7 +62,7 @@ export const profiles: Record<ProfileKey, ProfileConfig> = {
     label: "Médico",
     basePath: "/app/medico",
     accent: "Profissional",
-    user: { name: "Dr. Rafael Lasmar", role: "Médico", avatarInitials: "RL" },
+    user: { name: "Dr. Rafael Nova Saúde", role: "Médico", avatarInitials: "RL" },
     nav: [
       { label: "Dashboard", to: "/app/medico/dashboard", icon: LayoutDashboard },
       {

@@ -673,7 +673,7 @@ function CamposPorTipo({ tipo, config, onChange }: {
               value={(config.prompt_base as string) ?? ""}
               onChange={(e) => set("prompt_base", e.target.value)}
               rows={4}
-              placeholder="Você é a assistente da Lasmar Telemed..."
+              placeholder="Você é a assistente da Nova Saúde..."
             />
           </div>
           <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">

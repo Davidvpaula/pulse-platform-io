@@ -91,7 +91,7 @@ export default function ServicoHero({
         <div className="flex flex-col gap-4 md:col-span-7">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-              Lasmar Telemed
+              Nova Saúde
             </span>
             {tipo && (
               <Badge variant="outline" className="text-[10px] uppercase tracking-wider">

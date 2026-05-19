@@ -35,7 +35,7 @@ const numeros = [
 export default function Sobre() {
   return (
     <PageShell
-      title="Sobre a Lasmar TeleMed"
+      title="Sobre a Nova Saúde"
       subtitle="Tecnologia a serviço do cuidado humano."
     >
       <div className="mx-auto max-w-5xl space-y-16">
@@ -46,10 +46,10 @@ export default function Sobre() {
               Quem somos
             </p>
             <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-              O que é a Lasmar TeleMed?
+              O que é a Nova Saúde?
             </h2>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              A Telemed Lasmar é uma plataforma inovadora de telemedicina que conecta pacientes a
+              A Nova Saúde é uma plataforma inovadora de telemedicina que conecta pacientes a
               médicos e profissionais de saúde especializados. Oferecemos consultas online com
               praticidade, segurança e conforto.
             </p>
@@ -60,7 +60,7 @@ export default function Sobre() {
         <section>
           <div className="mb-8 max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Por que escolher a Lasmar?
+              Por que escolher a Nova Saúde?
             </p>
             <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
               Há 2 anos transformando o acesso à saúde no Brasil com 99,9% de aprovação.
