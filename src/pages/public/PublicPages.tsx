@@ -191,33 +191,33 @@ export const Medicos = () => {
           <p className="text-xs text-muted-foreground mb-3">{filtrados.length} {filtrados.length === 1 ? "médico encontrado" : "médicos encontrados"}</p>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {filtrados.map((m) => (
-              <Link key={m.id} to={`/medicos/${medicoSlug(m.nome)}`} className="card-elevated p-6 transition hover:-translate-y-0.5 hover:shadow-elegant">
-                <div className="flex items-start gap-4">
+              <Link key={m.id} to={`/medicos/${medicoSlug(m.nome)}`} className="card-elevated p-4 sm:p-6 transition hover:-translate-y-0.5 hover:shadow-elegant">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {m.foto_url ? (
-                    <img src={m.foto_url} alt={m.nome} className="h-14 w-14 rounded-full object-cover shrink-0" />
+                    <img src={m.foto_url} alt={m.nome} className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover shrink-0" />
                   ) : (
-                    <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold shrink-0">
+                    <div className="grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-full bg-gradient-primary text-primary-foreground font-bold shrink-0">
                       {iniciais(m.nome)}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{formatNomeMedico(m.tratamento, m.nome)}</p>
-                    <p className="text-xs text-muted-foreground">{m.especialidade ?? "Clínica"} · {m.crm}</p>
-                    <div className="mt-1.5 flex items-center gap-2">
+                    <p className="font-semibold truncate leading-tight">{formatNomeMedico(m.tratamento, m.nome)}</p>
+                    <p className="text-xs text-muted-foreground truncate">{m.especialidade ?? "Clínica"} · {m.crm}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-xs text-warning">
                         <Star className="h-3.5 w-3.5 fill-current" />
                         {m.avaliacao_media > 0 ? m.avaliacao_media.toFixed(1) : "Novo"}
                       </span>
+                      {m.online ? (
+                        <Badge className="bg-success/10 text-success border-success/20 text-[10px]">Disponível</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">Sem horário</Badge>
+                      )}
                     </div>
                   </div>
-                  {m.online ? (
-                    <Badge className="bg-success/10 text-success border-success/20 text-[10px] shrink-0">Disponível</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">Sem horário</Badge>
-                  )}
                 </div>
-                <div className="mt-5 flex items-center justify-end">
-                  <Button size="sm" className="bg-gradient-primary hover:opacity-90">Agendar</Button>
+                <div className="mt-4 flex">
+                  <Button size="sm" className="w-full sm:w-auto sm:ml-auto bg-gradient-primary hover:opacity-90">Agendar</Button>
                 </div>
               </Link>
             ))}
