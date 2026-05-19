@@ -99,7 +99,7 @@ export default function IntegracaoWhatsApp() {
             <div className="mt-6 space-y-4">
               <div>
                 <Label>Nome interno *</Label>
-                <Input value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Comercial Lasmar" />
+                <Input value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Comercial Nova Saúde" />
               </div>
               <div>
                 <Label>Tipo</Label>

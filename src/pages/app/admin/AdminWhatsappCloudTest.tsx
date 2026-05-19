@@ -23,7 +23,7 @@ type LogRow = {
   created_at: string;
 };
 
-const DEFAULT_MSG = "Teste real da API WhatsApp Cloud - Lasmar";
+const DEFAULT_MSG = "Teste real da API WhatsApp Cloud - Nova Saúde";
 
 export default function AdminWhatsappCloudTest() {
   const [to, setTo] = useState("");

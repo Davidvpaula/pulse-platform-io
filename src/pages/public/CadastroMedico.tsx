@@ -138,7 +138,7 @@ export default function CadastroMedico() {
 
       toast({
         title: "Documentos enviados!",
-        description: "Aguarde a aprovação da equipe Lasmar. Você receberá um aviso por e-mail.",
+        description: "Aguarde a aprovação da equipe Nova Saúde. Você receberá um aviso por e-mail.",
       });
       navigate("/app/medico/aguardando-aprovacao", { replace: true });
     } catch (err: unknown) {

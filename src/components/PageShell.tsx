@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react";
 export default function PageShell({
   title,
   subtitle,
-  eyebrow = "Lasmar Telemed",
+  eyebrow = "Nova Saúde",
   children,
 }: {
   title?: string;

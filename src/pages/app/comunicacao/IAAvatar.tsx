@@ -32,7 +32,7 @@ const MODELS = [
   "openai/gpt-5-nano",
 ];
 
-const DEFAULT_PROMPT = `Você é o assistente virtual da Lasmar Telemed.
+const DEFAULT_PROMPT = `Você é o assistente virtual da Nova Saúde.
 
 Seu objetivo é:
 - Ajudar o paciente com dúvidas

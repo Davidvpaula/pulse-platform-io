@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-const TOKEN_KEY = "lasmar.session_token";
+const TOKEN_KEY = "nova-saude.session_token";
 
 function getOrCreateToken(): string {
   let t = localStorage.getItem(TOKEN_KEY);

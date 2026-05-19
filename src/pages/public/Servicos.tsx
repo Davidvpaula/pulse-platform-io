@@ -82,7 +82,7 @@ export default function Servicos() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-dot-soft opacity-50" aria-hidden />
         <div className="relative max-w-3xl">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white ring-1 ring-white/20 backdrop-blur">
-            Lasmar Telemed
+            Nova Saúde
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
             Serviços

@@ -18,13 +18,13 @@ export default function PublicLayout() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* faixa fina decorativa Lasmar */}
+      {/* faixa fina decorativa Nova Saúde */}
       <div className="h-1 w-full bg-gradient-deep-vibrant" aria-hidden />
       {/* ─── HEADER SÓLIDO FULL-WIDTH ─── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 shadow-[0_1px_0_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(15,42,68,0.08)] backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Logo — alinhado à esquerda, tamanho legível */}
-          <Link to="/" aria-label="Lasmar Telemed — início" className="flex shrink-0 items-center">
+          <Link to="/" aria-label="Nova Saúde — início" className="flex shrink-0 items-center">
             <Logo size="md" />
           </Link>
 
@@ -125,7 +125,7 @@ export default function PublicLayout() {
             <ul className="mt-6 space-y-2.5 text-sm text-background/70">
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-primary-glow" />
-                contato@telemedlasmar.com.br
+                contato@novasaude.com.br
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-primary-glow" />
@@ -192,7 +192,7 @@ export default function PublicLayout() {
 
         <div className="border-t border-background/10">
           <div className="container flex flex-col items-center justify-between gap-2 py-6 text-xs text-background/50 md:flex-row">
-            <p>© {new Date().getFullYear()} Lasmar Telemed · Todos os direitos reservados</p>
+            <p>© {new Date().getFullYear()} Nova Saúde · Todos os direitos reservados</p>
             <p className="flex items-center gap-4">
               <Link to="/termos" className="hover:text-background">Termos</Link>
               <Link to="/privacidade" className="hover:text-background">Privacidade</Link>

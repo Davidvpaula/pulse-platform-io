@@ -5,9 +5,9 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-const SESSION_KEY = "lasmar_session_token";
-const UTM_KEY = "lasmar_utm_attr";
-const SESSION_META_KEY = "lasmar_session_meta";
+const SESSION_KEY = "nova-saude_session_token";
+const UTM_KEY = "nova-saude_utm_attr";
+const SESSION_META_KEY = "nova-saude_session_meta";
 
 interface UtmAttr {
   utm_source?: string;

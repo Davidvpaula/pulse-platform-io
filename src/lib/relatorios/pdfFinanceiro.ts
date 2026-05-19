@@ -51,7 +51,7 @@ export function gerarPdfFinanceiro(
   doc.text(opts?.titulo ?? "Relatório Financeiro", margin, 50);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(opts?.subtitulo ?? "Lasmar Telemed — Snapshots imutáveis", margin, 70);
+  doc.text(opts?.subtitulo ?? "Nova Saúde — Snapshots imutáveis", margin, 70);
   doc.setFontSize(9);
   doc.text(
     `Período: ${formatDataBR(d.periodo.inicio)} a ${formatDataBR(d.periodo.fim)}`,
@@ -157,7 +157,7 @@ export function gerarPdfFinanceiro(
     doc.setFontSize(8);
     doc.setTextColor(120);
     doc.text(
-      `Página ${i} de ${pages}  ·  Lasmar Telemed  ·  Documento gerado automaticamente`,
+      `Página ${i} de ${pages}  ·  Nova Saúde  ·  Documento gerado automaticamente`,
       margin,
       H - 16,
     );

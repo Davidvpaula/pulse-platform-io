@@ -215,7 +215,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.05fr_1fr] bg-background">
-      {/* Painel esquerdo — banda Lasmar petrol */}
+      {/* Painel esquerdo — banda Nova Saúde petrol */}
       <aside className="relative hidden overflow-hidden bg-gradient-deep text-deep-foreground lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="pointer-events-none absolute inset-0 bg-grid-soft opacity-40" aria-hidden />
         <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary-soft/20 blur-3xl" aria-hidden />
@@ -226,7 +226,7 @@ export default function Auth() {
         </div>
         <div className="relative max-w-md">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
-            Lasmar Telemed
+            Nova Saúde
           </p>
           <h2 className="mt-3 font-display text-4xl font-extrabold leading-tight tracking-tight">
             Saúde a distância,<br/>
@@ -237,7 +237,7 @@ export default function Auth() {
           </p>
         </div>
         <p className="relative text-xs text-white/60">
-          © {new Date().getFullYear()} Lasmar Telemed
+          © {new Date().getFullYear()} Nova Saúde
         </p>
       </aside>
 

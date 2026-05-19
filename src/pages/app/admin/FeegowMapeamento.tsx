@@ -89,7 +89,7 @@ export default function FeegowMapeamento() {
       local: "especialidades",
       feegow: "/specialties/list",
       status: "pendente",
-      detail: "Mapeamento futuro — especialidades Feegow ↔ especialidades Lasmar",
+      detail: "Mapeamento futuro — especialidades Feegow ↔ especialidades Nova Saúde",
     },
   ];
 
@@ -116,7 +116,7 @@ export default function FeegowMapeamento() {
         </div>
 
         <div className="grid grid-cols-[1.2fr_auto_1.2fr_auto] items-center gap-3 border-b border-border bg-muted/20 px-5 py-2 text-xs uppercase tracking-wider text-muted-foreground">
-          <span>Status interno (Lasmar)</span>
+          <span>Status interno (Nova Saúde)</span>
           <span>→</span>
           <span>Status Feegow</span>
           <span>Ativo</span>

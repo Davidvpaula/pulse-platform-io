@@ -56,7 +56,7 @@ export const Logo = ({
   const img = (
     <img
       src={src}
-      alt="Lasmar Telemed"
+      alt="Nova Saúde"
       className={cn(SIZE_CLASS[size], "w-auto select-none", className)}
       draggable={false}
     />
@@ -65,7 +65,7 @@ export const Logo = ({
   if (asImage) return img;
 
   return (
-    <Link to="/" className="inline-flex items-center" aria-label="Lasmar Telemed — início">
+    <Link to="/" className="inline-flex items-center" aria-label="Nova Saúde — início">
       {img}
     </Link>
   );

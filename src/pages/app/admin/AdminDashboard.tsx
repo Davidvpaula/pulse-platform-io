@@ -48,7 +48,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <PageHeader
         title="Visão geral da operação"
-        description="Indicadores em tempo real da plataforma Lasmar Telemed."
+        description="Indicadores em tempo real da plataforma Nova Saúde."
         actions={
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-border bg-card p-0.5">

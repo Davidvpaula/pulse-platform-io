@@ -42,7 +42,7 @@ export function gerarPdfAuditoria(d: DadosRelatorioAuditoriaPdf) {
   doc.text("Relatório de Auditoria", margin, 40);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("Lasmar Telemed — Trilha de eventos sensíveis", margin, 58);
+  doc.text("Nova Saúde — Trilha de eventos sensíveis", margin, 58);
   doc.text(
     `Período: ${formatDataBR(d.filtros.inicio)} a ${formatDataBR(d.filtros.fim)}`,
     margin,
@@ -190,7 +190,7 @@ export function gerarPdfAuditoria(d: DadosRelatorioAuditoriaPdf) {
     doc.setFontSize(8);
     doc.setTextColor(120);
     doc.text(
-      `Página ${i} de ${pages}  ·  Lasmar Telemed  ·  Documento gerado automaticamente — ${new Date().toISOString()}`,
+      `Página ${i} de ${pages}  ·  Nova Saúde  ·  Documento gerado automaticamente — ${new Date().toISOString()}`,
       margin,
       H - 14,
     );

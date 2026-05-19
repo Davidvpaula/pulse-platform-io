@@ -1,4 +1,4 @@
-/* ─── Omnes — tipografia oficial Lasmar Telemed ─── */
+/* ─── Omnes — tipografia oficial Nova Saúde ─── */
 @font-face {
   font-family: 'Omnes';
   src: url('/src/assets/fonts/omnes/Omnes-Hairline.ttf') format('truetype');
@@ -48,8 +48,8 @@
 
 @layer base {
   :root {
-    /* ─── Lasmar Telemed — paleta oficial ─── */
-    /* Cor 1 #FDFBF6 off-white | Cor 4/9 #198BBC azul Lasmar | Cor 12 #0088FF azul vibrante
+    /* ─── Nova Saúde — paleta oficial ─── */
+    /* Cor 1 #FDFBF6 off-white | Cor 4/9 #198BBC azul Nova Saúde | Cor 12 #0088FF azul vibrante
        Cor 6 #0376BC | Cor 7 #094BCC | Cor 8 #96DFFF soft | Cor 10 #0C4B6A petrol */
 
     --background: 40 50% 98%;          /* #FDFBF6 */
@@ -61,7 +61,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 200 80% 12%;
 
-    /* Primary = azul Lasmar #198BBC */
+    /* Primary = azul Nova Saúde #198BBC */
     --primary: 198 76% 42%;
     --primary-foreground: 0 0% 100%;
     --primary-soft: 198 100% 80%;      /* #96DFFF */
@@ -96,7 +96,7 @@
 
     --radius: 0.75rem;
 
-    /* Gradients & shadows — Lasmar */
+    /* Gradients & shadows — Nova Saúde */
     --gradient-primary: linear-gradient(135deg, hsl(198 76% 42%), hsl(206 100% 50%));
     --gradient-soft: linear-gradient(180deg, hsl(198 100% 97%), hsl(40 50% 98%));
     --gradient-hero: linear-gradient(135deg, hsl(200 80% 23%) 0%, hsl(198 76% 42%) 55%, hsl(198 100% 80%) 100%);

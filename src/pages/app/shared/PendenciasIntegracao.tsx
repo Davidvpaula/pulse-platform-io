@@ -37,7 +37,7 @@ const pendenciasConhecidas = [
   },
   {
     icon: Stethoscope,
-    titulo: "Mapear médicos Feegow ↔ médicos Lasmar",
+    titulo: "Mapear médicos Feegow ↔ médicos Nova Saúde",
     descricao: "Profissionais da Feegow precisam ser vinculados aos médicos cadastrados na plataforma.",
     prioridade: "media",
   },

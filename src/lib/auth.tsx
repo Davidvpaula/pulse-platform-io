@@ -22,7 +22,7 @@ type AuthCtx = {
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
-const LINK_KEY = "lasmar.patientLink";
+const LINK_KEY = "nova-saude.patientLink";
 
 // Prioridade quando o usuário tem múltiplos papéis no banco.
 // Roles "secretaria" e "supervisor" mapeiam para o perfil "colaborador" (menu dinâmico).
