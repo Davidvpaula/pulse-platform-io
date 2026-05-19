@@ -59,19 +59,19 @@ export default function Home() {
           <Syringe className="absolute left-[28%] bottom-10 h-7 w-7 -rotate-45 text-white/15 lg:h-9 lg:w-9" strokeWidth={1.5} />
         </div>
 
-        <div className="container relative z-10 grid gap-10 px-4 pb-24 pt-32 md:min-h-[640px] md:grid-cols-2 md:pb-28 md:pt-36">
+        <div className="container relative z-10 grid max-w-full gap-8 px-5 pb-16 pt-24 md:min-h-[640px] md:grid-cols-2 md:gap-10 md:pb-28 md:pt-36">
           {/* Texto */}
-          <div className="relative z-10 flex max-w-xl flex-col justify-center text-white">
-            <h1 className="font-display text-5xl font-extrabold leading-[1.02] tracking-tight md:text-6xl lg:text-[64px]">
+          <div className="relative z-10 flex min-w-0 max-w-xl flex-col justify-center text-white">
+            <h1 className="max-w-[12ch] text-balance font-display text-[2.65rem] font-extrabold leading-[0.98] tracking-tight sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[64px]">
               <span className="text-primary-soft">Saúde a distância,</span>
               <br />
               cuidado próximo.
             </h1>
-            <p className="mt-6 max-w-md text-base font-medium leading-relaxed md:text-lg">
+            <p className="mt-5 max-w-[31ch] text-sm font-medium leading-relaxed text-white/92 sm:max-w-md sm:text-base md:text-lg">
               <span className="font-bold">Medicina acessível para quem você se importa</span>,
               com médicos que se importam com você.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 asChild
                 size="lg"
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
 
             {/* Contadores em tempo real */}
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 border-t border-white/15 pt-6">
+            <div className="mt-8 grid min-w-0 grid-cols-3 gap-2 border-t border-white/15 pt-5 sm:gap-6 md:mt-10 md:pt-6">
               <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
               <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
               <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
