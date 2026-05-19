@@ -28,7 +28,7 @@ const SOURCES: Record<LogoVariant, string> = {
 
 const SIZE_CLASS: Record<LogoSize, string> = {
   sm: "h-7",
-  md: "h-9",
+  md: "h-9 text-xl",
   lg: "h-12",
   xl: "h-16",
 };
