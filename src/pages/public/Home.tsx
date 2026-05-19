@@ -59,19 +59,19 @@ export default function Home() {
           <Syringe className="absolute left-[28%] bottom-10 h-7 w-7 -rotate-45 text-white/15 lg:h-9 lg:w-9" strokeWidth={1.5} />
         </div>
 
-        <div className="container relative z-10 grid gap-10 px-4 pb-24 pt-32 md:min-h-[640px] md:grid-cols-2 md:pb-28 md:pt-36">
+        <div className="container relative z-10 grid max-w-full gap-8 px-5 pb-12 pt-12 md:min-h-[640px] md:grid-cols-2 md:gap-10 md:pb-28 md:pt-36">
           {/* Texto */}
-          <div className="relative z-10 flex max-w-xl flex-col justify-center text-white">
-            <h1 className="font-display text-5xl font-extrabold leading-[1.02] tracking-tight md:text-6xl lg:text-[64px]">
+          <div className="relative z-10 flex min-w-0 max-w-xl flex-col justify-center text-white">
+            <h1 className="max-w-[12ch] text-balance font-display text-[2.48rem] font-extrabold leading-[0.98] tracking-tight min-[380px]:text-[2.58rem] sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[64px]">
               <span className="text-primary-soft">Saúde a distância,</span>
               <br />
               cuidado próximo.
             </h1>
-            <p className="mt-6 max-w-md text-base font-medium leading-relaxed md:text-lg">
+            <p className="mt-5 max-w-[31ch] text-sm font-medium leading-relaxed text-white/92 sm:max-w-md sm:text-base md:text-lg">
               <span className="font-bold">Medicina acessível para quem você se importa</span>,
               com médicos que se importam com você.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 asChild
                 size="lg"
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
 
             {/* Contadores em tempo real */}
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 border-t border-white/15 pt-6">
+            <div className="mt-8 grid min-w-0 grid-cols-3 gap-2 rounded-2xl border border-white/12 bg-white/5 p-3 backdrop-blur-sm sm:gap-6 sm:border-t sm:border-x-0 sm:border-b-0 sm:bg-transparent sm:p-0 md:mt-10 md:pt-6">
               <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
               <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
               <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
@@ -297,13 +297,15 @@ function HeroCounter({
   const display = useCountUp(value);
   const formatted = display.toLocaleString("pt-BR");
   return (
-    <div className="flex min-w-0 flex-col items-start text-white">
-      <Icon className="mb-1.5 h-4 w-4 text-white/80 sm:mb-2 sm:h-6 sm:w-6" strokeWidth={1.75} />
-      <p className="max-w-full truncate font-display text-lg font-extrabold leading-none tracking-tight tabular-nums sm:text-3xl md:text-4xl">
+    <div className="flex min-w-0 flex-col items-start overflow-hidden text-white">
+      <span className="mb-1.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-white/10 text-white/85 ring-1 ring-white/10 sm:mb-2 sm:h-auto sm:w-auto sm:bg-transparent sm:ring-0">
+        <Icon className="h-3.5 w-3.5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+      </span>
+      <p className="max-w-full truncate font-display text-base font-extrabold leading-none tracking-tight tabular-nums sm:text-3xl md:text-4xl">
         {plus ? "+" : ""}
         {formatted}
       </p>
-      <p className="mt-1.5 text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/70 sm:text-xs sm:tracking-[0.14em]">
+      <p className="mt-1.5 max-w-full break-words text-[8px] font-semibold uppercase leading-[1.15] tracking-[0.05em] text-white/70 sm:text-xs sm:tracking-[0.14em]">
         {label}
       </p>
     </div>
