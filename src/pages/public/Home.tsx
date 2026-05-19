@@ -59,7 +59,7 @@ export default function Home() {
           <Syringe className="absolute left-[28%] bottom-10 h-7 w-7 -rotate-45 text-white/15 lg:h-9 lg:w-9" strokeWidth={1.5} />
         </div>
 
-        <div className="container relative z-10 grid max-w-full gap-8 px-5 pb-16 pt-24 md:min-h-[640px] md:grid-cols-2 md:gap-10 md:pb-28 md:pt-36">
+        <div className="container relative z-10 grid max-w-full gap-8 px-5 pb-12 pt-12 md:min-h-[640px] md:grid-cols-2 md:gap-10 md:pb-28 md:pt-36">
           {/* Texto */}
           <div className="relative z-10 flex min-w-0 max-w-xl flex-col justify-center text-white">
             <h1 className="max-w-[12ch] text-balance font-display text-[2.65rem] font-extrabold leading-[0.98] tracking-tight sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[64px]">
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
 
             {/* Contadores em tempo real */}
-            <div className="mt-8 grid min-w-0 grid-cols-3 gap-2 border-t border-white/15 pt-5 sm:gap-6 md:mt-10 md:pt-6">
+            <div className="mt-8 grid min-w-0 grid-cols-3 gap-2 rounded-2xl border border-white/12 bg-white/5 p-3 backdrop-blur-sm sm:gap-6 sm:border-t sm:border-x-0 sm:border-b-0 sm:bg-transparent sm:p-0 md:mt-10 md:pt-6">
               <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
               <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
               <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
