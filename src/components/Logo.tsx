@@ -27,11 +27,12 @@ const SOURCES: Record<LogoVariant, string> = {
 };
 
 const SIZE_CLASS: Record<LogoSize, string> = {
-  sm: "h-10",
-  md: "h-14",
-  lg: "h-20",
-  xl: "h-28",
+  sm: "h-16",
+  md: "h-24",
+  lg: "h-36",
+  xl: "h-52",
 };
+
 
 
 interface LogoProps {
