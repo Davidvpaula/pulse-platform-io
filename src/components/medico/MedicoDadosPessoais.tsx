@@ -239,6 +239,15 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
           </Select>
         </div>
         <div><Label>Status do cadastro</Label><Input value={medico.status} disabled className="capitalize" /></div>
+        <div>
+          <Label>Senha de acesso</Label>
+          <div className="flex gap-2">
+            <Input value="••••••••" disabled className="flex-1" />
+            <Button variant="outline" size="sm" onClick={() => setSenhaDialogOpen(true)} className="shrink-0">
+              <KeyRound className="mr-1.5 h-3.5 w-3.5" /> Alterar
+            </Button>
+          </div>
+        </div>
       </div>
 
       <EnderecoForm label="Endereço residencial" value={endRes} onChange={setEndRes} />
