@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Save, Mail } from "lucide-react";
+import { Save, Mail, KeyRound } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +74,37 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
   const [novoEmail, setNovoEmail] = useState("");
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [trocandoEmail, setTrocandoEmail] = useState(false);
+
+  // Troca de senha
+  const [senhaDialogOpen, setSenhaDialogOpen] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confSenha, setConfSenha] = useState("");
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
+
+  async function trocarSenha() {
+    if (novaSenha.length < 8) { toast.error("Nova senha precisa de no mínimo 8 caracteres."); return; }
+    if (novaSenha !== confSenha) { toast.error("Confirmação de senha não confere."); return; }
+    setTrocandoSenha(true);
+    const validation = await validatePassword(novaSenha);
+    if (!validation.valid) {
+      setTrocandoSenha(false);
+      toast.error("Senha: " + validation.errors.join(", "));
+      return;
+    }
+    const reauth = await supabase.auth.signInWithPassword({ email: medico.email, password: senhaAtual });
+    if (reauth.error) {
+      setTrocandoSenha(false);
+      toast.error("Senha atual incorreta.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    setTrocandoSenha(false);
+    if (error) { toast.error(error.message); return; }
+    setSenhaAtual(""); setNovaSenha(""); setConfSenha("");
+    setSenhaDialogOpen(false);
+    toast.success("Senha atualizada com sucesso.");
+  }
 
   useEffect(() => {
     loadEnderecos();
@@ -206,6 +239,15 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
           </Select>
         </div>
         <div><Label>Status do cadastro</Label><Input value={medico.status} disabled className="capitalize" /></div>
+        <div>
+          <Label>Senha de acesso</Label>
+          <div className="flex gap-2">
+            <Input value="••••••••" disabled className="flex-1" />
+            <Button variant="outline" size="sm" onClick={() => setSenhaDialogOpen(true)} className="shrink-0">
+              <KeyRound className="mr-1.5 h-3.5 w-3.5" /> Alterar
+            </Button>
+          </div>
+        </div>
       </div>
 
       <EnderecoForm label="Endereço residencial" value={endRes} onChange={setEndRes} />
@@ -249,6 +291,42 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={trocarEmail} disabled={trocandoEmail}>
               {trocandoEmail ? "Enviando…" : "Enviar confirmação"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog troca de senha */}
+      <AlertDialog open={senhaDialogOpen} onOpenChange={setSenhaDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar senha</AlertDialogTitle>
+            <AlertDialogDescription>
+              Informe sua senha atual e a nova senha. Mínimo de 8 caracteres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label>Senha atual</Label>
+              <Input type="password" autoComplete="current-password"
+                value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} />
+            </div>
+            <div>
+              <Label>Nova senha</Label>
+              <Input type="password" autoComplete="new-password" minLength={8}
+                value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+              <PasswordStrengthIndicator password={novaSenha} />
+            </div>
+            <div>
+              <Label>Confirmar nova senha</Label>
+              <Input type="password" autoComplete="new-password" minLength={8}
+                value={confSenha} onChange={e => setConfSenha(e.target.value)} />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={trocarSenha} disabled={trocandoSenha}>
+              {trocandoSenha ? "Atualizando…" : "Atualizar senha"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
