@@ -728,45 +728,34 @@ export const Agendar = () => {
                 return (
                 <article
                   key={m.id}
-                  className={`group flex flex-col rounded-2xl border bg-card p-5 shadow-sm transition ${
+                  className={`group flex flex-col rounded-2xl border bg-card p-4 sm:p-5 shadow-sm transition ${
                     isExpanded
                       ? "border-primary/40 shadow-md ring-2 ring-primary/15 md:col-span-2"
                       : "border-border hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                   }`}
                 >
-                  {/* Header: avatar + nome + status */}
+                  {/* Header: avatar + nome */}
                   <div className="flex items-start gap-3">
                     {m.foto_url ? (
                       <img
                         src={m.foto_url}
                         alt={m.nome}
-                        className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-primary/10"
+                        className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-full object-cover ring-2 ring-primary/10"
                       />
                     ) : (
-                      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-gradient-primary text-base font-bold text-primary-foreground">
+                      <div className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full bg-gradient-primary text-base font-bold text-primary-foreground">
                         {iniciais(m.nome)}
                       </div>
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="truncate font-semibold leading-tight">
-                          {formatNomeMedico(m.tratamento, m.nome)}
-                        </p>
-                        {m.proximo_slot ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-                            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Disponível
-                          </span>
-                        ) : (
-                          <span className="inline-flex shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-                            Sem horário
-                          </span>
-                        )}
-                      </div>
+                      <p className="truncate font-semibold leading-tight">
+                        {formatNomeMedico(m.tratamento, m.nome)}
+                      </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {m.especialista ? `Especialista · RQE ${m.rqe ?? "—"}` : "Não especialista"}
                       </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1 text-warning">
                           <Star className="h-3 w-3 fill-current" />
                           <span className="font-semibold tabular-nums text-foreground">
@@ -775,9 +764,19 @@ export const Agendar = () => {
                         </span>
                         <span className="text-border">·</span>
                         <span>CRM {m.crm}</span>
+                        {m.proximo_slot ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Disponível
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                            Sem horário
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
+
 
                   {/* Tags compactas */}
                   <div className="mt-3 flex flex-wrap gap-1.5">
