@@ -723,10 +723,16 @@ export const Agendar = () => {
             </p>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {medicosEsp.map((m) => (
+              {medicosEsp.map((m) => {
+                const isExpanded = expandedMedicoId === m.id;
+                return (
                 <article
                   key={m.id}
-                  className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                  className={`group flex flex-col rounded-2xl border bg-card p-5 shadow-sm transition ${
+                    isExpanded
+                      ? "border-primary/40 shadow-md ring-2 ring-primary/15 md:col-span-2"
+                      : "border-border hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                  }`}
                 >
                   {/* Header: avatar + nome + status */}
                   <div className="flex items-start gap-3">
@@ -808,36 +814,56 @@ export const Agendar = () => {
                     <Button
                       size="sm"
                       className="rounded-[10px] bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-                      onClick={() => setSheetMedico(m)}
+                      onClick={() =>
+                        setExpandedMedicoId((cur) => (cur === m.id ? null : m.id))
+                      }
                       disabled={!m.proximo_slot}
+                      aria-expanded={isExpanded}
                     >
                       <Calendar className="mr-1 h-3.5 w-3.5" />
-                      {m.proximo_slot ? "Ver horários" : "Sem horários"}
+                      {!m.proximo_slot
+                        ? "Sem horários"
+                        : isExpanded
+                        ? "Ocultar horários"
+                        : "Ver horários"}
+                      {m.proximo_slot && (
+                        <ChevronDown
+                          className={`ml-1 h-3.5 w-3.5 transition-transform duration-300 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      )}
                     </Button>
                   </div>
+
+                  {/* Painel inline expansível */}
+                  <div
+                    className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out ${
+                      isExpanded
+                        ? "mt-5 grid-rows-[1fr] opacity-100"
+                        : "mt-0 grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="min-h-0">
+                      <div className="rounded-xl border border-border/70 bg-muted/30 p-4 sm:p-5">
+                        {isExpanded && (
+                          <MedicoSlotsPanel
+                            medicoId={m.id}
+                            medicoNome={m.nome}
+                            especialidadeId={espId || undefined}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
       </div>
 
-      {/* Painel de horários — Sheet (mobile bottom, desktop right) */}
-      <Sheet open={!!sheetMedico} onOpenChange={(o) => { if (!o) setSheetMedico(null); }}>
-        <SheetContent
-          side={isMobile ? "bottom" : "right"}
-          className={isMobile ? "max-h-[85vh] overflow-y-auto" : "w-full sm:max-w-lg overflow-y-auto"}
-        >
-          <SheetHeader>
-            <SheetTitle>{sheetMedico ? formatNomeMedico(sheetMedico.tratamento, sheetMedico.nome) : "Horários"}</SheetTitle>
-          </SheetHeader>
-          <div className="mt-4">
-            {sheetMedico && (
-              <MedicoSlotsPanel medicoId={sheetMedico.id} medicoNome={sheetMedico.nome} especialidadeId={espId || undefined} />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
 
       <EmBreveDialog
         open={!!emBreveNome}
