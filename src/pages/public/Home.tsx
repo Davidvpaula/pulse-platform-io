@@ -297,13 +297,15 @@ function HeroCounter({
   const display = useCountUp(value);
   const formatted = display.toLocaleString("pt-BR");
   return (
-    <div className="flex min-w-0 flex-col items-start text-white">
-      <Icon className="mb-1.5 h-4 w-4 text-white/80 sm:mb-2 sm:h-6 sm:w-6" strokeWidth={1.75} />
-      <p className="max-w-full truncate font-display text-lg font-extrabold leading-none tracking-tight tabular-nums sm:text-3xl md:text-4xl">
+    <div className="flex min-w-0 flex-col items-start overflow-hidden text-white">
+      <span className="mb-1.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-white/10 text-white/85 ring-1 ring-white/10 sm:mb-2 sm:h-auto sm:w-auto sm:bg-transparent sm:ring-0">
+        <Icon className="h-3.5 w-3.5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+      </span>
+      <p className="max-w-full truncate font-display text-base font-extrabold leading-none tracking-tight tabular-nums sm:text-3xl md:text-4xl">
         {plus ? "+" : ""}
         {formatted}
       </p>
-      <p className="mt-1.5 text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/70 sm:text-xs sm:tracking-[0.14em]">
+      <p className="mt-1.5 max-w-full break-words text-[8px] font-semibold uppercase leading-[1.15] tracking-[0.05em] text-white/70 sm:text-xs sm:tracking-[0.14em]">
         {label}
       </p>
     </div>
