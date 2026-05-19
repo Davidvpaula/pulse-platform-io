@@ -75,6 +75,37 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [trocandoEmail, setTrocandoEmail] = useState(false);
 
+  // Troca de senha
+  const [senhaDialogOpen, setSenhaDialogOpen] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confSenha, setConfSenha] = useState("");
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
+
+  async function trocarSenha() {
+    if (novaSenha.length < 8) { toast.error("Nova senha precisa de no mínimo 8 caracteres."); return; }
+    if (novaSenha !== confSenha) { toast.error("Confirmação de senha não confere."); return; }
+    setTrocandoSenha(true);
+    const validation = await validatePassword(novaSenha);
+    if (!validation.valid) {
+      setTrocandoSenha(false);
+      toast.error("Senha: " + validation.errors.join(", "));
+      return;
+    }
+    const reauth = await supabase.auth.signInWithPassword({ email: medico.email, password: senhaAtual });
+    if (reauth.error) {
+      setTrocandoSenha(false);
+      toast.error("Senha atual incorreta.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    setTrocandoSenha(false);
+    if (error) { toast.error(error.message); return; }
+    setSenhaAtual(""); setNovaSenha(""); setConfSenha("");
+    setSenhaDialogOpen(false);
+    toast.success("Senha atualizada com sucesso.");
+  }
+
   useEffect(() => {
     loadEnderecos();
   }, [medico.id]);
