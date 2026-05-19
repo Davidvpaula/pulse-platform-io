@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Save, Mail } from "lucide-react";
+import { Save, Mail, KeyRound } from "lucide-react";
+import { validatePassword } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
