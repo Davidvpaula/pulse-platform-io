@@ -295,6 +295,42 @@ export function MedicoDadosPessoais({ medico }: { medico: MedicoRow }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog troca de senha */}
+      <AlertDialog open={senhaDialogOpen} onOpenChange={setSenhaDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar senha</AlertDialogTitle>
+            <AlertDialogDescription>
+              Informe sua senha atual e a nova senha. Mínimo de 8 caracteres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label>Senha atual</Label>
+              <Input type="password" autoComplete="current-password"
+                value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} />
+            </div>
+            <div>
+              <Label>Nova senha</Label>
+              <Input type="password" autoComplete="new-password" minLength={8}
+                value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+              <PasswordStrengthIndicator password={novaSenha} />
+            </div>
+            <div>
+              <Label>Confirmar nova senha</Label>
+              <Input type="password" autoComplete="new-password" minLength={8}
+                value={confSenha} onChange={e => setConfSenha(e.target.value)} />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={trocarSenha} disabled={trocandoSenha}>
+              {trocandoSenha ? "Atualizando…" : "Atualizar senha"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
