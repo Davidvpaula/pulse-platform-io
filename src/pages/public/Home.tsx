@@ -71,11 +71,11 @@ export default function Home() {
               <span className="font-bold">Medicina acessível para quem você se importa</span>,
               com médicos que se importam com você.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 asChild
                 size="lg"
-                className="rounded-[10px] bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95"
+                className="w-full rounded-[10px] bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95 sm:w-auto"
               >
                 <Link to="/agendar">
                   Agendar consulta <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -85,18 +85,19 @@ export default function Home() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-[10px] border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                className="w-full rounded-[10px] border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:w-auto"
               >
                 <Link to="/atendimento-imediato">Atendimento imediato</Link>
               </Button>
             </div>
 
             {/* Contadores em tempo real */}
-            <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-6 border-t border-white/15 pt-6">
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 border-t border-white/15 pt-6">
               <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
               <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
               <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
             </div>
+
           </div>
 
           {/* Card flutuante: Carrossel de serviços (mesma silhueta do antigo card PA) */}
@@ -296,18 +297,19 @@ function HeroCounter({
   const display = useCountUp(value);
   const formatted = display.toLocaleString("pt-BR");
   return (
-    <div className="flex flex-col items-start text-white">
-      <Icon className="mb-2 h-5 w-5 text-white/80 sm:h-6 sm:w-6" strokeWidth={1.75} />
-      <p className="font-display text-2xl font-extrabold leading-none tracking-tight sm:text-3xl md:text-4xl">
+    <div className="flex min-w-0 flex-col items-start text-white">
+      <Icon className="mb-1.5 h-4 w-4 text-white/80 sm:mb-2 sm:h-6 sm:w-6" strokeWidth={1.75} />
+      <p className="max-w-full truncate font-display text-lg font-extrabold leading-none tracking-tight tabular-nums sm:text-3xl md:text-4xl">
         {plus ? "+" : ""}
         {formatted}
       </p>
-      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 sm:text-xs">
+      <p className="mt-1.5 text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/70 sm:text-xs sm:tracking-[0.14em]">
         {label}
       </p>
     </div>
   );
 }
+
 
 function useCountUp(target: number, durationMs = 1500) {
   const [value, setValue] = useState(0);
