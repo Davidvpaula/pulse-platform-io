@@ -62,7 +62,7 @@ export default function Home() {
         <div className="container relative z-10 grid max-w-full gap-8 px-5 pb-12 pt-12 md:min-h-[640px] md:grid-cols-2 md:gap-10 md:pb-28 md:pt-36">
           {/* Texto */}
           <div className="relative z-10 flex min-w-0 max-w-xl flex-col justify-center text-white">
-            <h1 className="max-w-[12ch] text-balance font-display text-[2.65rem] font-extrabold leading-[0.98] tracking-tight sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[64px]">
+            <h1 className="max-w-[12ch] text-balance font-display text-[2.48rem] font-extrabold leading-[0.98] tracking-tight min-[380px]:text-[2.58rem] sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[64px]">
               <span className="text-primary-soft">Saúde a distância,</span>
               <br />
               cuidado próximo.
