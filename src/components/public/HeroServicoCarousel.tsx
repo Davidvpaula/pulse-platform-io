@@ -55,7 +55,7 @@ export default function HeroServicoCarousel() {
   // Skeleton enquanto carrega — mantém dimensão
   if (loading || slides.length === 0) {
     return (
-      <div className="relative z-10 flex items-end md:justify-end">
+      <div className="relative z-10 flex min-w-0 items-end md:justify-end">
         <CardShell>
           <div className="aspect-[4/3] w-full animate-pulse bg-muted" />
           <div className="space-y-3 p-5">
@@ -73,7 +73,7 @@ export default function HeroServicoCarousel() {
   }
 
   return (
-    <div className="relative z-10 flex items-end md:justify-end">
+    <div className="relative z-10 flex min-w-0 items-end md:justify-end">
       <CardShell>
         <Carousel
           setApi={setApi}
@@ -127,7 +127,7 @@ export default function HeroServicoCarousel() {
 
 function CardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-elegant ring-1 ring-black/5">
+    <div className="w-full max-w-md min-w-0 overflow-hidden rounded-[22px] bg-white shadow-elegant ring-1 ring-black/5 sm:rounded-3xl">
       {children}
     </div>
   );
