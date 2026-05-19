@@ -1,42 +1,43 @@
-# Corrigir erro ao confirmar aceite do contrato
+## Objetivo
 
-## Causa raiz
-Ao aceitar um termo, o insert em `user_terms_acceptance` dispara o trigger `trg_acceptance_audit`, que grava em `audit_log` com `action = 'aceite_termo'`. Mas a CHECK constraint `audit_log_action_check` só permite: `INSERT`, `UPDATE`, `DELETE`, `FORCE_TRANSITION`, `SNAPSHOT_BYPASS`. Resultado: toda tentativa de aceite falha.
+Na página `/agendar`, ao clicar em **"Ver horários"** no card do médico, o painel atualmente abre como um **Sheet lateral** à direita (quebrado visualmente). Vamos substituir por uma **expansão inline dentro do próprio card**, com animação suave e visual elegante.
 
-## Correção (1 migration, mínima e cirúrgica)
-Recriar a função `trg_acceptance_audit` para:
-- usar `action = 'INSERT'` (compatível com a constraint),
-- preservar a semântica de "aceite de termo" dentro de `after_data` (`event: 'aceite_termo'`, `termo_id`, `ip`),
-- manter `actor_role` correto buscando o perfil real do usuário (paciente/medico/empresa/colaborador/admin) em vez do fixo `'paciente'`.
+## Mudanças
 
-Sem alterar: RLS, tabela `user_terms_acceptance`, fluxo do médico, rotas, código frontend, nem o trigger de notificação de contrato criado anteriormente.
+### 1. `src/pages/public/PublicPages.tsx` (seção `AgendarPage`)
 
-## Verificação
-1. Médico clica em "Confirmar aceite" no modal do Contrato de Cadastro → toast de sucesso, sem erro.
-2. Linha aparece em `user_terms_acceptance` e em `audit_log` com `action='INSERT'` e `after_data.event='aceite_termo'`.
-3. `useTermsCheck` deixa de pedir aceite na próxima navegação.
+- Trocar o estado `sheetMedico` por `expandedMedicoId: string | null` (apenas um aberto por vez — clicar em outro fecha o anterior).
+- Remover o bloco `<Sheet>` (linhas ~825-840) inteiramente.
+- No botão "Ver horários":
+  - Vira um toggle (texto muda para "Ocultar horários" quando aberto).
+  - Ícone com rotação suave (chevron).
+- Logo abaixo do botão, dentro do mesmo card, renderizar condicionalmente uma área expansível contendo `<MedicoSlotsPanel />`.
+- Animação: usar `framer-motion` (`AnimatePresence` + `motion.div` com `height: auto`) para abrir/fechar com easing suave.
 
-## Detalhes técnicos
-```sql
-CREATE OR REPLACE FUNCTION public.trg_acceptance_audit()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_role text;
-BEGIN
-  SELECT CASE
-    WHEN EXISTS (SELECT 1 FROM medicos WHERE user_id = NEW.user_id) THEN 'medico'
-    WHEN EXISTS (SELECT 1 FROM empresas WHERE user_id = NEW.user_id) THEN 'empresa'
-    WHEN EXISTS (SELECT 1 FROM colaboradores WHERE user_id = NEW.user_id) THEN 'colaborador'
-    WHEN EXISTS (SELECT 1 FROM user_roles WHERE user_id = NEW.user_id AND role = 'admin') THEN 'admin'
-    ELSE 'paciente'
-  END INTO v_role;
+### 2. Refinamento visual do conteúdo expandido
 
-  INSERT INTO public.audit_log (
-    occurred_at, actor_id, actor_role, table_name, record_id, action, after_data
-  ) VALUES (
-    now(), NEW.user_id, v_role, 'user_terms_acceptance', NEW.id::text,
-    'INSERT',
-    jsonb_build_object('event','aceite_termo','termo_id',NEW.termo_id,'ip',NEW.ip_address)
-  );
-  RETURN NEW;
-END $$;
-```
+- Borda superior sutil separando o card do painel expandido.
+- Padding generoso (`p-6`), fundo levemente diferenciado (`bg-muted/30`).
+- Layout interno do `MedicoSlotsPanel` mantém os 3 blocos (calendário, horários, detalhes) mas em grid responsivo:
+  - Desktop (≥md): 3 colunas lado a lado.
+  - Mobile: empilhado.
+- Card do médico ganha `ring-2 ring-primary/20` quando expandido (estado ativo visível).
+
+### 3. Comportamento
+
+- Scroll suave até o card expandido após abrir (`scrollIntoView({ behavior: "smooth", block: "nearest" })`).
+- Trocar de médico fecha o anterior automaticamente.
+- Botão "Selecionar horário" dentro do painel continua navegando para `/app/agendamento/confirmar/:slotId` (lógica já existente em `MedicoSlotsPanel`, não mexer).
+
+### 4. Detalhes técnicos
+
+- `MedicoSlotsPanel` não precisa de alterações funcionais — só passa a viver inline.
+- Confirmar que o componente respeita largura do container pai (sem larguras fixas que estouravam dentro do Sheet).
+- Manter tokens semânticos do design system (sem cores hardcoded).
+- Sem mudanças de backend, sem mudanças nas RPCs, sem mudanças em rotas.
+
+## Fora de escopo
+
+- Não mexer no fluxo de agendamento em si.
+- Não mexer no `MedicoSlotsPanel` além de eventuais ajustes de largura/grid responsivo.
+- Não mexer em outras páginas que usem o painel (ex.: ServicoHero) — só `/agendar`.
