@@ -71,11 +71,11 @@ export default function Home() {
               <span className="font-bold">Medicina acessível para quem você se importa</span>,
               com médicos que se importam com você.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 asChild
                 size="lg"
-                className="rounded-[10px] bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95"
+                className="w-full rounded-[10px] bg-white px-7 font-semibold text-primary shadow-elegant hover:bg-white/95 sm:w-auto"
               >
                 <Link to="/agendar">
                   Agendar consulta <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -85,18 +85,19 @@ export default function Home() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-[10px] border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                className="w-full rounded-[10px] border-white/70 bg-white/10 font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:w-auto"
               >
                 <Link to="/atendimento-imediato">Atendimento imediato</Link>
               </Button>
             </div>
 
             {/* Contadores em tempo real */}
-            <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-6 border-t border-white/15 pt-6">
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 border-t border-white/15 pt-6">
               <HeroCounter icon={Stethoscope} value={stats.medicos} label="Médicos cadastrados" />
               <HeroCounter icon={Users} value={stats.pacientes} label="Pacientes cadastrados" plus />
               <HeroCounter icon={CalendarDays} value={stats.consultas} label="Consultas realizadas" plus />
             </div>
+
           </div>
 
           {/* Card flutuante: Carrossel de serviços (mesma silhueta do antigo card PA) */}
