@@ -169,7 +169,7 @@ function Slide({
         )}
       </div>
 
-      <div className="flex min-h-[210px] flex-col p-5">
+      <div className="flex min-h-[184px] flex-col p-4 sm:min-h-[210px] sm:p-5">
         <div className="flex items-center gap-2">
           {isPA ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600">
@@ -181,7 +181,7 @@ function Slide({
             </span>
           )}
         </div>
-        <h3 className="mt-2 line-clamp-2 font-display text-2xl font-bold tracking-tight text-foreground">
+        <h3 className="mt-2 line-clamp-2 font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           {servico.nome}
         </h3>
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -189,18 +189,18 @@ function Slide({
             servico.descricao_publica ??
             "Cuidado clínico humanizado, no seu tempo."}
         </p>
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-4 sm:gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               A partir de
             </p>
-            <p className="font-display text-3xl font-extrabold leading-none text-primary tabular-nums">
+            <p className="font-display text-2xl font-extrabold leading-none text-primary tabular-nums sm:text-3xl">
               {brl(servico.valor_paciente_centavos)}
             </p>
           </div>
           <Button
             asChild
-            className="rounded-[10px] bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+            className="shrink-0 rounded-[10px] bg-primary px-3 font-semibold text-primary-foreground hover:bg-primary/90 sm:px-4"
           >
             <Link to={href}>{ctaLabel}</Link>
           </Button>
