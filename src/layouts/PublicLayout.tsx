@@ -25,7 +25,7 @@ export default function PublicLayout() {
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Logo — alinhado à esquerda, tamanho legível */}
           <Link to="/" aria-label="Nova Saúde — início" className="flex shrink-0 items-center">
-            <Logo size="md" />
+            <Logo size="md" asImage />
           </Link>
 
           {/* Navegação principal */}
