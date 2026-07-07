@@ -118,12 +118,16 @@ export default function AdminIntegracoes() {
         body: { tipo: intg.tipo, integracao_id: intg.id },
       });
       if (error) throw error;
-      toast.success(data?.mensagem ?? "Teste concluído", { id: "test-" + intg.id });
+      const ok = data?.ok !== false;
+      const msg = data?.mensagem ?? (ok ? "Teste concluído com sucesso." : "Teste falhou.");
+      if (ok) toast.success(msg, { id: "test-" + intg.id, duration: 6000 });
+      else toast.error(msg, { id: "test-" + intg.id, duration: 8000 });
       carregar();
     } catch (e) {
       toast.error("Falha no teste: " + (e instanceof Error ? e.message : "desconhecido"), { id: "test-" + intg.id });
     }
   };
+
 
   const reprocessarEvento = async (id: string) => {
     const { error } = await supabase.rpc("event_reprocessar", { p_event_id: id });
