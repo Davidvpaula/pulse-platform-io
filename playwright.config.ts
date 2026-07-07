@@ -47,6 +47,24 @@ export default defineConfig({
       },
     },
     {
+      name: "medico",
+      testMatch: /medico\/.*\.spec\.ts/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: ".storage/medico.json",
+      },
+    },
+    {
+      name: "paciente",
+      testMatch: /paciente\/.*\.spec\.ts/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: ".storage/paciente.json",
+      },
+    },
+    {
       name: "guards",
       testMatch: /guards\/.*\.spec\.ts/,
       dependencies: ["setup"],
