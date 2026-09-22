@@ -4,7 +4,7 @@ Plataforma React + TypeScript + Vite, com Supabase (Auth, PostgreSQL, Storage, R
 
 ## Visualização local sem senha
 
-Requisitos: Node 22+ e npm. No Windows use `npm.cmd` se o PowerShell bloquear `npm.ps1`.
+Requisitos: Node 22.12+ e npm. No Windows use `npm.cmd` se o PowerShell bloquear `npm.ps1`.
 
 ```sh
 npm ci
@@ -36,6 +36,8 @@ npm run build
 node scripts/validate-routes.mjs --strict
 node scripts/audit-inventory.mjs
 npx playwright test --config playwright.local.config.ts
+npm run e2e:production
+npm audit
 ```
 
 Os testes locais precisam do Chromium instalado (`npx playwright install chromium`). Alternativamente, no PowerShell, use `$env:PLAYWRIGHT_CHANNEL='chrome'` com Chrome instalado. A configuração E2E antiga permanece disponível para homologação com backend real via `E2E_BASE_URL`.
@@ -46,8 +48,10 @@ Os testes locais precisam do Chromium instalado (`npx playwright install chromiu
 docker compose up --build
 ```
 
-Disponibiliza apenas a prévia do frontend na porta 8080, restrita a `127.0.0.1`. Não inclui banco Supabase. Pare o servidor Node antes para liberar a porta. Docker validado em 22/09/2026: imagem construída, contêiner iniciado e 7 testes de navegador aprovados. Na pasta acima, `INICIAR-DOCKER.cmd` permite iniciar por dois cliques com o Docker Desktop aberto.
+Disponibiliza apenas a prévia do frontend na porta 8080, restrita a `127.0.0.1`. Não inclui banco Supabase. Pare o servidor Node antes para liberar a porta. Docker validado em 22/09/2026: imagem construída, contêiner saudável e 14 testes locais de navegador aprovados. Executa com usuário `node`, sem privilégios adicionais, com healthcheck e reinício automático (exceto quando parado manualmente). Na pasta acima, `INICIAR-DOCKER.cmd` permite iniciar por dois cliques com o Docker Desktop aberto.
 
 Para parar sem remover o contêiner: `docker compose stop`. Para acompanhar a execução: `docker compose logs -f`. Alterações no código entram na imagem ao executar novamente `docker compose up --build -d`.
 
 Veja [a auditoria inicial](docs/AUDITORIA-INICIAL.md) para evidências, pendências e limites da verificação.
+
+Veja também [a rodada de segurança e estabilidade](docs/SEGURANCA-ESTABILIDADE.md): dependências corrigidas, recuperação de sessão, isolamento do cache por usuário e carregamento de páginas sob demanda. Os testes de produção usam um servidor temporário na porta 8081 e interceptam o Supabase; não se conectam ao banco real.

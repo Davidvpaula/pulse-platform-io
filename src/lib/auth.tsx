@@ -40,7 +40,7 @@ function rolesToProfileKey(roles: string[]): ProfileKey | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, roles } = useSession();
 
-  const [profileKey, setProfileKeyState] = useState<ProfileKey>(() => previewProfile() ?? "paciente");
+  const profileKey: ProfileKey = previewProfile() ?? (session ? rolesToProfileKey(roles) : null) ?? "paciente";
 
   const [patientLink, setPatientLinkState] = useState<PatientLink>(() => {
     if (typeof window === "undefined") return { tipo: "particular" };
@@ -48,15 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) { try { return JSON.parse(stored); } catch { /* ignore */ } }
     return { tipo: "particular" };
   });
-
-  // O papel ativo vem do banco (sessão é a fonte da verdade).
-  useEffect(() => {
-    if (!session) return;
-    const fromRoles = rolesToProfileKey(roles);
-    if (fromRoles && fromRoles !== profileKey) {
-      setProfileKeyState(fromRoles);
-    }
-  }, [session, roles]);
 
   useEffect(() => {
     localStorage.setItem(LINK_KEY, JSON.stringify(patientLink));

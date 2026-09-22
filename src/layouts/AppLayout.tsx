@@ -1,4 +1,6 @@
-import { LOCAL_PREVIEW } from "@/lib/local-preview";
+import { LOCAL_PREVIEW, clearPreviewProfile } from "@/lib/local-preview";
+import PageBoundary from "@/components/PageBoundary";
+import { toast } from "sonner";
 import { Outlet, NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -75,10 +77,13 @@ export default function AppLayout() {
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
-    if (session) {
-      await signOut();
+    try {
+      if (session) await signOut();
+      clearPreviewProfile();
+      navigate(LOCAL_PREVIEW ? "/auth" : "/");
+    } catch {
+      toast.error("Não foi possível sair. Confira sua conexão e tente novamente.");
     }
-    navigate("/");
   };
 
   const switchProfile = (k: ProfileKey) => {
@@ -194,7 +199,7 @@ export default function AppLayout() {
 
         <main className="flex-1 p-4 md:p-8 min-w-0">
           <ProtectedRoute>
-            <Outlet />
+            <PageBoundary><Outlet /></PageBoundary>
           </ProtectedRoute>
         </main>
       </div>

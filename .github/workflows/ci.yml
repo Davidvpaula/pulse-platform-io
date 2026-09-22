@@ -17,10 +17,15 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-placeholder
       - run: npm test
       - run: node scripts/smoke-tests.mjs --strict
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config playwright.local.config.ts
+      - run: npm run e2e:production
+      - run: npm audit --audit-level=high
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

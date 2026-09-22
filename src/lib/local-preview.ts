@@ -15,6 +15,9 @@ export function previewProfile(): ProfileKey | null {
 export function selectPreviewProfile(profile: ProfileKey) {
   if (LOCAL_PREVIEW && keys.includes(profile)) sessionStorage.setItem(KEY, profile);
 }
+export function clearPreviewProfile() {
+  if (LOCAL_PREVIEW) sessionStorage.removeItem(KEY);
+}
 
 // No request reaches the configured Supabase project in local preview.
 // Reads show empty states; writes fail explicitly instead of pretending to save.

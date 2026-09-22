@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-22T11:05:05.460Z",
-  "totalFiles": 795,
+  "generatedAt": "2026-09-22T15:48:00.619Z",
+  "totalFiles": 799,
   "files": [
     {
       "path": ".dockerignore",
@@ -9,8 +9,8 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 708,
-      "sha256": "3667591ae5e3fcf229b2503c13fd3faba4ec93f8ea63936d02bd484b00a464c5"
+      "bytes": 919,
+      "sha256": "282155dc4b7a6aab39610b34b80da2d48215a90f53cd580af695d36510413fe9"
     },
     {
       "path": ".gitignore",
@@ -44,13 +44,13 @@
     },
     {
       "path": "compose.yaml",
-      "bytes": 76,
-      "sha256": "a90bc19b5d70b8367d25bfe6e73132aaa03c271f38076559343554080b2407d4"
+      "bytes": 430,
+      "sha256": "0113cccc50201f3d0b21c5b33f9f573b4a023de1ec9363b0e406776e9b628fba"
     },
     {
       "path": "Dockerfile",
-      "bytes": 163,
-      "sha256": "acbb22014ba5e75c9a9889e31a749571d896f329dc6d5a1e51771f0297f3c90b"
+      "bytes": 234,
+      "sha256": "085bbe464fcfe63a5c15cdcefa0388014e2718320721a1671446b56fdb76e07d"
     },
     {
       "path": "eslint.config.js",
@@ -64,13 +64,13 @@
     },
     {
       "path": "package-lock.json",
-      "bytes": 388746,
-      "sha256": "22bc5ee3578475081b8b998f7004a6ecceb2863a10c15e83c8e61abefd9e1392"
+      "bytes": 396427,
+      "sha256": "bccd4402510f3d4016a1d38ba1c861ee0e0fa2bc15b0dc81d07fec3c7192d154"
     },
     {
       "path": "package.json",
-      "bytes": 3542,
-      "sha256": "12ca6c9379204548ee1592daea0fd2a760db6738fe162684358454bdf2cbf16d"
+      "bytes": 3739,
+      "sha256": "a81905c007f6060f25df2818cb338bcccccf7761afdaec2b73fa9724668f800a"
     },
     {
       "path": "playwright.config.ts",
@@ -81,6 +81,11 @@
       "path": "playwright.local.config.ts",
       "bytes": 402,
       "sha256": "1da7d5fc869a92d62c57dfd617f1742877ec566194f47ce11b9c6f8f9dd01edf"
+    },
+    {
+      "path": "playwright.production.config.ts",
+      "bytes": 440,
+      "sha256": "0abe8ed4514943d774d171d9394d74be83bd4551f95e500dc37c71e850665d98"
     },
     {
       "path": "postcss.config.js",
@@ -104,8 +109,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 3142,
-      "sha256": "33e5ee672b9a2e325595421812b1e40ad9028b686205ca4b25a3c8c4518b3be8"
+      "bytes": 4017,
+      "sha256": "eff5435011ebc0f8babc530b2089bf66366a0098753f57dbd433d884b47d4be9"
     },
     {
       "path": "scripts/audit-inventory.mjs",
@@ -139,8 +144,8 @@
     },
     {
       "path": "src/App.tsx",
-      "bytes": 35096,
-      "sha256": "41aa8e5ceee8dd86ba9422a351f3efc22c492b3fece99870b8a106b7427e9fe3"
+      "bytes": 38563,
+      "sha256": "c13054340a6421f5ff33e69a2322cd472747deb56e6e99870e100a5765d33866"
     },
     {
       "path": "src/assets/brand/logo-horizontal-black.png",
@@ -668,6 +673,11 @@
       "sha256": "03e758eac7bc586432403b9c9456288d415ecfc825a8cf3ee46f6e18c6ab4116"
     },
     {
+      "path": "src/components/PageBoundary.tsx",
+      "bytes": 1622,
+      "sha256": "38b68376f16945a7df752098695b81a2d212f39447b362a77266bb0e4cb5959d"
+    },
+    {
       "path": "src/components/PageHeader.tsx",
       "bytes": 852,
       "sha256": "3913670541c7b08f31102c63f259ceef6c60e1c2f9db3163560a961bdc4371aa"
@@ -739,8 +749,8 @@
     },
     {
       "path": "src/components/ProtectedRoute.tsx",
-      "bytes": 851,
-      "sha256": "c051b582b9796a6230c3b9103feee53abc768dfde7330e65d4dd9d275a167c2e"
+      "bytes": 1353,
+      "sha256": "b750d61b8eab64dc60f913cf5dfc45d1c66fbfecbb6f0ca4b3be5b26aa972758"
     },
     {
       "path": "src/components/public/FaqContactForms.tsx",
@@ -1184,8 +1194,8 @@
     },
     {
       "path": "src/layouts/AppLayout.tsx",
-      "bytes": 20822,
-      "sha256": "035c288a78c6719981ba496a5f67f18d08144c8ddd3be67a422ca82b3590990c"
+      "bytes": 21120,
+      "sha256": "afce3e6562ac73a2e8c7e6c15689bdb01a0ccd00a020883d782d05438ce9807f"
     },
     {
       "path": "src/layouts/PublicLayout.tsx",
@@ -1219,8 +1229,8 @@
     },
     {
       "path": "src/lib/auth.tsx",
-      "bytes": 5199,
-      "sha256": "c2f9f43fd741de107086f41cf3927e0629cf3130d57f982bfc8029ce95737f0e"
+      "bytes": 4922,
+      "sha256": "b123b488b6cc4bf0cd7852c2126215b9a9b5b3eee9436f0a88a71989b6402f2b"
     },
     {
       "path": "src/lib/clinical/clinicalUrls.ts",
@@ -1309,8 +1319,8 @@
     },
     {
       "path": "src/lib/local-preview.ts",
-      "bytes": 1774,
-      "sha256": "160875d9895327bf99acbe5dd7623e4d3e3af6fd064039eb71864a2a1d1f5d67"
+      "bytes": 1869,
+      "sha256": "2ac8097a71d241331c665b541c54ee8a111ee36f950d83faef8fa78a7cdb147a"
     },
     {
       "path": "src/lib/medicoRegistro.ts",
@@ -1454,8 +1464,8 @@
     },
     {
       "path": "src/lib/session.tsx",
-      "bytes": 2616,
-      "sha256": "a7a134a37a53638c9fe3f5b19a4e63619ddc1d3a3d0db9c03addd3b134102c9f"
+      "bytes": 5049,
+      "sha256": "8ac84610e5f18488763c82541f2e6e15929c5273ab07f71d30c48b322ad1a06f"
     },
     {
       "path": "src/lib/stripe.ts",
@@ -2281,6 +2291,11 @@
       "path": "src/test/routes-validation.test.ts",
       "bytes": 808,
       "sha256": "eaeafedfc9905b85d76d0823ba0f6163d3b3833ac515392e8d8110538ef1b156"
+    },
+    {
+      "path": "src/test/session-recovery.test.tsx",
+      "bytes": 6111,
+      "sha256": "51dcaa584d54c0b5844c8d91cd4c213a77aa2099e939e53d5e9d76b0205a234e"
     },
     {
       "path": "src/test/setup.ts",
@@ -3949,13 +3964,18 @@
     },
     {
       "path": "tests/local/preview.spec.ts",
-      "bytes": 1949,
-      "sha256": "e5a3a3b902f3403b45d4cd2b50f9bb96976629c6ece311495217a64901e52019"
+      "bytes": 3676,
+      "sha256": "5a8ec8fec5522b1c3b1687df5977eb889ff31acce9f418d945d908d1e6ab5f09"
+    },
+    {
+      "path": "tests/production/guards.spec.ts",
+      "bytes": 1199,
+      "sha256": "9a4cd4a48c9b0f06cdd0cd1ddd4c2d10eacaa7d311670515699d257806d51973"
     },
     {
       "path": "tsconfig.app.json",
-      "bytes": 695,
-      "sha256": "62208e00e0d43960c5b791202cfd1cb82dabfb9b7abbea40bb4090219ebe63dd"
+      "bytes": 702,
+      "sha256": "d760deca43f21256099553adfe63c12d30bf6fe08fd177a636ea35320ca24ed7"
     },
     {
       "path": "tsconfig.json",
@@ -3969,8 +3989,8 @@
     },
     {
       "path": "vite.config.ts",
-      "bytes": 593,
-      "sha256": "bf1b1c39a6b6da4adf035831fb50484be1b87347b34dfff40010dbf1d32cb21f"
+      "bytes": 527,
+      "sha256": "728e9c66a8b547b6b20f9f36a73917ad79d0bda9ed01f170ae2035478f0e443d"
     },
     {
       "path": "vitest.config.ts",

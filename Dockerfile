@@ -1,7 +1,9 @@
 FROM node:22-alpine
 WORKDIR /app
-COPY package.json package-lock.json ./
+RUN chown node:node /app
+USER node
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
-COPY . .
+COPY --chown=node:node . .
 EXPOSE 8080
 CMD ["npm", "run", "dev:local", "--", "--host", "0.0.0.0"]

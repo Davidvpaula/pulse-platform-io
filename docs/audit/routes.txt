@@ -3,7 +3,7 @@
   HARDENING DE NAVEGAÇÃO
 ════════════════════════════════════════════════════════════
 Rotas declaradas:    191
-Links no código:     175
+Links no código:     176
 Itens de menu:       104
 
 ════════════════════════════════════════════════════════════

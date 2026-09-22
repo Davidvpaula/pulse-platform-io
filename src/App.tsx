@@ -1,4 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import PageBoundary from "@/components/PageBoundary";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import { LOCAL_PREVIEW } from "@/lib/local-preview";
 const VisualEditor = lazy(() => import("@/pages/local/VisualEditor"));
@@ -11,167 +13,173 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { SessionProvider, useSession } from "@/lib/session";
 import { ImpersonationProvider } from "@/lib/impersonation";
-import Auth from "@/pages/auth/Auth";
+const Auth = lazy(() => import("@/pages/auth/Auth"));
 import PublicLayout from "@/layouts/PublicLayout";
 import AppLayout from "@/layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 
-import Home from "@/pages/public/Home";
-import {
-  Especialidades, Medicos, MedicoDetalhe, Agendar, Planos,
-  Empresas, ParaMedicos, Faq,
-} from "@/pages/public/PublicPages";
-import CadastroMedico from "@/pages/public/CadastroMedico";
-import AtendimentoImediato from "@/pages/public/AtendimentoImediato";
-import Servicos from "@/pages/public/Servicos";
-import Sobre from "@/pages/public/Sobre";
-import { TermosPublico, PrivacidadePublica, LgpdPublico } from "@/pages/public/TermoPublico";
-import ServicoDetalhe from "@/pages/public/ServicoDetalhe";
-import MedicoAguardandoAprovacao from "@/pages/app/medico/MedicoAguardandoAprovacao";
-import MedicosAprovacao from "@/pages/app/admin/MedicosAprovacao";
-import AdminMedicosContratos from "@/pages/app/admin/AdminMedicosContratos";
-import AdminContratosModelo from "@/pages/app/admin/AdminContratosModelo";
+const Home = lazy(() => import("@/pages/public/Home"));
+const Especialidades = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Especialidades })));
+const Medicos = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Medicos })));
+const MedicoDetalhe = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.MedicoDetalhe })));
+const Agendar = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Agendar })));
+const Planos = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Planos })));
+const Empresas = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Empresas })));
+const ParaMedicos = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.ParaMedicos })));
+const Faq = lazy(() => import("@/pages/public/PublicPages").then(module => ({ default: module.Faq })));
+const CadastroMedico = lazy(() => import("@/pages/public/CadastroMedico"));
+const AtendimentoImediato = lazy(() => import("@/pages/public/AtendimentoImediato"));
+const Servicos = lazy(() => import("@/pages/public/Servicos"));
+const Sobre = lazy(() => import("@/pages/public/Sobre"));
+const TermosPublico = lazy(() => import("@/pages/public/TermoPublico").then(module => ({ default: module.TermosPublico })));
+const PrivacidadePublica = lazy(() => import("@/pages/public/TermoPublico").then(module => ({ default: module.PrivacidadePublica })));
+const LgpdPublico = lazy(() => import("@/pages/public/TermoPublico").then(module => ({ default: module.LgpdPublico })));
+const ServicoDetalhe = lazy(() => import("@/pages/public/ServicoDetalhe"));
+const MedicoAguardandoAprovacao = lazy(() => import("@/pages/app/medico/MedicoAguardandoAprovacao"));
+const MedicosAprovacao = lazy(() => import("@/pages/app/admin/MedicosAprovacao"));
+const AdminMedicosContratos = lazy(() => import("@/pages/app/admin/AdminMedicosContratos"));
+const AdminContratosModelo = lazy(() => import("@/pages/app/admin/AdminContratosModelo"));
 import MedicoGuard from "@/components/MedicoGuard";
 import PacienteGuard from "@/components/PacienteGuard";
 
-import Placeholder from "@/pages/app/_Placeholder";
-import PacienteDashboard from "@/pages/app/paciente/PacienteDashboard";
-import PacienteCheckout from "@/pages/app/paciente/PacienteCheckout";
-import PacientePagamentoSucesso from "@/pages/app/paciente/PacientePagamentoSucesso";
-import PacientePagamentoCancelado from "@/pages/app/paciente/PacientePagamentoCancelado";
-import PacienteAgendarConfirmar from "@/pages/app/paciente/PacienteAgendarConfirmar";
-import AgendamentoConfirmar from "@/pages/app/agendamento/AgendamentoConfirmar";
-import PacienteAgendamentos from "@/pages/app/paciente/PacienteAgendamentos";
-import PacientePerfilPage from "@/pages/app/paciente/PacientePerfilPage";
-import PacienteDocumentos from "@/pages/app/paciente/PacienteDocumentos";
-import PacientePlano from "@/pages/app/paciente/PacientePlano";
-import PacienteMensagens from "@/pages/app/paciente/PacienteMensagens";
-import PacienteFinanceiro from "@/pages/app/paciente/PacienteFinanceiro";
-import PacienteDependentes from "@/pages/app/paciente/PacienteDependentes";
-import PacienteRotaNaoEncontrada from "@/pages/app/paciente/PacienteRotaNaoEncontrada";
+const Placeholder = lazy(() => import("@/pages/app/_Placeholder"));
+const PacienteDashboard = lazy(() => import("@/pages/app/paciente/PacienteDashboard"));
+const PacienteCheckout = lazy(() => import("@/pages/app/paciente/PacienteCheckout"));
+const PacientePagamentoSucesso = lazy(() => import("@/pages/app/paciente/PacientePagamentoSucesso"));
+const PacientePagamentoCancelado = lazy(() => import("@/pages/app/paciente/PacientePagamentoCancelado"));
+const PacienteAgendarConfirmar = lazy(() => import("@/pages/app/paciente/PacienteAgendarConfirmar"));
+const AgendamentoConfirmar = lazy(() => import("@/pages/app/agendamento/AgendamentoConfirmar"));
+const PacienteAgendamentos = lazy(() => import("@/pages/app/paciente/PacienteAgendamentos"));
+const PacientePerfilPage = lazy(() => import("@/pages/app/paciente/PacientePerfilPage"));
+const PacienteDocumentos = lazy(() => import("@/pages/app/paciente/PacienteDocumentos"));
+const PacientePlano = lazy(() => import("@/pages/app/paciente/PacientePlano"));
+const PacienteMensagens = lazy(() => import("@/pages/app/paciente/PacienteMensagens"));
+const PacienteFinanceiro = lazy(() => import("@/pages/app/paciente/PacienteFinanceiro"));
+const PacienteDependentes = lazy(() => import("@/pages/app/paciente/PacienteDependentes"));
+const PacienteRotaNaoEncontrada = lazy(() => import("@/pages/app/paciente/PacienteRotaNaoEncontrada"));
 import {
   PacienteParamGuard,
   UUID_RE,
   CHECKOUT_SESSION_RE,
 } from "@/pages/app/paciente/PacienteParamGuard";
-import MedicoAgenda from "@/pages/app/medico/MedicoAgenda";
-import MedicoHorarios from "@/pages/app/medico/MedicoHorarios";
-import MedicoPacientes from "@/pages/app/medico/MedicoPacientes";
-import MedicoConfiguracoes from "@/pages/app/medico/MedicoConfiguracoes";
-import MedicoGoogleCallback from "@/pages/app/medico/MedicoGoogleCallback";
-import MedicoPerfil from "@/pages/app/medico/MedicoPerfil";
-import MedicoConsultas from "@/pages/app/medico/MedicoConsultas";
-import MedicoFinanceiro from "@/pages/app/medico/MedicoFinanceiro";
+const MedicoAgenda = lazy(() => import("@/pages/app/medico/MedicoAgenda"));
+const MedicoHorarios = lazy(() => import("@/pages/app/medico/MedicoHorarios"));
+const MedicoPacientes = lazy(() => import("@/pages/app/medico/MedicoPacientes"));
+const MedicoConfiguracoes = lazy(() => import("@/pages/app/medico/MedicoConfiguracoes"));
+const MedicoGoogleCallback = lazy(() => import("@/pages/app/medico/MedicoGoogleCallback"));
+const MedicoPerfil = lazy(() => import("@/pages/app/medico/MedicoPerfil"));
+const MedicoConsultas = lazy(() => import("@/pages/app/medico/MedicoConsultas"));
+const MedicoFinanceiro = lazy(() => import("@/pages/app/medico/MedicoFinanceiro"));
 
-import MedicoTreinamento from "@/pages/app/medico/MedicoTreinamento";
-import MedicoDashboard from "@/pages/app/medico/MedicoDashboard";
-import MedicoDocumentos from "@/pages/app/medico/MedicoDocumentos";
-import SecretariaDashboard from "@/pages/app/secretaria/SecretariaDashboard";
-import SecretariaPacientes from "@/pages/app/secretaria/SecretariaPacientes";
-import SecretariaAgenda from "@/pages/app/secretaria/SecretariaAgenda";
-import SecretariaAgendamentos from "@/pages/app/secretaria/SecretariaAgendamentos";
-import SecretariaCupons from "@/pages/app/secretaria/SecretariaCupons";
-import SecretariaFinanceiro from "@/pages/app/secretaria/SecretariaFinanceiro";
-import SecretariaRelatorios from "@/pages/app/secretaria/SecretariaRelatorios";
-import CuponsUsoLog from "@/pages/app/shared/CuponsUsoLog";
-import AdminDashboard from "@/pages/app/admin/AdminDashboard";
-import AdminTermosCondicoes from "@/pages/app/admin/AdminTermosCondicoes";
-import AdminConfiguracoes from "@/pages/app/admin/AdminConfiguracoes";
-import AdminUsuarios from "@/pages/app/admin/AdminUsuarios";
-import EmpresaDashboard from "@/pages/app/empresa/EmpresaDashboard";
-import EmpresaFuncionarios from "@/pages/app/empresa/EmpresaFuncionarios";
-import EmpresaAgendamentos from "@/pages/app/empresa/EmpresaAgendamentos";
-import EmpresaRelatorios from "@/pages/app/empresa/EmpresaRelatorios";
-import EmpresaFinanceiro from "@/pages/app/empresa/EmpresaFinanceiro";
-import EmpresaPerfilPage from "@/pages/app/empresa/EmpresaPerfilPage";
-import EmpresaDocumentos from "@/pages/app/empresa/EmpresaDocumentos";
-import EmpresaTermos from "@/pages/app/empresa/EmpresaTermos";
+const MedicoTreinamento = lazy(() => import("@/pages/app/medico/MedicoTreinamento"));
+const MedicoDashboard = lazy(() => import("@/pages/app/medico/MedicoDashboard"));
+const MedicoDocumentos = lazy(() => import("@/pages/app/medico/MedicoDocumentos"));
+const SecretariaDashboard = lazy(() => import("@/pages/app/secretaria/SecretariaDashboard"));
+const SecretariaPacientes = lazy(() => import("@/pages/app/secretaria/SecretariaPacientes"));
+const SecretariaAgenda = lazy(() => import("@/pages/app/secretaria/SecretariaAgenda"));
+const SecretariaAgendamentos = lazy(() => import("@/pages/app/secretaria/SecretariaAgendamentos"));
+const SecretariaCupons = lazy(() => import("@/pages/app/secretaria/SecretariaCupons"));
+const SecretariaFinanceiro = lazy(() => import("@/pages/app/secretaria/SecretariaFinanceiro"));
+const SecretariaRelatorios = lazy(() => import("@/pages/app/secretaria/SecretariaRelatorios"));
+const CuponsUsoLog = lazy(() => import("@/pages/app/shared/CuponsUsoLog"));
+const AdminDashboard = lazy(() => import("@/pages/app/admin/AdminDashboard"));
+const AdminTermosCondicoes = lazy(() => import("@/pages/app/admin/AdminTermosCondicoes"));
+const AdminConfiguracoes = lazy(() => import("@/pages/app/admin/AdminConfiguracoes"));
+const AdminUsuarios = lazy(() => import("@/pages/app/admin/AdminUsuarios"));
+const EmpresaDashboard = lazy(() => import("@/pages/app/empresa/EmpresaDashboard"));
+const EmpresaFuncionarios = lazy(() => import("@/pages/app/empresa/EmpresaFuncionarios"));
+const EmpresaAgendamentos = lazy(() => import("@/pages/app/empresa/EmpresaAgendamentos"));
+const EmpresaRelatorios = lazy(() => import("@/pages/app/empresa/EmpresaRelatorios"));
+const EmpresaFinanceiro = lazy(() => import("@/pages/app/empresa/EmpresaFinanceiro"));
+const EmpresaPerfilPage = lazy(() => import("@/pages/app/empresa/EmpresaPerfilPage"));
+const EmpresaDocumentos = lazy(() => import("@/pages/app/empresa/EmpresaDocumentos"));
+const EmpresaTermos = lazy(() => import("@/pages/app/empresa/EmpresaTermos"));
 import { EmpresaGuard } from "@/components/empresa/EmpresaGuard";
-import ComunicacaoDashboard from "@/pages/app/comunicacao/ComunicacaoDashboard";
-import Conversas from "@/pages/app/comunicacao/Conversas";
-import MedicoMensagensConsultas from "@/pages/app/medico/MedicoMensagensConsultas";
-import MedicoNotificacoes from "@/pages/app/medico/MedicoNotificacoes";
-import PacienteNotificacoes from "@/pages/app/paciente/PacienteNotificacoes";
-import Templates from "@/pages/app/comunicacao/Templates";
-import Automacoes from "@/pages/app/comunicacao/Automacoes";
-import Metricas from "@/pages/app/comunicacao/Metricas";
-import BotConfig from "@/pages/app/comunicacao/BotConfig";
+const ComunicacaoDashboard = lazy(() => import("@/pages/app/comunicacao/ComunicacaoDashboard"));
+const Conversas = lazy(() => import("@/pages/app/comunicacao/Conversas"));
+const MedicoMensagensConsultas = lazy(() => import("@/pages/app/medico/MedicoMensagensConsultas"));
+const MedicoNotificacoes = lazy(() => import("@/pages/app/medico/MedicoNotificacoes"));
+const PacienteNotificacoes = lazy(() => import("@/pages/app/paciente/PacienteNotificacoes"));
+const Templates = lazy(() => import("@/pages/app/comunicacao/Templates"));
+const Automacoes = lazy(() => import("@/pages/app/comunicacao/Automacoes"));
+const Metricas = lazy(() => import("@/pages/app/comunicacao/Metricas"));
+const BotConfig = lazy(() => import("@/pages/app/comunicacao/BotConfig"));
 
-import AdminIntegracoes from "@/pages/app/admin/AdminIntegracoes";
-import Tarefas from "@/pages/app/shared/Tarefas";
-import Permissoes from "@/pages/app/admin/Permissoes";
-import PermissoesLog from "@/pages/app/admin/PermissoesLog";
-import AdminImpersonar from "@/pages/app/admin/AdminImpersonar";
-import AdminSessoes from "@/pages/app/admin/AdminSessoes";
-import AdminSeguranca from "@/pages/app/admin/AdminSeguranca";
-import AdminAlertasSeguranca from "@/pages/app/admin/AdminAlertasSeguranca";
-import AdminServicos from "@/pages/app/admin/AdminServicos";
-import AdminTreinamentos from "@/pages/app/admin/AdminTreinamentos";
-import MedicoServicos from "@/pages/app/medico/MedicoServicos";
-import TrocarSenha from "@/pages/auth/TrocarSenha";
+const AdminIntegracoes = lazy(() => import("@/pages/app/admin/AdminIntegracoes"));
+const Tarefas = lazy(() => import("@/pages/app/shared/Tarefas"));
+const Permissoes = lazy(() => import("@/pages/app/admin/Permissoes"));
+const PermissoesLog = lazy(() => import("@/pages/app/admin/PermissoesLog"));
+const AdminImpersonar = lazy(() => import("@/pages/app/admin/AdminImpersonar"));
+const AdminSessoes = lazy(() => import("@/pages/app/admin/AdminSessoes"));
+const AdminSeguranca = lazy(() => import("@/pages/app/admin/AdminSeguranca"));
+const AdminAlertasSeguranca = lazy(() => import("@/pages/app/admin/AdminAlertasSeguranca"));
+const AdminServicos = lazy(() => import("@/pages/app/admin/AdminServicos"));
+const AdminTreinamentos = lazy(() => import("@/pages/app/admin/AdminTreinamentos"));
+const MedicoServicos = lazy(() => import("@/pages/app/medico/MedicoServicos"));
+const TrocarSenha = lazy(() => import("@/pages/auth/TrocarSenha"));
 import { SecurityWatcher } from "@/components/security/SecurityWatcher";
-import AdminAnalises from "@/pages/app/admin/AdminAnalises";
-import WhatsAppCentral from "@/pages/app/admin/WhatsAppCentral";
-import IntegracaoWhatsApp from "@/pages/app/admin/IntegracaoWhatsApp";
-import Inbox from "@/pages/app/comunicacao/Inbox";
-import IAAvatar from "@/pages/app/comunicacao/IAAvatar";
-import InboxConfiguracoes from "@/pages/app/comunicacao/InboxConfiguracoes";
-import SupervisorEquipe from "@/pages/app/supervisor/SupervisorDashboard";
-import ComunicacaoInterna from "@/pages/app/shared/ComunicacaoInterna";
-import FluxoOperacional from "@/pages/app/admin/FluxoOperacional";
-import AdminAgendamentos from "@/pages/app/admin/AdminAgendamentos";
-import AdminFinanceiroCentral from "@/pages/app/admin/AdminFinanceiroCentral";
-import AdminFinanceiroConfig from "@/pages/app/admin/AdminFinanceiroConfig";
-import AdminLedgerObservabilidade from "@/pages/app/admin/AdminLedgerObservabilidade";
-import AdminNOC from "@/pages/app/admin/AdminNOC";
-import AdminIAMedicos from "@/pages/app/admin/AdminIAMedicos";
-import AdminPreviaRepasse from "@/pages/app/admin/AdminPreviaRepasse";
-import AdminAtendimentoImediato from "@/pages/app/admin/AdminAtendimentoImediato";
-import AdminPlanos from "@/pages/app/admin/AdminPlanos";
-import AdminRelatorios from "@/pages/app/admin/AdminRelatorios";
-import AdminRelatorioFinanceiro from "@/pages/app/admin/AdminRelatorioFinanceiro";
+const AdminAnalises = lazy(() => import("@/pages/app/admin/AdminAnalises"));
+const WhatsAppCentral = lazy(() => import("@/pages/app/admin/WhatsAppCentral"));
+const IntegracaoWhatsApp = lazy(() => import("@/pages/app/admin/IntegracaoWhatsApp"));
+const Inbox = lazy(() => import("@/pages/app/comunicacao/Inbox"));
+const IAAvatar = lazy(() => import("@/pages/app/comunicacao/IAAvatar"));
+const InboxConfiguracoes = lazy(() => import("@/pages/app/comunicacao/InboxConfiguracoes"));
+const SupervisorEquipe = lazy(() => import("@/pages/app/supervisor/SupervisorDashboard"));
+const ComunicacaoInterna = lazy(() => import("@/pages/app/shared/ComunicacaoInterna"));
+const FluxoOperacional = lazy(() => import("@/pages/app/admin/FluxoOperacional"));
+const AdminAgendamentos = lazy(() => import("@/pages/app/admin/AdminAgendamentos"));
+const AdminFinanceiroCentral = lazy(() => import("@/pages/app/admin/AdminFinanceiroCentral"));
+const AdminFinanceiroConfig = lazy(() => import("@/pages/app/admin/AdminFinanceiroConfig"));
+const AdminLedgerObservabilidade = lazy(() => import("@/pages/app/admin/AdminLedgerObservabilidade"));
+const AdminNOC = lazy(() => import("@/pages/app/admin/AdminNOC"));
+const AdminIAMedicos = lazy(() => import("@/pages/app/admin/AdminIAMedicos"));
+const AdminPreviaRepasse = lazy(() => import("@/pages/app/admin/AdminPreviaRepasse"));
+const AdminAtendimentoImediato = lazy(() => import("@/pages/app/admin/AdminAtendimentoImediato"));
+const AdminPlanos = lazy(() => import("@/pages/app/admin/AdminPlanos"));
+const AdminRelatorios = lazy(() => import("@/pages/app/admin/AdminRelatorios"));
+const AdminRelatorioFinanceiro = lazy(() => import("@/pages/app/admin/AdminRelatorioFinanceiro"));
 // AdminRelatorioAuditoria unificado com AdminAuditoria — rota redireciona via Navigate
-import AdminAuditoria from "@/pages/app/admin/AdminAuditoria";
-import AdminFaq from "@/pages/app/admin/AdminFaq";
-import AdminFeedbacks from "@/pages/app/admin/AdminFeedbacks";
-import AdminComunicacaoOperacao from "@/pages/app/admin/AdminComunicacaoOperacao";
-import AdminProducaoCockpit from "@/pages/app/admin/AdminProducaoCockpit";
-import AdminWhatsappCloudTest from "@/pages/app/admin/AdminWhatsappCloudTest";
-import AdminObservabilidade from "@/pages/app/admin/AdminObservabilidade";
-import AdminColaboradores from "@/pages/app/admin/AdminColaboradores";
-import AdminEmpresas from "@/pages/app/admin/AdminEmpresas";
-import AdminPlanosEmpresariais from "@/pages/app/admin/AdminPlanosEmpresariais";
-import AdminGestaoB2B from "@/pages/app/admin/AdminGestaoB2B";
-import AdminRelatoriosB2B from "@/pages/app/admin/AdminRelatoriosB2B";
-import AdminFaturamentoB2B from "@/pages/app/admin/AdminFaturamentoB2B";
-import AdminContratoDetalhes from "@/pages/app/admin/AdminContratoDetalhes";
-import AdminPropostasB2B from "@/pages/app/admin/AdminPropostasB2B";
-import MedicoCorporativo from "@/pages/app/medico/MedicoCorporativo";
-import MedicoPropostas from "@/pages/app/medico/MedicoPropostas";
-import EmpresaPropostas from "@/pages/app/empresa/EmpresaPropostas";
-import PacientePerfil from "@/pages/app/shared/PacientePerfil";
-import FeegowIntegracao from "@/pages/app/admin/FeegowIntegracao";
-import FeegowMapeamento from "@/pages/app/admin/FeegowMapeamento";
-import FeegowSchema from "@/pages/app/admin/FeegowSchema";
-import FeegowProfissionais from "@/pages/app/admin/FeegowProfissionais";
-import PendenciasIntegracao from "@/pages/app/shared/PendenciasIntegracao";
-import MedicoPlanos from "@/pages/app/medico/MedicoPlanos";
-import MedicoGamificacao from "@/pages/app/medico/MedicoGamificacao";
-import MedicoPremiumPage from "@/pages/app/medico/MedicoPremiumPage";
-import MedicoCampanhasPage from "@/pages/app/medico/MedicoCampanhasPage";
-import MedicoROIPage from "@/pages/app/medico/MedicoROIPage";
-import AdminGamificacao from "@/pages/app/admin/AdminGamificacao";
-import AdminGamificacaoFinanceiro from "@/pages/app/admin/AdminGamificacaoFinanceiro";
-import AdminPlanosMedicos from "@/pages/app/admin/AdminPlanosMedicos";
-import AdminCancelamentosPlanos from "@/pages/app/admin/AdminCancelamentosPlanos";
-import AdminSaquesMedicos from "@/pages/app/admin/AdminSaquesMedicos";
-import AdminReembolsoConfig from "@/pages/app/admin/AdminReembolsoConfig";
-import PacienteMontarPlano from "@/pages/app/paciente/PacienteMontarPlano";
-import PlanoCheckoutRetorno from "@/pages/app/paciente/PlanoCheckoutRetorno";
-import PacienteAssinarPlano from "@/pages/app/paciente/PacienteAssinarPlano";
-import AdminPerfil from "@/pages/app/admin/AdminPerfil";
-import AdminSaude from "@/pages/app/admin/AdminSaude";
-import ColaboradorPerfil from "@/pages/app/colaborador/ColaboradorPerfil";
+const AdminAuditoria = lazy(() => import("@/pages/app/admin/AdminAuditoria"));
+const AdminFaq = lazy(() => import("@/pages/app/admin/AdminFaq"));
+const AdminFeedbacks = lazy(() => import("@/pages/app/admin/AdminFeedbacks"));
+const AdminComunicacaoOperacao = lazy(() => import("@/pages/app/admin/AdminComunicacaoOperacao"));
+const AdminProducaoCockpit = lazy(() => import("@/pages/app/admin/AdminProducaoCockpit"));
+const AdminWhatsappCloudTest = lazy(() => import("@/pages/app/admin/AdminWhatsappCloudTest"));
+const AdminObservabilidade = lazy(() => import("@/pages/app/admin/AdminObservabilidade"));
+const AdminColaboradores = lazy(() => import("@/pages/app/admin/AdminColaboradores"));
+const AdminEmpresas = lazy(() => import("@/pages/app/admin/AdminEmpresas"));
+const AdminPlanosEmpresariais = lazy(() => import("@/pages/app/admin/AdminPlanosEmpresariais"));
+const AdminGestaoB2B = lazy(() => import("@/pages/app/admin/AdminGestaoB2B"));
+const AdminRelatoriosB2B = lazy(() => import("@/pages/app/admin/AdminRelatoriosB2B"));
+const AdminFaturamentoB2B = lazy(() => import("@/pages/app/admin/AdminFaturamentoB2B"));
+const AdminContratoDetalhes = lazy(() => import("@/pages/app/admin/AdminContratoDetalhes"));
+const AdminPropostasB2B = lazy(() => import("@/pages/app/admin/AdminPropostasB2B"));
+const MedicoCorporativo = lazy(() => import("@/pages/app/medico/MedicoCorporativo"));
+const MedicoPropostas = lazy(() => import("@/pages/app/medico/MedicoPropostas"));
+const EmpresaPropostas = lazy(() => import("@/pages/app/empresa/EmpresaPropostas"));
+const PacientePerfil = lazy(() => import("@/pages/app/shared/PacientePerfil"));
+const FeegowIntegracao = lazy(() => import("@/pages/app/admin/FeegowIntegracao"));
+const FeegowMapeamento = lazy(() => import("@/pages/app/admin/FeegowMapeamento"));
+const FeegowSchema = lazy(() => import("@/pages/app/admin/FeegowSchema"));
+const FeegowProfissionais = lazy(() => import("@/pages/app/admin/FeegowProfissionais"));
+const PendenciasIntegracao = lazy(() => import("@/pages/app/shared/PendenciasIntegracao"));
+const MedicoPlanos = lazy(() => import("@/pages/app/medico/MedicoPlanos"));
+const MedicoGamificacao = lazy(() => import("@/pages/app/medico/MedicoGamificacao"));
+const MedicoPremiumPage = lazy(() => import("@/pages/app/medico/MedicoPremiumPage"));
+const MedicoCampanhasPage = lazy(() => import("@/pages/app/medico/MedicoCampanhasPage"));
+const MedicoROIPage = lazy(() => import("@/pages/app/medico/MedicoROIPage"));
+const AdminGamificacao = lazy(() => import("@/pages/app/admin/AdminGamificacao"));
+const AdminGamificacaoFinanceiro = lazy(() => import("@/pages/app/admin/AdminGamificacaoFinanceiro"));
+const AdminPlanosMedicos = lazy(() => import("@/pages/app/admin/AdminPlanosMedicos"));
+const AdminCancelamentosPlanos = lazy(() => import("@/pages/app/admin/AdminCancelamentosPlanos"));
+const AdminSaquesMedicos = lazy(() => import("@/pages/app/admin/AdminSaquesMedicos"));
+const AdminReembolsoConfig = lazy(() => import("@/pages/app/admin/AdminReembolsoConfig"));
+const PacienteMontarPlano = lazy(() => import("@/pages/app/paciente/PacienteMontarPlano"));
+const PlanoCheckoutRetorno = lazy(() => import("@/pages/app/paciente/PlanoCheckoutRetorno"));
+const PacienteAssinarPlano = lazy(() => import("@/pages/app/paciente/PacienteAssinarPlano"));
+const AdminPerfil = lazy(() => import("@/pages/app/admin/AdminPerfil"));
+const AdminSaude = lazy(() => import("@/pages/app/admin/AdminSaude"));
+const ColaboradorPerfil = lazy(() => import("@/pages/app/colaborador/ColaboradorPerfil"));
 import { RequireRoutePermission as G } from "@/components/permissions/RequireRoutePermission";
 
 const queryClient = new QueryClient();
@@ -201,7 +209,7 @@ const App = () => (
         <BrowserRouter>
           <AnalyticsTracker />
           <SecurityWatcher />
-          <Routes>
+          <PageBoundary><Routes>
             {LOCAL_PREVIEW && <Route path="/editor-visual" element={<Suspense fallback={<p>Carregando editor…</p>}><VisualEditor /></Suspense>} />}
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
@@ -229,7 +237,7 @@ const App = () => (
             <Route path="/trocar-senha" element={<TrocarSenha />} />
 
             {/* APP */}
-            <Route path="/app" element={<AppLayout />}>
+            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route index element={<SmartRedirect />} />
 
               {/* Paciente */}
@@ -447,7 +455,7 @@ const App = () => (
             </Route>
 
             <Route path="*" element={<NotFound />} />
-          </Routes>
+          </Routes></PageBoundary>
         </BrowserRouter>
       </AuthProvider>
       </ImpersonationProvider>
