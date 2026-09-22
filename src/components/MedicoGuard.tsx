@@ -1,3 +1,4 @@
+import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
@@ -41,6 +42,8 @@ export default function MedicoGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   // Loading — mostra spinner
+  if (previewProfile()) return <>{children}</>;
+
   if (loading || situacao === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

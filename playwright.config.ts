@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL =
-  process.env.E2E_BASE_URL ?? "https://pulse-platform-io.lovable.app";
+  process.env.E2E_BASE_URL ?? "http://127.0.0.1:8080";
 
 export default defineConfig({
   testDir: "./tests/e2e",

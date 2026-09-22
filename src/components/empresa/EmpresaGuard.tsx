@@ -1,3 +1,4 @@
+import { previewProfile } from "@/lib/local-preview";
 /**
  * EmpresaGuard — protege rotas /empresa/*.
  * Exige autenticação + vínculo real com empresa.
@@ -14,6 +15,8 @@ interface EmpresaGuardProps {
 
 export function EmpresaGuard({ children }: EmpresaGuardProps) {
   const { empresa, loading, error } = useEmpresaAtual();
+
+  if (previewProfile()) return <>{children}</>;
 
   if (loading) {
     return (

@@ -1,0 +1,59 @@
+
+════════════════════════════════════════════════════════════
+  HARDENING DE NAVEGAÇÃO
+════════════════════════════════════════════════════════════
+Rotas declaradas:    191
+Links no código:     175
+Itens de menu:       104
+
+════════════════════════════════════════════════════════════
+  ⚠️  ROTAS ÓRFÃS — declaradas mas sem link nem menu (44)
+════════════════════════════════════════════════════════════
+    (não é erro; podem ser acessadas via URL direta)
+  • /editor-visual
+  • /empresas
+  • /para-medicos
+  • /sobre
+  • /app/paciente/plano-checkout-retorno
+  • /app/paciente/pagamento/sucesso
+  • /app/paciente/pagamento/cancelado
+  • /app/medico/google-callback
+  • /app/medico/mensagens
+  • /app/medico/campanhas
+  • /app/medico/roi
+  • /app/secretaria/dashboard
+  • /app/secretaria/pacientes
+  • /app/secretaria/agenda
+  • /app/secretaria/agendamentos
+  • /app/secretaria/cupons/log
+  • /app/secretaria/cupons
+  • /app/secretaria/comunicacao
+  • /app/secretaria/financeiro
+  • /app/secretaria/tarefas
+  • /app/secretaria/equipe
+  • /app/secretaria/relatorios
+  • /app/secretaria/comunicacao-interna
+  • /app/secretaria/perfil
+  • /app/secretaria/pendencias-integracao
+  • /app/colaborador/produtividade
+  • /app/colaborador/auditoria
+  • /app/colaborador/gamificacao
+  • /app/colaborador/gamificacao/financeiro
+  • /app/admin/usuarios
+  • /app/admin/secretaria
+  • /app/admin/comunicacao
+  • /app/admin/whatsapp
+  • /app/admin/permissoes-log
+  • /app/admin/treinamentos
+  • /app/admin/relatorios/auditoria
+  • /app/admin/comunicacao/operacao
+  • /app/admin/whatsapp-cloud-test
+  • /app/admin/faq
+  • /app/admin/saude
+  • /app/admin/cupons/log
+  • /app/comunicacao/dashboard
+  • /app/comunicacao/conversas
+  • /app/comunicacao/whatsapp
+
+✅ Sem erros. Apenas avisos informativos.
+

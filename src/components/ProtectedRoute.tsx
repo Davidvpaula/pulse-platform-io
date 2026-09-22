@@ -1,3 +1,4 @@
+import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useSession } from "@/lib/session";
@@ -9,6 +10,8 @@ import { useSession } from "@/lib/session";
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useSession();
   const location = useLocation();
+
+  if (previewProfile()) return <>{children}</>;
 
   if (loading) {
     return (

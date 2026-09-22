@@ -134,6 +134,16 @@ async function run() {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Disabled by default. Enable only in an isolated test project.
+  const testToken = Deno.env.get("INTERNAL_FINANCEIRO_TEST_TOKEN");
+  if (Deno.env.get("ENABLE_INTERNAL_FINANCEIRO_TESTS") !== "true" || !testToken) {
+    return new Response("Not found", { status: 404 });
+  }
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (req.headers.get("Authorization") !== `Bearer ${testToken}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  results.length = 0;
   try {
     await run();
     const allOk = results.every((r) => r.ok);

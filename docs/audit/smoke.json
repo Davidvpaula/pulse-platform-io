@@ -1,0 +1,501 @@
+{
+  "routes_ok": true,
+  "rpcs": {
+    "ai_avatar_kill_switch": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\avatar\\AiAvatarSupervisorDashboard.tsx:82"
+    ],
+    "ai_avatar_pausar_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\avatar\\ConversationAvatarPanel.tsx:114"
+    ],
+    "ai_avatar_assumir_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\avatar\\ConversationAvatarPanel.tsx:154"
+    ],
+    "set_conversation_queue": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\ConversationQueuePanel.tsx:39"
+    ],
+    "update_conversation_priority": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\ConversationQueuePanel.tsx:48"
+    ],
+    "confirmar_vinculo_paciente": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\PacientesVinculadosPanel.tsx:87"
+    ],
+    "definir_paciente_ativo_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\PacientesVinculadosPanel.tsx:101"
+    ],
+    "update_conversation_status": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\StatusOperacionalSelect.tsx:22"
+    ],
+    "transferir_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\TransferirConversaDialog.tsx:52"
+    ],
+    "vincular_paciente_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\comunicacao\\VincularPacienteDialog.tsx:79"
+    ],
+    "permissoes_efetivas": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:45",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:61"
+    ],
+    "colaborador_remover_permissao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:72",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminColaboradores.tsx:731"
+    ],
+    "colaborador_set_permissao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:76",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:95",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\ColaboradorPermissoesDrawer.tsx:118",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminColaboradores.tsx:738"
+    ],
+    "has_role": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\RequireRoutePermission.tsx:37",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\permissions\\usePermissionsBatch.ts:67",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\supabase\\functions\\ia-auditoria-medica\\index.ts:33"
+    ],
+    "relatorios_financeiro": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\FinanceiroTab.tsx:26",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminRelatorios.tsx:75"
+    ],
+    "relatorios_medicos_performance": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\MedicosTab.tsx:36"
+    ],
+    "relatorios_clinica": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\OperacaoClinicaTab.tsx:25",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\VisaoExecutivaTab.tsx:32",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:427",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminRelatorios.tsx:70"
+    ],
+    "relatorios_executivo": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\VisaoExecutivaTab.tsx:30",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:410",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminRelatorios.tsx:69"
+    ],
+    "relatorios_consultas_diarias": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\relatorios\\VisaoExecutivaTab.tsx:31"
+    ],
+    "password_status": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\security\\SecurityWatcher.tsx:52"
+    ],
+    "update_attendant_presence": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\hooks\\useAttendantPresence.ts:8"
+    ],
+    "set_typing": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\hooks\\useConversationTyping.ts:13",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\hooks\\useConversationTyping.ts:19",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\hooks\\useConversationTyping.ts:28"
+    ],
+    "public_home_stats": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\hooks\\usePublicHomeStats.ts:20"
+    ],
+    "admin_visao_geral": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:55"
+    ],
+    "colaborador_alterar_status": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:103",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminColaboradores.tsx:628"
+    ],
+    "colaborador_atualizar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:114",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminColaboradores.tsx:545"
+    ],
+    "admin_agendamentos_overview": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:217"
+    ],
+    "financeiro_central_dashboard": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:303",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:31"
+    ],
+    "analytics_overview": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:317",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:64"
+    ],
+    "analytics_trafego": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:330",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:65"
+    ],
+    "analytics_conversao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:342",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:66"
+    ],
+    "analytics_financeiro": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:354",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:67"
+    ],
+    "analytics_tempo_real": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:366",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:80"
+    ],
+    "auditoria_dashboard": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:380",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAuditoria.tsx:107"
+    ],
+    "permissoes_dashboard": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:397",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\Permissoes.tsx:38"
+    ],
+    "plano_saude_financeira": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:445",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\planos\\saude.ts:21",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminPlanos.tsx:66"
+    ],
+    "admin_empresas_overview": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\admin\\queries.ts:459",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminEmpresas.tsx:101"
+    ],
+    "agendar_retorno_gratuito": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\clinico.ts:1074"
+    ],
+    "trocar_medico_consulta": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\clinico.ts:1153"
+    ],
+    "reservar_slot_unificado": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\clinico.ts:1360"
+    ],
+    "validar_e_aplicar_cupom": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\cupons.ts:210"
+    ],
+    "remover_cupom_pagamento": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\cupons.ts:235"
+    ],
+    "set_audit_motivo": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\financeiroConfig.ts:57",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\financeiroConfig.ts:65"
+    ],
+    "aplicar_restricao_medico": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\ia-auditoria.ts:295",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\ia-auditoria.ts:321"
+    ],
+    "impersonation_iniciar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\impersonation.tsx:96"
+    ],
+    "impersonation_finalizar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\impersonation.tsx:135"
+    ],
+    "medico_colocar_em_analise": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:250"
+    ],
+    "medico_aprovar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:255"
+    ],
+    "medico_reprovar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:260"
+    ],
+    "medico_suspender": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:270"
+    ],
+    "medico_bloquear": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:281"
+    ],
+    "medico_reativar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\medicoRegistro.ts:288"
+    ],
+    "mark_messages_read": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\pacienteConversas.ts:101",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\medico\\MedicoMensagensConsultas.tsx:112"
+    ],
+    "has_permissions_batch": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\permissions\\usePermission.ts:63",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\permissions\\usePermissionsBatch.ts:107"
+    ],
+    "has_permission": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\permissions\\usePermission.ts:75",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminObservabilidade.tsx:43",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\secretaria\\SecretariaFinanceiro.tsx:28",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\secretaria\\SecretariaFinanceiro.tsx:29"
+    ],
+    "session_heartbeat": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\security\\sessionTracker.ts:31"
+    ],
+    "get_empresa_id_do_usuario": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\lib\\useEmpresaAtual.ts:44"
+    ],
+    "admin_consulta_forcar_confirmacao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAgendamentos.tsx:249"
+    ],
+    "admin_consulta_marcar_realizada": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAgendamentos.tsx:253"
+    ],
+    "forcar_status_consulta": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAgendamentos.tsx:258"
+    ],
+    "admin_consulta_cancelar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAgendamentos.tsx:279"
+    ],
+    "admin_consulta_reenviar_link": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAgendamentos.tsx:295"
+    ],
+    "security_generate_alerts": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAlertasSeguranca.tsx:83"
+    ],
+    "auditoria_listar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAuditoria.tsx:123",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAuditoria.tsx:176"
+    ],
+    "financeiro_pagamento_confirmar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:125",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:159"
+    ],
+    "financeiro_pagamento_cancelar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:138",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:165"
+    ],
+    "financeiro_reembolso_aprovar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:173"
+    ],
+    "financeiro_reembolso_recusar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:177"
+    ],
+    "financeiro_repasse_marcar_pago": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:186"
+    ],
+    "financeiro_repasse_bloquear": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminFinanceiroCentral.tsx:193"
+    ],
+    "impersonation_listar_alvos": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminImpersonar.tsx:56"
+    ],
+    "integracoes_dashboard": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminIntegracoes.tsx:97"
+    ],
+    "event_reprocessar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminIntegracoes.tsx:133"
+    ],
+    "fn_observabilidade_financeira": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminLedgerObservabilidade.tsx:45"
+    ],
+    "fn_reconciliar_global": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminLedgerObservabilidade.tsx:56"
+    ],
+    "fn_noc_snapshot": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminNOC.tsx:110"
+    ],
+    "producao_ativar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminProducaoCockpit.tsx:89"
+    ],
+    "relatorios_financeiro_snapshot": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminRelatorioFinanceiro.tsx:46"
+    ],
+    "session_revoke": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSessoes.tsx:98",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSessoes.tsx:109"
+    ],
+    "alterar_status_conta_paciente": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminUsuarios.tsx:252",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:386"
+    ],
+    "get_meta_window_state": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\comunicacao\\Inbox.tsx:426"
+    ],
+    "claim_conversation": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\comunicacao\\Inbox.tsx:615"
+    ],
+    "resolver_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\comunicacao\\Inbox.tsx:630"
+    ],
+    "liberar_conversa": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\comunicacao\\Inbox.tsx:638"
+    ],
+    "fn_resolver_comissao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\medico\\MedicoServicos.tsx:54"
+    ],
+    "login_attempt_check": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\auth\\Auth.tsx:88"
+    ],
+    "login_attempt_record": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\auth\\Auth.tsx:107"
+    ],
+    "password_mark_changed": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\auth\\Auth.tsx:193",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\auth\\TrocarSenha.tsx:66"
+    ],
+    "fn_pa_slots_disponiveis": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\public\\AtendimentoImediato.tsx:87"
+    ],
+    "fn_servico_slots_disponiveis": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\public\\ServicoDetalhe.tsx:73"
+    ],
+    "coletar_metricas_medico": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\supabase\\functions\\ia-auditoria-medica\\index.ts:71"
+    ],
+    "recalcular_ranking_todos": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\supabase\\functions\\recalcular-ranking\\index.ts:19"
+    ],
+    "inbox_increment_unread": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\supabase\\functions\\whatsapp-webhook\\index.ts:190"
+    ]
+  },
+  "permissions": {
+    "pacientes.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:328",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:329",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:348",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:415"
+    ],
+    "agenda.ver_todas": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:330",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:331",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:361",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:369",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:406"
+    ],
+    "financeiro.servicos_gerenciar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:332",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:333",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:370",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:371",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:372",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:373",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:391",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:392",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:420",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:421"
+    ],
+    "financeiro.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:334",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:362",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:367",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:368"
+    ],
+    "supervisor.fila_geral": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:336"
+    ],
+    "relatorios.ver_operacional": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:337"
+    ],
+    "supervisor.pendencias_feegow": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:341"
+    ],
+    "auditoria.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:342",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:405"
+    ],
+    "gamificacao.configurar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:343",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:344",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:374",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:375"
+    ],
+    "admin.dashboard": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:347",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:383",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:407",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:408",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:410",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:412",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:413",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:414"
+    ],
+    "colaboradores.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:353"
+    ],
+    "empresas.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:355",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:356",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:357",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:358",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:359",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:360"
+    ],
+    "financeiro.editar_comissao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:363",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:365"
+    ],
+    "gamificacao.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:364"
+    ],
+    "financeiro.saques.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:366"
+    ],
+    "termos.gerenciar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:376"
+    ],
+    "integracoes.configurar_whatsapp": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:379"
+    ],
+    "integracoes.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:380"
+    ],
+    "configuracoes.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:382"
+    ],
+    "colaboradores.alterar_permissoes": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:384",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:385",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:387",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:388",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:389",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:390",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:393"
+    ],
+    "analises.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:394",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:395",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:396",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:397",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:398",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:401"
+    ],
+    "relatorios.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:402",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:403"
+    ],
+    "comunicacao.producao.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:409"
+    ],
+    "observabilidade.ver": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:411"
+    ],
+    "integracoes.configurar_feegow": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:416",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:417",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:418",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:419"
+    ],
+    "integracoes.ver_logs": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\App.tsx:422"
+    ],
+    "financeiro.reembolsar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\components\\permissions\\RequirePermission.tsx:17"
+    ],
+    "analises.financeiro": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:376"
+    ],
+    "analises.marketing": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminAnalises.tsx:479"
+    ],
+    "integracoes.reprocessar_eventos": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminIntegracoes.tsx:230"
+    ],
+    "financeiro.saques.configurar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:140"
+    ],
+    "financeiro.ver_dados_bancarios_medico": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:214"
+    ],
+    "financeiro.saques.aprovar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:221"
+    ],
+    "financeiro.saques.recusar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:225"
+    ],
+    "financeiro.saques.solicitar_correcao": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:229"
+    ],
+    "financeiro.saques.marcar_pago": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\AdminSaquesMedicos.tsx:238"
+    ],
+    "medicos.aprovar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\MedicosAprovacao.tsx:405",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\admin\\MedicosAprovacao.tsx:415"
+    ],
+    "pacientes.suspender": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:468",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:475",
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:489"
+    ],
+    "pacientes.bloquear": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:482"
+    ],
+    "pacientes.reembolsar": [
+      "C:\\Users\\nagil\\OneDrive\\Documentos\\David Alura\\Telemedicina\\pulse-platform-git\\src\\pages\\app\\shared\\PacientePerfil.tsx:646"
+    ]
+  }
+}

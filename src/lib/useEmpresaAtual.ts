@@ -2,6 +2,7 @@
  * Hook centralizado para resolver a empresa do usuário logado.
  * Fonte única de verdade — todas as páginas /empresa/* devem usar este hook.
  */
+import { LOCAL_PREVIEW } from "./local-preview";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,6 +25,11 @@ export function useEmpresaAtual(): UseEmpresaAtualReturn {
   const [error, setError] = useState<string | null>(null);
 
   const resolver = async () => {
+    if (LOCAL_PREVIEW) {
+      setEmpresa({ empresaId: "00000000-0000-4000-8000-000000000001", razaoSocial: "Empresa demonstrativa", nomeFantasia: "Empresa demonstrativa" });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

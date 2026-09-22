@@ -1,3 +1,4 @@
+import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
 import { useAuth } from "@/lib/auth";
@@ -37,6 +38,8 @@ function BlockScreen({ icon: Icon, title, description, action }: {
 export default function PacienteGuard({ children }: { children: ReactNode }) {
   const { paciente, loading, situacao } = usePacienteAtual();
   const { profileKey } = useAuth();
+
+  if (previewProfile()) return <>{children}</>;
 
   if (loading || situacao === null) {
     return (

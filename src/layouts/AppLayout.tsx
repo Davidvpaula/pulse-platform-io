@@ -1,3 +1,4 @@
+import { LOCAL_PREVIEW } from "@/lib/local-preview";
 import { Outlet, NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -97,11 +98,12 @@ export default function AppLayout() {
   return (
     <div className={cn("flex min-h-screen w-full flex-col bg-muted/40", flow.cls)}>
       <ImpersonationBanner />
+      {LOCAL_PREVIEW && <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">Prévia local · sem dados reais · gravações desativadas · <a className="font-semibold underline" href="/auth">Trocar dashboard</a></div>}
 
       {/* HEADER FIXO FULL-WIDTH */}
       <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
         <Link to="/" aria-label="Ir para a home" className="flex items-center">
-          <Logo size="sm" />
+          <Logo size="sm" asImage />
         </Link>
 
         {/* Flow context badge */}

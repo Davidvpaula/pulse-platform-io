@@ -1,0 +1,4453 @@
+{
+  "generatedAt": "2026-09-22T11:05:05.460Z",
+  "totalFiles": 795,
+  "files": [
+    {
+      "path": ".dockerignore",
+      "bytes": 84,
+      "sha256": "31ad7d0d6498624ca830be3dab5908773b621445e42d07a7c348623c994e628e"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 708,
+      "sha256": "3667591ae5e3fcf229b2503c13fd3faba4ec93f8ea63936d02bd484b00a464c5"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 421,
+      "sha256": "1155dc27a11ecb6ef5b35d108911940357ed50cb2a480f5a8c4c0f157228ed5a"
+    },
+    {
+      "path": ".lovable/migrations/inbox-fase-estabilidade-etapa-a.sql",
+      "bytes": 18846,
+      "sha256": "58ca70cc65f0974d59c51e57d9d9df959fad719617cc414f25d1e1d957aac513"
+    },
+    {
+      "path": ".lovable/plan.md",
+      "bytes": 2444,
+      "sha256": "20648f65bb4f34e783df973a3788b50ee5c69e0472034ab80dfa1c835632de78"
+    },
+    {
+      "path": ".lovable/rollback/inbox-fase-estabilidade.sql",
+      "bytes": 1698,
+      "sha256": "771088c8500bce063d5f86bdb7da565eb7fc5bad68dd36ac97316a4aa1f0bc09"
+    },
+    {
+      "path": "bun.lockb",
+      "bytes": 303555,
+      "sha256": "12a1f68a60ae58435e7be96451b4f9c9016fc06a809bd01511a54c2c1e95c6cc"
+    },
+    {
+      "path": "components.json",
+      "bytes": 434,
+      "sha256": "1b55b1d844ca520d6df6293c24d1366839511cf2d00a285300574327eb61ac27"
+    },
+    {
+      "path": "compose.yaml",
+      "bytes": 76,
+      "sha256": "a90bc19b5d70b8367d25bfe6e73132aaa03c271f38076559343554080b2407d4"
+    },
+    {
+      "path": "Dockerfile",
+      "bytes": 163,
+      "sha256": "acbb22014ba5e75c9a9889e31a749571d896f329dc6d5a1e51771f0297f3c90b"
+    },
+    {
+      "path": "eslint.config.js",
+      "bytes": 791,
+      "sha256": "a4cd6dafce32a4548f5e2dcfd420692c7cb930d3b6b445e113c63e80bb127dcd"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1660,
+      "sha256": "9066d818d37d8ca725fb5bb0062a340c96eedd87ea86340d609d6e9d4621f74e"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 388746,
+      "sha256": "22bc5ee3578475081b8b998f7004a6ecceb2863a10c15e83c8e61abefd9e1392"
+    },
+    {
+      "path": "package.json",
+      "bytes": 3542,
+      "sha256": "12ca6c9379204548ee1592daea0fd2a760db6738fe162684358454bdf2cbf16d"
+    },
+    {
+      "path": "playwright.config.ts",
+      "bytes": 2117,
+      "sha256": "bb018fabe27e350453f2059e961b00ca28d2b910b16703d7fa9d75609f4fc26a"
+    },
+    {
+      "path": "playwright.local.config.ts",
+      "bytes": 402,
+      "sha256": "1da7d5fc869a92d62c57dfd617f1742877ec566194f47ce11b9c6f8f9dd01edf"
+    },
+    {
+      "path": "postcss.config.js",
+      "bytes": 87,
+      "sha256": "98e8d8a143f16216f4b50a2520024f6254987049b2e199026742a96e16ba411e"
+    },
+    {
+      "path": "public/favicon.png",
+      "bytes": 7509,
+      "sha256": "74ef6e78e510eac7e94aaf84317050a93a43479d01b1bf4439a50f1442d5bb4f"
+    },
+    {
+      "path": "public/placeholder.svg",
+      "bytes": 28665,
+      "sha256": "21789eebf17b6437d2b47e1a4e979548b48cf3652a92c0222c94a9ccd89746a6"
+    },
+    {
+      "path": "public/robots.txt",
+      "bytes": 174,
+      "sha256": "52710c261d851bc1ad35604017862f2a8444e7a0f02cd7b8b49e3ba92e6d4cea"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3142,
+      "sha256": "33e5ee672b9a2e325595421812b1e40ad9028b686205ca4b25a3c8c4518b3be8"
+    },
+    {
+      "path": "scripts/audit-inventory.mjs",
+      "bytes": 1805,
+      "sha256": "dad1e73371549af8021c36aa3da54e44b026fe1d8f51d3d6ad6d085068054655"
+    },
+    {
+      "path": "scripts/baseline.json",
+      "bytes": 4323,
+      "sha256": "1be959b7c60e008297f99fc9af494f49c7b4d9eb7c9e5f614b9118eb1e8b6688"
+    },
+    {
+      "path": "scripts/README-baseline.md",
+      "bytes": 1897,
+      "sha256": "2cda0b2a54e58f66177c924ae706131bd207594a47ce6ecb5258a47bafc25c54"
+    },
+    {
+      "path": "scripts/smoke-tests.mjs",
+      "bytes": 8626,
+      "sha256": "7d922dca3d37e0e69302d5475efa845353c6f391ccafcdf23c53d68f29d42499"
+    },
+    {
+      "path": "scripts/validate-routes.mjs",
+      "bytes": 6981,
+      "sha256": "639d41a3207d31574c87454ca5e94e2fa3f0806a875d6f50f5f0b839ba616eb5"
+    },
+    {
+      "path": "src/App.css",
+      "bytes": 648,
+      "sha256": "1b75716b5511ad178574cd3e3656e5e8dd94544456944b4ff1d253c9ecc614d4"
+    },
+    {
+      "path": "src/App.tsx",
+      "bytes": 35096,
+      "sha256": "41aa8e5ceee8dd86ba9422a351f3efc22c492b3fece99870b8a106b7427e9fe3"
+    },
+    {
+      "path": "src/assets/brand/logo-horizontal-black.png",
+      "bytes": 234890,
+      "sha256": "651fc8fd170f0d37efb07e85cff1545b1e4464c96a343150d3b80936b387631f"
+    },
+    {
+      "path": "src/assets/brand/logo-horizontal-color.png",
+      "bytes": 234890,
+      "sha256": "651fc8fd170f0d37efb07e85cff1545b1e4464c96a343150d3b80936b387631f"
+    },
+    {
+      "path": "src/assets/brand/logo-horizontal-white.png",
+      "bytes": 218129,
+      "sha256": "0452446b713635421fa011ea124a0cce7c9d3d12ba71d74e4ad29bdede981597"
+    },
+    {
+      "path": "src/assets/brand/logo-symbol-color.png",
+      "bytes": 496655,
+      "sha256": "76054a6e7296d3417c769c01378880662ace90079f34ebadf2950fbc6e305685"
+    },
+    {
+      "path": "src/assets/brand/logo-symbol-white.png",
+      "bytes": 496655,
+      "sha256": "76054a6e7296d3417c769c01378880662ace90079f34ebadf2950fbc6e305685"
+    },
+    {
+      "path": "src/assets/brand/logo-vertical-color.png",
+      "bytes": 234890,
+      "sha256": "651fc8fd170f0d37efb07e85cff1545b1e4464c96a343150d3b80936b387631f"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-Bold.ttf",
+      "bytes": 140644,
+      "sha256": "63ee086f17f20367c91709ccd6711aa1efed6cbde29a0af95c321f67835e33d4"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-Hairline.ttf",
+      "bytes": 133300,
+      "sha256": "9593bfe2868b96151f81fbfa7e6f5d31c2dcd726aafa1d7c6a1bce45c7c9274b"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-Italic.ttf",
+      "bytes": 100720,
+      "sha256": "cbb6c7512417b3f1cb6bd4f4b26417f5c3f47cdbb61ff28169099e26628cf5e5"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-Medium.ttf",
+      "bytes": 107132,
+      "sha256": "98e8d4a76709b54c26579481143598a6f498c8cf2b2d919f0764c6cbe6401b55"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-Regular.ttf",
+      "bytes": 140956,
+      "sha256": "61dd140abc32a123312c5aeb496d49272d471de4f1c2371722d003da87c1bd86"
+    },
+    {
+      "path": "src/assets/fonts/omnes/Omnes-SemiBold.ttf",
+      "bytes": 151980,
+      "sha256": "9a7c81163fc4223e55310c5ec6000c3f948587b8559eda3a1b1162b6e92420a7"
+    },
+    {
+      "path": "src/assets/home/diferencial-humanizado.jpg",
+      "bytes": 41312,
+      "sha256": "ef51cab168a7c3b6f28ac1f68769340dd5b0b81c290e7dc0609a0cd864a38566"
+    },
+    {
+      "path": "src/assets/home/diferencial-qualquer-lugar.jpg",
+      "bytes": 57244,
+      "sha256": "aacc92b710a15afa4042f8f43a9d76792fb39eb9c5146f57a5b1aa56dbcfe61a"
+    },
+    {
+      "path": "src/assets/home/diferencial-qualquer-momento.jpg",
+      "bytes": 58122,
+      "sha256": "1d3267614bc42901f7a034dc9993668436b8df07a4f14bd3c5de9f5756acabda"
+    },
+    {
+      "path": "src/assets/home/hero-couple.png",
+      "bytes": 2037121,
+      "sha256": "de5202edcb40cb31673befffec6620587fdfdd461894e083b2ae6613332a90ae"
+    },
+    {
+      "path": "src/assets/home/pronto-atendimento.jpg",
+      "bytes": 46652,
+      "sha256": "3f022c28da0efa88387a6635a33ab66742aa06332b7cc28fd16ee1cfb549eb28"
+    },
+    {
+      "path": "src/components/admin/AdminStates.tsx",
+      "bytes": 2920,
+      "sha256": "8b24d18068cad239da586696bdcbc0e6127b34f9277588be4d62974db9264d3d"
+    },
+    {
+      "path": "src/components/admin/financeiro/CobrancasLinksTable.tsx",
+      "bytes": 4738,
+      "sha256": "e374a5003692bafe73fd02e010bdde5f2df550b850974a05b62ba5dd6931c10d"
+    },
+    {
+      "path": "src/components/admin/financeiro/FinanceiroKpis.tsx",
+      "bytes": 1656,
+      "sha256": "0be5e24020ae875c6ac010a3b06fd1fb4721a9c6e10d7813de58bfcdd8ad58a0"
+    },
+    {
+      "path": "src/components/admin/financeiro/FinanceiroStatusBadge.tsx",
+      "bytes": 1078,
+      "sha256": "ad97dc7d4049ff4058a9dd08c13b7774e9c248031de3cbe1c4700300514fb467"
+    },
+    {
+      "path": "src/components/admin/financeiro/PagamentosTable.tsx",
+      "bytes": 8542,
+      "sha256": "368e6f772e49e18b192f0c7fead031d65716afffec265d88002986bd8cfe8c1b"
+    },
+    {
+      "path": "src/components/admin/financeiro/ReembolsosTable.tsx",
+      "bytes": 8961,
+      "sha256": "02eba3b8583aa4c4d2eaa6a99633b19d1153afa7090cf13eb31c3478202de3c0"
+    },
+    {
+      "path": "src/components/admin/financeiro/RepassesTable.tsx",
+      "bytes": 2445,
+      "sha256": "3e799e8c55fbf5cdb37f1aba6695e176199304fd5bfc3ae9252cc83c4ee982ba"
+    },
+    {
+      "path": "src/components/admin/ServicoImagemUploader.tsx",
+      "bytes": 5046,
+      "sha256": "8cd9e9850123131daea44357515451a1d76c88d5ca7c54d296e681529bb9c9ce"
+    },
+    {
+      "path": "src/components/AppBreadcrumb.tsx",
+      "bytes": 16473,
+      "sha256": "8f2e82b85c4e83386b4a46ec28454fa1cc725c24d9824aa26da05c64a8c2718d"
+    },
+    {
+      "path": "src/components/atendimento-imediato/CalendarioFila.tsx",
+      "bytes": 2092,
+      "sha256": "b76e43c738adc111d0d496c8b2621949597d353d747fcfb419f8bb178e1e8c0b"
+    },
+    {
+      "path": "src/components/atendimento-imediato/RodapeReserva.tsx",
+      "bytes": 2466,
+      "sha256": "19939d22249a845f506dee8a3b60e779a64d1cd4b4afe461c7381025240464fb"
+    },
+    {
+      "path": "src/components/atendimento-imediato/SlotCelula.tsx",
+      "bytes": 2732,
+      "sha256": "45b80eaee092e1e17d2350bcbedeba12e732c382e02cdd566f9d41861abfe082"
+    },
+    {
+      "path": "src/components/auth/LocalPreviewLogin.tsx",
+      "bytes": 2303,
+      "sha256": "246a4ec21af9385ad5a6d2d0152e656413c9d70dcaaf55770aaf1ad559c17c5d"
+    },
+    {
+      "path": "src/components/auth/PasswordStrengthIndicator.tsx",
+      "bytes": 1646,
+      "sha256": "be647220a29e150a56fd4091f3f4ce988157937839a940b466a6081772482aca"
+    },
+    {
+      "path": "src/components/CategorizedTimeline.tsx",
+      "bytes": 2051,
+      "sha256": "1feeacc42ba396da5689b9b12af65572d9b92fbf3e73cad0a969c2ec0b0894c4"
+    },
+    {
+      "path": "src/components/clinical/AbrirNaFeegowButton.tsx",
+      "bytes": 1719,
+      "sha256": "ec419704f8c5c2a7f41302de17b182d69c60bb803ad2c0d0849f9ab64f5e3fa7"
+    },
+    {
+      "path": "src/components/comunicacao/ai/ConversationAiIntentBadge.tsx",
+      "bytes": 693,
+      "sha256": "1d36e1885d35bce8c3ce65aae6e98edf2df88bbe7e5d7cacf98453d7f26d53f3"
+    },
+    {
+      "path": "src/components/comunicacao/ai/ConversationAiPanel.tsx",
+      "bytes": 8305,
+      "sha256": "9e177fe55b1866c248a5fc9ea124a1aebeb71ab2992dfd978618d44b453bcbd7"
+    },
+    {
+      "path": "src/components/comunicacao/ai/ConversationAiRiskBadge.tsx",
+      "bytes": 1133,
+      "sha256": "23d44e9b56f72a6b147a4dd2618ba7ff0d853ef7c83c07a744ee2f460f2020cc"
+    },
+    {
+      "path": "src/components/comunicacao/AttendantPresenceBadge.tsx",
+      "bytes": 1890,
+      "sha256": "c6655e6701e240e45bfaa1cf068b899c23e46df3221f4ba56e2168c229843121"
+    },
+    {
+      "path": "src/components/comunicacao/AuditLogDrawer.tsx",
+      "bytes": 6536,
+      "sha256": "d6d7f484d022283db72412e12a60a1f523a9d21e64ef0078fc9d50699aa8f7b0"
+    },
+    {
+      "path": "src/components/comunicacao/avatar/AiAvatarMemoryDrawer.tsx",
+      "bytes": 7637,
+      "sha256": "76ee56a1e2329a0f3f69a781472c250fae728fcd5c7b51dfd240b322e5b20862"
+    },
+    {
+      "path": "src/components/comunicacao/avatar/AiAvatarSupervisorDashboard.tsx",
+      "bytes": 7929,
+      "sha256": "cb80974a8d83adb48b2ea88a774631c4cabac712d2fc31aaae8120ef963e21ce"
+    },
+    {
+      "path": "src/components/comunicacao/avatar/ConversationAvatarPanel.tsx",
+      "bytes": 11710,
+      "sha256": "f1267c494f780cd53fbaff5c15105a7ebdb32b026f5e242c1fd21b599333949e"
+    },
+    {
+      "path": "src/components/comunicacao/ConversationQueuePanel.tsx",
+      "bytes": 4616,
+      "sha256": "17b5a7cdc0005c95482405f7d296ae56522201f1d1bdd1256104398063fd3dde"
+    },
+    {
+      "path": "src/components/comunicacao/ConversationSlaBadge.tsx",
+      "bytes": 1540,
+      "sha256": "822cc1c590104a175e04307441c1ba355c47aef9c9389ee12364c8fad8dfd219"
+    },
+    {
+      "path": "src/components/comunicacao/EnviarTemplateDialog.tsx",
+      "bytes": 6226,
+      "sha256": "81029b3a36b570d2f3b8db22bc61b53d2fc1c0f03b30c25351b376e35e50d3f4"
+    },
+    {
+      "path": "src/components/comunicacao/Janela24hMeta.tsx",
+      "bytes": 4227,
+      "sha256": "2c63bffca76c1d68944a9a44464c69872d0f653e317037a8923a3ae728a69903"
+    },
+    {
+      "path": "src/components/comunicacao/JanelaAtivaIndicator.tsx",
+      "bytes": 2830,
+      "sha256": "211fc60b85d609ef78206bd292fa9298f6d061e1c07f14a3cf77dd70844d82e1"
+    },
+    {
+      "path": "src/components/comunicacao/JanelaExpiradaBanner.tsx",
+      "bytes": 808,
+      "sha256": "0fdcbb1a6a3c2871cd786a81a01bc34800461065a8cb0defff84210f5b3dd072"
+    },
+    {
+      "path": "src/components/comunicacao/LGPDGate.tsx",
+      "bytes": 1149,
+      "sha256": "5d01e1f71f2761da298a32d8f6825e8b2810798c627c8d44ff61aeb520e9db66"
+    },
+    {
+      "path": "src/components/comunicacao/LockBadge.tsx",
+      "bytes": 1329,
+      "sha256": "98d943a60bea70a6c77809d08e49b3c0368c27aa9f58be5e6c93eec967134d6a"
+    },
+    {
+      "path": "src/components/comunicacao/NovaConversaDialog.tsx",
+      "bytes": 5166,
+      "sha256": "fd65634781616bf36e673bfa8c9de3ecfc19cdb7e430ea8d02e15ec9bf6a0740"
+    },
+    {
+      "path": "src/components/comunicacao/PacientesVinculadosPanel.tsx",
+      "bytes": 8099,
+      "sha256": "5270fa045f509bdbdba3bbc10ceae989b1783feb0d02ddea7a3457da1343c72d"
+    },
+    {
+      "path": "src/components/comunicacao/producao/ChecklistGoLiveItem.tsx",
+      "bytes": 3009,
+      "sha256": "8edaf915b5ec53ec44125ad820b3a3217c6fe19b3824edd547731ecb908361b1"
+    },
+    {
+      "path": "src/components/comunicacao/producao/EventoSeveridadeBadge.tsx",
+      "bytes": 652,
+      "sha256": "a3c376fc728cd18465f1ecf6ba1a186820790ecb36f1ae78333bf7d1d75b65e9"
+    },
+    {
+      "path": "src/components/comunicacao/producao/ProducaoStatusBadge.tsx",
+      "bytes": 490,
+      "sha256": "6547eb607b8ee132f8364ec98ff6f5b595d173f358ad97d98484d056809207d9"
+    },
+    {
+      "path": "src/components/comunicacao/producao/WabaHealthCard.tsx",
+      "bytes": 3602,
+      "sha256": "ad62a4843459fd80609f52e436544ad86fc9bc68c353ab76a02419843977fa78"
+    },
+    {
+      "path": "src/components/comunicacao/SandboxBanner.tsx",
+      "bytes": 1246,
+      "sha256": "c8d2116a3ea123f271ab6cd2db5cb3707b0a6244014cf223afc7eb5a83b9b655"
+    },
+    {
+      "path": "src/components/comunicacao/StatusOperacionalSelect.tsx",
+      "bytes": 1365,
+      "sha256": "1852ad05862b963579f58a499584c028c7b01bdbb8b8c24536c584bad6d1a183"
+    },
+    {
+      "path": "src/components/comunicacao/TransferirConversaDialog.tsx",
+      "bytes": 4547,
+      "sha256": "4b4896be99bd89e807678ae0f17dc464017fc01a441147be62758636fa9c9a94"
+    },
+    {
+      "path": "src/components/comunicacao/TypingIndicator.tsx",
+      "bytes": 2346,
+      "sha256": "d4c447e9f6ff7ee35f5c53e60b3ebd424c53da8a1583874531cc7367f1507f99"
+    },
+    {
+      "path": "src/components/comunicacao/VincularPacienteDialog.tsx",
+      "bytes": 6777,
+      "sha256": "9c323328ffea1f8007f4bd4ff9f5a949dc191f0fc0e18691eb07cc66fbb69b41"
+    },
+    {
+      "path": "src/components/EmBreveDialog.tsx",
+      "bytes": 1898,
+      "sha256": "a16f75a143638e703c525992e5d54af0585945de074f9272064f8393bbf5d790"
+    },
+    {
+      "path": "src/components/empresa/EmpresaGuard.tsx",
+      "bytes": 2152,
+      "sha256": "b8dd8b2e1f9f12f2503967c70291db0f8b55d2cfcba1bbdca959e28708fe8df2"
+    },
+    {
+      "path": "src/components/financeiro/ConsultaPagamentos.tsx",
+      "bytes": 3842,
+      "sha256": "6ed94d7c0ffb37dc1ac4c9bf3dc2a3ed829021fc1e7bc8fcc4b7930cbcceea85"
+    },
+    {
+      "path": "src/components/financeiro/FinanceiroErrorBoundary.tsx",
+      "bytes": 1560,
+      "sha256": "2098a352ed6a07aa2106db1c1f742ed3812b2a61d04c02d0562269078d316efa"
+    },
+    {
+      "path": "src/components/financeiro/MotivoDialog.tsx",
+      "bytes": 3737,
+      "sha256": "734d84c93291d43d09abb60b70a736ad72f033edd48155f7662e09e769ae11ff"
+    },
+    {
+      "path": "src/components/financeiro/NovaCobrancaDialog.tsx",
+      "bytes": 4983,
+      "sha256": "6b34e90650b9fb22a3be5d4dc057918c027c6b288496ac208eb57217db752a2e"
+    },
+    {
+      "path": "src/components/financeiro/PreviaRepasseSimuladorForm.tsx",
+      "bytes": 5579,
+      "sha256": "44e187304d91dad0ba1fef8fedf159f9edd19068621d2abee10b2a643000d925"
+    },
+    {
+      "path": "src/components/financeiro/PreviaRepasseTabela.tsx",
+      "bytes": 8352,
+      "sha256": "332a4b309bbe6b356f269c3c762aed5d11ba7ea91ba540463c19ec5a33b1e7b1"
+    },
+    {
+      "path": "src/components/financeiro/RepasseAuditoriaCard.tsx",
+      "bytes": 13276,
+      "sha256": "9896bc9e405321ca5b3aa99b21c39657a741c3588f7c5c46f761d7d7cac574b7"
+    },
+    {
+      "path": "src/components/financeiro/RepasseSplitInput.tsx",
+      "bytes": 6907,
+      "sha256": "25e4e00d137e44b90cf682dcf8f80dfcbc52a0d9c7f231078409444280583a55"
+    },
+    {
+      "path": "src/components/FloatingWhatsApp.tsx",
+      "bytes": 935,
+      "sha256": "db3bb95bf0a5b526c8a0b0523cf6fd6d7de66cf75868152a82095556dc2b2644"
+    },
+    {
+      "path": "src/components/GlobalSearch.tsx",
+      "bytes": 5015,
+      "sha256": "b68756e0f7c8038d5b7c4f161c423653a85e1915082abc168b867532eb32ad8b"
+    },
+    {
+      "path": "src/components/impersonation/ImpersonationBanner.tsx",
+      "bytes": 1960,
+      "sha256": "3ac511c16ef808a77901d49ef23a4a695387d7154367e71a652f61e913bc335c"
+    },
+    {
+      "path": "src/components/Logo.tsx",
+      "bytes": 2187,
+      "sha256": "39280fc20aec43bac1bffd7a03f846dcd92b4ed654ffbb6d1f0e1a2f961bab3b"
+    },
+    {
+      "path": "src/components/medico/FinalizarAtendimentoDialog.tsx",
+      "bytes": 10891,
+      "sha256": "b6ee9e4d75d1a260a9615de62d8cf40548e59422c8dc68485ba801bfa589cfd2"
+    },
+    {
+      "path": "src/components/medico/LembreteTrocarLinkSala.tsx",
+      "bytes": 4232,
+      "sha256": "254c4c2e37f98a132fa17ddc935745f138fd06709576bab2c0f2a3ba130a150f"
+    },
+    {
+      "path": "src/components/medico/MedicoContratoPlataforma.tsx",
+      "bytes": 9264,
+      "sha256": "b33bfa0f36c7e68762d43859d12574ff7b1cbeb719fd8bf8afa0261ebe44cc65"
+    },
+    {
+      "path": "src/components/medico/MedicoDadosBancarios.tsx",
+      "bytes": 8569,
+      "sha256": "2deb78276e5e1ea356055c6b445dd68c5a40713788e9367294460a86c5edec2c"
+    },
+    {
+      "path": "src/components/medico/MedicoDadosPessoais.tsx",
+      "bytes": 15216,
+      "sha256": "61d62dd6aeb5372bf4b1ae8afccfa3934e3692b94925ae337560d6fcb53a73f6"
+    },
+    {
+      "path": "src/components/medico/MedicoDocumentosFiscais.tsx",
+      "bytes": 5852,
+      "sha256": "21a605ab7bf860fff2459a6ff0467ac89f37c2b548beef55abd726328a50a5b2"
+    },
+    {
+      "path": "src/components/medico/MedicoStates.tsx",
+      "bytes": 1682,
+      "sha256": "49e42ae5b45272a2ec20194b814868fd03b6504bc491756eb1b016bd5ad1d4fc"
+    },
+    {
+      "path": "src/components/medico/RetornoGratuitoDialog.tsx",
+      "bytes": 5140,
+      "sha256": "46241e5710fda008b37837d0658dd9aa5ba71063ef7313c5282784e0c5f9cea3"
+    },
+    {
+      "path": "src/components/medico/SaqueHistorico.tsx",
+      "bytes": 3522,
+      "sha256": "9360b2a0f0186ef44854f0d61bd7aeeb00dd91e4a15f17477c3a0adcf4480947"
+    },
+    {
+      "path": "src/components/medico/SolicitarSaqueDialog.tsx",
+      "bytes": 7874,
+      "sha256": "c6b49df4933eddf8ac2c79254bda800089cc6d8b061f236b138c48280a89ea2e"
+    },
+    {
+      "path": "src/components/MedicoGuard.tsx",
+      "bytes": 5034,
+      "sha256": "ada28ff3beb2e7d724ad0a121949b305def34b685391ad92f3332c9d8aa21f24"
+    },
+    {
+      "path": "src/components/NavLink.tsx",
+      "bytes": 779,
+      "sha256": "ae74980e699af0c3cd0ad42663626cf49c543ced33c81423bd345ac307b3c13a"
+    },
+    {
+      "path": "src/components/NotificationsBell.tsx",
+      "bytes": 4425,
+      "sha256": "22755026dcbd1f3eb1baac0587594a263a031d22fdf8da8afe8e657a314c9114"
+    },
+    {
+      "path": "src/components/paciente/AgendarRetornoDialog.tsx",
+      "bytes": 5364,
+      "sha256": "a23f4094a43edc0ab1dbbd3f2afabb20c2ff1c2bfc35aaaa3ecfc4043f29050b"
+    },
+    {
+      "path": "src/components/paciente/AvaliacaoPendenteBanner.tsx",
+      "bytes": 3946,
+      "sha256": "d27dc14703d30e99c7bb4bc19f43ee446336b0de9a8a401bbca5a93eec2082e5"
+    },
+    {
+      "path": "src/components/paciente/AvaliarMedicoDialog.tsx",
+      "bytes": 4992,
+      "sha256": "8ed67377bc05466318213085e4e66740a5a5cbcd39e628bbe0ce4203a42960c8"
+    },
+    {
+      "path": "src/components/paciente/CancelarConsultaDialog.tsx",
+      "bytes": 5380,
+      "sha256": "115e1023c692e5ed61548b1257ebc10a3004d613de820829b15f7fc4ca4455ed"
+    },
+    {
+      "path": "src/components/paciente/ConsultaCountdown.tsx",
+      "bytes": 1724,
+      "sha256": "87429a040261b0c8b057d1ddd4e82062bd5472798bab56db7c3e997b353a855a"
+    },
+    {
+      "path": "src/components/paciente/DocStatusChip.tsx",
+      "bytes": 524,
+      "sha256": "cd30b3dfaccea9aeba733c3ac10569c3ae5ca004a6b5603b18b3c7e6989e5b2a"
+    },
+    {
+      "path": "src/components/paciente/EntrarTeleconsulta.tsx",
+      "bytes": 3234,
+      "sha256": "f881afb4ebcb714ad1343daef8180e29c8963476f666ea4f164b4e96f4b7732e"
+    },
+    {
+      "path": "src/components/paciente/HistoricoCancelamentos.tsx",
+      "bytes": 4509,
+      "sha256": "66c559f873a8b0a67a20f1d50dff3e9b2a54ca712f9c5e0c9921108d25f26925"
+    },
+    {
+      "path": "src/components/paciente/MeusProfissionaisPlano.tsx",
+      "bytes": 7966,
+      "sha256": "d654ea9340291e7bf83c5293353d837cd5edf422e7b3d3e8397da4c357377a6c"
+    },
+    {
+      "path": "src/components/paciente/PacienteStates.tsx",
+      "bytes": 1690,
+      "sha256": "4887f6a2aaa8e8ccc0c8c567f7ede8eb643dc6ce131bf461fc4baee5100de04f"
+    },
+    {
+      "path": "src/components/paciente/plano-helpers.tsx",
+      "bytes": 13753,
+      "sha256": "b07411fb8832330d68f42ca588bd97c32d8701c842f71f93dc6ac9298d2bc3e9"
+    },
+    {
+      "path": "src/components/paciente/PlanoCard.tsx",
+      "bytes": 14056,
+      "sha256": "f148ac2671744995721f55eea599404bdc0097874ee8f45f52d594658fbab775"
+    },
+    {
+      "path": "src/components/paciente/PlanoEmpresaTab.tsx",
+      "bytes": 1318,
+      "sha256": "02642ccfb0f929299419d419eb133af598de565a1103ad2ea52fd257cd7285e7"
+    },
+    {
+      "path": "src/components/paciente/PlanoPersonalizadoTab.tsx",
+      "bytes": 4449,
+      "sha256": "b423acabc67cfe1791602236f379db3eeae77d14c13b4867dde46530d0bfa9a7"
+    },
+    {
+      "path": "src/components/paciente/PlanoPlataformaTab.tsx",
+      "bytes": 2421,
+      "sha256": "66a5e3dacf1528576d82ad4b7fd54ccffcebe1e79e9fa56235ea994656dd7b33"
+    },
+    {
+      "path": "src/components/paciente/SeletorPacienteAtendido.tsx",
+      "bytes": 14191,
+      "sha256": "b03403d409fb968b945975285f80eef0efc6b1ba9668f1a7640502f07129efb4"
+    },
+    {
+      "path": "src/components/paciente/UploadDocumentoDialog.tsx",
+      "bytes": 4474,
+      "sha256": "fda12d33457d652808b07ef33b65a9344a7683ea8eedb5f44d51471b4a6c34e4"
+    },
+    {
+      "path": "src/components/PacienteGuard.tsx",
+      "bytes": 4702,
+      "sha256": "03e758eac7bc586432403b9c9456288d415ecfc825a8cf3ee46f6e18c6ab4116"
+    },
+    {
+      "path": "src/components/PageHeader.tsx",
+      "bytes": 852,
+      "sha256": "3913670541c7b08f31102c63f259ceef6c60e1c2f9db3163560a961bdc4371aa"
+    },
+    {
+      "path": "src/components/PageShell.tsx",
+      "bytes": 2211,
+      "sha256": "30aa3c89d09d7f5f7bb65131b63472471cefa10551aa77e0095ff5644176af6b"
+    },
+    {
+      "path": "src/components/payments/StripeEmbeddedCheckout.tsx",
+      "bytes": 1476,
+      "sha256": "544148dd45b0f42df28d928da2f692d9322df378b0554f6b1f987a6005fbbeee"
+    },
+    {
+      "path": "src/components/permissions/ColaboradorPermissoesDrawer.tsx",
+      "bytes": 11109,
+      "sha256": "a431a8eaa27b4358869f8a9eb3b58b122003ae0dd97884ffc4df917fc533f482"
+    },
+    {
+      "path": "src/components/permissions/MatrizPermissoes.tsx",
+      "bytes": 5990,
+      "sha256": "22ed46af5a43f9606d12792103b4f3463d8ac9ee35b011483bc2ab6618c9875e"
+    },
+    {
+      "path": "src/components/permissions/MenuPreview.tsx",
+      "bytes": 5232,
+      "sha256": "bc91416023bcf6f0ece8cd68663f1bf16268ef14c44aadb356ef0d786068dadf"
+    },
+    {
+      "path": "src/components/permissions/RequirePermission.tsx",
+      "bytes": 1175,
+      "sha256": "6a210912553d10aea28155236c8a77e58e1e8405c4c43b7d9dfb64d31cc4eac3"
+    },
+    {
+      "path": "src/components/permissions/RequireRoutePermission.tsx",
+      "bytes": 2907,
+      "sha256": "990af7c2df0bb308986a3fc2c160f2b9e4bbd146f50463d245df51321ce9ea9e"
+    },
+    {
+      "path": "src/components/planos/BeneficioSelector.tsx",
+      "bytes": 5164,
+      "sha256": "153601ff0e8b4b2c5d9d515e7f1bc91e4afd25d09ea992e28b3cb040e72ce13d"
+    },
+    {
+      "path": "src/components/planos/DescontoProgressivoConfig.tsx",
+      "bytes": 4469,
+      "sha256": "4f83531cb91711dfd78e397ec72a9027347f85110988cbc37f132f5f39a8477b"
+    },
+    {
+      "path": "src/components/planos/PlanoBuilder.tsx",
+      "bytes": 35381,
+      "sha256": "1de297cf698d995cca82127300bcb10435a68c16a9dff42f906faa3f4022aede"
+    },
+    {
+      "path": "src/components/planos/ReceitaPorOrigem.tsx",
+      "bytes": 2422,
+      "sha256": "12a0d3b6a719f5aae66c09cab48ddbb29c28cdf6c96343bfd6b6a2915ef6b41d"
+    },
+    {
+      "path": "src/components/planos/SaudeFinanceiraCard.tsx",
+      "bytes": 4545,
+      "sha256": "2b66dfacd91e7b362fb090be7144ad050d51aacbe0b780eaa27521367d8a6ee0"
+    },
+    {
+      "path": "src/components/planos/TaxaPlataformaConfig.tsx",
+      "bytes": 4025,
+      "sha256": "8bae9bb2571ce6232d0be9de9f304ccfbf620e14c831a8cb53aafd8967d5ce25"
+    },
+    {
+      "path": "src/components/ProtectedRoute.tsx",
+      "bytes": 851,
+      "sha256": "c051b582b9796a6230c3b9103feee53abc768dfde7330e65d4dd9d275a167c2e"
+    },
+    {
+      "path": "src/components/public/FaqContactForms.tsx",
+      "bytes": 8708,
+      "sha256": "867d73832a9f01bb8dc84fcb5bc2d80053402227917ba705b87def29abec0c08"
+    },
+    {
+      "path": "src/components/public/HeroServicoCarousel.tsx",
+      "bytes": 7756,
+      "sha256": "93b9cfcfae0e7adbf11446c082c06299aca43247216111b79255c93896016651"
+    },
+    {
+      "path": "src/components/public/MedicoSlotsPanel.tsx",
+      "bytes": 11500,
+      "sha256": "fc9447cd4762ca1440025397bb972c043e7f1061d43671db8628994a83cf99f4"
+    },
+    {
+      "path": "src/components/public/ServicoHero.tsx",
+      "bytes": 5723,
+      "sha256": "3578e04760232030ceb8d43091e5d531541d2fa309c268ac8bd64bc2c8ecac80"
+    },
+    {
+      "path": "src/components/public/ServicosCarousel.tsx",
+      "bytes": 7776,
+      "sha256": "6ef10fc852105dc58d535d2326da4e1c8311ec48ea37e14f5fca9f11cc416eb2"
+    },
+    {
+      "path": "src/components/relatorios/FiltrosGlobaisBar.tsx",
+      "bytes": 7597,
+      "sha256": "84af5ea83f5c0e1ae408f68e7befa3b0b9ce12f2dd47c1b37c8b1072346cc12d"
+    },
+    {
+      "path": "src/components/relatorios/FinanceiroTab.tsx",
+      "bytes": 7456,
+      "sha256": "27ff545d198ba26e4c51dc063c566e38ec786aef67605d399a2a54e3cd4ff60d"
+    },
+    {
+      "path": "src/components/relatorios/KpiCard.tsx",
+      "bytes": 1802,
+      "sha256": "05c5621055fd548ca248bd959ceb2b9871aee3a8d51a1f38f6eac5fcc74b32e2"
+    },
+    {
+      "path": "src/components/relatorios/MedicosTab.tsx",
+      "bytes": 6942,
+      "sha256": "08a0b4abae77a99ff9c7cf8fe3f93f857180bdf305a87903da341c9019184755"
+    },
+    {
+      "path": "src/components/relatorios/OperacaoClinicaTab.tsx",
+      "bytes": 7453,
+      "sha256": "596a990bca1f5b2e509a4e0076f19aa3a4dbaf9f3203e3036348230605a9901d"
+    },
+    {
+      "path": "src/components/relatorios/VisaoExecutivaTab.tsx",
+      "bytes": 9186,
+      "sha256": "912e02a1496a8f9e51fd89ad9175cadc5dde099e1b517041440ee0331fe6925d"
+    },
+    {
+      "path": "src/components/secretaria/CupomDialog.tsx",
+      "bytes": 11225,
+      "sha256": "73524e6b61c8f1b624c8a00954a8295ffad54ba5d9d3051bcfed0a0e9a0771bd"
+    },
+    {
+      "path": "src/components/secretaria/NovoAgendamentoDialog.tsx",
+      "bytes": 10128,
+      "sha256": "a7ee51d95b2572d8da24ae801f5096848ef604f953fce0aafa1299905aa1a8df"
+    },
+    {
+      "path": "src/components/secretaria/TrocarMedicoDialog.tsx",
+      "bytes": 9886,
+      "sha256": "56549b7af2a745cfe420fbe3990c78fca72d22aaed6ae7b2bbded48dde3b5be5"
+    },
+    {
+      "path": "src/components/security/SecurityWatcher.tsx",
+      "bytes": 2212,
+      "sha256": "3e1374d88ee7bf04f3c55898a2afb1ec3e4efbb41ad20fdd5b374dc6a2183ee5"
+    },
+    {
+      "path": "src/components/shared/ConsultaHistoricoDialog.tsx",
+      "bytes": 5098,
+      "sha256": "3b9683d371523133abffb0808d6dfe3fa92bba02811bd5f26dce531f57288aa7"
+    },
+    {
+      "path": "src/components/shared/ContaSeguranca.tsx",
+      "bytes": 5331,
+      "sha256": "6fcffacc855bad716b5d0ac3c892d1fdcf657b6e130b1e1044213a0ec27b8ba9"
+    },
+    {
+      "path": "src/components/shared/DropzonePdf.tsx",
+      "bytes": 3666,
+      "sha256": "3fa8caba61f5786223599849edb8340cf560b57849ea0eae0e9a98d7e8406f09"
+    },
+    {
+      "path": "src/components/shared/MeusAceites.tsx",
+      "bytes": 5685,
+      "sha256": "39eb7ed0ca82c0f6343bddcd0aa9fb867ce4f601aa518df338ebc7acabc74e48"
+    },
+    {
+      "path": "src/components/shared/TermosPendentesBanner.tsx",
+      "bytes": 5558,
+      "sha256": "21f9428f97dcd37c1e642104f57e34cc6fd02b025ebabff6f9f659032ab4742b"
+    },
+    {
+      "path": "src/components/shared/TermsAcceptanceDialog.tsx",
+      "bytes": 3753,
+      "sha256": "3cc0a87a4dee0801d1c69ee1ed2e2af2bf6f1ef381bc0018ed2965a513b08619"
+    },
+    {
+      "path": "src/components/StatCard.tsx",
+      "bytes": 1320,
+      "sha256": "0fe57e3cd9cd97a66f430ab4657b4bfda1682689144da521f1097e0eed8c8b1f"
+    },
+    {
+      "path": "src/components/StatusBadge.tsx",
+      "bytes": 520,
+      "sha256": "c7f38a62a1e8f1a2942b2268e2f6cd36a2e8c8cc68c30adb78be95d6c75146f8"
+    },
+    {
+      "path": "src/components/Timeline.tsx",
+      "bytes": 2456,
+      "sha256": "8d2984b4d61467f99455e6a13139e8c201c52220794e8e7a7be1f3cb0199abad"
+    },
+    {
+      "path": "src/components/ui/accordion.tsx",
+      "bytes": 2028,
+      "sha256": "dedb1e79e973f5be7bbe9149c56e6de293e3c831269192084a664cb40eb9ea49"
+    },
+    {
+      "path": "src/components/ui/alert-dialog.tsx",
+      "bytes": 4417,
+      "sha256": "26892ecf3644081f8af613b482871f3d1971ff37c0853cdc02a6258ca93a1ea2"
+    },
+    {
+      "path": "src/components/ui/alert.tsx",
+      "bytes": 1589,
+      "sha256": "f6e25204c7dbe2d52bca2d8fa6ba2b770cd92fc6b6182b24b8504cd2cfa14235"
+    },
+    {
+      "path": "src/components/ui/aspect-ratio.tsx",
+      "bytes": 148,
+      "sha256": "67c60b91df6dc9fc729390742b04c02d40c19f51f7a2d4f79110911a061266bb"
+    },
+    {
+      "path": "src/components/ui/avatar.tsx",
+      "bytes": 1403,
+      "sha256": "fb40d976244fd1053055b2c01bf8789aabca8299d2b6383c5d23c15ed06dd961"
+    },
+    {
+      "path": "src/components/ui/badge.tsx",
+      "bytes": 1118,
+      "sha256": "b82f8dfedd3c17c96d5660d4b2b83dec832b1c72631919dd1ff595b62086d7c5"
+    },
+    {
+      "path": "src/components/ui/breadcrumb.tsx",
+      "bytes": 2777,
+      "sha256": "cdb4909b5375a2b2e3b6613a217b1b357e6fe1bac86a98e0ba9a55ed8a96101d"
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "bytes": 1899,
+      "sha256": "5a712dd1b900c1353eed6fcea3be2c33916764044881b6870951e69174454bd4"
+    },
+    {
+      "path": "src/components/ui/calendar.tsx",
+      "bytes": 2617,
+      "sha256": "a52d8aeed9df4b5eefc45e489b488923f036ca7ea08bc73530256fe317a93b99"
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "bytes": 1828,
+      "sha256": "88e728bd33911310f5e8018409448cef61147c841683bb0ed243bac2e2c96895"
+    },
+    {
+      "path": "src/components/ui/carousel.tsx",
+      "bytes": 6473,
+      "sha256": "b6cc2145ceae0ad822d8c51f25e4df947338249112ea2552acb08c9af69aeff9"
+    },
+    {
+      "path": "src/components/ui/chart.tsx",
+      "bytes": 10494,
+      "sha256": "6f44360e4b3fc97dd3fae5149dacdca4696c44cce9a99b14b2dbc9b0c9296ce9"
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "bytes": 1079,
+      "sha256": "dbe4c3e16b760ccadcc654e7f69d5ed95621cb88909e83dc7d50015f694f8b8d"
+    },
+    {
+      "path": "src/components/ui/collapsible.tsx",
+      "bytes": 329,
+      "sha256": "f375e9bb056882208fc140c8f65d8878398c891351d369950bf4cd431e4a98e6"
+    },
+    {
+      "path": "src/components/ui/command.tsx",
+      "bytes": 4953,
+      "sha256": "b445c96c8d4315c793e40020cd9f4bf2c95b72579f5afc8eedc99dd39d411b73"
+    },
+    {
+      "path": "src/components/ui/context-menu.tsx",
+      "bytes": 7369,
+      "sha256": "44641f2907e8b225c250bf2f5df28461400b3a1ce30bcdee113a8e3b662f2c92"
+    },
+    {
+      "path": "src/components/ui/dialog.tsx",
+      "bytes": 3856,
+      "sha256": "137f3e8fa158010e1b113034d89ef3f808f4eaae4d9555f6c281ae003680befb"
+    },
+    {
+      "path": "src/components/ui/drawer.tsx",
+      "bytes": 3028,
+      "sha256": "173e0d771230a244c5899ec6ac8e162e38ac551e00cd43ea50af2dfdf96538e9"
+    },
+    {
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "bytes": 7439,
+      "sha256": "3c031a123dbb144a925d2720ec43b5fab495ee0f52ce62dbe7fbfdd17194b729"
+    },
+    {
+      "path": "src/components/ui/form.tsx",
+      "bytes": 4143,
+      "sha256": "109f343145aad66795974ecd8f53646c09d02760f66e8bab81e539d12bd41d57"
+    },
+    {
+      "path": "src/components/ui/hover-card.tsx",
+      "bytes": 1220,
+      "sha256": "643dc4bb95e37a4c8244c9b00f6042ad52ad8deeb44eb212c7e6aadce0662350"
+    },
+    {
+      "path": "src/components/ui/input-otp.tsx",
+      "bytes": 2227,
+      "sha256": "832723e92321ae391222df9c83d60c405f15ec54ad61b8c954b14b4b74243d5a"
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "bytes": 821,
+      "sha256": "3b09ee25c1c65e8890236eb3df0bb7b664f21ca694481815b955cbe6fdf25b22"
+    },
+    {
+      "path": "src/components/ui/label.tsx",
+      "bytes": 713,
+      "sha256": "9365711e408fc8add0e7a7fe4ddf513ee346b98a54aa1de131f34a9afedc753d"
+    },
+    {
+      "path": "src/components/ui/menubar.tsx",
+      "bytes": 8070,
+      "sha256": "1e9b2239e995d7a1fe6dfea7cf4ef571658eb99c8b744f540853350d1cbb1b7f"
+    },
+    {
+      "path": "src/components/ui/navigation-menu.tsx",
+      "bytes": 5150,
+      "sha256": "4e3cb2bf59e67f930f395c94cabfc63c03c4d6b0d86dc5735fa666852f8022cd"
+    },
+    {
+      "path": "src/components/ui/pagination.tsx",
+      "bytes": 2764,
+      "sha256": "8fa329509f89ebfce9cb4fdb5fd57e7bc595724831485d9c24dfa6a755e17a66"
+    },
+    {
+      "path": "src/components/ui/popover.tsx",
+      "bytes": 1268,
+      "sha256": "3c3c138c4ca584e2449599fa87467cf96085fe6518d03645b3adfc83f118202b"
+    },
+    {
+      "path": "src/components/ui/progress.tsx",
+      "bytes": 788,
+      "sha256": "aa219168fea49b768544e7da6d6b6776d97df6f499fefd69e9cca69e80e38d61"
+    },
+    {
+      "path": "src/components/ui/radio-group.tsx",
+      "bytes": 1483,
+      "sha256": "e7bcb8238a536581930a50e37912b11003a4e5f9b2e0a5e17aeffc024edd1394"
+    },
+    {
+      "path": "src/components/ui/resizable.tsx",
+      "bytes": 1733,
+      "sha256": "649c0537bd8f0784f11a5e7666284ad42a0665a0525b93e69f0287c7bf1f000d"
+    },
+    {
+      "path": "src/components/ui/scroll-area.tsx",
+      "bytes": 1646,
+      "sha256": "3d5021162483838dab258477d4752e6194428424fc74d75a30efa30d83200b59"
+    },
+    {
+      "path": "src/components/ui/select.tsx",
+      "bytes": 5718,
+      "sha256": "37eaf6e792144f80187df0e3a6314246b2bd3c61fa401a78bf6c3fdd49d7a210"
+    },
+    {
+      "path": "src/components/ui/separator.tsx",
+      "bytes": 718,
+      "sha256": "8ec59e1c43ca286a97e5ced3a3473352dbdaf4f0b1cade910c95dfdf251ae209"
+    },
+    {
+      "path": "src/components/ui/sheet.tsx",
+      "bytes": 4304,
+      "sha256": "3ce2628215cc3742c53baa6d5a0c4ca39ef63db33027cf57b5b159949cebefda"
+    },
+    {
+      "path": "src/components/ui/sidebar.tsx",
+      "bytes": 23474,
+      "sha256": "4d898b00c646352cf4ac4241a288d36d72833fdda1be588578c2109e140a4d43"
+    },
+    {
+      "path": "src/components/ui/skeleton.tsx",
+      "bytes": 241,
+      "sha256": "1911c26c08ed186e51ef65279bff95eae5f3bf6d237bca0018b10f1e70ba6d7b"
+    },
+    {
+      "path": "src/components/ui/slider.tsx",
+      "bytes": 1088,
+      "sha256": "527bb9cfea006f3b70eecbdd40c1ac2ff1b7e687014b4112863bccabde3be735"
+    },
+    {
+      "path": "src/components/ui/sonner.tsx",
+      "bytes": 904,
+      "sha256": "b945ad2be234fb2971bebb4bb41608f203dc40e1e8e4586827b00a601826f711"
+    },
+    {
+      "path": "src/components/ui/switch.tsx",
+      "bytes": 1174,
+      "sha256": "82d20b0bbe0880e62ab6471e3ba5f1f5a5f8337e1a5420420380314a653cfea7"
+    },
+    {
+      "path": "src/components/ui/table.tsx",
+      "bytes": 2766,
+      "sha256": "5cee937c372bce9af767f5d87e57c3220694d0c29b682bb6f1c834c4fff888ec"
+    },
+    {
+      "path": "src/components/ui/tabs.tsx",
+      "bytes": 1950,
+      "sha256": "ea49795ab5cc253c7d2ab1138f27cb7807b19e254c5e661141cde7aa8c4187d4"
+    },
+    {
+      "path": "src/components/ui/textarea.tsx",
+      "bytes": 772,
+      "sha256": "3ef3096c7143ea4cfc44be33890b564ab3128cbe3aac54e382188f9254ff9a41"
+    },
+    {
+      "path": "src/components/ui/toast.tsx",
+      "bytes": 4909,
+      "sha256": "87ab93db171be019c37982e95b47732c0fe58592aa26998ef62b9ca8362ff8ca"
+    },
+    {
+      "path": "src/components/ui/toaster.tsx",
+      "bytes": 754,
+      "sha256": "6cce09ccc4cecbd88e2b249c7d60ff87d7d7ca6271906c80f281050668aa93c0"
+    },
+    {
+      "path": "src/components/ui/toggle-group.tsx",
+      "bytes": 1763,
+      "sha256": "80ca2245a6104b972681ff574543fbbd076142361db9370e8b70ab349aa1c537"
+    },
+    {
+      "path": "src/components/ui/toggle.tsx",
+      "bytes": 1453,
+      "sha256": "834fecdf28eccf12796fdb428c249947d21f4db4941fe8b7f07fbbcf379f17cf"
+    },
+    {
+      "path": "src/components/ui/tooltip.tsx",
+      "bytes": 1183,
+      "sha256": "0d43ec6da30ba92a66c6b098a5123563ebd4153c8d53983f105109b8da7031c4"
+    },
+    {
+      "path": "src/components/ui/use-toast.ts",
+      "bytes": 85,
+      "sha256": "3fbe3b856affdf39f3eb2a82c898b96d44560d93d05674ab2fd6105825ca78d1"
+    },
+    {
+      "path": "src/hooks/use-mobile.tsx",
+      "bytes": 595,
+      "sha256": "f6f7a7643d4607721c57e2b8c4081a8f84aefbb0a240f4b9dd1fc20d8d7a61e6"
+    },
+    {
+      "path": "src/hooks/use-toast.ts",
+      "bytes": 4121,
+      "sha256": "6bf9e146f489a0c63de9c7e52c2c4d94d2c4618214b106cf3b871f02ca9b5925"
+    },
+    {
+      "path": "src/hooks/useAttendantPresence.ts",
+      "bytes": 1106,
+      "sha256": "04d610dd32b51b4aff7c6200c04b023f20e232c0277e6b890b4d8438207e224b"
+    },
+    {
+      "path": "src/hooks/useConversationAi.ts",
+      "bytes": 4887,
+      "sha256": "9a52582610fd41a3a3cecfd0de9615f0d3b76281221818a59af7cbf8ca4946b3"
+    },
+    {
+      "path": "src/hooks/useConversationTyping.ts",
+      "bytes": 1276,
+      "sha256": "72179c3553866ac72ad28e9b70fcb74c24b747476602da211c328321e3d9ffd7"
+    },
+    {
+      "path": "src/hooks/useEspecialidadesPublicas.ts",
+      "bytes": 2644,
+      "sha256": "d4254d4cdf1bb12c87ea4db97e234a18111151d6fefae735667f7f9b2e0a8f07"
+    },
+    {
+      "path": "src/hooks/useMedicosDestaque.ts",
+      "bytes": 1555,
+      "sha256": "cb3de9bb4b95e9c0bbac0792677aa19e74b4dae7464276d1075174fabb8eadf3"
+    },
+    {
+      "path": "src/hooks/useNotificacoes.ts",
+      "bytes": 2672,
+      "sha256": "869296972364675bf29d2af6e4df57bc1156089844706817184c98df0e380c5f"
+    },
+    {
+      "path": "src/hooks/useOperacaoMetricas.ts",
+      "bytes": 2783,
+      "sha256": "e8d3fd518b6b11d8fe7d23c3084f9fc4f9e7338d7e2911ad1699203a93e1c05d"
+    },
+    {
+      "path": "src/hooks/usePublicHomeStats.ts",
+      "bytes": 1141,
+      "sha256": "7734e1322ba1a2c3ce4e16e4a61297d8133b8db7076475a89b5e32047fafad6a"
+    },
+    {
+      "path": "src/hooks/useServicosPublicos.ts",
+      "bytes": 2051,
+      "sha256": "96b7527714fa9bfa5b1d548e32ae4b4365b1813a1f8877f43d509a66ac5c26f7"
+    },
+    {
+      "path": "src/hooks/useTermsCheck.ts",
+      "bytes": 1757,
+      "sha256": "dacee3d7e7d70dbc725aff95e37f8f9c4b9dfbfa77dd98f955b2d03c669515c4"
+    },
+    {
+      "path": "src/index.css",
+      "bytes": 8279,
+      "sha256": "aeb863106e870c714604af955a443e2e4b95352b94d3d11f9d41efde4a1b13bb"
+    },
+    {
+      "path": "src/integrations/supabase/client.ts",
+      "bytes": 955,
+      "sha256": "196052196fbbb2c4ca85de21faf5b07b97822fece3a3f0441205335ab5e56b2a"
+    },
+    {
+      "path": "src/integrations/supabase/types.ts",
+      "bytes": 433075,
+      "sha256": "7f74aed6303d1432503cface8a8a36df652a2d3c3a1d42e2fd1ce5751cb32b98"
+    },
+    {
+      "path": "src/layouts/AppLayout.tsx",
+      "bytes": 20822,
+      "sha256": "035c288a78c6719981ba496a5f67f18d08144c8ddd3be67a422ca82b3590990c"
+    },
+    {
+      "path": "src/layouts/PublicLayout.tsx",
+      "bytes": 9577,
+      "sha256": "3c97854d01652e71e38f9e386fe331fc7d6442c838f4d64ec599ad4cd7989c11"
+    },
+    {
+      "path": "src/lib/abilities.ts",
+      "bytes": 2492,
+      "sha256": "a97090411d2e5b2fefe82286d3ba9fae516b1919b0bf17491f13d313654ae6a6"
+    },
+    {
+      "path": "src/lib/admin/queries.ts",
+      "bytes": 17762,
+      "sha256": "5c20a6721769348982a14c3a34d69cd8764074545f886d9251e544fac615c92a"
+    },
+    {
+      "path": "src/lib/admin/types.ts",
+      "bytes": 4463,
+      "sha256": "820e9e93dc6e5d374d6b63fc1e875906ba10f63ee426f1103069a863bae9af91"
+    },
+    {
+      "path": "src/lib/analytics/AnalyticsTracker.tsx",
+      "bytes": 632,
+      "sha256": "104bec819bb88ceb39fddb4330073e5a62dd390245d017e8fe6a5f53f5db8457"
+    },
+    {
+      "path": "src/lib/analytics/tracker.ts",
+      "bytes": 8409,
+      "sha256": "d7d5f12e83328d28aeca03be4e1ac9b1d552ede01c82386c62f106b23f437a76"
+    },
+    {
+      "path": "src/lib/auth.tsx",
+      "bytes": 5199,
+      "sha256": "c2f9f43fd741de107086f41cf3927e0629cf3130d57f982bfc8029ce95737f0e"
+    },
+    {
+      "path": "src/lib/clinical/clinicalUrls.ts",
+      "bytes": 1489,
+      "sha256": "37311f4172504ae395b33fe333617b37acff23d1c88c165619244d86597a5d3c"
+    },
+    {
+      "path": "src/lib/clinical/useClinicalProvider.ts",
+      "bytes": 2329,
+      "sha256": "3ea66d3a13d6a97c6a4ffef6733f3449e3c03cff5fbfbeeaf39701dcf4df70e5"
+    },
+    {
+      "path": "src/lib/clinico.ts",
+      "bytes": 60530,
+      "sha256": "1a15460605085ac9be97fe3bdb2028ce4dcc5d313a42be0cd9db8bd0f14aedf7"
+    },
+    {
+      "path": "src/lib/comunicacao/openOrCreateConversation.ts",
+      "bytes": 1932,
+      "sha256": "fd1a0c94b153c975dfb20b58252292b037347c3863fa425605ce56cf64472fab"
+    },
+    {
+      "path": "src/lib/cupons.ts",
+      "bytes": 10462,
+      "sha256": "1dd3f5079f0924075d255f74bdbe30d28532b9b8f1cca3b5ecfbacdc6557f861"
+    },
+    {
+      "path": "src/lib/cuponsUso.ts",
+      "bytes": 2750,
+      "sha256": "bc75ec150ea53eafb9276ee685df8e3700f93923821a95de11da487508682050"
+    },
+    {
+      "path": "src/lib/feegow.ts",
+      "bytes": 1589,
+      "sha256": "0a5094337ff9d532929031cb29f7c2b1ea545a8519975f7a627deacee9952f19"
+    },
+    {
+      "path": "src/lib/financeiroConfig.ts",
+      "bytes": 9375,
+      "sha256": "a8413894f90681b502a2aceec9aac2f94ad9bba165d9695248b02223f104b27e"
+    },
+    {
+      "path": "src/lib/financeiroPrevia.ts",
+      "bytes": 8663,
+      "sha256": "f199ba8af45dd024a0f27296335d613d6608999da7dd8657d9e9a4dce8082dd5"
+    },
+    {
+      "path": "src/lib/format.ts",
+      "bytes": 1769,
+      "sha256": "7feed7b558e2bea06d53422bca07439ef7324e6250202bc746b20ef75cec5d16"
+    },
+    {
+      "path": "src/lib/gamificacao.ts",
+      "bytes": 23092,
+      "sha256": "fd25edb50f2c6d7953a5e256b7eeec0521d193b7af2f70f8112b181aefffbea0"
+    },
+    {
+      "path": "src/lib/gerarContratoMedicoPdf.ts",
+      "bytes": 3230,
+      "sha256": "1da77f1f228ed87149a2d44244b4a022546e62ec247afe44acab868d442afc45"
+    },
+    {
+      "path": "src/lib/gerarFaturaPdf.ts",
+      "bytes": 5635,
+      "sha256": "7407f0f2e0a9f9e60072cdb593c1f7d834058c3f2fc3d649a9f1af5803a2f0d7"
+    },
+    {
+      "path": "src/lib/googleCalendarSync.ts",
+      "bytes": 687,
+      "sha256": "b73a5a5364218a89f08459325525103f41439f7fb5ab701381fed48ed61c0ebc"
+    },
+    {
+      "path": "src/lib/ia-auditoria.ts",
+      "bytes": 12734,
+      "sha256": "1a48380d13af0fde233d8a4a3e5c1829a5fafb8d7f9da9140ae0b4257c2c6e2e"
+    },
+    {
+      "path": "src/lib/imageProcessing.ts",
+      "bytes": 2986,
+      "sha256": "3d7cc41fd33ef10de87b6dfbd32e52dcd18a6c3cb8654c6541af651199446684"
+    },
+    {
+      "path": "src/lib/impersonation.tsx",
+      "bytes": 4965,
+      "sha256": "67d79de7fce758163a72f796371246683334ab48773c8629154e77456d831d19"
+    },
+    {
+      "path": "src/lib/local-preview.ts",
+      "bytes": 1774,
+      "sha256": "160875d9895327bf99acbe5dd7623e4d3e3af6fd064039eb71864a2a1d1f5d67"
+    },
+    {
+      "path": "src/lib/medicoRegistro.ts",
+      "bytes": 9130,
+      "sha256": "1eff201fde9fcad6eef367fa7c8839753217cf2aee3ab5362125c206a54a112d"
+    },
+    {
+      "path": "src/lib/menu/menuCatalog.ts",
+      "bytes": 4413,
+      "sha256": "4b1867472da43e5ff9d89a5c5f4d8012c4f587ed3cde6f894393769ce89eae43"
+    },
+    {
+      "path": "src/lib/menu/validateMenuKeys.ts",
+      "bytes": 1202,
+      "sha256": "b650085c8a4c504cc62d2c37cbd3691910ce92feb6cd0774309066361db003ce"
+    },
+    {
+      "path": "src/lib/mock.ts",
+      "bytes": 3362,
+      "sha256": "bbe7ddad12529c87760589c9104950d3549a615d185739a1a7f4b9e3aff1b849"
+    },
+    {
+      "path": "src/lib/observability.ts",
+      "bytes": 3812,
+      "sha256": "1d120312b7cb167ef48c41b5e0b0b3cae63360898402b4b046882e53eeda909e"
+    },
+    {
+      "path": "src/lib/pa-types.ts",
+      "bytes": 739,
+      "sha256": "7e6e795f9992d68b40f51c29115f2ad4749b7edf469ca396145e40befce49f13"
+    },
+    {
+      "path": "src/lib/paciente/queries.ts",
+      "bytes": 10249,
+      "sha256": "03a7924165363fc6b0247a6e4c8f954dcb7de405e530f7c5e50f5830630b0519"
+    },
+    {
+      "path": "src/lib/pacienteConversas.ts",
+      "bytes": 4218,
+      "sha256": "2afae46f7379d1d69a15bf680a1ef073eb6a87440313870fd5507829cffc774d"
+    },
+    {
+      "path": "src/lib/pagamentos.ts",
+      "bytes": 13359,
+      "sha256": "99a2e9002e1da4c99d0dbc6832657b3a6f42c06a1f9269ad4898a4d7139c05a9"
+    },
+    {
+      "path": "src/lib/passwordValidation.ts",
+      "bytes": 2431,
+      "sha256": "d74c8ee6ba058f40d2f1f8c557738e8c1a728361d1e6b214f5437d85b8d0d1ae"
+    },
+    {
+      "path": "src/lib/permissions/constants.ts",
+      "bytes": 1713,
+      "sha256": "7bd6aaa79b811aa676800e5b92d0229bb2bfd4d110e931010808597f5281ef33"
+    },
+    {
+      "path": "src/lib/permissions/roleTemplates.ts",
+      "bytes": 3847,
+      "sha256": "c1730ee98bdabe3b7c70de255bf13cc82538d331c8cc89be8b26f1e2ffa4c24f"
+    },
+    {
+      "path": "src/lib/permissions/usePermission.ts",
+      "bytes": 3282,
+      "sha256": "e4690b1616a1cbf53639c7be749e646060d0549625c69ad85ad1a115c489e637"
+    },
+    {
+      "path": "src/lib/permissions/usePermissionsBatch.ts",
+      "bytes": 6062,
+      "sha256": "80f86228936ddc88678029451f16c67ed6e5b131dc91bf58b5fe052c054019e8"
+    },
+    {
+      "path": "src/lib/planos/saude.ts",
+      "bytes": 3220,
+      "sha256": "839b58d2333fc900a242281a16ee4f4953d2222379014f4a6ed0dc6eb7a23bf1"
+    },
+    {
+      "path": "src/lib/profiles.ts",
+      "bytes": 13669,
+      "sha256": "f5ac9747bd4b67b7ae3f371dfb0243b58a4de6a444ba3996fd30b080c33670c0"
+    },
+    {
+      "path": "src/lib/queryConfig.ts",
+      "bytes": 2444,
+      "sha256": "ac5b4a6340da5c530ec641941a93b5ced5b3c790700ebc13895fd2cc08bdfff4"
+    },
+    {
+      "path": "src/lib/reciboPdf.ts",
+      "bytes": 4984,
+      "sha256": "a2988d32958517eebfbe0cc646c492b05010267418d229d0e3613f3181a81930"
+    },
+    {
+      "path": "src/lib/reembolsoConfig.ts",
+      "bytes": 3146,
+      "sha256": "25bf33f5d576cf36f4f645ee178542f78c4e637164e12d5c70bfdb6f73310d90"
+    },
+    {
+      "path": "src/lib/reembolsoEstimativa.ts",
+      "bytes": 2762,
+      "sha256": "ca10911b461b1a22c1cc2f12cab9c5498f2071428efe952436e6574b10eb1fd1"
+    },
+    {
+      "path": "src/lib/relatorios/pdfAuditoria.ts",
+      "bytes": 7146,
+      "sha256": "ce7db5f0f288628cc1438a44227905787a4afe113da58936cebd02747585cbd3"
+    },
+    {
+      "path": "src/lib/relatorios/pdfFinanceiro.ts",
+      "bytes": 6679,
+      "sha256": "0d812bd5d0ea4bccc331689d92de4bae1f5db3eb51475a158a31f1d9a2c91a7d"
+    },
+    {
+      "path": "src/lib/relatorios/pdfRelatoriosGeral.ts",
+      "bytes": 5869,
+      "sha256": "78b2dbc34435b0e7a145b47f73bacfd34a4ebe08cfbd6ce5d3a5932f434eb6f1"
+    },
+    {
+      "path": "src/lib/relatorios/typesAuditoria.ts",
+      "bytes": 3408,
+      "sha256": "57b07153f68d27932129157d9d183fb5696e8f486656f83093c6f528334c06fa"
+    },
+    {
+      "path": "src/lib/relatorios/utils.ts",
+      "bytes": 3240,
+      "sha256": "c0e32114dc50d300a0c45b431636e2903e152d0146e3fb538ae6ee04f436c80f"
+    },
+    {
+      "path": "src/lib/sanitize.ts",
+      "bytes": 455,
+      "sha256": "504ba4d212d2b9dfdc49d37c6100f5e794150135ca01394cd135a7726dedf80c"
+    },
+    {
+      "path": "src/lib/saques.ts",
+      "bytes": 5550,
+      "sha256": "399ae39be6457160cfcfd30684435c113d33d51981124bb7501ac31f183df46c"
+    },
+    {
+      "path": "src/lib/security/sessionTracker.ts",
+      "bytes": 1346,
+      "sha256": "4db0d2022108aefa264f7bc71580dd866c4ba7d1d3a12cd509eada361b50ac65"
+    },
+    {
+      "path": "src/lib/session.tsx",
+      "bytes": 2616,
+      "sha256": "a7a134a37a53638c9fe3f5b19a4e63619ddc1d3a3d0db9c03addd3b134102c9f"
+    },
+    {
+      "path": "src/lib/stripe.ts",
+      "bytes": 664,
+      "sha256": "102941e00d19ed79ea262cd7d0b901e4fbed03b4083e86fbcd27a9d6831070a5"
+    },
+    {
+      "path": "src/lib/termos.ts",
+      "bytes": 8242,
+      "sha256": "a69e83a56c4cf93671b22d8ff73e087affe2626dde65cc51eb38ecc33e8c5071"
+    },
+    {
+      "path": "src/lib/treinamentos.ts",
+      "bytes": 6616,
+      "sha256": "725481503d9302d8d2497effb560d986b4725fa388ba2f7dcb9d13d89c609845"
+    },
+    {
+      "path": "src/lib/types/untyped-tables.ts",
+      "bytes": 3185,
+      "sha256": "4fe057e1261f8bb2f4a10c38734038b394d118322af57256c216ae1e22191985"
+    },
+    {
+      "path": "src/lib/useEmpresaAtual.ts",
+      "bytes": 2317,
+      "sha256": "881e2ab236f776a1d6afd779094f6f45679e99483cb0fd1d2ddf8cdf61999b47"
+    },
+    {
+      "path": "src/lib/useMedicoAtual.ts",
+      "bytes": 4395,
+      "sha256": "0716ac24b7494d62cc87177ee9adb159e4874dff350a0bde770b6e20dbf3a07f"
+    },
+    {
+      "path": "src/lib/usePacienteAtual.ts",
+      "bytes": 3770,
+      "sha256": "30f13e86f8a8e808378f1787c0924a62bd01a7d40b5896018731dc471c3789b3"
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "bytes": 175,
+      "sha256": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29"
+    },
+    {
+      "path": "src/lib/validation/cobranca.ts",
+      "bytes": 1749,
+      "sha256": "e7339d878eb89b67dea2871fa42ca8b460396d755666a8471c745f275c2e3302"
+    },
+    {
+      "path": "src/lib/validation/cpf.ts",
+      "bytes": 2753,
+      "sha256": "b339bb471dc6f89b643c1169509ff81ea39096d743ce1e533a54b6010b91f4f2"
+    },
+    {
+      "path": "src/main.tsx",
+      "bytes": 166,
+      "sha256": "0e6f13d73ea54de0964c09ddd627297f201e439379075aaace03d2ae302f901b"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAgendamentos.tsx",
+      "bytes": 34378,
+      "sha256": "e8ae385ad4383f3914df8d3ce1f831b718d53cc1a97bde0d1f2e5afc727c4ba4"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAiAssistant.tsx",
+      "bytes": 4346,
+      "sha256": "a148ddf9df11b51985ee98cc085ba729c9f38fb5087d1fe38ab9b3e4a1141959"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAiDashboard.tsx",
+      "bytes": 3222,
+      "sha256": "2c685d7a08189eaa056e253ce8a3d2cf2e9b593baa954d152d2e0b56b665cb17"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAiPrompts.tsx",
+      "bytes": 2222,
+      "sha256": "ffd0f70c8198c01cd12bc7b9bb84313e7bcd16f7938d6454920a5559b5451743"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAlertasSeguranca.tsx",
+      "bytes": 15209,
+      "sha256": "532f1333028e4444ed4ecd69e4ff30d7804fe56c335bcc31045b0f0f877e57c5"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAnalises.tsx",
+      "bytes": 39878,
+      "sha256": "759a967ad239fba3cfea3c9b05ffa0b115dde6583a885a40f755a53ee95d1a8c"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAtendimentoImediato.tsx",
+      "bytes": 17801,
+      "sha256": "9448e59eb7cdc18861d869d93d636a73f1636ed49f6f1f5a1380cd2a8f19b3a7"
+    },
+    {
+      "path": "src/pages/app/admin/AdminAuditoria.tsx",
+      "bytes": 31887,
+      "sha256": "af66b2937c9363ae0cde7289dcee8f6846ff3a58bca9f4b581fcdec24a26cf9b"
+    },
+    {
+      "path": "src/pages/app/admin/AdminCancelamentosPlanos.tsx",
+      "bytes": 11887,
+      "sha256": "3d8e0bbaaf88f2b5fa9af3c4ec70e9eb9236a42dfb70ba534a8c93f6df28a894"
+    },
+    {
+      "path": "src/pages/app/admin/AdminColaboradores.tsx",
+      "bytes": 35912,
+      "sha256": "0b44130caa556ceb30ffea0edbda43bda0d13b1864690bba7e1bae7bd8e44bd2"
+    },
+    {
+      "path": "src/pages/app/admin/AdminComunicacaoOperacao.tsx",
+      "bytes": 6115,
+      "sha256": "9a14c755565f742783cd28c761598d18888ee0b411fd6893deb384e6ad5b0f44"
+    },
+    {
+      "path": "src/pages/app/admin/AdminConfiguracoes.tsx",
+      "bytes": 16234,
+      "sha256": "03641395755f85a730435893dc84c4fda8fd459619fee5a2a64dec99c63e76c1"
+    },
+    {
+      "path": "src/pages/app/admin/AdminContratoDetalhes.tsx",
+      "bytes": 15699,
+      "sha256": "b123bda2572649386bdd10a87f40477670a0914611600684095cf5946e0d3a5e"
+    },
+    {
+      "path": "src/pages/app/admin/AdminContratosModelo.tsx",
+      "bytes": 10492,
+      "sha256": "d0ce74a681cef26f69e6a593968afa1ef43e5e89bf080945380363de8dfdd55c"
+    },
+    {
+      "path": "src/pages/app/admin/AdminDashboard.tsx",
+      "bytes": 16113,
+      "sha256": "da33d8a741815a2af3e7d6ad4a165aad1e585b2de7f1ee728b7e44ea8e4b2d79"
+    },
+    {
+      "path": "src/pages/app/admin/AdminEmpresas.tsx",
+      "bytes": 24011,
+      "sha256": "5560c2c4a5d1f0a7439425eb5e433329a62650b663bead727d474c3dda376f96"
+    },
+    {
+      "path": "src/pages/app/admin/AdminFaq.tsx",
+      "bytes": 8019,
+      "sha256": "0e4ba909f4f016b4d782b0798cfef22f3586fc899bf6fdfe0183c0669a460ea6"
+    },
+    {
+      "path": "src/pages/app/admin/AdminFaturamentoB2B.tsx",
+      "bytes": 24573,
+      "sha256": "441220b8d1b406eecf379c770ec400322f37afc6647f9081f52030829f51d5d6"
+    },
+    {
+      "path": "src/pages/app/admin/AdminFeedbacks.tsx",
+      "bytes": 9908,
+      "sha256": "7852448313b1bdad79168d6a8c7a41d1357b2acc0e6592550d2ee2ca444c405e"
+    },
+    {
+      "path": "src/pages/app/admin/AdminFinanceiroCentral.tsx",
+      "bytes": 24126,
+      "sha256": "c48b650e3ef2247ee8e7de2007a3c56bdb241e023ac1b913d65697210b2126b0"
+    },
+    {
+      "path": "src/pages/app/admin/AdminFinanceiroConfig.tsx",
+      "bytes": 23732,
+      "sha256": "ff382b9a277f20a7153c9554736008161aea5bd1ed96988f6f60369f3a00e1cd"
+    },
+    {
+      "path": "src/pages/app/admin/AdminGamificacao.tsx",
+      "bytes": 29616,
+      "sha256": "02b3a8f9bd9d4fd5d54bb0a2d6801f0af002681732bfdeca7717ab9ac15366c0"
+    },
+    {
+      "path": "src/pages/app/admin/AdminGamificacaoFinanceiro.tsx",
+      "bytes": 12067,
+      "sha256": "a7660b453e63b7924d04b2a953d596f2a3692f1386af8508ec4a9f569936f2a7"
+    },
+    {
+      "path": "src/pages/app/admin/AdminGestaoB2B.tsx",
+      "bytes": 18044,
+      "sha256": "e30fc4d99ea12e27c00b5ff4309cf69cac9d6f4d4a54e27a3121a79c0de10ee4"
+    },
+    {
+      "path": "src/pages/app/admin/AdminIAMedicos.tsx",
+      "bytes": 54448,
+      "sha256": "6eb04173fcf1dfa477039744d23946489e92c3451005039e6eae6e38245d234c"
+    },
+    {
+      "path": "src/pages/app/admin/AdminImpersonar.tsx",
+      "bytes": 11164,
+      "sha256": "dec54a12ed46651b307d1fecd3770508d457e2558311950863e6c02a30a99216"
+    },
+    {
+      "path": "src/pages/app/admin/AdminIntegracoes.tsx",
+      "bytes": 35812,
+      "sha256": "27d09d7237b00de5621a55659eb7bd6a0bf78cbfbc68aba7a9b731d7bc5d823b"
+    },
+    {
+      "path": "src/pages/app/admin/AdminLedgerObservabilidade.tsx",
+      "bytes": 16148,
+      "sha256": "aa388f10a2877c83950f5a80bf9de47e6ab1bc1aa6f4cc13ff6e0ca6ba559c84"
+    },
+    {
+      "path": "src/pages/app/admin/AdminMedicosContratos.tsx",
+      "bytes": 10000,
+      "sha256": "63c09d5e1badbadda84e5733259b951d0612f8159707974061737bebfbfd68b4"
+    },
+    {
+      "path": "src/pages/app/admin/AdminNOC.tsx",
+      "bytes": 25421,
+      "sha256": "554c694caf20a770555d8a3177c27e698ec44b719026be0ad22d898782499f80"
+    },
+    {
+      "path": "src/pages/app/admin/AdminObservabilidade.tsx",
+      "bytes": 8810,
+      "sha256": "d8b80495ecafe16fb17b4aa0f97aa8cadf67a53ca8573f2748c8144d2f757cad"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPerfil.tsx",
+      "bytes": 222,
+      "sha256": "08b87759fc36bb320ad78065b7fedc2a39c3a9f5d857f564b112683bf30f4c7a"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPlanos.tsx",
+      "bytes": 19500,
+      "sha256": "d861f229f30df2ad0c6e81341a0dd49fb1886ed3719e93da5c34d237c0aeef3f"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPlanosEmpresariais.tsx",
+      "bytes": 9133,
+      "sha256": "55c985fb5777e145711856bf0bf3b10cd83e0cc36c23ccaff78c0dff1f47cb2c"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPlanosMedicos.tsx",
+      "bytes": 10285,
+      "sha256": "7678b78fa4416f73b0b150f58eeb8fdf536373040649a5195bf66ad4cb3ecbd9"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPreviaRepasse.tsx",
+      "bytes": 19378,
+      "sha256": "89231f871593852512b2429c2c0d503636262e5ca6bcc45c7267c7dadb76ef3f"
+    },
+    {
+      "path": "src/pages/app/admin/AdminProducaoCockpit.tsx",
+      "bytes": 9509,
+      "sha256": "445f7871f9adfa9a021d78bf7a136aa478a31760916754348825c7124e141f8e"
+    },
+    {
+      "path": "src/pages/app/admin/AdminPropostasB2B.tsx",
+      "bytes": 25404,
+      "sha256": "1dc340ecbafe9a776a0ca70ba306af60d5c6031e4fc77f2415a4e3e403116703"
+    },
+    {
+      "path": "src/pages/app/admin/AdminReembolsoConfig.tsx",
+      "bytes": 20295,
+      "sha256": "a7f840f0f7fc8de8f9d9c248f53b409548d9548521a8b60e6f9e37ac52449ec2"
+    },
+    {
+      "path": "src/pages/app/admin/AdminRelatorioAuditoria.tsx",
+      "bytes": 192,
+      "sha256": "747855698018b8ccd686e41e474f69dbbc0c31938ff31da9bcdc62ec0b06b1bf"
+    },
+    {
+      "path": "src/pages/app/admin/AdminRelatorioFinanceiro.tsx",
+      "bytes": 17231,
+      "sha256": "39baba1097df5b01b740de9d59154b55e8b37048119efdc63f692353822e1ad3"
+    },
+    {
+      "path": "src/pages/app/admin/AdminRelatorios.tsx",
+      "bytes": 7657,
+      "sha256": "7a0c73566a635c9ad6a98c2ddb4a7fd4941ec5c84080f46aff55d6198a505167"
+    },
+    {
+      "path": "src/pages/app/admin/AdminRelatoriosB2B.tsx",
+      "bytes": 34864,
+      "sha256": "1d408b883074bfc9d1d33761a66caac074bf294eefd6807b02d9231054b1c1a4"
+    },
+    {
+      "path": "src/pages/app/admin/AdminSaquesMedicos.tsx",
+      "bytes": 21695,
+      "sha256": "d41af47a6eec34ad25f8eb68dc915aae08091eea91ee522b8925df308b9a5ba8"
+    },
+    {
+      "path": "src/pages/app/admin/AdminSaude.tsx",
+      "bytes": 10691,
+      "sha256": "64bdd829a58c0bc8d4cd489efb608fdd82d5ead2fb1ac7b2c5cfc84e8eb9f91c"
+    },
+    {
+      "path": "src/pages/app/admin/AdminSeguranca.tsx",
+      "bytes": 11071,
+      "sha256": "6283e1836a148c237d5601f7fc341590282f5f56e0f312dc5ffb9629080de48a"
+    },
+    {
+      "path": "src/pages/app/admin/AdminServicos.tsx",
+      "bytes": 23960,
+      "sha256": "6b94d30f1fd5059eb795c2c9a83b69b86abcdb7cd1512b8b5070fde14daa6dde"
+    },
+    {
+      "path": "src/pages/app/admin/AdminSessoes.tsx",
+      "bytes": 12324,
+      "sha256": "d638cc8d0c07e5cd5df5d1ce2b29b78b538cfe56951abf47d90d21466d28184b"
+    },
+    {
+      "path": "src/pages/app/admin/AdminTermosCondicoes.tsx",
+      "bytes": 20977,
+      "sha256": "9027da64a514250be100ad08807c1054c993e9d8b20e83e7d9030386b604662f"
+    },
+    {
+      "path": "src/pages/app/admin/AdminTreinamentos.tsx",
+      "bytes": 25523,
+      "sha256": "8f1c2c8a961ff442836ab8ca5730ebd403777579f767b3a79e6c4aa8795458f0"
+    },
+    {
+      "path": "src/pages/app/admin/AdminUsuarios.tsx",
+      "bytes": 28398,
+      "sha256": "9e269e72d1d4e9441bf6d00bc26d38ff9407909326b61ef97cf9822aadb4e446"
+    },
+    {
+      "path": "src/pages/app/admin/AdminWhatsappCloudTest.tsx",
+      "bytes": 7797,
+      "sha256": "151a1c4b6ac2c2f4f16e653e46354a2c5aa558fc304af15828eceb6f72edda64"
+    },
+    {
+      "path": "src/pages/app/admin/FeegowIntegracao.tsx",
+      "bytes": 20595,
+      "sha256": "63c366757d3ce16b367e0bc54f996010f98e79e9143dc4868c063618ef67cc3d"
+    },
+    {
+      "path": "src/pages/app/admin/FeegowMapeamento.tsx",
+      "bytes": 7756,
+      "sha256": "1672e9f5fde6aec868042fb1d3312ce3fb0ef505d7bd5070a267f9f0097c17d3"
+    },
+    {
+      "path": "src/pages/app/admin/FeegowProfissionais.tsx",
+      "bytes": 30724,
+      "sha256": "dc596f2c6a3f90d86326e93aeb3428a7a7247c021ca814d01b4b32da34a6861f"
+    },
+    {
+      "path": "src/pages/app/admin/FeegowSchema.tsx",
+      "bytes": 7311,
+      "sha256": "aa3c024ca40dc8a371727c8165cbfd8888e18b4bb60e9d30674242c1f4ebe86e"
+    },
+    {
+      "path": "src/pages/app/admin/FluxoOperacional.tsx",
+      "bytes": 7755,
+      "sha256": "bd88678d5fcfca2b94776b3b646504e490b6319da6294efe58d31d9e9132c639"
+    },
+    {
+      "path": "src/pages/app/admin/IntegracaoWhatsApp.tsx",
+      "bytes": 14273,
+      "sha256": "499bfca55ee46a9f80a0918d6fe2a4f3af22b1a7c867e98fc2f7b8aa2219cc13"
+    },
+    {
+      "path": "src/pages/app/admin/MedicosAprovacao.tsx",
+      "bytes": 31890,
+      "sha256": "215a3664057e02e3bec8ace4de9288c827440b1e27dbd51bcea2c6821a2d4e87"
+    },
+    {
+      "path": "src/pages/app/admin/Permissoes.tsx",
+      "bytes": 13671,
+      "sha256": "e2afb90f64d104ba1f44a543f58eb7c3809be87712347df870563e8f7af95171"
+    },
+    {
+      "path": "src/pages/app/admin/PermissoesLog.tsx",
+      "bytes": 15390,
+      "sha256": "af28e0606fbd33e8ef8e8317c745f510e96e18b2eb29b480b52036c43d6f37ca"
+    },
+    {
+      "path": "src/pages/app/admin/WhatsAppCentral.tsx",
+      "bytes": 2697,
+      "sha256": "7bb9b2eb3770c659e0ffadfe774cf209998e31f3a540b1d387c8c2ae6c021827"
+    },
+    {
+      "path": "src/pages/app/agendamento/AgendamentoConfirmar.tsx",
+      "bytes": 25944,
+      "sha256": "be6f0fa53bdbf1bbd17326748f0a8b4451a3272a5b8a8750b053fa0aee6e33f6"
+    },
+    {
+      "path": "src/pages/app/colaborador/ColaboradorPerfil.tsx",
+      "bytes": 210,
+      "sha256": "94ff3251a01ba1ce91735e187f763e5282d968bb4b08fcd424f7da9b415acb26"
+    },
+    {
+      "path": "src/pages/app/comunicacao/Automacoes.tsx",
+      "bytes": 8318,
+      "sha256": "f86db0c741410cdaca29cf65be8110a24898f6bdffc136157ab57e88ba6e83c6"
+    },
+    {
+      "path": "src/pages/app/comunicacao/BotConfig.tsx",
+      "bytes": 13910,
+      "sha256": "723e8b241127b518829fe8523ac54554cdc9e7814165efa6118fa37e63407920"
+    },
+    {
+      "path": "src/pages/app/comunicacao/ComunicacaoDashboard.tsx",
+      "bytes": 4910,
+      "sha256": "b07964b2d97b0dd46a85c7d732f51d37658ac51c657d77a05fe5053cdf52daf0"
+    },
+    {
+      "path": "src/pages/app/comunicacao/Conversas.tsx",
+      "bytes": 275,
+      "sha256": "1aeb55f57847c814b3e1b7e85bf2454702f797c9ecd85f08848dcccaf5e3fe82"
+    },
+    {
+      "path": "src/pages/app/comunicacao/IAAvatar.tsx",
+      "bytes": 28186,
+      "sha256": "c92e6f9aec5617ddc30bcdfcb58c020f2aba744d34fbff518e1adce6ad11bf68"
+    },
+    {
+      "path": "src/pages/app/comunicacao/Inbox.tsx",
+      "bytes": 62439,
+      "sha256": "555be382167115040781a95794d08891e01ba6196480eebf75906ae18d602f1f"
+    },
+    {
+      "path": "src/pages/app/comunicacao/InboxConfiguracoes.tsx",
+      "bytes": 6920,
+      "sha256": "703b11f9695730bb18d713235fe50df95b447d287fdb07cdf2d6912265686522"
+    },
+    {
+      "path": "src/pages/app/comunicacao/Metricas.tsx",
+      "bytes": 2827,
+      "sha256": "7366793f21fa1e59f16d61c5f1fe3d4a26dee43c0ff1d41b3f540d9ddbadcfe5"
+    },
+    {
+      "path": "src/pages/app/comunicacao/Templates.tsx",
+      "bytes": 7461,
+      "sha256": "f9c81fb01d5f5dcbe7ec8d8e089fbfac0368729dd17ac29fefc61064f4a980f8"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaAgendamentos.tsx",
+      "bytes": 8304,
+      "sha256": "ce79068c36e2549788606d5021b34e69cdac7e1081cb490db74ab41e9c0a4b27"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaDashboard.tsx",
+      "bytes": 10790,
+      "sha256": "9447a8a2f0da45e70628abe818c1442a317361d47807c51eace4d4bd6f6f5f02"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaDocumentos.tsx",
+      "bytes": 9907,
+      "sha256": "273a779ec229bd625d8771c388d6df5b6e78eeeadbbdba6e00377f8c89c4ff03"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaFinanceiro.tsx",
+      "bytes": 7562,
+      "sha256": "d3e0ad47a93ca197603b2ed33de89ba5ac95cb6ea5eed60aaeda8704631a1a00"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaFuncionarios.tsx",
+      "bytes": 14130,
+      "sha256": "3153d6611bde80a23c46cf69d89a18a85d3bace4f18c490555c0cd9823258fb4"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaPerfilPage.tsx",
+      "bytes": 10129,
+      "sha256": "aaaa79f3cede9b323a17b0731a9541435a065dd7fb61d94959097292a6c03edd"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaPropostas.tsx",
+      "bytes": 21157,
+      "sha256": "aff3b523c4cdeb6a77437c48fa990592a1f2e3023795845d8175cfbc83dd657e"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaRelatorios.tsx",
+      "bytes": 17060,
+      "sha256": "fbc32cad56a209ae2c60909ba52306b598192fdfe296f4fc6a631e214dfb5704"
+    },
+    {
+      "path": "src/pages/app/empresa/EmpresaTermos.tsx",
+      "bytes": 5091,
+      "sha256": "0a846c3a76044c1aac05ea55af1da2a9edb1f2beb2859f75903dd339c3e8d0c1"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoAgenda.tsx",
+      "bytes": 15119,
+      "sha256": "2b985c846b46aaf0c387b0a5eeaff4e9c8fc5828ae830f10446da2b72f4dbe93"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoAguardandoAprovacao.tsx",
+      "bytes": 5296,
+      "sha256": "3e74aad36ee80afc242e5d189f0beff01ba56c9ac9eb1fa14b9632649b90e320"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoCampanhasPage.tsx",
+      "bytes": 14022,
+      "sha256": "9d10d3b2f68c5264ba5d9362a8181662d212ceebefb8c1d29ec2bbc98549b27b"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoConfiguracoes.tsx",
+      "bytes": 39539,
+      "sha256": "1d8fab0c040ef47965a3a4a502658e60dc2f57a9ccbafaffb2f8864971fd3aa0"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoConsultas.tsx",
+      "bytes": 18913,
+      "sha256": "ac12f3b79cdeae531e805092da8a4652abdfb10ede1824ba0d2d9f101ac1dd8b"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoCorporativo.tsx",
+      "bytes": 25728,
+      "sha256": "18541e9ce18bab23d07518d3665550c71171ced6281a908ebd31a045d5a8c0b0"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoDashboard.tsx",
+      "bytes": 33115,
+      "sha256": "3168a10afee1bb1212ddb493aed2a17020a0239f152c852d91b5c0cd3212f632"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoDocumentos.tsx",
+      "bytes": 14985,
+      "sha256": "8539407676acfee71a9f2507aca17302a367dee851a19b08f060a559d910e58b"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoFinanceiro.tsx",
+      "bytes": 16305,
+      "sha256": "62e4b6ee19f13e6e61f60a04e1ab108ddcb6a0c7d18ad7afa5e42a663a36a46a"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoGamificacao.tsx",
+      "bytes": 48954,
+      "sha256": "2092802d2c3ed51d9f1f0ad704e83244a290d75136e7708a102535f0047bfee4"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoGoogleCallback.tsx",
+      "bytes": 3058,
+      "sha256": "c6f7d41181454ee4eb3236ced5b7cb14cd768848227b5b504ca9346927d697f6"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoHorarios.tsx",
+      "bytes": 40671,
+      "sha256": "53dd891434dbc7c4f63453aecb0b2b903f8c638fcb105e5ad9265490716e78ff"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoMensagensConsultas.tsx",
+      "bytes": 12796,
+      "sha256": "aa57f7183ba5984750a5d76532ceca63bae7394b7b42090d651c1a09e23db245"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoNotificacoes.tsx",
+      "bytes": 5781,
+      "sha256": "517c0b939fa3b7260070873ac0151faf68ae32044a56a29f76f7ccb23908b129"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoPacientes.tsx",
+      "bytes": 10456,
+      "sha256": "18cc2477cabad588cb255f1b1366a2a110b8292ec4434ad71f13af5fc356fc27"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoPerfil.tsx",
+      "bytes": 23500,
+      "sha256": "00e6c8be4f534bc48e81dc20b600e4420ef7cfbc30a05910a3e6f15140bde9ea"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoPlanos.tsx",
+      "bytes": 12736,
+      "sha256": "8dc97d6feda28d6458923278d69300dba0f981b6d771dc3e6069ee7fb5f173a7"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoPremiumPage.tsx",
+      "bytes": 15561,
+      "sha256": "95a829c2ab5ed7e06921b0a1ae8732ade26e794ec7668e6e16588821b5eb7a28"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoPropostas.tsx",
+      "bytes": 18525,
+      "sha256": "791dd5a5ebff473e61c2b5a000335e738be06612ea0892872d3e4d4a980e8b61"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoROIPage.tsx",
+      "bytes": 13163,
+      "sha256": "f4061ec960d0104da7be56c51ca8c1ff90f6329c5b6cd6e98b399e3158e7541a"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoServicos.tsx",
+      "bytes": 6631,
+      "sha256": "582fe4a211be8db9b27aa0c6f6fe61487064d6dfa5eb94ece9780177ee87689f"
+    },
+    {
+      "path": "src/pages/app/medico/MedicoTreinamento.tsx",
+      "bytes": 11023,
+      "sha256": "3b72019364c3dd97b41401247b0deab88930b6b7c29e34c1f0bbe369514963b0"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteAgendamentos.tsx",
+      "bytes": 17191,
+      "sha256": "5a3f241a7c1ef192263ae561a3e2519061f4105144ccbec224987f69b76f0dd5"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteAgendarConfirmar.tsx",
+      "bytes": 15800,
+      "sha256": "fd0b5bb7992bc3c66c63f7898863a21a3b8904d2f5f96956c21b610972660a15"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteAssinarPlano.tsx",
+      "bytes": 8964,
+      "sha256": "810015beab86f3465886058927b2bb5b72771cc730936d11711149f40aab8011"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteCheckout.tsx",
+      "bytes": 25390,
+      "sha256": "dca5949b8d5abebbea7bf957e0e4c754f819c6c6bdc93f6db3172368fdd8aff9"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteDashboard.tsx",
+      "bytes": 21323,
+      "sha256": "d42fb795769cecb4d3f3f067dc54cbc619ab50b7b86476b8a801646751d833af"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteDependentes.tsx",
+      "bytes": 12463,
+      "sha256": "a6cb2f58cd3f8af27451cbe0bf86d4d45cec2ffd25de51f46402f50bb713ab2e"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteDocumentos.tsx",
+      "bytes": 29143,
+      "sha256": "ac2a0efc50cca4bfb98f4afc16fa2eeb16dac99130740ccdaff33422361c9d73"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteFinanceiro.tsx",
+      "bytes": 21753,
+      "sha256": "1b23fb440709e1e337817c39a958f39c0894f5af6627342296e914eca35f6011"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteMensagens.tsx",
+      "bytes": 12889,
+      "sha256": "3343579980d602af44f9a3b5bf82f4356dd2e052871ae7334ce8b6113efc9aba"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteMontarPlano.tsx",
+      "bytes": 21993,
+      "sha256": "9031a41be8be57114e3503cb141bb9b41189d9aa7f65fd3816791bf340c563b0"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteNotificacoes.tsx",
+      "bytes": 5727,
+      "sha256": "5b447cc446908bcf9d89b4e2367a1b37c14d3b4fcea63dc5be4de13885234320"
+    },
+    {
+      "path": "src/pages/app/paciente/PacientePagamentoCancelado.tsx",
+      "bytes": 1226,
+      "sha256": "c90fc1dcca12a94fb6c3d37f56c116648e9c510e992199c3f457faa1802a7052"
+    },
+    {
+      "path": "src/pages/app/paciente/PacientePagamentoSucesso.tsx",
+      "bytes": 6989,
+      "sha256": "f31628dfbbfbcf9b4e80042eb7c72df4eba660165721d705cb3856dd45714159"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteParamGuard.tsx",
+      "bytes": 1050,
+      "sha256": "077651c34a25b1c8fe236762168ab4c2cbb44d2240b4d2b1c6c40c01cfe4362b"
+    },
+    {
+      "path": "src/pages/app/paciente/PacientePerfilPage.tsx",
+      "bytes": 18034,
+      "sha256": "42ebcf9cc306f558cf3afb1dfb54e41af03a5b272af782ff00fe7039ba5bb225"
+    },
+    {
+      "path": "src/pages/app/paciente/PacientePlano.tsx",
+      "bytes": 6597,
+      "sha256": "84c79750bd1399b7799ed9d1b06e574a4e949218982abc7f117fe665456b57fc"
+    },
+    {
+      "path": "src/pages/app/paciente/PacienteRotaNaoEncontrada.tsx",
+      "bytes": 4087,
+      "sha256": "980d5970baed72cb6979f598a759125f2af68bbf8e0c848aba46d0436027e9ee"
+    },
+    {
+      "path": "src/pages/app/paciente/PlanoCheckoutRetorno.tsx",
+      "bytes": 2866,
+      "sha256": "d786389f3788a844c009b2e7fefef9feda1e13edf0b194b7eecd55b10ed764f0"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaAgenda.tsx",
+      "bytes": 9084,
+      "sha256": "f3c625f231d380bffddec2d49e4d61f6d6a92680fcb401a36642756559311db3"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaAgendamentos.tsx",
+      "bytes": 10503,
+      "sha256": "a6f495981e4be29e896ce3e866b69a1c9ad6049ebfa66d142348175012073b0b"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaCupons.tsx",
+      "bytes": 13949,
+      "sha256": "5907e075d915117ad0be9453812b1343d9a314c869cccc41ad10c80b859529c2"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaDashboard.tsx",
+      "bytes": 15323,
+      "sha256": "8d2c2554f5628499b1cb51288e1d2c066e70cf33f9785dd6ed883b0f978f0e0f"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaFinanceiro.tsx",
+      "bytes": 6764,
+      "sha256": "505cc140e3f3caa493b7a015aa40eac004fb780587919823938b1458e5435374"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaPacientes.tsx",
+      "bytes": 11523,
+      "sha256": "84c6514356b62d42a8f85c3b34ed4a621f7bd74976f2587170d4de6b75df035d"
+    },
+    {
+      "path": "src/pages/app/secretaria/SecretariaRelatorios.tsx",
+      "bytes": 10580,
+      "sha256": "e787fb16eb0bd727ff18ad0ee6ba16438010dc648d8031573ed1ca9b0662c7c4"
+    },
+    {
+      "path": "src/pages/app/shared/ComunicacaoInterna.tsx",
+      "bytes": 24047,
+      "sha256": "1f1ed17ad568c324c6807a25288e98bfed537818ecd778f4677e51747e69cbb3"
+    },
+    {
+      "path": "src/pages/app/shared/CuponsUsoLog.tsx",
+      "bytes": 10958,
+      "sha256": "58098f4a677dd7c022a3d7a13dc5356213203c912c27fd9e67d3086abf0e7257"
+    },
+    {
+      "path": "src/pages/app/shared/PacientePerfil.tsx",
+      "bytes": 45426,
+      "sha256": "04daf493bbf48c371d3dc6fc0373527806455c8e5660a92d15272e4d75a15155"
+    },
+    {
+      "path": "src/pages/app/shared/PendenciasIntegracao.tsx",
+      "bytes": 9545,
+      "sha256": "0bf677ff8425e1d5060fa6535cdd3cf6e1291625396698062982e08d48740eda"
+    },
+    {
+      "path": "src/pages/app/shared/PerfilGenerico.tsx",
+      "bytes": 5134,
+      "sha256": "5d2c423e0ccca4b2e27a041bd62c546a520f88422cb88dd44aa3d1a84c64ba22"
+    },
+    {
+      "path": "src/pages/app/shared/Tarefas.tsx",
+      "bytes": 13397,
+      "sha256": "170d7ce7a3fd1f8a8759f9797e7c953f1c6f3033298ddc585d01a7056227879a"
+    },
+    {
+      "path": "src/pages/app/supervisor/SupervisorDashboard.tsx",
+      "bytes": 4058,
+      "sha256": "e8f453e914586d2ffb2b254b5c3e3fad614760dd0000452ac530c87ed3b58433"
+    },
+    {
+      "path": "src/pages/app/_Placeholder.tsx",
+      "bytes": 1021,
+      "sha256": "7a8c082f715558d6c9f38e7a1e01e7b4ca72f4da723245e5dc43d55906b83cf2"
+    },
+    {
+      "path": "src/pages/auth/Auth.tsx",
+      "bytes": 17499,
+      "sha256": "a185e224958f32b79b366d6d5399f696a2a9089cf79c511b08d72f14c4c5b558"
+    },
+    {
+      "path": "src/pages/auth/TrocarSenha.tsx",
+      "bytes": 4328,
+      "sha256": "3954c9523ed7388fb1f5c1c711696b728c631b121392969c928c18c26bc3a21c"
+    },
+    {
+      "path": "src/pages/Index.tsx",
+      "bytes": 89,
+      "sha256": "59d2ce7acd190199607ed53962377d1c72ac02c06a4c4bd912233f3ea3e57fa4"
+    },
+    {
+      "path": "src/pages/local/VisualEditor.tsx",
+      "bytes": 3980,
+      "sha256": "33d5148be658d77ccbf2060ed657071e50c0a4358c7b08ac90cdebbbc1ab7c24"
+    },
+    {
+      "path": "src/pages/NotFound.tsx",
+      "bytes": 751,
+      "sha256": "2881988c57fb19591a837fc53cba6843b142b285f03f2cf8b92d3c9c1c27775b"
+    },
+    {
+      "path": "src/pages/public/AtendimentoImediato.tsx",
+      "bytes": 8089,
+      "sha256": "cf0ca03bb69ea790cafdf4a8e09bacff5a38ddc512b72d96140614e1d8e0e277"
+    },
+    {
+      "path": "src/pages/public/CadastroMedico.tsx",
+      "bytes": 12224,
+      "sha256": "055a3980e43aab7f70823b66e4d7e3f69c439afff0f01c62fa6e75259bc089eb"
+    },
+    {
+      "path": "src/pages/public/Home.tsx",
+      "bytes": 16532,
+      "sha256": "134aaf756e0bde557d0f5409f2d1ef3b10853e62f4d5bbb1cd88486e8ba21b1d"
+    },
+    {
+      "path": "src/pages/public/PublicPages.tsx",
+      "bytes": 53234,
+      "sha256": "469e51055b20f9e834b87c3387a0164cae59534e73da5ef88f074ca1d0f5b35c"
+    },
+    {
+      "path": "src/pages/public/ServicoDetalhe.tsx",
+      "bytes": 10113,
+      "sha256": "bb27cea59dd694b497f1b8b4ebb41e59102597d459f560edaeb33f9695a98993"
+    },
+    {
+      "path": "src/pages/public/Servicos.tsx",
+      "bytes": 8928,
+      "sha256": "d612f06723cca238d6725520f640ace245ea6b560a23d357aa1bf2bce417864d"
+    },
+    {
+      "path": "src/pages/public/Sobre.tsx",
+      "bytes": 8750,
+      "sha256": "f00889ae3646883462464a6b0839af8069748c2a9812765ca5321e611b0eb166"
+    },
+    {
+      "path": "src/pages/public/TermoPublico.tsx",
+      "bytes": 3078,
+      "sha256": "10577139e5b76a0406f8f37628a11c229b947a4dd4cea105c20afaf867a62c04"
+    },
+    {
+      "path": "src/test/agendamento-unificado.test.ts",
+      "bytes": 19612,
+      "sha256": "e6edcf2ede8157cf41e9e8ae1bd6b54a48671642fe23c7c008493e4993e3ccd2"
+    },
+    {
+      "path": "src/test/example.test.ts",
+      "bytes": 150,
+      "sha256": "59e65dfa496976f02d41b5b54cd30cc8bb0a5edd46879a1a419a87051821d0a2"
+    },
+    {
+      "path": "src/test/local-preview.test.ts",
+      "bytes": 1166,
+      "sha256": "4320f016f4b2e8898c5ecfd369df9aa7c147c648814bccee30746fe295dff9df"
+    },
+    {
+      "path": "src/test/routes-validation.test.ts",
+      "bytes": 808,
+      "sha256": "eaeafedfc9905b85d76d0823ba0f6163d3b3833ac515392e8d8110538ef1b156"
+    },
+    {
+      "path": "src/test/setup.ts",
+      "bytes": 368,
+      "sha256": "04f2798b91d274d3a353c678412ff265cd9c45345090808925f13c8d55408049"
+    },
+    {
+      "path": "src/test/smoke-baseline.test.ts",
+      "bytes": 764,
+      "sha256": "4b7e4f6d469fdb922152d1b0ed21fd8f4b3b4628094b59ab7a3acf26cc6e1b81"
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "bytes": 39,
+      "sha256": "424faf9241dd699dda995b367ed36665732da1e6ec1f33b2fd40394488ecac92"
+    },
+    {
+      "path": "supabase/config.toml",
+      "bytes": 260,
+      "sha256": "595a0a214ceab5189585b59748dffb65e3b9a0c77278f0f7833f67ce392afe57"
+    },
+    {
+      "path": "supabase/functions/admin-criar-paciente/index.ts",
+      "bytes": 5200,
+      "sha256": "bf7bb7853e56c1c53d941ee7f9f2eaadda122e1f6473977ee7d915e19a9c59ae"
+    },
+    {
+      "path": "supabase/functions/admin-invite-colaborador/index.ts",
+      "bytes": 5751,
+      "sha256": "4b83fa663d75dedbfb434799f5b88aad853340bdf294ab0c796adfde57936126"
+    },
+    {
+      "path": "supabase/functions/ai-assistant/index.ts",
+      "bytes": 12302,
+      "sha256": "1a5d461b6ab4f755d16376672b5f628e91ead14eb47676c0cddf2427f2b0ad06"
+    },
+    {
+      "path": "supabase/functions/ai-avatar-memory/index.ts",
+      "bytes": 5707,
+      "sha256": "5b2997759c6eb4c1962d20e9feb61d9d5db55dee4ffd162adc6e8a112d31b669"
+    },
+    {
+      "path": "supabase/functions/ai-avatar-reply/index.ts",
+      "bytes": 19504,
+      "sha256": "27b8f0fc2a08aad36076eba71a41119b18dc7fba64ebddae3581c05833d43e33"
+    },
+    {
+      "path": "supabase/functions/ai-respond/index.ts",
+      "bytes": 7818,
+      "sha256": "669ab71e4e629a5da5b1ff0e3e7b33fcd89ed93e939cdf74a189d1ea5c5724d8"
+    },
+    {
+      "path": "supabase/functions/audit-log/index.ts",
+      "bytes": 3581,
+      "sha256": "4bc750fa135202f0d2cf663a78b66e64b4b38374ae37d0320efdac87766178e7"
+    },
+    {
+      "path": "supabase/functions/consulta-insights/index.ts",
+      "bytes": 5524,
+      "sha256": "ab5eb1ad55ac2f612e166c534fa3357f3c9a5a0e114ad1e6be8682f34f25918d"
+    },
+    {
+      "path": "supabase/functions/criar-checkout-plano/index.ts",
+      "bytes": 6800,
+      "sha256": "65183b6e6c2bd63306a6e123e70db70f9098206b336b432a6a6540643962c52c"
+    },
+    {
+      "path": "supabase/functions/criar-checkout-premium/index.ts",
+      "bytes": 3052,
+      "sha256": "bf1d061af79f330590db48af4e62a1fff3478f28ca10e6738559354addd0cbc1"
+    },
+    {
+      "path": "supabase/functions/criar-checkout-stripe/index.ts",
+      "bytes": 10102,
+      "sha256": "a8ace341dbfb97d2a23017b53ccbf9088baa377571427b462d1163a397371743"
+    },
+    {
+      "path": "supabase/functions/enviar-confirmacao-consulta/index.ts",
+      "bytes": 3367,
+      "sha256": "bfaca2bb142d6a21bf2142c851608af1e4c6874e8b6fb3babf36036993f67bcf"
+    },
+    {
+      "path": "supabase/functions/feegow-agenda-readonly/index.ts",
+      "bytes": 13147,
+      "sha256": "26eab94c1d96663ad1e8cf47447057bf8afcb322a32ba45b827dec57f5169003"
+    },
+    {
+      "path": "supabase/functions/feegow-criar-agendamento/index.ts",
+      "bytes": 10441,
+      "sha256": "54724e62cc9295d4f367e3e13061c37f3c6882505ebb63604641904e81021f76"
+    },
+    {
+      "path": "supabase/functions/feegow-enviar-paciente/index.ts",
+      "bytes": 21907,
+      "sha256": "fa1d28b0a36c4f49a157f0fe646b394da7fdb7434064f2e9c228e6d59cbb5e15"
+    },
+    {
+      "path": "supabase/functions/feegow-importar-documentos/index.ts",
+      "bytes": 14216,
+      "sha256": "e7134c4967e98e03a20c7a959583b71671066bd0c935eec93395e8f6dda9afc9"
+    },
+    {
+      "path": "supabase/functions/feegow-liberar-medico/index.ts",
+      "bytes": 8332,
+      "sha256": "76a483f45f2ddd28e2efebd761617cc7d89872dc956536630603063b9d6abc43"
+    },
+    {
+      "path": "supabase/functions/feegow-profissionais/index.ts",
+      "bytes": 3777,
+      "sha256": "1f12cd3413a2040f98fcc0f4733c1b568b0d748ab4e84c06441c27c3c487b70c"
+    },
+    {
+      "path": "supabase/functions/feegow-vincular-profissional/index.ts",
+      "bytes": 6387,
+      "sha256": "848d99f8ab2d85b2be859ad757733a7172ca5a8b02ffd51b6dee02f386e41f3a"
+    },
+    {
+      "path": "supabase/functions/google-calendar-sync/index.ts",
+      "bytes": 13539,
+      "sha256": "7757e7bca924cf05449e374416fe23fc7ce551beb1bc378d5e5dcf26507ab358"
+    },
+    {
+      "path": "supabase/functions/google-create-meet/index.ts",
+      "bytes": 6463,
+      "sha256": "43c5ad019b2985e5ace58fc1991d98c529f369f8bed4e4a1a424b441f6e2bab7"
+    },
+    {
+      "path": "supabase/functions/google-oauth/index.ts",
+      "bytes": 8732,
+      "sha256": "1d32749b253f38f21f172fd2f4e3c66a6185a7757defe9556726e081e62e3350"
+    },
+    {
+      "path": "supabase/functions/ia-auditoria-medica/index.ts",
+      "bytes": 19482,
+      "sha256": "dca2b69f1fe84841bbcb33fbd0895c0843cb8885dcf9008d73ea91e54e2bf4a6"
+    },
+    {
+      "path": "supabase/functions/inbox-transfer-cron/index.ts",
+      "bytes": 947,
+      "sha256": "72cb99ca849fc7ff00d8ad9e1c953b5145eeff50f3f73196e3ba22fa1f2c10fa"
+    },
+    {
+      "path": "supabase/functions/integracoes-test/index.ts",
+      "bytes": 15029,
+      "sha256": "759db497ec72fc3b665218c1068fd29c6fd71cf622ba029c05201dd2e8798fd8"
+    },
+    {
+      "path": "supabase/functions/internal-financeiro-tests/index.ts",
+      "bytes": 7932,
+      "sha256": "f2758aa451f8c8048924f28a64f35337ed91da6e371ff9f65e73abcdc545199b"
+    },
+    {
+      "path": "supabase/functions/meta-health-check/index.ts",
+      "bytes": 4511,
+      "sha256": "e37d8580d5829c679e9d46c45c592eefaef90b805b9a3d86fe41495f92add809"
+    },
+    {
+      "path": "supabase/functions/meta-template-sync/index.ts",
+      "bytes": 3280,
+      "sha256": "35958f2065ffc403cf376f302cc5794e8f5ef2a656456ee32c14c6e30d6a1d03"
+    },
+    {
+      "path": "supabase/functions/nfe-emitir/index.ts",
+      "bytes": 7409,
+      "sha256": "206dddb7260a2c8356f630443eb8b72c0b6932948a7df8baaaf47faaf83039c8"
+    },
+    {
+      "path": "supabase/functions/noc-detector-financeiro/index.ts",
+      "bytes": 10133,
+      "sha256": "33eb3c9e20e991b1c1113286ac212a383f516e13634ccd924934c184495776bc"
+    },
+    {
+      "path": "supabase/functions/noc-ia-auditora/index.ts",
+      "bytes": 7558,
+      "sha256": "8351defc7721ec3e4778f125d62df96b5cc768d7360c318855a06b2aeeef5d20"
+    },
+    {
+      "path": "supabase/functions/notificar-reembolso/index.ts",
+      "bytes": 6184,
+      "sha256": "b8b95ac7a53d486ce26f0d351030cd12b12bb718d9319e338ca0bfad4998cf27"
+    },
+    {
+      "path": "supabase/functions/notificar-troca-medico/index.ts",
+      "bytes": 8274,
+      "sha256": "bcfa1ab371cc12bee66d7e6a7fe3096126e63d4b2e23765c7c4f421294e97b7b"
+    },
+    {
+      "path": "supabase/functions/observabilidade-export/index.ts",
+      "bytes": 4578,
+      "sha256": "a5d98c33b3f2529a3aff51badc45b2328f57bdfaccd4f486f4ef935dc7df9ef1"
+    },
+    {
+      "path": "supabase/functions/observabilidade-ingest/index.ts",
+      "bytes": 3141,
+      "sha256": "ccc1b30262c764ac6dd8c054d4e1cc1c7cf47c1f77c7f1a670b7ee9438d701ad"
+    },
+    {
+      "path": "supabase/functions/payments-webhook/index.ts",
+      "bytes": 13470,
+      "sha256": "35d2ad8c24fb7fa47338b4536b480296a28727bf8f4aa8f8236c41481135a222"
+    },
+    {
+      "path": "supabase/functions/recalcular-ranking/index.ts",
+      "bytes": 1007,
+      "sha256": "ba130f3c5bf73a06156d55c903ee673ed91dd5af5e30eb009284a71806127504"
+    },
+    {
+      "path": "supabase/functions/whatsapp-cloud-test/index.ts",
+      "bytes": 5532,
+      "sha256": "1ae8e8b9f6aa0ada82d90da3f60752ac22b5b1ee47f726aa751b5b5d263d2488"
+    },
+    {
+      "path": "supabase/functions/whatsapp-enviar/index.ts",
+      "bytes": 12758,
+      "sha256": "6b5962db5d8f4e79ab388ecda9f80e678cdd30e45ec622173c58ebd47d5bbeb2"
+    },
+    {
+      "path": "supabase/functions/whatsapp-template-send/index.ts",
+      "bytes": 9700,
+      "sha256": "991c508b0c53581141c24e517e5069a4bddc991c06910df2903a90184bbdc8a8"
+    },
+    {
+      "path": "supabase/functions/whatsapp-test-send/index.ts",
+      "bytes": 5797,
+      "sha256": "8d0d5ccc1ee6268f900d3d4a90961eb59e76fd13e09f0e76301a41da5fcb08a0"
+    },
+    {
+      "path": "supabase/functions/whatsapp-webhook/index.ts",
+      "bytes": 11299,
+      "sha256": "984beb1c5785f55186f8139e2103db161fe760fe278592372f7d2daf613566d4"
+    },
+    {
+      "path": "supabase/functions/_shared/ai-providers.ts",
+      "bytes": 2953,
+      "sha256": "859a99d247651b51d37b5e2879b1c532c22371770e4f34f113c1134acf9f5607"
+    },
+    {
+      "path": "supabase/functions/_shared/clinical-providers.ts",
+      "bytes": 3555,
+      "sha256": "97b755b0c2b05628af995e97ae37ea1e3b48445d6e268895f1acad325deea4e8"
+    },
+    {
+      "path": "supabase/functions/_shared/observabilidade.ts",
+      "bytes": 3534,
+      "sha256": "32f216baecc5cdab17ab727829607be529cd11449c88bc4b3a324af557c657d3"
+    },
+    {
+      "path": "supabase/functions/_shared/stripe.ts",
+      "bytes": 1278,
+      "sha256": "325da627d97009c8b33375e4a1bd28f59dc8776fa56712f98c7cfd653ef31a3d"
+    },
+    {
+      "path": "supabase/functions/_shared/wa-providers.ts",
+      "bytes": 2496,
+      "sha256": "fbab49cdeed22e68375f3e8bd8accc0e402332ef671672a4c7ff7192199b5f5f"
+    },
+    {
+      "path": "supabase/migrations/20260428210721_f8bf3c5f-8c77-4c85-8416-30c24296d7b9.sql",
+      "bytes": 6980,
+      "sha256": "a21bdde8df75fd15d7a997a2f1d36ab35122552a89c0950faa5c9f50606698b4"
+    },
+    {
+      "path": "supabase/migrations/20260428210751_7951dcca-8590-4dee-bb2b-cbd7ade93033.sql",
+      "bytes": 645,
+      "sha256": "c7d32eb199fb8e6421bb3c9f99d1aacabc7a0f5e85ae643cb90759b7e54927cc"
+    },
+    {
+      "path": "supabase/migrations/20260428210942_df6c4328-5ef9-4193-8cc4-e487c05ec54f.sql",
+      "bytes": 1264,
+      "sha256": "a8cb4cec56148d7ebb43e731ae6068963c8969a87c49fe136148998ec051cf57"
+    },
+    {
+      "path": "supabase/migrations/20260428212052_f5d8588d-9eb3-44b0-b9e0-7c265a116112.sql",
+      "bytes": 1571,
+      "sha256": "2867cabd7266bcc56f4be882b82254452c2cf06a0d8b5e5afb32e13fdc917a11"
+    },
+    {
+      "path": "supabase/migrations/20260428212109_6b869ce7-acfa-400a-ac8b-074f285a8040.sql",
+      "bytes": 571,
+      "sha256": "348359ecb5c58ddf91f53897fbc7433ddaedbe52aac8dc3d77186a9f2b895822"
+    },
+    {
+      "path": "supabase/migrations/20260428220944_808ed66d-8437-4aa4-9c1c-fa084b5d3c7c.sql",
+      "bytes": 23458,
+      "sha256": "146f9661a37e3318555185fcb773dcf616178079bee98446d2cf3a8d52f1dd8b"
+    },
+    {
+      "path": "supabase/migrations/20260428221000_7caddbe5-220c-4fa5-a422-3965ebc5ea27.sql",
+      "bytes": 405,
+      "sha256": "655d5944dd4d1cdf1a4f7d513b8d03616df6e2407adbc6ced4892d4fdb8cb515"
+    },
+    {
+      "path": "supabase/migrations/20260428225412_3b60acaf-8398-4199-9759-0ac2b0b3398f.sql",
+      "bytes": 1581,
+      "sha256": "e419d7fd8d459aad00efd0700d81678a5dfc269d76718f73364228f3a2eef52d"
+    },
+    {
+      "path": "supabase/migrations/20260428231313_d65376ce-5969-452c-86b5-889bbef71e66.sql",
+      "bytes": 1348,
+      "sha256": "47e7a2411070330b9731bcbe89ee48f3662dda53e0304c8366a7264683d10bfb"
+    },
+    {
+      "path": "supabase/migrations/20260428232901_2e4ae38b-a832-49c2-bcac-7b11ac85a0cc.sql",
+      "bytes": 2987,
+      "sha256": "62c83e9f31de4e034b03769cbe2d117b6ea95d93f57c3d7ee26bc23eba0fc4cc"
+    },
+    {
+      "path": "supabase/migrations/20260428233617_40f71f5a-3cf1-4245-8e57-ae13719ee6dd.sql",
+      "bytes": 6445,
+      "sha256": "8ca88f5af9cb402f58f82bfd9fbd64a446861a9093aac032253391552f218ea5"
+    },
+    {
+      "path": "supabase/migrations/20260428233633_8a82e017-a06e-4406-97bb-bcb6d90c7368.sql",
+      "bytes": 210,
+      "sha256": "6084354f8b42d2290c9df62187f77799a6634f37475f1cdb654b5ecb2bdfc0cc"
+    },
+    {
+      "path": "supabase/migrations/20260428234852_eabc1a3c-97c4-4c53-b836-b222526c3f24.sql",
+      "bytes": 3416,
+      "sha256": "d7c3cc6b3f2c409b8a4ef8a69b65278b4307ffa88b69a5e230feb086f31cfda4"
+    },
+    {
+      "path": "supabase/migrations/20260429000915_d1ea3672-8b3e-4a64-bb6f-b003a8f4396d.sql",
+      "bytes": 3943,
+      "sha256": "ccae47fe4aef21153c97adb96131bfa6ae9f4ccac455b4aadaf452ff809012f1"
+    },
+    {
+      "path": "supabase/migrations/20260429000933_1eaa3ce6-354c-474e-b14f-c1bf977fffb1.sql",
+      "bytes": 899,
+      "sha256": "6d1ff5d10517002cd2ef52986999fb5d93043d2c712c1a3992fe85dfff527a28"
+    },
+    {
+      "path": "supabase/migrations/20260429003436_48a2d021-87e4-4933-b827-2c017a7ead05.sql",
+      "bytes": 2262,
+      "sha256": "685ed25fef2699ed1c92a7fec4f52709eb5f52b01281b03fef257f70500d094c"
+    },
+    {
+      "path": "supabase/migrations/20260430130152_76730d50-d74e-4bb6-a84c-672d7ff3c7ef.sql",
+      "bytes": 5861,
+      "sha256": "57ee05a8a04750cb3e80873d6ccca4ff01c6fa9eddc6a93a0ba55f983d6ff236"
+    },
+    {
+      "path": "supabase/migrations/20260430130642_fd1013c7-4625-4564-8466-c9f6e4fb5a8c.sql",
+      "bytes": 3744,
+      "sha256": "a7635f6901131c22c670b9f16b7f0c4688f2ce9914cf1ff63367f4744a5c81a9"
+    },
+    {
+      "path": "supabase/migrations/20260430131630_5349922b-338c-4fdc-a724-18ef30e41bb7.sql",
+      "bytes": 4137,
+      "sha256": "2a24e5f5e3f55dad2111014dd03438a185a5ece770ec006129a1d63885f35266"
+    },
+    {
+      "path": "supabase/migrations/20260430140434_41f4834b-dbe2-420d-8dd0-cfdea1f4d5af.sql",
+      "bytes": 3302,
+      "sha256": "bafc45c4d7200daa03c24d35ac7fceba89221d2c856249e4a65d387b09186a3f"
+    },
+    {
+      "path": "supabase/migrations/20260430141053_3a564250-cb68-4ddf-876b-e8dde96a7de5.sql",
+      "bytes": 6288,
+      "sha256": "03a1c4a54f1e4536ba2219ee498e1637d07a40bb953535efea693090ad36e70a"
+    },
+    {
+      "path": "supabase/migrations/20260430141113_abdcc955-3759-4967-9e07-11333c1dd041.sql",
+      "bytes": 334,
+      "sha256": "58915d1a5e814c64596f9eec091d710492721f5111cbaa5607a346ab2d0610d6"
+    },
+    {
+      "path": "supabase/migrations/20260430152129_8bb7f726-5de7-4e3f-aff9-e03bdb9d53e5.sql",
+      "bytes": 5347,
+      "sha256": "15b8621aa9f06fc9e1716fe6b993a8ded632d56fcef02dd9b071b9c10e7ea41d"
+    },
+    {
+      "path": "supabase/migrations/20260430155148_0b4e6e5b-c8bf-4c57-924b-0831034492d7.sql",
+      "bytes": 782,
+      "sha256": "1a0cb78b51eb5d658e195da7d4b03e153a69364f171a49bfd8f792aede80bfdd"
+    },
+    {
+      "path": "supabase/migrations/20260430160156_361d7ae7-7b8b-4ade-ae47-ff38c377847a.sql",
+      "bytes": 257,
+      "sha256": "3ff763f223514913f5122532524c4ef61fc643de0fd08eab60d353ad3437d6f8"
+    },
+    {
+      "path": "supabase/migrations/20260430160256_c3b8c24b-c638-4a84-b400-b6c676a54aa1.sql",
+      "bytes": 10174,
+      "sha256": "67a77562155aa9ad285eaef81b9f73920579b6e73689329843322e033b1ece90"
+    },
+    {
+      "path": "supabase/migrations/20260430161135_aeec6b1e-c565-4af1-bda0-d3d5a68a5f64.sql",
+      "bytes": 8129,
+      "sha256": "e110527e4f2f867d35452cdb0b74489195c879e9cca61058d793cfb1ed1cf4b3"
+    },
+    {
+      "path": "supabase/migrations/20260430161753_124bdc5e-9b0a-4d79-8058-3c53b4f28fe2.sql",
+      "bytes": 11979,
+      "sha256": "d220f17c6992ff482826bc2da532ab96d965bb006d8d43c046965f262bf3b5a2"
+    },
+    {
+      "path": "supabase/migrations/20260430162810_bbe125f1-7aab-4539-a41b-bcfbad954150.sql",
+      "bytes": 13606,
+      "sha256": "451b4d84a786a197d2c250440e6190ac5dad702896a9e3d4ce3be61e4a96c755"
+    },
+    {
+      "path": "supabase/migrations/20260430163313_bb60729b-3c63-499f-8423-bd383e6ab983.sql",
+      "bytes": 5643,
+      "sha256": "0eeb3ee754bfbd68d7b2c4e99974093e0ff183d787dcba09d1a5dc2fb4b6859b"
+    },
+    {
+      "path": "supabase/migrations/20260430164113_48142638-da36-4216-b7e1-4a432eaa0745.sql",
+      "bytes": 18496,
+      "sha256": "0612faf33d0e659a5e17b1fe11e13a1f2e94ee94dfc72d6ee9660ebbd7bb54a8"
+    },
+    {
+      "path": "supabase/migrations/20260430164927_c80d639c-5dce-45fa-8c20-66d93e835d5e.sql",
+      "bytes": 14366,
+      "sha256": "162c02b02b1617cade122bcafe576c6a279eb6399acdb3e2c80c9d250f6310b3"
+    },
+    {
+      "path": "supabase/migrations/20260430165843_b7ee8047-27e5-4233-897a-256dcc3d5c15.sql",
+      "bytes": 27399,
+      "sha256": "7342ca64372b1a7472225454ac027e5495b5e298d1b9b9095730aee8e0143a36"
+    },
+    {
+      "path": "supabase/migrations/20260430171127_5d0141b8-45e5-4a5a-8671-884370206e08.sql",
+      "bytes": 315,
+      "sha256": "52e2b819c381d30785f4841564a74ddd47a2ae62fd0a7276bbcf7531c6ac198b"
+    },
+    {
+      "path": "supabase/migrations/20260430171347_5c447f2f-70d9-488f-8216-d7c6475ed40d.sql",
+      "bytes": 1534,
+      "sha256": "befebf154b9b6a379b1c636477b0356d3c092709e5593da4372c1588a319a10c"
+    },
+    {
+      "path": "supabase/migrations/20260430171449_cb08ac18-58b8-4bfa-97e5-d46e73a95a37.sql",
+      "bytes": 1208,
+      "sha256": "e7754538dd4c2710b2abcfc386e1feb0720e54afccc45f1c98fdec64ff3e4d76"
+    },
+    {
+      "path": "supabase/migrations/20260430171645_ca3f5093-61f0-48da-96c9-b91ee4ecd01a.sql",
+      "bytes": 22522,
+      "sha256": "e7ef65d2609fbc7d4068f197fc99ac86aaadc4856d09d94aa759f38c8264e416"
+    },
+    {
+      "path": "supabase/migrations/20260430174406_17b4fd11-fead-4514-abd2-2ea2e77db44e.sql",
+      "bytes": 15573,
+      "sha256": "dea18e12ba77a17fb98d7582023c85563a8cd10678df28a5f962ebd36e1848c7"
+    },
+    {
+      "path": "supabase/migrations/20260430175925_72314d7f-dd71-4184-b687-ef5bade199df.sql",
+      "bytes": 24780,
+      "sha256": "e55e4d076323eba2e1cc427f96ed8f361e2f62a810b646822410cf54c365829d"
+    },
+    {
+      "path": "supabase/migrations/20260430175945_2b53702f-4047-4f1e-994f-21bf3fbac117.sql",
+      "bytes": 418,
+      "sha256": "f4ab8a5e764180fa713522aaf53fa49e5c041866e985aff7d550a6985d14b227"
+    },
+    {
+      "path": "supabase/migrations/20260430181308_e289f685-ae06-47d4-ab21-e44b459db70b.sql",
+      "bytes": 25476,
+      "sha256": "8e9d75ddef5ebc6fb7c38cb70962a1b680e969434b220f235744132fd67e9d7a"
+    },
+    {
+      "path": "supabase/migrations/20260430182104_e61cf704-f415-4980-b4b8-200a7cff062c.sql",
+      "bytes": 11809,
+      "sha256": "e6bd6e0975eff8b3b458d3e06059b4492755f08c0f339e5f9547819dbc3f3fc1"
+    },
+    {
+      "path": "supabase/migrations/20260430182125_357d13a8-89ce-4378-a3a2-3f00b54ec677.sql",
+      "bytes": 254,
+      "sha256": "50fce7d1b19ae0b517d2800773d5a9f0aea94e8665e8786d86d23e4d2892ae76"
+    },
+    {
+      "path": "supabase/migrations/20260430182929_fc286944-8669-46d1-a783-5191bd6127c4.sql",
+      "bytes": 14217,
+      "sha256": "5eb337714b0d746124b5b0f36a5fbc9b54dc5b12a293061f533eba54ffc24dfd"
+    },
+    {
+      "path": "supabase/migrations/20260430184156_31372de7-12dd-4bc2-a17b-a3009a7e1067.sql",
+      "bytes": 21073,
+      "sha256": "279982442475e718cae167d0af753c673010af240d9b93203c46652f53d98cfa"
+    },
+    {
+      "path": "supabase/migrations/20260430185138_0c87ffab-0082-45d5-bdd9-2d2e26754d48.sql",
+      "bytes": 17408,
+      "sha256": "1d5c5bc499ae5857b4e07bea11fc6500130a80084f512da2c9cb5a526d15c7d4"
+    },
+    {
+      "path": "supabase/migrations/20260430191337_2f5522bb-0ca7-4be2-967f-0c896efc1312.sql",
+      "bytes": 10501,
+      "sha256": "37382125b5eb7d32cbdff86255d4a02724124ecf15e80641fbb690f981ae5878"
+    },
+    {
+      "path": "supabase/migrations/20260430191358_83b47df0-df26-4254-8d64-973d4051764b.sql",
+      "bytes": 172,
+      "sha256": "74b9af5f0b96db2dc0563954306d5f2ae905e1011cdaaf62937be7726fd4b621"
+    },
+    {
+      "path": "supabase/migrations/20260430192339_600a40d5-dfe9-4947-acf6-fcf4111dbe1c.sql",
+      "bytes": 7769,
+      "sha256": "cd3dad57e942fed1ed8ec28755aadd4fa8332bfd25e0676b07d15d6ef1d609e9"
+    },
+    {
+      "path": "supabase/migrations/20260430203346_4d6e82c7-9f05-4261-90ac-43f9954df139.sql",
+      "bytes": 2504,
+      "sha256": "2e6047630c07b0b1af1d9e884977a3fb35ca44ad1112afebaa1197ddbd4febf6"
+    },
+    {
+      "path": "supabase/migrations/20260430204107_b988209c-ed65-488e-b721-e28b9635d7ac.sql",
+      "bytes": 6240,
+      "sha256": "283637634ee007989a1c5d749f18a6b0df0af678636340d1b179091372c44f4b"
+    },
+    {
+      "path": "supabase/migrations/20260430204954_b846d9cf-b1a5-405e-b487-c27062a9d48f.sql",
+      "bytes": 10664,
+      "sha256": "88f08567ba192667aecba472991a0a4fe253dc3e1434ea27ed108e2e74eb17ef"
+    },
+    {
+      "path": "supabase/migrations/20260430210729_8bc099e7-416e-4adb-bb4c-41695e05ba39.sql",
+      "bytes": 13448,
+      "sha256": "32d599ffe76b7bf1db6cbc6424aa46ffff2479c3679af769a798c77db33ae938"
+    },
+    {
+      "path": "supabase/migrations/20260430213406_3dbd36a0-8440-4f46-90f3-e96261318776.sql",
+      "bytes": 134,
+      "sha256": "9867e3e44410a1c26161800665720cedb19ca519ae4a8d7bef2a1f9d91b1b5e8"
+    },
+    {
+      "path": "supabase/migrations/20260430215441_c9c26a04-f577-4c9a-a3cd-b6ed46f151c7.sql",
+      "bytes": 6275,
+      "sha256": "13b6277354d1a8e949959cee1eb5fb0052b71ebbc1c327d17fed9a7d65ce2c16"
+    },
+    {
+      "path": "supabase/migrations/20260430215750_d4af972d-3ae9-4787-83b2-b202816b5389.sql",
+      "bytes": 5864,
+      "sha256": "711fe0d9cb2c453df040eca6c11893c39fac12b9ed7b94fdf6bc5f73c5494331"
+    },
+    {
+      "path": "supabase/migrations/20260430215834_ac0a9d90-74e8-42ca-9d79-2f819ff4cdb4.sql",
+      "bytes": 96,
+      "sha256": "e4f2af8b67dfe461d1db19f81081d62daa22b245d112343180aac46201fa5e2e"
+    },
+    {
+      "path": "supabase/migrations/20260430220121_230b4f3f-861c-4c13-9f68-c254500f03e5.sql",
+      "bytes": 4520,
+      "sha256": "c1c2eab565c52384b31876bf0c2a79d6fa1b81988fd457bfe99dc8558d03c899"
+    },
+    {
+      "path": "supabase/migrations/20260430224951_7770622e-25fa-4ab8-85f8-20224e05cd35.sql",
+      "bytes": 6261,
+      "sha256": "b5f472d614a9474287d3a958158525cfc07ad50ccf097755fd24226f6cf8a77e"
+    },
+    {
+      "path": "supabase/migrations/20260430225642_3cd50f2b-c7e9-45f9-8510-76feb5ef0fba.sql",
+      "bytes": 2893,
+      "sha256": "564666905d0961b10dfa25ac7a3f0da1f7fe98f76a55a40cca7875bc4641fd99"
+    },
+    {
+      "path": "supabase/migrations/20260501000451_bba9d010-960a-483f-a58f-7bd61f7c109b.sql",
+      "bytes": 3357,
+      "sha256": "4129eb2ddddf0363e7630b7b52483317d89dd2d00b8f1d0b534174eacfce016f"
+    },
+    {
+      "path": "supabase/migrations/20260501132607_9525df7e-109f-49ef-a3a4-5fa46599ec65.sql",
+      "bytes": 6587,
+      "sha256": "51a9ca386b1fc037de98ae197bec7e1b6e056f88354b8ed004a9f6432585bba5"
+    },
+    {
+      "path": "supabase/migrations/20260501132627_887f88c3-49fb-4848-affb-ba0e8b307a2d.sql",
+      "bytes": 685,
+      "sha256": "b717f2c39c7c71495deb9b14ae0aa43e2cb879b177681d934bdbe18a2856957a"
+    },
+    {
+      "path": "supabase/migrations/20260501133129_6328ca9e-f585-4d13-b7f8-90cf35e8542a.sql",
+      "bytes": 229,
+      "sha256": "61b0c80a1c3d82bc9573e8a4b97399ba8131dfaf37724051a52bd02a43663b84"
+    },
+    {
+      "path": "supabase/migrations/20260501134457_fdead8a5-9cf0-4b4c-a6a5-f3c66af9a780.sql",
+      "bytes": 9043,
+      "sha256": "970ac9ae0676bbd18b81994472f98fb35d3b4122321a789fab9d19514f71880f"
+    },
+    {
+      "path": "supabase/migrations/20260501134515_a6aecce0-c0e1-4ce5-9ea1-0fae2284a7e7.sql",
+      "bytes": 155,
+      "sha256": "92f6aacbe7498540cd7588a2114afb9923d517fc5cb19ca907d7bf478e5ec96a"
+    },
+    {
+      "path": "supabase/migrations/20260501140100_379c3a50-ab78-443e-a170-ac50371055de.sql",
+      "bytes": 6515,
+      "sha256": "e5d6d53badbf96fe04d21ac996a9e407d3e6792657c7f20a5f71b3a338968a4a"
+    },
+    {
+      "path": "supabase/migrations/20260501174131_eeb9e11c-7d23-49ad-a5af-af6035e73d41.sql",
+      "bytes": 12366,
+      "sha256": "78ebf121dcb199cb5868c749cb934349245091f51d0f9483959e2f85420d5401"
+    },
+    {
+      "path": "supabase/migrations/20260501174151_0d242f2d-096a-4550-847c-6d9f3c2d2aa2.sql",
+      "bytes": 148,
+      "sha256": "46301391d43b4cf0da62c5b9066a15f9f90e96a4dedafbaf38de215a06e0f127"
+    },
+    {
+      "path": "supabase/migrations/20260501181042_3f74fd93-bd41-44cf-ab75-f08c6abce215.sql",
+      "bytes": 89,
+      "sha256": "607cee377142e29ad19be3976e4c76cba3c420e0305837027ef7cd91ed6cc4ed"
+    },
+    {
+      "path": "supabase/migrations/20260501205144_fe501878-d6f1-4bb7-a2e1-2850c156041f.sql",
+      "bytes": 1648,
+      "sha256": "72656560556e31a2b461e74a3d48ed31a5e40b2dbe157cd0a2bd7d10838cf993"
+    },
+    {
+      "path": "supabase/migrations/20260501220441_7f817b13-a11c-44a4-a44b-c6aa0d1abd06.sql",
+      "bytes": 1062,
+      "sha256": "3959043a3cdf2021565ac0d9fc367ee3af87a35ba78b63c9f3dd729121020b09"
+    },
+    {
+      "path": "supabase/migrations/20260501220753_7f619ec2-5a5e-491a-90e4-9845bc44a5db.sql",
+      "bytes": 871,
+      "sha256": "7d8bd3c12d29e14fb912f9d8ea058ddbd989018de97b57041d076b381d3f2d0b"
+    },
+    {
+      "path": "supabase/migrations/20260502130529_cf98000c-0c93-4dda-92e8-734d4dacdd82.sql",
+      "bytes": 9441,
+      "sha256": "655b62f6cdac15c626023e7f60d6e488277babae4b6d66f4cd3ee350fea2ff58"
+    },
+    {
+      "path": "supabase/migrations/20260502130554_dea368ba-719a-487e-849c-07847fedd667.sql",
+      "bytes": 290,
+      "sha256": "61328ed5a14b9a4c332b65f9d3f8f2ec71a5dc02bb2a70f264572bf185735b76"
+    },
+    {
+      "path": "supabase/migrations/20260502132037_b0075c63-adb0-4102-a9eb-6bbc60939c41.sql",
+      "bytes": 940,
+      "sha256": "0f9f62fb2512384de96388bcbf4bd59450e68c0215b251e9a82cc1040e478765"
+    },
+    {
+      "path": "supabase/migrations/20260502132144_de1a5ef9-8324-47cd-b98e-fc977eb380f3.sql",
+      "bytes": 76,
+      "sha256": "796ee946037f5b4ad6e5137909e9cd326392cd01bd9322dc69aea37a9e977c85"
+    },
+    {
+      "path": "supabase/migrations/20260502132720_002cf439-d9ac-4c74-834b-93295be5a9d6.sql",
+      "bytes": 8787,
+      "sha256": "1759cc341aaf1190207a2ae16f817f0c3221c4460e4059cebb4b9ad91ec84e25"
+    },
+    {
+      "path": "supabase/migrations/20260502134505_46a5023d-7885-497f-8c48-08dd5c926b0a.sql",
+      "bytes": 5833,
+      "sha256": "b5bc7b2aa1c7164ab744200d89ae6f2ef3fbf5dbe17f07425cea377f52c2bd99"
+    },
+    {
+      "path": "supabase/migrations/20260502134536_98efe94b-916a-4b11-b25c-9ef20b131127.sql",
+      "bytes": 287,
+      "sha256": "35e2a7c49dde6359f523af95b54023d8a4546767f23d0d074c2df94e6f8e99a3"
+    },
+    {
+      "path": "supabase/migrations/20260502135953_3b81f09b-62cf-430a-bbd2-864330bef510.sql",
+      "bytes": 1012,
+      "sha256": "1eafdd0cc3a8277fe5cd9f236ec17e1304b74290b407cb091471856bef98f119"
+    },
+    {
+      "path": "supabase/migrations/20260502140326_e6512144-f1fe-4ee5-9353-347e5a7bc0be.sql",
+      "bytes": 11865,
+      "sha256": "330cdee70fc8d3c6b964081fce622c07001354c7399ac4234267dd50a4c10900"
+    },
+    {
+      "path": "supabase/migrations/20260502140351_23d4756e-4808-42a7-b178-61898b02f4e1.sql",
+      "bytes": 1117,
+      "sha256": "1d1eb4e4dfbdd5011cbc9cac4715f5f4f0d3136308d3176748f79eb341b67005"
+    },
+    {
+      "path": "supabase/migrations/20260502144750_d1b6ef30-2f80-4366-b445-57be37f50f15.sql",
+      "bytes": 2340,
+      "sha256": "044e01841e9f04e169bcb4623b562795e08314a46c7d6d6a409d3bdb8b3464a1"
+    },
+    {
+      "path": "supabase/migrations/20260502155133_dd241915-1115-4568-a6c5-a9c1e42740a3.sql",
+      "bytes": 1168,
+      "sha256": "870777eaf8bfd703a29d63b763dd8b82c05d3dc2e46e9dccb2ef2606fc5cd270"
+    },
+    {
+      "path": "supabase/migrations/20260502155351_ee4a23b1-3caa-45f1-b54a-3ceee7d16074.sql",
+      "bytes": 112,
+      "sha256": "91ff50ad03671f19a15e93c25bf03c168c786a231ea8e86c197eb83700e3b936"
+    },
+    {
+      "path": "supabase/migrations/20260502161232_8565b9eb-8a94-4abc-ae1a-9ae0f1513745.sql",
+      "bytes": 2828,
+      "sha256": "1ba578fcc054e77c261de73b03fde9b19d7b7ea4e389145556291fe4e04515d7"
+    },
+    {
+      "path": "supabase/migrations/20260502162928_4bb5fdfe-caf7-4971-8e32-a12a5682094c.sql",
+      "bytes": 162,
+      "sha256": "444fe4848d086d3c2ea27648e6a8536ea6d9b129eb339777539b933fd342bf74"
+    },
+    {
+      "path": "supabase/migrations/20260502164812_8b99d227-25cf-4693-9c2e-a69dc7a05055.sql",
+      "bytes": 3500,
+      "sha256": "2abf72b6551cef735992b7f658ad079bed19345e8bd75820c8a43dd652b9bc84"
+    },
+    {
+      "path": "supabase/migrations/20260502174202_040b591a-e8a2-4bb2-9720-244c2959b913.sql",
+      "bytes": 7623,
+      "sha256": "35038d4a614508d03d28312b5903ab5cbc90b3e7780831d11843db4cb0a47665"
+    },
+    {
+      "path": "supabase/migrations/20260502174229_fd2b6cbd-2eec-4d00-90d3-effce5a32cf6.sql",
+      "bytes": 496,
+      "sha256": "427fddf55d30629e8209fbf6858f0a69a3dcf58e71f851a0a083de90248ca58b"
+    },
+    {
+      "path": "supabase/migrations/20260502180317_e76300cc-af54-450b-af76-0a4217fceafa.sql",
+      "bytes": 8486,
+      "sha256": "ccf857d85ea15ffb4b07483b88ee657ea03f281ff46156900b39c150a37d8c2b"
+    },
+    {
+      "path": "supabase/migrations/20260502180338_1edff91f-c81b-457c-b0d3-740e208feac4.sql",
+      "bytes": 602,
+      "sha256": "15a3b9ad14d05c9b3971964fa0e2c89e383fb78831f4f8584bad905c16858427"
+    },
+    {
+      "path": "supabase/migrations/20260502181302_f8696969-e5a1-4738-8ea7-09ee5590f6cb.sql",
+      "bytes": 2757,
+      "sha256": "93dd9ca0757d90164dc91001c3effa6cf0ea7fcfa519387c9cff4e348612ce3a"
+    },
+    {
+      "path": "supabase/migrations/20260502183807_c4db0b97-43bd-4e59-86ba-0109089d48d6.sql",
+      "bytes": 2750,
+      "sha256": "6d6652212a86f7a249a46108cd7b0f7b642c5c86241022ce97673c38b20e5f99"
+    },
+    {
+      "path": "supabase/migrations/20260502191355_6a7cf659-da4f-4da6-8c51-8cc1ef32b992.sql",
+      "bytes": 561,
+      "sha256": "626888f5929486070ef655f26989a201fa72502c167c6b830b2b3afd3070dcfb"
+    },
+    {
+      "path": "supabase/migrations/20260502191637_b19ad88c-3889-4a24-bbc4-0304774f3da3.sql",
+      "bytes": 968,
+      "sha256": "ce6405bad46886c3dbc6432120e0d8924e7e169a4e390f52910e679320731d9a"
+    },
+    {
+      "path": "supabase/migrations/20260502191655_31fc1d46-69a3-4cbc-8d95-43879f3a0a27.sql",
+      "bytes": 76,
+      "sha256": "339576c59261f94e9c9dcd11e8fbd640b4cdb3362c13968d8ffa320a3b529f3e"
+    },
+    {
+      "path": "supabase/migrations/20260502191912_d0a9501c-60b4-4857-b3ad-418b0152a977.sql",
+      "bytes": 5243,
+      "sha256": "022a00ae17894fa9567ea9e09ec0450dd3cd42961168399e9cb9f1e6be7107d1"
+    },
+    {
+      "path": "supabase/migrations/20260502193320_03124709-167b-48db-a247-df96e0e9cee8.sql",
+      "bytes": 1075,
+      "sha256": "84d1062c99c290069bb3005c37e51d5618883969b17cf2b2826660c9c2eaf2dc"
+    },
+    {
+      "path": "supabase/migrations/20260502193424_b3d63fa0-6963-4ae4-97ea-5483509749e1.sql",
+      "bytes": 1862,
+      "sha256": "9cdeecc784c063e1b75bdcc3457569428fd659f3f08ecafc8916c0948d94cac8"
+    },
+    {
+      "path": "supabase/migrations/20260502194005_0cd74217-4e7b-4558-ac54-6ac9947b2075.sql",
+      "bytes": 623,
+      "sha256": "30994c02fab33df266cdf5de3570104bd084f8a638bc803f20bc530d0a50fb7b"
+    },
+    {
+      "path": "supabase/migrations/20260502195119_a4d62d33-c8c4-4b87-a56f-59238d546a51.sql",
+      "bytes": 2185,
+      "sha256": "d74db85d3db512fcba085d6aa9b0d65d99321f6ce5bec04309c47d97d4107ab6"
+    },
+    {
+      "path": "supabase/migrations/20260502195143_60cab54d-c84b-4739-bbe7-51467315f36d.sql",
+      "bytes": 178,
+      "sha256": "de5ebf2912da2a71d1d56820ada8c13365dd73d16385ba2d4bac3a3e07779be4"
+    },
+    {
+      "path": "supabase/migrations/20260502195257_9b6e1bc5-e08a-4af8-8511-156700b763b8.sql",
+      "bytes": 897,
+      "sha256": "646d95fe224139b36d87fb020f0659c899a065116119bc87c780b47de136fbb6"
+    },
+    {
+      "path": "supabase/migrations/20260502201149_4346b734-b95a-4438-9c78-9f28791ea499.sql",
+      "bytes": 1610,
+      "sha256": "276d514860e97a67fb536a3ca52ad436c1dc5ba925c4f06746e4eb4a245261c2"
+    },
+    {
+      "path": "supabase/migrations/20260502203034_9d9637d7-dba4-488e-825f-2c035e7f4771.sql",
+      "bytes": 1378,
+      "sha256": "3ae3eadcb712fc7220884191b17ee481747d47ada51a200be8aaaf03f8acb81d"
+    },
+    {
+      "path": "supabase/migrations/20260502203056_678854cd-4025-43a5-934d-b1a26f40dbcb.sql",
+      "bytes": 142,
+      "sha256": "05516a79a85bfb15142912dd48b796c264945fff45208c5a4eb9702c129015ea"
+    },
+    {
+      "path": "supabase/migrations/20260502204630_f14148bc-cf55-43ac-83f1-1793eb862cc2.sql",
+      "bytes": 870,
+      "sha256": "740709673876b4b25576ea7d3591a6a6c680828046a19c51654afaf63cb6b484"
+    },
+    {
+      "path": "supabase/migrations/20260502204725_aceb3e88-e855-4d5a-b108-3a200e31b947.sql",
+      "bytes": 829,
+      "sha256": "3f3416971babfc5a600932d988ff36ade795b976f10342e7b865535ecaff6f52"
+    },
+    {
+      "path": "supabase/migrations/20260502204827_83f7cb39-8f10-47d1-94db-bcb69fb74ad8.sql",
+      "bytes": 843,
+      "sha256": "01a483b7642a37de1142f0bab6db5a47f84f2e0dd0f78f859ab6b55a24fcc844"
+    },
+    {
+      "path": "supabase/migrations/20260502210815_d1dbddc8-31fd-4944-99e9-3f43952917bd.sql",
+      "bytes": 4426,
+      "sha256": "f7d113c2610d712f0750bc78e5d60184b6299a2e50eb1308b4485f2bfcf4f926"
+    },
+    {
+      "path": "supabase/migrations/20260502212300_6cff2b98-99f9-4a47-a868-5e65f9fdd181.sql",
+      "bytes": 10639,
+      "sha256": "dc669bf41492511706319108273686d43fcb4595073d34bc87df97b7401ddde2"
+    },
+    {
+      "path": "supabase/migrations/20260502212325_79e6cd91-515a-44cd-b17d-5dbcac1c6e24.sql",
+      "bytes": 775,
+      "sha256": "f9e2d1198b71dcf7eadade00d50a50da74595de3aa71d7a5b0c422dceef28d04"
+    },
+    {
+      "path": "supabase/migrations/20260502212723_530dc6b3-73e5-4c33-b1b3-32611771cef5.sql",
+      "bytes": 178,
+      "sha256": "29ec195c2606a714d790a4107543d188a4550934f7e128cf84dcc5cac4cb4829"
+    },
+    {
+      "path": "supabase/migrations/20260503141020_32465ac0-a2a8-4384-bbfe-195fcaa49702.sql",
+      "bytes": 8645,
+      "sha256": "db89fd687626f9c06d627653b0ef9e705ccb011b9ac7a5913a94c8af200b29cd"
+    },
+    {
+      "path": "supabase/migrations/20260503141057_289a6064-123d-4037-8378-5c254559e9ca.sql",
+      "bytes": 235,
+      "sha256": "fb94f692e108dc593e01c95698c4a8f28aab59889cd320a378ac56aa86b7859f"
+    },
+    {
+      "path": "supabase/migrations/20260503142805_703b24c4-e1be-45ee-9e74-61b70e8b4ff8.sql",
+      "bytes": 3558,
+      "sha256": "80ebd9e1565d2116025d52b5d3db579823e01402d53745d1a56a02151fbbfdca"
+    },
+    {
+      "path": "supabase/migrations/20260503142842_9fb8bf1c-94f1-4ee9-bc42-7d56f83622bc.sql",
+      "bytes": 3552,
+      "sha256": "68be5f8e52fd4cd330034a8f7ca3539f06ac952adb2161fb6ebacdaa979870c6"
+    },
+    {
+      "path": "supabase/migrations/20260503144556_adae35ec-befb-4c8c-b577-ae3865d7e9ed.sql",
+      "bytes": 2935,
+      "sha256": "40fc21e92708b17cf31b5e174f1b0079d9649c223cdd9e86ef0483ec197eafdf"
+    },
+    {
+      "path": "supabase/migrations/20260503145154_5f653278-1956-4d37-a988-dee7bfe53ce9.sql",
+      "bytes": 797,
+      "sha256": "6fc3574eccb5125d517a13edb6571a09568add00351038eb1df0dbefc3ad7d3b"
+    },
+    {
+      "path": "supabase/migrations/20260503150114_d7255e70-1c7e-499c-871c-6ec32a875efe.sql",
+      "bytes": 2626,
+      "sha256": "0fabc08ea18c64aff0ab10e605617771a1b31ca52ea585618476d7474998a7d5"
+    },
+    {
+      "path": "supabase/migrations/20260503151212_d7e463fa-c429-461d-a8bf-817d072d1c37.sql",
+      "bytes": 290,
+      "sha256": "e2c7ddaf85f8a6fcab7fe5c2b2a9bfcc2ac26dffbc15e1b9952723a96cb66293"
+    },
+    {
+      "path": "supabase/migrations/20260503151254_42214505-3eed-41b7-b55a-f84e68393fef.sql",
+      "bytes": 129,
+      "sha256": "5bc931cba80c224fd6f7e2475679257433205b3705d98aeb5525aac17e5db4e2"
+    },
+    {
+      "path": "supabase/migrations/20260504124210_d5ee7d01-3d82-4d73-9e39-d4ffaf518f11.sql",
+      "bytes": 2172,
+      "sha256": "19b36cdfad9c626a2ed9f93e8af08aa85f420991805a60b43a9d799338db9778"
+    },
+    {
+      "path": "supabase/migrations/20260504131804_73a89cf6-2c95-4944-b2df-52ed9da0563d.sql",
+      "bytes": 103,
+      "sha256": "43006eebb7b9b71c0797e8c098c85b92fe213ac6f3122ba4a81fb65c6ab66854"
+    },
+    {
+      "path": "supabase/migrations/20260504133521_4034fed6-8b10-46e3-98c4-6e71dcf21677.sql",
+      "bytes": 1445,
+      "sha256": "f78db97ef66aa3b8b4ec6738279945601909672678f5788037344b9789230f16"
+    },
+    {
+      "path": "supabase/migrations/20260504135407_5d2011f9-cff2-4d32-a7d0-56e672ffb306.sql",
+      "bytes": 1176,
+      "sha256": "1677a48a81be740a188aa9deb3a06834e0a992fc4dd0e1ea4829a6c8c19b817d"
+    },
+    {
+      "path": "supabase/migrations/20260504140517_250cddd0-8d23-44bc-b48e-173ec16f1cb9.sql",
+      "bytes": 1693,
+      "sha256": "ed13d4248a1fde9384aa3fb7d1004943d0676f245f54781c5dc7b116f7ca0b31"
+    },
+    {
+      "path": "supabase/migrations/20260504142602_0236effd-6ffa-4c26-a3df-373524e71f6c.sql",
+      "bytes": 1533,
+      "sha256": "b85893a41b7d724a2a0ea335658bcb8a6301107b85528569990bcd84e3f31b20"
+    },
+    {
+      "path": "supabase/migrations/20260504142653_5c3a23c4-2a91-46d0-821f-38702b8e4b6b.sql",
+      "bytes": 76,
+      "sha256": "4f9fed6ab5f29bd4fd4aca7b63e20eb596de7711828bf6f8dfa7dc5f17980e09"
+    },
+    {
+      "path": "supabase/migrations/20260504144057_d2bbb723-5795-4749-9d88-0d4b99de6bdb.sql",
+      "bytes": 542,
+      "sha256": "a4d1f9cf56f750e26e69191727ecaa1c16f90cc0a075126ef66e1aa7b09d4542"
+    },
+    {
+      "path": "supabase/migrations/20260504145420_f185422d-af58-4b77-bc9c-707fa3bf2a31.sql",
+      "bytes": 439,
+      "sha256": "56362904f56158c3fbb5002a4b7b97ba8967928a633a921bdeab8c78121b4015"
+    },
+    {
+      "path": "supabase/migrations/20260504145843_a368a19a-86db-439d-8cd2-57576cdcf9dd.sql",
+      "bytes": 3748,
+      "sha256": "f0bcafe140c485b47909fb996d3cd04725e8a179f380dd5d0911e7fa78cd164f"
+    },
+    {
+      "path": "supabase/migrations/20260504150619_b8be7e4e-2123-4603-bdac-510af8dca31c.sql",
+      "bytes": 1068,
+      "sha256": "0759aa849cd79519bf0546acc52172edbddcccc5c300f368eeb8a0da2996bedd"
+    },
+    {
+      "path": "supabase/migrations/20260504150744_df4a7c84-c889-4221-9c1c-99a18af242e0.sql",
+      "bytes": 148,
+      "sha256": "8c0227d135b18c01fd480432d08998f31bd9bc66ed230f424883e63f98d63fd6"
+    },
+    {
+      "path": "supabase/migrations/20260504151144_018f3f95-23f9-4be0-9b4d-973f44e1e527.sql",
+      "bytes": 221,
+      "sha256": "55a63fe04a10e6e8052231bbd21ce6fe12b64f40eabe87ed4437a4065484988e"
+    },
+    {
+      "path": "supabase/migrations/20260504151546_4d19ccd1-923b-4855-b715-88afabadf1d7.sql",
+      "bytes": 1019,
+      "sha256": "b276ae2410084e5a6253f7d3b0333dede9b02977340baa36b79fd8b789140192"
+    },
+    {
+      "path": "supabase/migrations/20260504163236_b994eeca-30ca-4cae-890a-b9cc52581ae1.sql",
+      "bytes": 828,
+      "sha256": "d420643143b30e035dbf249689114db5d464f14690c73258804c3ed255d14ce7"
+    },
+    {
+      "path": "supabase/migrations/20260504174804_0aba1fd6-7e4b-4192-826a-b1c2798cd379.sql",
+      "bytes": 900,
+      "sha256": "8028df4922e79d12495af2fada95817ca71e9e1a221989b341d71a85de5cee28"
+    },
+    {
+      "path": "supabase/migrations/20260504184851_4d523e6b-aec5-4418-ad49-637bf9de7c63.sql",
+      "bytes": 1182,
+      "sha256": "116aa4bc8b6023b9fff9f9e8470665ec3d35e464d866d99b93afd615400e7270"
+    },
+    {
+      "path": "supabase/migrations/20260504190304_d920b838-a12e-479e-8a52-548b4ae2ea52.sql",
+      "bytes": 5207,
+      "sha256": "5b603872d3aca2a231991c98d1bc6e4576a5af0f04de550787ffcd720c2f066c"
+    },
+    {
+      "path": "supabase/migrations/20260504192958_c728133c-56b3-49f1-97b1-d32cebe8ccb6.sql",
+      "bytes": 1053,
+      "sha256": "0170c2142658ab08e3a278d415e1e52b0f41b44a57ce606dd4a1ef450d26d7d6"
+    },
+    {
+      "path": "supabase/migrations/20260504194951_3799c210-4ecd-49c5-af68-8cc7f03c8304.sql",
+      "bytes": 5530,
+      "sha256": "8702ac2b8aa19d73e626c63379fe12fa6301af214256fd5f199148e40f4543a4"
+    },
+    {
+      "path": "supabase/migrations/20260504200129_f77cbace-b95e-4650-b50e-42c2751491cb.sql",
+      "bytes": 1526,
+      "sha256": "9ac5cf949d43a3c8ce066443868706a2f7e1104034962916df70d210bf9ea1d9"
+    },
+    {
+      "path": "supabase/migrations/20260504200749_3a498c65-8379-4ca6-bead-c6097c1a6bc5.sql",
+      "bytes": 296,
+      "sha256": "41a0a22aab3e80e1efeb5a5e14720d2a7cb3e3ad698beff5be4df7d72eb93328"
+    },
+    {
+      "path": "supabase/migrations/20260504201308_db76e7bb-a757-4564-a02a-3301a843b91d.sql",
+      "bytes": 1172,
+      "sha256": "a99793def4131f3dc34ff441ebdb5b0e8b987c3c91a37b1c638da75175a109ac"
+    },
+    {
+      "path": "supabase/migrations/20260504201943_07e0b094-78ec-42fe-bedc-4dc80be31395.sql",
+      "bytes": 830,
+      "sha256": "92bec081c8b45c4696283015734efacf478b80523e202f778abfee45de88cc44"
+    },
+    {
+      "path": "supabase/migrations/20260504202627_ed273e43-c383-404c-b8b1-078a7a068ad8.sql",
+      "bytes": 1053,
+      "sha256": "9d302ddf994adb266c6a6f3c667209431b3b06f10635f863d0c2473186272d4e"
+    },
+    {
+      "path": "supabase/migrations/20260504204559_02a88dd6-244c-400b-bcce-90a7fada3981.sql",
+      "bytes": 1081,
+      "sha256": "e74764603982db64c7a57881c9ed8d18ad717200d18f50238a920a966cadd62f"
+    },
+    {
+      "path": "supabase/migrations/20260504205209_e8695645-42e9-4e4f-aefa-70238e697b8a.sql",
+      "bytes": 747,
+      "sha256": "4a07090bedc3ca0a80a228809d39fe35edd32193b43358afc649eccfd7696584"
+    },
+    {
+      "path": "supabase/migrations/20260504210050_4526e41d-dee8-4c15-b8e9-cfb275a44f35.sql",
+      "bytes": 3008,
+      "sha256": "f418474de975147c6e13481bccad3b19aa56e403da06c902d9e6a3c621ef71b2"
+    },
+    {
+      "path": "supabase/migrations/20260504211020_66188b98-d7a6-4955-b36b-603f9b2f8e2b.sql",
+      "bytes": 5268,
+      "sha256": "8d775a39b2ec434250058b71c32407868c4f63fb6c2af35e1131a6c6908b8782"
+    },
+    {
+      "path": "supabase/migrations/20260504213213_c8d79e1d-8628-4de9-8c37-4070672305e6.sql",
+      "bytes": 5873,
+      "sha256": "952c0284aedba40b2281f859c3027b5d5644ea2d9f883affb1e33795e99def92"
+    },
+    {
+      "path": "supabase/migrations/20260504214738_eea35005-10b2-4e6c-b8ff-91e675b3649c.sql",
+      "bytes": 12589,
+      "sha256": "23c5056e3275878a5326809e45453e27d0625ab977637c90187ef44ff4052d1d"
+    },
+    {
+      "path": "supabase/migrations/20260504220028_ca315b9e-21c0-4f8a-a810-0a0fd0e53ad5.sql",
+      "bytes": 1908,
+      "sha256": "8ccf8535dfd652911a4d04f819f8efc331c69b039e39c2e4d2d3f8d606f0faee"
+    },
+    {
+      "path": "supabase/migrations/20260504221423_b694e78e-e8d8-48d5-83e2-b4df9d38483c.sql",
+      "bytes": 3334,
+      "sha256": "90c4a9e72da63b8811513869548471097060d3a8c436995eee5e976ac66d6bd6"
+    },
+    {
+      "path": "supabase/migrations/20260504222748_17ba45ae-62df-4c56-a5a9-e879f1c6288d.sql",
+      "bytes": 2334,
+      "sha256": "4b18f933225284f7e3d48a67cf49815b737acc511c36a7484da758f051086707"
+    },
+    {
+      "path": "supabase/migrations/20260504223233_b73e1848-8340-4dfd-a888-69606df1a343.sql",
+      "bytes": 2640,
+      "sha256": "f44f57f5512c6fea119725218a0ab59bb3979b9d73704f0e502ade396d86b43f"
+    },
+    {
+      "path": "supabase/migrations/20260504231545_c7880069-faa3-4df3-a569-6491bb6cb77c.sql",
+      "bytes": 8182,
+      "sha256": "9d871401f88769db4959daab4c0831232f384c4349971da4f62f74baee0b029f"
+    },
+    {
+      "path": "supabase/migrations/20260504231748_71d5c71a-f737-487f-857f-e14a65394565.sql",
+      "bytes": 69,
+      "sha256": "ed4154cdd4b931e4719333e71d5b749d716943e0475889d38a4aaa582039550e"
+    },
+    {
+      "path": "supabase/migrations/20260505000457_d700c777-aa8d-497d-996e-b1ec6a9a4641.sql",
+      "bytes": 324,
+      "sha256": "94c3962e841ac3f87122d0eba99ecab5247a25b9416558a3934ec7debe7834d4"
+    },
+    {
+      "path": "supabase/migrations/20260505001912_f4553750-8b4b-4311-8010-a2157ab5758e.sql",
+      "bytes": 904,
+      "sha256": "a9f5a238bc8d2877baab029784377de0c12ae06016c477a78f6120417f803372"
+    },
+    {
+      "path": "supabase/migrations/20260505002242_cda42e22-fab4-4fd8-a94b-ad088327b871.sql",
+      "bytes": 82,
+      "sha256": "9b921dd4e4974d8f0dacf694bc682a9d11209dcd87604fe5f7c1738a46860834"
+    },
+    {
+      "path": "supabase/migrations/20260505110645_5a7ca4ed-b452-4045-98de-b895b65ebd8c.sql",
+      "bytes": 4716,
+      "sha256": "883ea72c4ac9f34702bb625cc35b383d396ad05fabec6da1a57bbf0d35f6bdfd"
+    },
+    {
+      "path": "supabase/migrations/20260505113221_2bb8327e-6c32-47b2-a9d9-fc3b9f932d3c.sql",
+      "bytes": 297,
+      "sha256": "5dec7521a7d720ebd3e0c5e2ab3af895edb4e0da1b31b2e2fe746d2b93ec15ac"
+    },
+    {
+      "path": "supabase/migrations/20260505114223_2958a7d0-5eef-4c9d-a15f-81beff0620c9.sql",
+      "bytes": 314,
+      "sha256": "6f42ba8c366313489c2a4c960e2ef137bdde7f2b511360b89771a23ed9934292"
+    },
+    {
+      "path": "supabase/migrations/20260505114917_9e9085c7-c52c-45bd-b4b4-cf269c8c07a6.sql",
+      "bytes": 1826,
+      "sha256": "95d19427ee84e1c383b796d05b0658bb1dcde8fd665f69dc50c41a0e333a24c9"
+    },
+    {
+      "path": "supabase/migrations/20260505115423_940357bf-4f77-4eeb-b89d-f7e5de5b9347.sql",
+      "bytes": 1262,
+      "sha256": "61203f7607736501b64b03b8401f04cfc1ce848ceae512d1276ec0e4f8b15b5b"
+    },
+    {
+      "path": "supabase/migrations/20260505122714_44814c72-1a84-42e0-8dc3-8769ab5185c3.sql",
+      "bytes": 6010,
+      "sha256": "4a876915da95d3b20ce6c001a634cf6494d33a6ead2d20519b4c3c81bc523a21"
+    },
+    {
+      "path": "supabase/migrations/20260505122739_722418c6-7434-4c7d-971e-83f6c82b61ea.sql",
+      "bytes": 265,
+      "sha256": "2880895993d09de9dc558dd83d216113f14cc85d19033f775ee59e34d29631b9"
+    },
+    {
+      "path": "supabase/migrations/20260505133056_c5d70cdc-3a0a-4fff-ad5e-18d8e71842f7.sql",
+      "bytes": 154,
+      "sha256": "aa80d8a3ce94dc9c028ee19394fbbed820fdf9d76d8b95e7c8b8edd96ec75cdc"
+    },
+    {
+      "path": "supabase/migrations/20260505135955_91854da2-e548-4e88-9c19-33292916dd79.sql",
+      "bytes": 509,
+      "sha256": "72bbb7b84a9b6031256b59f7708e8f3e8b983748bee4576af4bdfb997a905a1e"
+    },
+    {
+      "path": "supabase/migrations/20260505140233_16cd0913-29f5-4bbb-9243-e42f62cfb5ca.sql",
+      "bytes": 542,
+      "sha256": "519f26123a2f52eb4b447d47ec8593766bae227892703ac4e515397efd788c88"
+    },
+    {
+      "path": "supabase/migrations/20260505140401_bc79cb04-eaf1-46e5-9e3f-028474add07e.sql",
+      "bytes": 925,
+      "sha256": "59c6d05928bdc4b8bd265ad92bdb7116e5721f10533352c4e769b47d51ee03d3"
+    },
+    {
+      "path": "supabase/migrations/20260505150028_4a3dbf4c-67b4-405c-9919-261a56b675f9.sql",
+      "bytes": 509,
+      "sha256": "df989dac91b9a123d706492b9f0139a0ffd33b8357989b61e34a6a94c41e3d37"
+    },
+    {
+      "path": "supabase/migrations/20260505173931_e0aabf1c-058c-4be3-a44f-98ba25afa501.sql",
+      "bytes": 558,
+      "sha256": "4fa78444fc453dcdb797df3a6d8e003957086ce947b34d033aed5c6030eb6c56"
+    },
+    {
+      "path": "supabase/migrations/20260505215908_8d7a60ff-4c9e-4d74-8a12-8ba361031a10.sql",
+      "bytes": 2190,
+      "sha256": "082cbf6756dad02bd3fb77bae9ab690ff81fa0db2ef6192a6508b34cabe30bc5"
+    },
+    {
+      "path": "supabase/migrations/20260505223124_9e712be4-3f8e-4528-be5b-c7bb9fd53b45.sql",
+      "bytes": 150,
+      "sha256": "86f4b2fafddf27079148bd7685a1267571a625615ca90487d11e6570dee0b051"
+    },
+    {
+      "path": "supabase/migrations/20260505223617_d7a1f89f-1de1-4a46-b85b-bde284eaf0d2.sql",
+      "bytes": 284,
+      "sha256": "c25957db723c204e0d2119773af662f57af07e93d9936c032bd851d935d3906a"
+    },
+    {
+      "path": "supabase/migrations/20260505232658_643a3dd8-d20b-4cac-97b1-91e735b3cf2c.sql",
+      "bytes": 14406,
+      "sha256": "49e9e2690ae2446aecfeeb69101ce04319f703b434ecafffea01d336a5af8ece"
+    },
+    {
+      "path": "supabase/migrations/20260505232717_abe94eee-790f-4b79-a119-7077e7ccd82b.sql",
+      "bytes": 158,
+      "sha256": "09d458436d2c53dcf7b53ad095cac23359577ac724a24399f23ac0ae7a0ac030"
+    },
+    {
+      "path": "supabase/migrations/20260505233741_2c2af00b-c5f0-4031-808d-724426e5c38c.sql",
+      "bytes": 12887,
+      "sha256": "735cbc2489ffdc795cfd88c03cf73954b9edeade7bab5d895f00bde504f2cbfe"
+    },
+    {
+      "path": "supabase/migrations/20260505233801_551484a5-e3b5-480c-8b77-b060fe9ce5f0.sql",
+      "bytes": 148,
+      "sha256": "5b5d5d8152ff3fbcea268ded0074a808f79ab541ed6728120c166cea850a2a17"
+    },
+    {
+      "path": "supabase/migrations/20260505234150_7e0402ca-f79b-414d-9801-20c14c6619c7.sql",
+      "bytes": 13385,
+      "sha256": "d501b1aa3f811b218f8ea37e187aff9390dc7f86b200162c8f76f1e63da9b677"
+    },
+    {
+      "path": "supabase/migrations/20260505235117_33d61e05-bf2f-49e0-a655-feeb78c18d98.sql",
+      "bytes": 13608,
+      "sha256": "1de06dd49cbe65b2938e82a863eaf5b645ddc03410a9af365be65997c8ab8a33"
+    },
+    {
+      "path": "supabase/migrations/20260505235734_a7381465-6483-45db-89d4-7b9da2f9ce68.sql",
+      "bytes": 4491,
+      "sha256": "103d3c635449a48f22132c2e98f91bf69b066511fa0dc22cedfeef325d81eaf0"
+    },
+    {
+      "path": "supabase/migrations/20260506001654_a83200f8-ba77-45d6-bfb6-6c4cc45e0912.sql",
+      "bytes": 13721,
+      "sha256": "ac1b5194e04334a25762e2104a3ec2c26190e0089ee614c9ea36829ae1d3c9bd"
+    },
+    {
+      "path": "supabase/migrations/20260506114106_54c93fa0-62be-40ff-bd73-46c74b028f80.sql",
+      "bytes": 1746,
+      "sha256": "cee5190e77c92b8f4a237d5f85aca88baf4ea5769c610101b0e14ac9e0cae30a"
+    },
+    {
+      "path": "supabase/migrations/20260506124322_faa7dc91-1f7e-43eb-83c0-ac0943dff324.sql",
+      "bytes": 751,
+      "sha256": "4447abd44fba9f66e0ce9e14188ece6dc1fc7cdeeda91098c7a9d3617d9ff897"
+    },
+    {
+      "path": "supabase/migrations/20260506174114_480e130a-0a7a-4ee2-9ac8-b12684ee6594.sql",
+      "bytes": 5174,
+      "sha256": "ab56ca4136db0c6e2a67eeca5828bf4a8a90804dadf120c174cc95d1c4803c88"
+    },
+    {
+      "path": "supabase/migrations/20260506184327_41981fb3-5140-47ae-b31b-3adc4740bc7d.sql",
+      "bytes": 386,
+      "sha256": "84305b473193b01042f5cf3f4c0805f6039c0e8c4d7b5fa3d427c2d411365047"
+    },
+    {
+      "path": "supabase/migrations/20260506185405_81301d09-b425-4c7d-9099-75f0c20d4264.sql",
+      "bytes": 367,
+      "sha256": "3442a41fe25c571c04ebc1e2df6469f40ba674d95a988ab7ba6e9fd5b68e1c5e"
+    },
+    {
+      "path": "supabase/migrations/20260506191852_6232bd1f-cb1a-4c86-8376-307ae0983ebc.sql",
+      "bytes": 6279,
+      "sha256": "b142acb5e12aff65814e4515b1d97677fb8f7b0331940ae0a7864e334fdb778f"
+    },
+    {
+      "path": "supabase/migrations/20260506192500_92e7660b-10e3-4b35-b3ac-590d166a443c.sql",
+      "bytes": 5666,
+      "sha256": "769f1b972230f16dffd713fa496ac6e85bd0ff92aeda6ecac43dc4ea89154f24"
+    },
+    {
+      "path": "supabase/migrations/20260506192857_f7d1d29b-e33b-4b48-acec-7a23db42df9c.sql",
+      "bytes": 6279,
+      "sha256": "e0133ec7530c0cb45d8365ad0c14c1afec6c6e70eecc933827f9595b23f9e281"
+    },
+    {
+      "path": "supabase/migrations/20260506193607_ae1e502b-3f3a-44c4-b3e4-cf7d5acdb321.sql",
+      "bytes": 6333,
+      "sha256": "b0779a5c58f598c656fc51aeb550138837b5703f55a7b300494cd13bc86a0109"
+    },
+    {
+      "path": "supabase/migrations/20260506193642_3a0ad7ce-afb4-416e-87bc-6e37de7c9001.sql",
+      "bytes": 287,
+      "sha256": "2fd80b66a33cd03e1990827074f02e965f28142b6ef273f98172e25af8eb8069"
+    },
+    {
+      "path": "supabase/migrations/20260506200125_c0d71f6b-4784-4a83-a4fa-619d1a1dca73.sql",
+      "bytes": 347,
+      "sha256": "e41ec778612e1b645feed855775c1baa63bdf4d741202f1fe6d98ce3ca64aa67"
+    },
+    {
+      "path": "supabase/migrations/20260506223214_c667b0d4-41fe-49f7-910d-7df44a28b0bd.sql",
+      "bytes": 284,
+      "sha256": "7819b8fa79e588da9f6039ce18770a50c3d64fa8eaf9d2bab0427f4e94d517b1"
+    },
+    {
+      "path": "supabase/migrations/20260507100535_587e0cb7-d195-452a-a903-333986a4abf3.sql",
+      "bytes": 828,
+      "sha256": "6bc9387b6578c4a06a32639de3125deb2dd97211e62d79a61255df01f653e70f"
+    },
+    {
+      "path": "supabase/migrations/20260507101531_c62eeb89-122a-4a07-b403-c07c38389a5c.sql",
+      "bytes": 557,
+      "sha256": "abe9c250b1b7ea2b0a6189d40c6d980a8a079580b9b5cfdf9020832b92d936a6"
+    },
+    {
+      "path": "supabase/migrations/20260507103614_9661e194-a9fc-41d2-996f-89c9f9a5ad14.sql",
+      "bytes": 3257,
+      "sha256": "8581125452678d97426995d7a9db8345c373985a5ba4a667de8734fb8f5e21e1"
+    },
+    {
+      "path": "supabase/migrations/20260507104459_72c455a5-8554-4251-9019-c78a0127e6f1.sql",
+      "bytes": 5986,
+      "sha256": "08a4076f90e09618da283a16d13233ed7c1a6aee59dc509295f930e93e9fa370"
+    },
+    {
+      "path": "supabase/migrations/20260507110514_d930945a-b079-454d-a2b4-7bd78368131d.sql",
+      "bytes": 4474,
+      "sha256": "4ac9c72539a5a3926e54a6b273e330c89d957356af1741081f3c099672b87742"
+    },
+    {
+      "path": "supabase/migrations/20260507110537_3d89a847-c375-44f5-b292-cae38cf99faa.sql",
+      "bytes": 153,
+      "sha256": "b6982d212e8ae640688adee6a38d780a330620ad4f60f30501534813fce3a1c5"
+    },
+    {
+      "path": "supabase/migrations/20260507111634_6825215f-20b8-46d4-ad3b-58b47eee4c31.sql",
+      "bytes": 1314,
+      "sha256": "9bd7703b8c1055cdf79f2d7ee47a8c9a9d2b929a903a5d2bceefe609cbbedff9"
+    },
+    {
+      "path": "supabase/migrations/20260507112547_28dc9b79-a7c4-4483-a46c-04e6526933b7.sql",
+      "bytes": 134,
+      "sha256": "c9ef8e89af94e0b150f98c66b2e677b8155bc60f2188ff5cd1cb4afca3d3dcd2"
+    },
+    {
+      "path": "supabase/migrations/20260507113805_37dfc985-0c69-4475-be2a-b9055204c1bb.sql",
+      "bytes": 92,
+      "sha256": "cea94871fb2de3921626735ce73d3bfb9af3e5ca06df537c4c1f361d260b5fc1"
+    },
+    {
+      "path": "supabase/migrations/20260507124631_ceb91743-ad60-4c7b-af52-a698f080c743.sql",
+      "bytes": 1702,
+      "sha256": "35e25d91b7bb7655f4e1b26b339359126877e9b51b3dd4f1cd4e64a2304df11b"
+    },
+    {
+      "path": "supabase/migrations/20260507131837_59950e3a-cebc-4e74-b70b-a08a74bff3ce.sql",
+      "bytes": 67,
+      "sha256": "beabed10f0fd3405ca337f29b6491c0271c245978dfaf993d94c03ee7d96650e"
+    },
+    {
+      "path": "supabase/migrations/20260507132242_a18a931b-5ce8-49a3-a750-5bec3598e3f4.sql",
+      "bytes": 672,
+      "sha256": "66e30e0f75987cba6f29a030ff74287fdfdd7357e3f420c6fbe74df09d3a52b3"
+    },
+    {
+      "path": "supabase/migrations/20260507141142_668e6934-f03b-4363-9f67-140dd29e5a73.sql",
+      "bytes": 3681,
+      "sha256": "e30a9f63637b9735b9e8fee644a814611944d35b004ac444280a4a414f1baa4a"
+    },
+    {
+      "path": "supabase/migrations/20260507155404_c39678c8-1761-4130-b825-c326e96a6dad.sql",
+      "bytes": 542,
+      "sha256": "de4fbbd6c7801860e861f09bbacd5a49c1eeb682f88d73f2243805023f6533cd"
+    },
+    {
+      "path": "supabase/migrations/20260508130619_a7c9617a-d5cc-47b7-a0c7-eb857c217ade.sql",
+      "bytes": 2099,
+      "sha256": "eb6b715d80ec4d6c4efe21d498d5f6e2fc7edb73f24ebeec04ff3e919ab793be"
+    },
+    {
+      "path": "supabase/migrations/20260508131009_71bc34e7-c03d-4d4e-8150-4c2d6dddf8fc.sql",
+      "bytes": 4404,
+      "sha256": "35c789c9484bd1656816458eab94b26c70c993a359fc0e730a417bb0791214d6"
+    },
+    {
+      "path": "supabase/migrations/20260508133250_a5a0c8c9-df43-461c-8fb9-969576e4609c.sql",
+      "bytes": 4670,
+      "sha256": "308e6386ba5c270da9aed6aa1e2715debbd5bae6451a9f37758ab1e0b0282579"
+    },
+    {
+      "path": "supabase/migrations/20260508150832_bb974735-fee8-4bb7-b023-5eea519ddc7b.sql",
+      "bytes": 15030,
+      "sha256": "9f984bfc22790e639ab0cffe714cefff04e265496b693939cb780aac32704be0"
+    },
+    {
+      "path": "supabase/migrations/20260508160424_6f51246e-486a-4a61-98fe-a11f4ceb0160.sql",
+      "bytes": 894,
+      "sha256": "95882bce5af01b9fad5b0b0b09ee36820a4d850a10c66813c871be7e601da2e2"
+    },
+    {
+      "path": "supabase/migrations/20260508160539_4e7c5c84-6cbc-4592-8197-cee1554b0f60.sql",
+      "bytes": 572,
+      "sha256": "76673e352db5d4af1c13d0d2e67268e761db8cec7d75aacfd240320a6b1febf0"
+    },
+    {
+      "path": "supabase/migrations/20260508160643_a3459b75-4db7-4e90-ab22-1f0dc6822798.sql",
+      "bytes": 472,
+      "sha256": "fa4938c6be0a51cdcf12360aa29955a1d0aea6bfd1dabedbe0fd4ebe809f589d"
+    },
+    {
+      "path": "supabase/migrations/20260508162856_9b1d0f35-e7e6-4a33-81a8-bb3d7986a5cc.sql",
+      "bytes": 2674,
+      "sha256": "10e8b0781a328e1e3e583d9a7d57b7e9925334100eba420899040d8b78d3810e"
+    },
+    {
+      "path": "supabase/migrations/20260508163622_5debd04a-c799-4662-bcb9-ab3ebf2fb035.sql",
+      "bytes": 13082,
+      "sha256": "8fdccea97f15cf9c0b3a41bc146957ba7b571308b1bf891ac722d4a82ebecc9f"
+    },
+    {
+      "path": "supabase/migrations/20260508165310_0a76546b-6f33-4b01-9757-1a9115e30fb3.sql",
+      "bytes": 11181,
+      "sha256": "f5b371f65423a7a36266b1c39372d453f22b7f47ff35cd3658562a465eb8fa0e"
+    },
+    {
+      "path": "supabase/migrations/20260508170340_fdb45bc8-499b-4ee5-a987-ef6496e0294a.sql",
+      "bytes": 20557,
+      "sha256": "91240dc5babdcc19eedf28434f1f8b2635ac5357d2f6a76c2a0e2d7c4f651cfb"
+    },
+    {
+      "path": "supabase/migrations/20260508173012_b5823654-2716-49a0-a4cc-51394bd9178a.sql",
+      "bytes": 15305,
+      "sha256": "68d2a0079cc133842a5bd688b39aac4de514b0c261bb9782396f1c1ef34c3270"
+    },
+    {
+      "path": "supabase/migrations/20260508210542_9ca1c69c-8129-4e2e-9036-73bc24921d45.sql",
+      "bytes": 122,
+      "sha256": "09d6c673493d64b49d1378d5580ecd6ccaa595811adf0256cc425af88eecaed8"
+    },
+    {
+      "path": "supabase/migrations/20260508222327_671ce6bf-ab6f-49fb-a7ac-ba1ad6c46452.sql",
+      "bytes": 22018,
+      "sha256": "e358c069cb903a188272ac1edafdb929453d670356059c63c4405b5ab510abc4"
+    },
+    {
+      "path": "supabase/migrations/20260508222351_05b81add-722f-41fa-bb34-9b0942a4f9d1.sql",
+      "bytes": 70,
+      "sha256": "e76520d0f8568046be370fa9ec0377155ed67548e50d70cfb6a1a9e9d7543fdd"
+    },
+    {
+      "path": "supabase/migrations/20260508222523_dec0c870-00df-414b-b1ee-399cd00679b8.sql",
+      "bytes": 3023,
+      "sha256": "2b8ee0b62d421548deee431cba3aa7eb14bbd746cf1b08aae0b8d9161eb89133"
+    },
+    {
+      "path": "supabase/migrations/20260508222749_35ff5ff1-e5b6-405b-8fc2-05712b379748.sql",
+      "bytes": 6875,
+      "sha256": "3109012bd9aa021da795c095e362094eeeed841c17f47b310e7b1cacbfbe122c"
+    },
+    {
+      "path": "supabase/migrations/20260508230134_40924fed-dac2-48da-a272-cef799838dee.sql",
+      "bytes": 16458,
+      "sha256": "bafa917c806d3de502a3dc2e79c4e451192a2e16bb864a6891749238888c9408"
+    },
+    {
+      "path": "supabase/migrations/20260509124240_5904795a-01c3-4961-bfc6-ac373f19159f.sql",
+      "bytes": 9189,
+      "sha256": "fa02f46549f4aaff0f962013b4527b02bfb3a0ccab95a2fb3ee751d4082b8d77"
+    },
+    {
+      "path": "supabase/migrations/20260509124300_1ce82c39-478e-4cfe-96e2-b9c521a6f82a.sql",
+      "bytes": 145,
+      "sha256": "6995449d4156fe443caee839a51a1a4ead24edb7388514bcc5ba911be68ac8ff"
+    },
+    {
+      "path": "supabase/migrations/20260509124336_03640cfd-743c-4f48-a62f-91aa8b516f48.sql",
+      "bytes": 309,
+      "sha256": "707b1e7147b3c5fb3488f64850bd2d0d7affa579f5c87ed3e2a1626f609aeb6d"
+    },
+    {
+      "path": "supabase/migrations/20260509130802_1b42a01c-f28e-436f-9c87-0713a681b5da.sql",
+      "bytes": 8003,
+      "sha256": "7607e6c687deec810a91011e72d47871d4ad1699517718863f13988c6fb11dcf"
+    },
+    {
+      "path": "supabase/migrations/20260509131508_449bd3bb-fa1a-49a3-819c-95db69b25f92.sql",
+      "bytes": 5388,
+      "sha256": "bd06fe08d5c4b416d04168609af43151e0ae1e2f3180f05e1113dd530fee33b5"
+    },
+    {
+      "path": "supabase/migrations/20260509132501_d979f757-5b20-4ba5-8c28-1ef26f9846f8.sql",
+      "bytes": 12744,
+      "sha256": "52466bfa70d1a775baea4b2fa3a32d76d3516291dea6f313c58b114bd10e875f"
+    },
+    {
+      "path": "supabase/migrations/20260509133946_0b1fe600-e06a-48a0-a992-9ea0e3134958.sql",
+      "bytes": 10190,
+      "sha256": "59fa976e062f512717b208deae789c71dd8a9c9a76ec7715a01fe51eaab0b11a"
+    },
+    {
+      "path": "supabase/migrations/20260509153206_6cc8985e-e104-48ac-a6dd-58f2a604dbcf.sql",
+      "bytes": 868,
+      "sha256": "ac19abb5215abeec596f32f703e4ad430613843c8df6a106a1f315377bdcd81c"
+    },
+    {
+      "path": "supabase/migrations/20260509164007_0a6f621e-249b-4b80-ba06-62bdf94ed9f6.sql",
+      "bytes": 1674,
+      "sha256": "08c45f31a65bbd9beb51019e01c31fce8a68ae6d47149919ca21c0e1c6f63504"
+    },
+    {
+      "path": "supabase/migrations/20260509185315_30a2768b-e125-4213-87e9-6a847fb1f289.sql",
+      "bytes": 962,
+      "sha256": "6bd22ecbcf4b77875f4fdc016c0600855c30f673546fa2acf17da8a9d4d9f089"
+    },
+    {
+      "path": "supabase/migrations/20260509192102_c2b80f70-a234-4e18-9ef8-e02b30490ade.sql",
+      "bytes": 1989,
+      "sha256": "31c94a47b8d34ff330b9f2deeae95014628a64edd8dd7d7efcb9e7a4b5cb38c2"
+    },
+    {
+      "path": "supabase/migrations/20260509193701_bda662ca-6a18-4997-97ec-ed3190538be0.sql",
+      "bytes": 91,
+      "sha256": "f8c174b2cf14d9f35199bf69af81fbf901129c0f6478a194b80cc520b7a9d1ed"
+    },
+    {
+      "path": "supabase/migrations/20260509194732_c9043a7c-df7f-4aeb-97ab-dfe012607544.sql",
+      "bytes": 377,
+      "sha256": "ab8a1fe032c24f0e0567cd72bf8c21ceb2f4f041bb71bb596bc80f55286b0792"
+    },
+    {
+      "path": "supabase/migrations/20260510151923_8b30a3b2-b39e-4c69-84e9-d6398b4b5a6c.sql",
+      "bytes": 172,
+      "sha256": "c0548855b5c331d90997e7e01c8839ad440e152633dd6e8c5e612e4d5daa6ccb"
+    },
+    {
+      "path": "supabase/migrations/20260510154342_594440c3-2466-409b-82ee-afbf712e1dde.sql",
+      "bytes": 4592,
+      "sha256": "75d470cf38077565fbf51a57defc51747bffcb8bf567ba0b6c61de7ca0e67fec"
+    },
+    {
+      "path": "supabase/migrations/20260510155744_cd0085da-84b7-494b-bc4a-4839c2ec3059.sql",
+      "bytes": 4503,
+      "sha256": "4066bb5cc421f7143858d9d5e50692d71d330e2a7f5b124ab765b7c50c61f680"
+    },
+    {
+      "path": "supabase/migrations/20260510161055_27c5f865-1cb7-401e-a622-88f3753d182c.sql",
+      "bytes": 567,
+      "sha256": "c6ca9302403f3e9436a3162e6b6d06443c85fe15a980cd46dd64ad423c567404"
+    },
+    {
+      "path": "supabase/migrations/20260510214136_4223dd2e-eefa-4d36-a29e-09af11a38bd3.sql",
+      "bytes": 5997,
+      "sha256": "00b8129ccf3bf47097cac27016434782dbeb174c2a83fe5dacf8988cffa91a9c"
+    },
+    {
+      "path": "supabase/migrations/20260511173734_b7e5c5c5-01ea-44e1-b4fd-35a71144c2c5.sql",
+      "bytes": 508,
+      "sha256": "32055790051c7375a54cf53a82f9c5dfb014a72fa46e945eb360eb67ec114b2d"
+    },
+    {
+      "path": "supabase/migrations/20260511175517_4759a743-2a46-49f3-92e5-417ee965e45b.sql",
+      "bytes": 1611,
+      "sha256": "0344bceca8dabee2f7765df9adad46579bbff761f854c049fac942e9b60b865a"
+    },
+    {
+      "path": "supabase/migrations/20260511181732_ec272190-dee8-4fe4-ad71-c9bba1ab3539.sql",
+      "bytes": 263,
+      "sha256": "ae6d6b399fcc6580781a431bb78517ee9e5ef56013d07f7c6e2b0967298b94f3"
+    },
+    {
+      "path": "supabase/migrations/20260511182042_4706a05e-9dc8-4ed6-aab4-ad5e2def88c3.sql",
+      "bytes": 407,
+      "sha256": "cb3bfe5455f13c126f815a641d69bd682251e3677e7a2ba19dbebaf5b590a3bf"
+    },
+    {
+      "path": "supabase/migrations/20260511192634_0b3a1c06-acba-4c7b-8e5a-5ee667441071.sql",
+      "bytes": 1504,
+      "sha256": "d9ecc2c001bf3a6521cd8fa52e7a0c7c2d2603e46b72df237dcb681c2c734ddc"
+    },
+    {
+      "path": "supabase/migrations/20260512161105_6b994d29-6fe5-4e46-8ac7-aeb218d801af.sql",
+      "bytes": 139,
+      "sha256": "32fffb3f4f56b3388b2b5c9ab42201ab57d963acb589da586baf7f141b381c30"
+    },
+    {
+      "path": "supabase/migrations/20260512165351_a6d9d171-a534-4094-b1db-3dbed0726e83.sql",
+      "bytes": 2910,
+      "sha256": "bc22e9fbaf8d2c526a25efe02ea4868311899930f66463d4118a27b8d9d3d44c"
+    },
+    {
+      "path": "supabase/migrations/20260512165604_273d51ee-2bee-478a-9d1c-fbeed335c029.sql",
+      "bytes": 1037,
+      "sha256": "ba32d693074d89f2748fe3dbadf4de54beab70a35a3374a5fc9d6f0e26008c70"
+    },
+    {
+      "path": "supabase/migrations/20260512170742_15c179e0-59c1-45ff-b34e-24a6779d8f9b.sql",
+      "bytes": 2789,
+      "sha256": "9d1a140a750d105f32c8834fda85d011b9bad7e38da483b0b66669a020919339"
+    },
+    {
+      "path": "supabase/migrations/20260513160137_3033e968-e39c-4b47-9d55-282f2def5b09.sql",
+      "bytes": 1544,
+      "sha256": "d45ac248a92fdb9d69d7c4e208ba13f5eff23391471e621ba2a8f7718fbe5213"
+    },
+    {
+      "path": "supabase/migrations/20260518182942_3d85d2d1-3d59-4275-9af7-9f97a8ad2fa2.sql",
+      "bytes": 934,
+      "sha256": "0e35bf78bdfa67dc25a1e0a925770be1c9e72b32d049395f99ce1fe3d73dfe90"
+    },
+    {
+      "path": "supabase/migrations/20260518184139_1cac4e99-479b-4253-81e0-f838f9e11c30.sql",
+      "bytes": 845,
+      "sha256": "e20f29d5f4d5619ee554ddeb2af738d19af2500347cb713ae82952fd93fba70d"
+    },
+    {
+      "path": "supabase/migrations/20260628145232_ea296d90-918b-4c07-bd6e-209bfa7f32b2.sql",
+      "bytes": 2774,
+      "sha256": "f316e716aee02f6feeb0b93f5921c67766100033aa27a57b5197680c071d5df5"
+    },
+    {
+      "path": "supabase/migrations/20260628145346_75f3c369-faeb-4c5b-bc3d-4b250fdc1804.sql",
+      "bytes": 896,
+      "sha256": "ef08d874ce0aa650e5a33325e669a428df889386bf5db93a9d002327568b4a8f"
+    },
+    {
+      "path": "supabase/migrations/20260707112313_04f20adf-7cbc-4df4-8188-8fcdd02a4918.sql",
+      "bytes": 322,
+      "sha256": "7c531f0c7fb323e3af5714df62d870ce37b184c79dcc5be27b3701468060f57a"
+    },
+    {
+      "path": "supabase/migrations/20260709124209_16493ecd-8081-4786-8558-8e8ed98224f3.sql",
+      "bytes": 244,
+      "sha256": "9c8af7030f495826cf62fcb371d2fa9d6adaab1d260b9fc6ca0479b81126eb97"
+    },
+    {
+      "path": "supabase/migrations/20260709124514_80bbbdb5-0a1c-45c3-a430-132449e6269c.sql",
+      "bytes": 5648,
+      "sha256": "5f16c9bec0f64337de96154b4ac79d7aaaf27dc26daa0c2978b02dc21f98fbc9"
+    },
+    {
+      "path": "tailwind.config.ts",
+      "bytes": 3919,
+      "sha256": "569c0d150aad44b60ee5b4e846f838269aa020186833af6917606772331a5a18"
+    },
+    {
+      "path": "tests/e2e/admin/auditoria.spec.ts",
+      "bytes": 652,
+      "sha256": "38898dec4e6414135ea7f0c1202a38bd627ae3286086b8da741ef94d98c1b054"
+    },
+    {
+      "path": "tests/e2e/admin/dashboard.spec.ts",
+      "bytes": 1349,
+      "sha256": "4ad6d00b6f498c37049ed213097e0e3fbdcc6eccccc5e0d1d78dc4f637c193b8"
+    },
+    {
+      "path": "tests/e2e/admin/financeiro.spec.ts",
+      "bytes": 918,
+      "sha256": "e646d16ca12917c29c2989c3a865894468d9805f2ea0c959a12a6a3288b9d9b8"
+    },
+    {
+      "path": "tests/e2e/admin/noc.spec.ts",
+      "bytes": 687,
+      "sha256": "49c72db36c7d6978853407908a8673aa2830c7ca5966d4eb97850fa29e4b5f8b"
+    },
+    {
+      "path": "tests/e2e/admin/rbac.spec.ts",
+      "bytes": 456,
+      "sha256": "6a390fcd1426e6ae13a5702bb66af050d554f91c7d7fd369ee5a5b60ea6b1120"
+    },
+    {
+      "path": "tests/e2e/auth/auth.setup.ts",
+      "bytes": 1913,
+      "sha256": "3ace7ded9b6c7c43a1507917d927ea1caf78964bdf04d1baa5f9aa12276f06ba"
+    },
+    {
+      "path": "tests/e2e/fixtures/users.ts",
+      "bytes": 1055,
+      "sha256": "d549144ff3a1b06942867ecabedca9b847cdf9902eac575f72ebc0ebf6e8499d"
+    },
+    {
+      "path": "tests/e2e/guards/rotas.spec.ts",
+      "bytes": 2694,
+      "sha256": "c044f9582ea90a4f9a72e1290dacbce698b5f412eed823a3070501c1e2b245a6"
+    },
+    {
+      "path": "tests/e2e/helpers/navigation.ts",
+      "bytes": 1793,
+      "sha256": "de665aff55d29845bbfe1f357f909c5e95eb8b5e19cffcb2c0b7dc9625e1ae35"
+    },
+    {
+      "path": "tests/e2e/helpers/rbac.ts",
+      "bytes": 2041,
+      "sha256": "e760f7fc8fc98abc1308d8d48113365300ef2a1ef353ff9ab13c194a38de5eb7"
+    },
+    {
+      "path": "tests/e2e/medico/smoke.spec.ts",
+      "bytes": 1194,
+      "sha256": "0265c2da8d87f7ae89cdb02c0015c1e8410284107ff4be0af2c44260cbe24185"
+    },
+    {
+      "path": "tests/e2e/paciente/smoke.spec.ts",
+      "bytes": 1407,
+      "sha256": "17e19e56c105c023ce708def105c8d19ad961fe43d154f949ac463cb1885541b"
+    },
+    {
+      "path": "tests/e2e/README.md",
+      "bytes": 3805,
+      "sha256": "9b616a60d5d71b9b56c821f00a612444280022b2bbee4281851162a37fea7f09"
+    },
+    {
+      "path": "tests/e2e/STABILITY.md",
+      "bytes": 4569,
+      "sha256": "d8593eb213355c0acbb6a7e37414ea9cb7874f79d162659c465cdb7f1933b3dd"
+    },
+    {
+      "path": "tests/local/preview.spec.ts",
+      "bytes": 1949,
+      "sha256": "e5a3a3b902f3403b45d4cd2b50f9bb96976629c6ece311495217a64901e52019"
+    },
+    {
+      "path": "tsconfig.app.json",
+      "bytes": 695,
+      "sha256": "62208e00e0d43960c5b791202cfd1cb82dabfb9b7abbea40bb4090219ebe63dd"
+    },
+    {
+      "path": "tsconfig.json",
+      "bytes": 364,
+      "sha256": "241a5373255a1085186f59ec450b41f5fe63d528f204342d6f7800c77a45a09c"
+    },
+    {
+      "path": "tsconfig.node.json",
+      "bytes": 503,
+      "sha256": "8dc2fd2a2ff7497afa9e29037a36bcddbfa7c89ea8ff3b7c62b2814b55995449"
+    },
+    {
+      "path": "vite.config.ts",
+      "bytes": 593,
+      "sha256": "bf1b1c39a6b6da4adf035831fb50484be1b87347b34dfff40010dbf1d32cb21f"
+    },
+    {
+      "path": "vitest.config.ts",
+      "bytes": 411,
+      "sha256": "1b7b7feb0587b3e6a2ee171138e17d042777d848b6c53498457e98c1882ff394"
+    }
+  ],
+  "functions": [
+    {
+      "path": "supabase/functions/admin-criar-paciente/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/admin-invite-colaborador/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/ai-assistant/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "LOVABLE_API_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/ai-avatar-memory/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/ai-avatar-reply/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "LOVABLE_API_KEY",
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/ai-respond/index.ts",
+      "envNames": [
+        "LOVABLE_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/audit-log/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/consulta-insights/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "LOVABLE_API_KEY"
+      ],
+      "usesServiceRole": false,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/criar-checkout-plano/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/criar-checkout-premium/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": false,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/criar-checkout-stripe/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/enviar-confirmacao-consulta/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-agenda-readonly/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-criar-agendamento/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "FEEGOW_TOKEN",
+        "FEEGOW_API_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-enviar-paciente/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-importar-documentos/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-liberar-medico/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_ANON_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-profissionais/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/feegow-vincular-profissional/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_BASE_URL"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/google-calendar-sync/index.ts",
+      "envNames": [
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/google-create-meet/index.ts",
+      "envNames": [
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/google-oauth/index.ts",
+      "envNames": [
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/ia-auditoria-medica/index.ts",
+      "envNames": [
+        "LOVABLE_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/inbox-transfer-cron/index.ts",
+      "envNames": [],
+      "usesServiceRole": false,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/integracoes-test/index.ts",
+      "envNames": [
+        "FEEGOW_API_TOKEN",
+        "FEEGOW_TOKEN",
+        "META_WHATSAPP_TOKEN",
+        "WHATSAPP_TOKEN",
+        "META_WHATSAPP_PHONE_ID",
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "STRIPE_SECRET_KEY",
+        "LOVABLE_API_KEY",
+        "OPENAI_API_KEY",
+        "ASSINATURA_DIGITAL_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/internal-financeiro-tests/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "INTERNAL_FINANCEIRO_TEST_TOKEN",
+        "ENABLE_INTERNAL_FINANCEIRO_TESTS"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/meta-health-check/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID",
+        "META_WABA_BUSINESS_ID"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/meta-template-sync/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "META_WHATSAPP_TOKEN",
+        "META_WABA_BUSINESS_ID"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/nfe-emitir/index.ts",
+      "envNames": [
+        "NFE_API_TOKEN",
+        "NFE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/noc-detector-financeiro/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/noc-ia-auditora/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_ANON_KEY",
+        "LOVABLE_API_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/notificar-reembolso/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/notificar-troca-medico/index.ts",
+      "envNames": [
+        "META_WHATSAPP_TEMPLATE_NAME",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "META_WHATSAPP_TOKEN",
+        "META_WHATSAPP_PHONE_NUMBER_ID"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/observabilidade-export/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/observabilidade-ingest/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/payments-webhook/index.ts",
+      "envNames": [
+        "PAYMENTS_LIVE_WEBHOOK_SECRET",
+        "PAYMENTS_SANDBOX_WEBHOOK_SECRET",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/recalcular-ranking/index.ts",
+      "envNames": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/whatsapp-cloud-test/index.ts",
+      "envNames": [
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/whatsapp-enviar/index.ts",
+      "envNames": [
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/whatsapp-template-send/index.ts",
+      "envNames": [
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/whatsapp-test-send/index.ts",
+      "envNames": [
+        "META_WHATSAPP_TOKEN",
+        "META_PHONE_NUMBER_ID",
+        "META_VERIFY_TOKEN",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY"
+      ],
+      "usesServiceRole": false,
+      "explicitAuthMarkers": true
+    },
+    {
+      "path": "supabase/functions/whatsapp-webhook/index.ts",
+      "envNames": [
+        "META_VERIFY_TOKEN",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "META_APP_SECRET"
+      ],
+      "usesServiceRole": true,
+      "explicitAuthMarkers": true
+    }
+  ]
+}

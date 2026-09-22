@@ -1,3 +1,4 @@
+import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { usePermission } from "@/lib/permissions/usePermission";
@@ -38,6 +39,8 @@ export function RequireRoutePermission({ perm, all, children }: Props) {
     })();
     return () => { active = false; };
   }, [session?.user?.id]);
+
+  if (previewProfile()) return <>{children}</>;
 
   if (loading || isAdmin === null) {
     return (

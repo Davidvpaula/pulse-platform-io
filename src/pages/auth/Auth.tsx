@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { LOCAL_PREVIEW } from "@/lib/local-preview";
+import LocalPreviewLogin from "@/components/auth/LocalPreviewLogin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +47,10 @@ const medicoSchema = z.object({
 }).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
+  return LOCAL_PREVIEW ? <LocalPreviewLogin /> : <ProductionAuth />;
+}
+
+function ProductionAuth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [params] = useSearchParams();
@@ -201,15 +206,15 @@ export default function Auth() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const result = await supabase.auth.signInWithOAuth({
+      provider: "google", options: { redirectTo: `${window.location.origin}/app` },
     });
     setLoading(false);
     if (result.error) {
       toast({ title: "Erro no Google", description: String(result.error), variant: "destructive" });
       return;
     }
-    if (result.redirected) return;
+    if (result.data.url) return;
     navigate(redirectTo);
   }
 

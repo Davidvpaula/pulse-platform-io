@@ -1,0 +1,39 @@
+
+> pulse-platform@0.0.0 build
+> vite build
+
+vite v5.4.19 building for production...
+transforming...
+✓ 4223 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                            1.73 kB │ gzip:     0.67 kB
+dist/assets/diferencial-humanizado-Bp3bDTru.jpg           41.31 kB
+dist/assets/pronto-atendimento-Dh6pW1qk.jpg               46.65 kB
+dist/assets/diferencial-qualquer-lugar-Yl-P6KLj.jpg       57.24 kB
+dist/assets/diferencial-qualquer-momento-gTm6pqW2.jpg     58.12 kB
+dist/assets/Omnes-Italic-DeAifch7.ttf                    100.72 kB
+dist/assets/Omnes-Medium-CN8OlUY_.ttf                    107.13 kB
+dist/assets/Omnes-Hairline-GIB5LZ98.ttf                  133.30 kB
+dist/assets/Omnes-Bold-CieqamCH.ttf                      140.64 kB
+dist/assets/Omnes-Regular-CVSz1tp0.ttf                   140.96 kB
+dist/assets/Omnes-SemiBold-CZuR2ERB.ttf                  151.98 kB
+dist/assets/logo-horizontal-white-nHxy-3Eo.png           218.13 kB
+dist/assets/logo-vertical-color-DJnOU1pz.png             234.89 kB
+dist/assets/logo-symbol-color-CoAtVj7U.png               496.66 kB
+dist/assets/VisualEditor-DJZm_nmW.css                     91.12 kB │ gzip:    13.77 kB
+dist/assets/index-fd9-lShN.css                           121.66 kB │ gzip:    20.37 kB
+dist/assets/loaded-36WRJPBT-GFqza8Wb.js                    0.71 kB │ gzip:     0.42 kB
+dist/assets/loaded-JKA25A3T-CumP-EeC.js                    0.75 kB │ gzip:     0.46 kB
+dist/assets/loaded-SMPR6KZF-D3qevaV3.js                    0.77 kB │ gzip:     0.43 kB
+dist/assets/Render-DQXAYUBI-CbvCvDUC.js                    1.78 kB │ gzip:     0.82 kB
+dist/assets/full-7ZJV44EE-AB4swEfZ.js                      2.19 kB │ gzip:     0.87 kB
+dist/assets/Editor-44C53YAG-BGD82bZg.js                    2.32 kB │ gzip:     1.15 kB
+dist/assets/index-XG6c-88y.js                             15.72 kB │ gzip:     4.98 kB
+dist/assets/chunk-2CNEFIQP-DuDYxQtl.js                    68.09 kB │ gzip:    25.25 kB
+dist/assets/index.es-CJZX4m8_.js                         150.92 kB │ gzip:    51.66 kB
+dist/assets/html2canvas.esm-CBrSDip1.js                  201.42 kB │ gzip:    48.03 kB
+dist/assets/index-Bq77EMSP.js                            285.81 kB │ gzip:    88.28 kB
+dist/assets/VisualEditor-BloW-lJN.js                     568.06 kB │ gzip:   160.36 kB
+dist/assets/index--zhsE6vA.js                          4,557.42 kB │ gzip: 1,149.37 kB
+✓ built in 17.48s

@@ -1,4 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
+import { LOCAL_PREVIEW } from "@/lib/local-preview";
+const VisualEditor = lazy(() => import("@/pages/local/VisualEditor"));
 import { BrowserRouter, Route, Routes, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { AnalyticsTracker } from "@/lib/analytics/AnalyticsTracker";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -199,6 +202,7 @@ const App = () => (
           <AnalyticsTracker />
           <SecurityWatcher />
           <Routes>
+            {LOCAL_PREVIEW && <Route path="/editor-visual" element={<Suspense fallback={<p>Carregando editor…</p>}><VisualEditor /></Suspense>} />}
             {/* PUBLIC */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />

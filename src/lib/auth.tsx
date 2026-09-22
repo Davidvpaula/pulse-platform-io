@@ -22,6 +22,7 @@ type AuthCtx = {
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
+import { previewProfile } from "./local-preview";
 const LINK_KEY = "nova-saude.patientLink";
 
 // Prioridade quando o usuário tem múltiplos papéis no banco.
@@ -39,7 +40,7 @@ function rolesToProfileKey(roles: string[]): ProfileKey | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, roles } = useSession();
 
-  const [profileKey, setProfileKeyState] = useState<ProfileKey>("paciente");
+  const [profileKey, setProfileKeyState] = useState<ProfileKey>(() => previewProfile() ?? "paciente");
 
   const [patientLink, setPatientLinkState] = useState<PatientLink>(() => {
     if (typeof window === "undefined") return { tipo: "particular" };

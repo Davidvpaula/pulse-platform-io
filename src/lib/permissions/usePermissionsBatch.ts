@@ -1,3 +1,4 @@
+import { LOCAL_PREVIEW, previewProfile } from "../local-preview";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
@@ -43,18 +44,18 @@ function buildRealtimeChannel() {
   return ch;
 }
 
-const realtimeChannel = buildRealtimeChannel();
+const realtimeChannel = LOCAL_PREVIEW ? null : buildRealtimeChannel();
 
 // Cleanup (módulo unload) — defensive
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => { try { supabase.removeChannel(realtimeChannel); } catch {} });
+  window.addEventListener("beforeunload", () => { if (realtimeChannel) void supabase.removeChannel(realtimeChannel).catch(() => {}); });
 }
 
 // HMR: remove o canal antigo antes do módulo ser substituído.
 // Sem isso, o reload tenta registrar `.on()` num canal já assinado e quebra a árvore.
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
-    try { supabase.removeChannel(realtimeChannel); } catch {}
+    if (realtimeChannel) void supabase.removeChannel(realtimeChannel).catch(() => {});
     cache.clear();
     cachedAdmin = null;
   });
@@ -143,7 +144,7 @@ export function usePermissionsBatch(keys: string[]) {
     return () => { active = false; };
   }, [uid, sessionLoading, roles.join(","), keySignature, refreshCounter, fetchPermissions]);
 
-  const has = useCallback((k: string) => !!state.allowed[k], [state.allowed]);
+  const has = useCallback((k: string) => !!previewProfile() || !!state.allowed[k], [state.allowed]);
 
   /** Força re-consulta ao banco (ignora cache). Útil após admin alterar permissões. */
   const refresh = useCallback(() => {
