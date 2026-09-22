@@ -46,6 +46,10 @@ O inventário não significa leitura humana linha a linha dos 792 arquivos. A tr
 
 ## Sequência de acabamento
 
+Atualização Docker (22/09/2026): após autorização de acesso, `docker compose up --build -d` concluiu com sucesso. Contêiner `pulse-platform-git-frontend-1` em `127.0.0.1:8080`, mantendo os demais contêineres existentes. Os 7 testes de navegador passaram contra o frontend servido pelo Docker. Isso substitui a pendência de execução Docker acima; banco e integrações reais continuam pendentes.
+
+O `npm audit` executado no contêiner identificou 19 pacotes com alertas: 2 baixos, 5 moderados, 11 altos e 1 crítico. O crítico refere-se ao servidor UI do Vitest (`GHSA-5xrq-8626-4rwp`); esse servidor não está sendo executado na prévia. Há também alertas no Vite e dependências transitivas. Atualizações e regressões devem ser tratadas na frente de segurança; a contagem não significa 19 falhas comprovadamente exploráveis no produto.
+
 1. Backend de testes isolado: aplicar as migrações em ordem, seed fictício e testes de isolamento/RLS, revisar funções privilegiadas.
 2. Fluxos completos por perfil: cadastro, agenda, consulta, documentos, cancelamento, pagamento/reembolso, repasse e empresa; medir sucesso e falhas de provedores.
 3. Qualidade: corrigir lint por módulo, dividir carregamento e revisar estados vazios/erro, acessibilidade e telas móveis.

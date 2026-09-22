@@ -46,6 +46,8 @@ Os testes locais precisam do Chromium instalado (`npx playwright install chromiu
 docker compose up --build
 ```
 
-Disponibiliza apenas a prévia do frontend na porta 8080. Não inclui banco Supabase. Pare o servidor Node antes para liberar a porta. A execução Docker não foi validada nesta sessão porque o acesso foi recusado.
+Disponibiliza apenas a prévia do frontend na porta 8080, restrita a `127.0.0.1`. Não inclui banco Supabase. Pare o servidor Node antes para liberar a porta. Docker validado em 22/09/2026: imagem construída, contêiner iniciado e 7 testes de navegador aprovados. Na pasta acima, `INICIAR-DOCKER.cmd` permite iniciar por dois cliques com o Docker Desktop aberto.
+
+Para parar sem remover o contêiner: `docker compose stop`. Para acompanhar a execução: `docker compose logs -f`. Alterações no código entram na imagem ao executar novamente `docker compose up --build -d`.
 
 Veja [a auditoria inicial](docs/AUDITORIA-INICIAL.md) para evidências, pendências e limites da verificação.
