@@ -1,0 +1,8 @@
+{
+  "command": "node scripts/verify-dashboard-audit.mjs",
+  "date": "2026-09-22",
+  "linksChecked": 3437,
+  "findings": 35,
+  "routes": 191,
+  "errors": []
+}

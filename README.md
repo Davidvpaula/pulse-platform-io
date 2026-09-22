@@ -54,4 +54,6 @@ Para parar sem remover o contêiner: `docker compose stop`. Para acompanhar a ex
 
 Veja [a auditoria inicial](docs/AUDITORIA-INICIAL.md) para evidências, pendências e limites da verificação.
 
+Veja a [auditoria separada por dashboard](docs/auditoria-dashboards/README.md): administrador, paciente, médico, empresa e secretaria/colaborador unificados, além de comunicação compartilhada. Contém rotas, funções, mecanismos, permissões e 35 achados classificados, com inventários reproduzíveis e limites da análise estática.
+
 Veja também [a rodada de segurança e estabilidade](docs/SEGURANCA-ESTABILIDADE.md): dependências corrigidas, recuperação de sessão, isolamento do cache por usuário e carregamento de páginas sob demanda. Os testes de produção usam um servidor temporário na porta 8081 e interceptam o Supabase; não se conectam ao banco real.
