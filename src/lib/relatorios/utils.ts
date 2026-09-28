@@ -42,9 +42,7 @@ export function toRpcArgs(f: FiltrosGlobais) {
 }
 
 export function downloadCSV(filename: string, rows: (string | number | null | undefined)[][]) {
-  const csv = rows
-    .map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";"))
-    .join("\n");
+  const csv = serializeCSV(rows);
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -54,17 +52,19 @@ export function downloadCSV(filename: string, rows: (string | number | null | un
   URL.revokeObjectURL(url);
 }
 
+export function serializeCSV(rows: (string | number | null | undefined)[][]) {
+  return rows.map(row => row.map(value => {
+    let text = String(value ?? '');
+    if (typeof value === 'string' && /^[\s]*[=+@-]/.test(text)) text = "'" + text;
+    return `"${text.replace(/"/g, '""')}"`;
+  }).join(';')).join('\r\n');
+}
+
 /** Gera CSV a partir de array de objetos (auto-detecta colunas). */
 export function downloadCSVFromObjects(filename: string, rows: Record<string, any>[]) {
   if (!rows.length) return;
   const cols = Object.keys(rows[0]);
-  const csv = [cols.join(","), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? "")).join(","))].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  downloadCSV(filename, [cols, ...rows.map(row => cols.map(c => row[c] ?? ''))]);
 }
 
 export const formatDia = (s: string) => {

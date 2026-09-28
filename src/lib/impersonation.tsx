@@ -1,15 +1,16 @@
 /**
- * "Visualizar como" — impersonação read-only no frontend.
- *
- * O Admin permanece autenticado como Admin no banco (RLS continua admin),
- * mas a UI assume o perfil/identidade do alvo. Toda escrita é bloqueada
- * pelo helper `assertNotImpersonating()` (componente Guard + helper).
+ * Inspeção administrativa: mantém a identidade do Admin e mostra um
+ * cadastro somente leitura. Não emula uma sessão autenticada do alvo.
+ * O transporte do cliente bloqueia gravações durante a inspeção;
+ * a RPC verifica administrador, titularidade do log e prazo no servidor.
  *
  * Persistência: sessionStorage (some ao fechar a aba) + expira em 60min.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileKey } from "./profiles";
+import { useSession } from './session';
+import { useQueryClient } from '@tanstack/react-query';
 
 const STORAGE_KEY = "nova-saude.impersonation";
 const MAX_DURATION_MS = 60 * 60 * 1000; // 60 min
@@ -22,6 +23,7 @@ type Target = {
 };
 
 export type ImpersonationState = {
+  admin_id: string;
   log_id: string;
   iniciado_em: number;     // epoch ms
   expira_em: number;       // epoch ms
@@ -55,18 +57,28 @@ function loadFromStorage(): ImpersonationState | null {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as ImpersonationState;
-    if (Date.now() > s.expira_em) {
+    if (!s.admin_id || !s.log_id || !s.target?.user_id || !Number.isFinite(s.expira_em)
+      || s.expira_em > Date.now() + MAX_DURATION_MS || Date.now() > s.expira_em) {
       sessionStorage.removeItem(STORAGE_KEY);
       return null;
     }
     return s;
   } catch {
+    sessionStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
 
 export function ImpersonationProvider({ children }: { children: ReactNode }) {
+  const { session, loading, roles } = useSession();
+  const queryClient = useQueryClient();
   const [active, setActive] = useState<ImpersonationState | null>(() => loadFromStorage());
+  useEffect(() => {
+    if (!loading && (!session || !roles.includes('admin') || (active && active.admin_id !== session.user.id))) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      setActive(null);
+    }
+  }, [loading, session?.user.id, roles.join(','), active?.admin_id]);
 
   // Auto-expira
   useEffect(() => {
@@ -81,18 +93,11 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.log_id]);
 
-  // Encerra ao fechar a aba (best-effort)
-  useEffect(() => {
-    if (!active) return;
-    const handler = () => {
-      // Não conseguimos garantir a chamada async, mas tentamos
-      void stopInternal(active.log_id);
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [active]);
+  // O servidor também expira o log em 60 minutos. Recarregar a aba não o encerra.
 
   const start = useCallback(async (target: Target, motivo: string) => {
+    if (!session || !roles.includes('admin')) throw new Error('Apenas administrador');
+    if (active) throw new Error('Encerre a inspeção atual');
     const { data, error } = await supabase.rpc("impersonation_iniciar", {
       _target_id: target.user_id,
       _motivo: motivo,
@@ -102,6 +107,7 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
     const log_id = data as unknown as string;
     const profileKey: ProfileKey = ROLE_TO_PROFILE[target.role] ?? "paciente";
     const state: ImpersonationState = {
+      admin_id: session.user.id,
       log_id,
       iniciado_em: Date.now(),
       expira_em: Date.now() + MAX_DURATION_MS,
@@ -110,14 +116,16 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
       profileKey,
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    await queryClient.cancelQueries();
     setActive(state);
-  }, []);
+  }, [roles, active, queryClient, session]);
 
   const stop = useCallback(async () => {
     if (!active) return;
     await stopInternal(active.log_id);
     sessionStorage.removeItem(STORAGE_KEY);
     setActive(null);
+    queryClient.removeQueries({ queryKey: ['inspection'] });
   }, [active]);
 
   const value = useMemo<Ctx>(() => ({

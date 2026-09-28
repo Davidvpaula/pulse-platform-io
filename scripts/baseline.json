@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-10",
+  "generated_at": "2026-09-28",
   "description": "F6 baseline congelada — qualquer drift deve ser revisto e a baseline atualizada intencionalmente.",
   "routes_ok": true,
   "rpcs": [
@@ -9,6 +9,7 @@
     "admin_consulta_marcar_realizada",
     "admin_consulta_reenviar_link",
     "admin_empresas_overview",
+    "admin_inspecionar_usuario",
     "admin_visao_geral",
     "agendar_retorno_gratuito",
     "ai_avatar_assumir_conversa",
@@ -26,6 +27,7 @@
     "claim_conversation",
     "colaborador_alterar_status",
     "colaborador_atualizar",
+    "colaborador_permissoes_lote",
     "colaborador_remover_permissao",
     "colaborador_set_permissao",
     "coletar_metricas_medico",

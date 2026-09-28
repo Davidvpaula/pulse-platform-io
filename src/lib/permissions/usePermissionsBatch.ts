@@ -1,163 +1,71 @@
-import { LOCAL_PREVIEW, previewProfile } from "../local-preview";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/lib/session";
+import { useEffect, useSyncExternalStore } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useSession } from '@/lib/session';
+import { previewProfile } from '@/lib/local-preview';
 
-/**
- * Consulta várias permissões de uma vez via RPC has_permissions_batch (1 round-trip).
- * - Bypass automático para admin.
- * - Cache in-memory com TTL (5 min) e invalidação via Realtime.
- * - Expõe `refresh()` para forçar recarga (útil após admin alterar permissões).
- */
-
-type CacheEntry = { value: boolean; expiresAt: number };
-const cache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
-let cachedAdmin: { uid: string | null; isAdmin: boolean; expiresAt: number } | null = null;
-
-function getCached(uid: string, key: string): boolean | undefined {
-  const entry = cache.get(`${uid}:${key}`);
-  if (!entry) return undefined;
-  if (Date.now() > entry.expiresAt) { cache.delete(`${uid}:${key}`); return undefined; }
-  return entry.value;
+let revision = 0;
+const listeners = new Set<() => void>();
+export function clearPermissionsBatchCache() {
+  revision++;
+  listeners.forEach(listener => listener());
 }
-
-function setCache(uid: string, key: string, value: boolean) {
-  cache.set(`${uid}:${key}`, { value, expiresAt: Date.now() + CACHE_TTL_MS });
-}
-
-// Limpa cache quando a sessão muda
-supabase.auth.onAuthStateChange(() => {
-  cache.clear();
-  cachedAdmin = null;
-});
-
-// Realtime: invalida cache quando permissões mudam no banco.
-// Construído dentro de função para podermos limpar com HMR sem disparar o erro
-// "cannot add postgres_changes callbacks ... after subscribe()".
-function buildRealtimeChannel() {
-  const ch = supabase.channel("permissions-invalidate");
-  ch.on("postgres_changes", { event: "*", schema: "public", table: "permissoes_colaborador" }, () => { cache.clear(); });
-  ch.on("postgres_changes", { event: "*", schema: "public", table: "function_permissions" }, () => { cache.clear(); });
-  ch.on("postgres_changes", { event: "*", schema: "public", table: "permissoes_perfil" }, () => { cache.clear(); });
-  ch.subscribe();
-  return ch;
-}
-
-const realtimeChannel = LOCAL_PREVIEW ? null : buildRealtimeChannel();
-
-// Cleanup (módulo unload) — defensive
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => { if (realtimeChannel) void supabase.removeChannel(realtimeChannel).catch(() => {}); });
-}
-
-// HMR: remove o canal antigo antes do módulo ser substituído.
-// Sem isso, o reload tenta registrar `.on()` num canal já assinado e quebra a árvore.
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    if (realtimeChannel) void supabase.removeChannel(realtimeChannel).catch(() => {});
-    cache.clear();
-    cachedAdmin = null;
-  });
-}
-
-
-async function checkAdmin(uid: string): Promise<boolean> {
-  if (cachedAdmin && cachedAdmin.uid === uid && Date.now() < cachedAdmin.expiresAt) return cachedAdmin.isAdmin;
-  const { data } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
-  const isAdmin = !!data;
-  cachedAdmin = { uid, isAdmin, expiresAt: Date.now() + CACHE_TTL_MS };
-  return isAdmin;
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+};
+let subscriptions = 0;
+let channel: ReturnType<typeof supabase.channel> | null = null;
+function watchPermissions() {
+  subscriptions++;
+  if (!channel) {
+    channel = supabase.channel('permissions-reactive');
+    for (const table of ['permissoes_colaborador', 'function_permissions', 'permissoes_perfil', 'user_roles', 'colaboradores']) {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table }, clearPermissionsBatchCache);
+    }
+    channel.subscribe();
+  }
+  return () => {
+    subscriptions--;
+    if (!subscriptions && channel) {
+      void supabase.removeChannel(channel);
+      channel = null;
+    }
+  };
 }
 
 export function usePermissionsBatch(keys: string[]) {
-  const { session, roles, loading: sessionLoading } = useSession();
-  const uid = session?.user?.id ?? null;
-
-  const keySignature = useMemo(() => [...new Set(keys)].sort().join("|"), [keys]);
-  const stableKeys = useMemo(() => keySignature ? keySignature.split("|") : [], [keySignature]);
-
-  const [state, setState] = useState<{ loading: boolean; allowed: Record<string, boolean> }>(() => ({
-    loading: true,
-    allowed: {},
-  }));
-
-  const [refreshCounter, setRefreshCounter] = useState(0);
-
-  const fetchPermissions = useCallback(async (currentUid: string, currentKeys: string[], currentRoles: string[]) => {
-    // 1) Admin bypass
-    let isAdmin = currentRoles.includes("admin");
-    if (!isAdmin) isAdmin = await checkAdmin(currentUid);
-
-    if (isAdmin) {
-      return Object.fromEntries(currentKeys.map(k => [k, true]));
-    }
-
-    // 2) Check cache, collect misses
-    const result: Record<string, boolean> = {};
-    const toFetch: string[] = [];
-    for (const k of currentKeys) {
-      const cached = getCached(currentUid, k);
-      if (cached !== undefined) result[k] = cached;
-      else toFetch.push(k);
-    }
-
-    // 3) Batch RPC for misses
-    if (toFetch.length > 0) {
-      const { data, error } = await supabase.rpc("has_permissions_batch", {
-        _user_id: currentUid,
-        _keys: toFetch,
-      });
-      if (!error && Array.isArray(data)) {
-        for (const row of data as { permission_key: string; allowed: boolean }[]) {
-          result[row.permission_key] = row.allowed;
-          setCache(currentUid, row.permission_key, row.allowed);
-        }
-      } else {
-        // Fallback: treat as denied
-        for (const k of toFetch) result[k] = false;
-      }
-    }
-
-    return result;
-  }, []);
-
+  const { session, loading: sessionLoading } = useSession();
+  const uid = session?.user.id;
+  const preview = !!previewProfile();
+  const version = useSyncExternalStore(subscribe, () => revision);
+  const signature = [...new Set(keys)].sort().join('|');
+  const list = signature ? signature.split('|') : [];
   useEffect(() => {
-    let active = true;
-
-    if (!sessionLoading && !uid) {
-      setState({ loading: false, allowed: Object.fromEntries(stableKeys.map(k => [k, false])) });
-      return () => { active = false; };
-    }
-
-    if (sessionLoading || !uid || stableKeys.length === 0) {
-      if (stableKeys.length === 0) setState({ loading: false, allowed: {} });
-      return () => { active = false; };
-    }
-
-    setState(prev => ({ ...prev, loading: true }));
-
-    fetchPermissions(uid, stableKeys, roles).then(allowed => {
-      if (active) setState({ loading: false, allowed });
-    });
-
-    return () => { active = false; };
-  }, [uid, sessionLoading, roles.join(","), keySignature, refreshCounter, fetchPermissions]);
-
-  const has = useCallback((k: string) => !!previewProfile() || !!state.allowed[k], [state.allowed]);
-
-  /** Força re-consulta ao banco (ignora cache). Útil após admin alterar permissões. */
-  const refresh = useCallback(() => {
-    cache.clear();
-    cachedAdmin = null;
-    setRefreshCounter(c => c + 1);
-  }, []);
-
-  return { loading: state.loading, has, allowed: state.allowed, refresh };
-}
-
-/** Limpa todo o cache de permissões (chamada manual). */
-export function clearPermissionsBatchCache() {
-  cache.clear();
-  cachedAdmin = null;
+    if (uid && !preview) return watchPermissions();
+  }, [uid, preview]);
+  const query = useQuery({
+    queryKey: ['permissions', uid, signature, version],
+    enabled: !!uid && !sessionLoading && !preview && list.length > 0,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.rpc('has_permissions_batch', { _user_id: uid!, _keys: list })
+        .abortSignal(AbortSignal.any([signal, AbortSignal.timeout(12_000)]));
+      if (error) throw new Error(error.message);
+      if (!Array.isArray(data)) throw new Error('Resposta de permissões inválida');
+      const result: Record<string, boolean> = Object.fromEntries(list.map(key => [key, false]));
+      for (const row of data) result[row.permission_key] = row.allowed === true;
+      return result;
+    },
+    staleTime: 15_000,
+    gcTime: 60_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
+  // Erro, troca de identidade e invalidação não reutilizam autorização anterior.
+  const allowed: Record<string, boolean> = preview ? Object.fromEntries(list.map(key => [key, true]))
+    : uid && !sessionLoading && !query.isError ? query.data ?? {} : {};
+  const has = (key: string) => allowed[key] === true;
+  return { loading: !preview && (sessionLoading || (!!uid && list.length > 0 && query.isPending)),
+    allowed, has, error: query.error, refresh: clearPermissionsBatchCache };
 }

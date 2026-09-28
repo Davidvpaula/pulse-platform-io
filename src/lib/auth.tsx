@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { profiles, type ProfileKey } from "./profiles";
 import { useSession } from "./session";
-import { useImpersonation } from "./impersonation";
 
 /**
  * Vínculo do paciente — não é um perfil separado, apenas metadado exibido
@@ -56,17 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Troca manual de perfil bloqueada — banco é a fonte da verdade.
   const setProfileKey = (_k: ProfileKey) => {};
 
-  const { active: impersonation } = useImpersonation();
-
-  // Quando há impersonação ativa, a UI usa o perfil do alvo (read-only).
-  const effectiveProfileKey: ProfileKey = impersonation?.profileKey ?? profileKey;
+  // A inspeção usa uma tela dedicada; a identidade autenticada permanece explícita.
+  const effectiveProfileKey: ProfileKey = profileKey;
 
   const displayUser = useMemo(() => {
-    if (impersonation) {
-      const name = impersonation.target.nome || impersonation.target.email;
-      const initials = name.split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase() || "U";
-      return { name, role: profiles[impersonation.profileKey].user.role, avatarInitials: initials };
-    }
     if (session?.user) {
       const email = session.user.email ?? "";
       const meta = (session.user.user_metadata ?? {}) as { nome?: string; full_name?: string };
@@ -75,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { name, role: profiles[profileKey].user.role, avatarInitials: initials };
     }
     return profiles[profileKey].user;
-  }, [session, profileKey, impersonation]);
+  }, [session, profileKey]);
 
   const value = useMemo<AuthCtx>(() => ({
     profileKey: effectiveProfileKey,

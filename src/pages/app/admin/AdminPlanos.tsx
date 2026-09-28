@@ -45,7 +45,7 @@ export default function AdminPlanos() {
 
       const { data: assin } = await supabase
         .from("assinaturas")
-        .select("*, plano:planos(id,nome,categoria), paciente:pacientes(id,nome), empresa:empresas(id,razao_social,nome_fantasia)")
+        .select("*, plano:planos(id,nome,categoria), paciente:pacientes(id,nome:nome_completo), empresa:empresas(id,razao_social,nome_fantasia)")
         .order("created_at", { ascending: false })
         .limit(500);
 

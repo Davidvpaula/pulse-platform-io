@@ -57,18 +57,21 @@ export default function AdminSaude() {
 
     // 1. RPCs principais
     try {
-      const rpcs = [
-        "admin_visao_geral",
-        "admin_agendamentos_overview",
-        "financeiro_central_dashboard",
-        "auditoria_listar",
-        "integracoes_dashboard",
-        "has_permission",
-        "security_generate_alerts",
-        "relatorios_financeiro",
+      const { data: auth } = await supabase.auth.getSession();
+      const hoje = new Date().toISOString().slice(0, 10);
+      const probes: [string, Record<string, unknown>][] = [
+        ['admin_visao_geral', { _periodo: 'mes' }],
+        ['admin_agendamentos_overview', { _data: hoje, _periodo: 'dia' }],
+        ['financeiro_central_dashboard', { _inicio: hoje, _fim: hoje }],
+        ['has_permissions_batch', { _user_id: auth.session?.user.id, _keys: ['admin.dashboard'] }],
+        ['permissoes_dashboard', {}],
       ];
+      const rpcs = probes.map(([name]) => name);
       const rpcResults = await Promise.allSettled(
-        rpcs.map((r) => supabase.rpc(r as never, {} as never))
+        probes.map(async ([name, args]) => {
+          const { error } = await supabase.rpc(name as never, args as never);
+          if (error) throw error;
+        })
       );
       const ok = rpcResults.filter((r) => r.status === "fulfilled").length;
       const fail = rpcs.length - ok;
@@ -116,7 +119,8 @@ export default function AdminSaude() {
 
     // 4. RBAC
     try {
-      const { data } = await supabase.from("user_roles").select("role", { count: "exact", head: true });
+      const { error } = await supabase.from("user_roles").select("role", { count: "exact", head: true });
+      if (error) throw error;
       results.push({
         label: "RBAC (user_roles)",
         status: "ok",
@@ -129,7 +133,8 @@ export default function AdminSaude() {
 
     // 5. Audit log
     try {
-      const { count } = await supabase.from("audit_log").select("id", { count: "exact", head: true });
+      const { count, error } = await supabase.from("audit_log").select("id", { count: "exact", head: true });
+      if (error) throw error;
       results.push({
         label: "Audit Log",
         status: "ok",
@@ -142,7 +147,8 @@ export default function AdminSaude() {
 
     // 6. Financeiro
     try {
-      const { count } = await supabase.from("pagamentos").select("id", { count: "exact", head: true });
+      const { count, error } = await supabase.from("pagamentos").select("id", { count: "exact", head: true });
+      if (error) throw error;
       results.push({
         label: "Financeiro (pagamentos)",
         status: "ok",
@@ -168,11 +174,12 @@ export default function AdminSaude() {
 
     // 8. IA Auditora
     try {
-      const { count } = await supabase.from("ia_medico_scores" as never).select("id", { count: "exact", head: true });
+      const { count, error } = await supabase.from("medicos").select("id", { count: "exact", head: true });
+      if (error) throw error;
       results.push({
-        label: "IA Auditora (scores)",
-        status: count !== null ? "ok" : "warn",
-        detail: count !== null ? `${count} scores IA registrados.` : "Sem dados de IA auditora.",
+        label: "IA Auditora",
+        status: "deferred",
+        detail: `Integração externa adiada. ${count ?? 0} médicos cadastrados.`,
         icon: Bot,
       });
     } catch {

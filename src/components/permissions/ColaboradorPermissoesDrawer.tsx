@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, RotateCcw, Zap, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { ORIGEM_LABEL, RISCO_COLORS } from "@/lib/permissions/constants";
-import { clearPermissionCache } from "@/lib/permissions/usePermission";
 import { clearPermissionsBatchCache } from "@/lib/permissions/usePermissionsBatch";
 import { ROLE_TEMPLATES, type RoleTemplate } from "@/lib/permissions/roleTemplates";
 import { MenuPreview } from "./MenuPreview";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { requireSuccess } from "@/lib/supabase-result";
 
 interface ColabResumo { user_id: string; nome_completo: string; funcao_interna: string; status_conta: string }
 
@@ -28,7 +28,6 @@ interface PermEf {
 }
 
 function invalidateCaches() {
-  clearPermissionCache();
   clearPermissionsBatchCache();
 }
 
@@ -37,16 +36,24 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!colaborador || !open) return;
+    let cancelled = false;
+    setPerms([]);
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase.rpc("permissoes_efetivas", { _user_id: colaborador.user_id });
-      if (error) toast.error(error.message);
-      setPerms((data as PermEf[]) || []);
-      setLoading(false);
+      try {
+        const data = await requireSuccess(supabase.rpc("permissoes_efetivas", { _user_id: colaborador.user_id }));
+        if (!cancelled) setPerms((data as PermEf[]) || []);
+      } catch (error) {
+        if (!cancelled) toast.error(error instanceof Error ? error.message : 'Falha ao carregar permissões');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [colaborador, open]);
 
   // Mapa de permissões para o MenuPreview
@@ -58,24 +65,25 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
 
   async function reloadPerms() {
     if (!colaborador) return;
-    const { data } = await supabase.rpc("permissoes_efetivas", { _user_id: colaborador.user_id });
+    const data = await requireSuccess(supabase.rpc("permissoes_efetivas", { _user_id: colaborador.user_id }));
     setPerms((data as PermEf[]) || []);
   }
 
   async function override(p: PermEf, novoEfeito: "grant" | "revoke" | null) {
-    if (!colaborador) return;
+    if (!colaborador || saving) return;
     const motivo = novoEfeito ? prompt(`Motivo para ${novoEfeito === "grant" ? "conceder" : "bloquear"} "${p.descricao}":`) : null;
     if (novoEfeito && !motivo) return;
 
+    setSaving(true);
     try {
       if (novoEfeito === null) {
-        await supabase.rpc("colaborador_remover_permissao", {
+        await requireSuccess(supabase.rpc("colaborador_remover_permissao", {
           _user_id: colaborador.user_id, _key: p.permission_key, _motivo: "Restaurado para padrão",
-        });
+        }));
       } else {
-        await supabase.rpc("colaborador_set_permissao", {
+        await requireSuccess(supabase.rpc("colaborador_set_permissao", {
           _user_id: colaborador.user_id, _key: p.permission_key, _efeito: novoEfeito as any, _motivo: motivo,
-        });
+        }));
       }
       // Audit log agora é gerado automaticamente pelo trigger no banco
       invalidateCaches();
@@ -83,6 +91,25 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
       toast.success("Permissão atualizada");
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function executarLote(modo: string, motivo: string, keys: string[] = [], origem: string | null = null) {
+    if (!colaborador || saving) return;
+    setSaving(true);
+    try {
+      const total = await requireSuccess(supabase.rpc('colaborador_permissoes_lote' as never, {
+        _user_id: colaborador.user_id, _modo: modo, _keys: keys, _origem: origem, _motivo: motivo,
+      } as never));
+      invalidateCaches();
+      await reloadPerms();
+      toast.success(`${total} permissão(ões) atualizada(s)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Falha ao atualizar permissões');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -90,48 +117,23 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
     if (!colaborador) return;
     if (!confirm(`Aplicar template "${template.label}"?\nIsso concederá ${template.permissions.length} permissões. Overrides existentes serão mantidos.`)) return;
 
-    try {
-      for (const key of template.permissions) {
-        await supabase.rpc("colaborador_set_permissao", {
-          _user_id: colaborador.user_id, _key: key, _efeito: "grant" as any,
-          _motivo: `Template: ${template.label}`,
-        });
-      }
-      invalidateCaches();
-      await reloadPerms();
-      toast.success(`Template "${template.label}" aplicado (${template.permissions.length} permissões)`);
-    } catch (e: any) {
-      toast.error(e.message);
-    }
+    await executarLote('template', `Template: ${template.label}`, template.permissions);
   }
 
   async function copiarDe() {
     if (!colaborador) return;
     const email = prompt("E-mail do colaborador para copiar permissões individuais:");
     if (!email) return;
-    const { data: src } = await supabase.from("colaboradores").select("user_id").eq("email", email).maybeSingle();
+    const { data: src, error } = await supabase.from("colaboradores").select("user_id").eq("email", email.trim()).maybeSingle();
+    if (error) { toast.error(error.message); return; }
     if (!src) { toast.error("Colaborador não encontrado"); return; }
-    const { data: srcPerms } = await supabase.from("permissoes_colaborador")
-      .select("permission_key,efeito,motivo").eq("user_id", src.user_id);
-    if (!srcPerms?.length) { toast.info("Origem não tem overrides individuais"); return; }
-    for (const sp of srcPerms) {
-      await supabase.rpc("colaborador_set_permissao", {
-        _user_id: colaborador.user_id, _key: sp.permission_key, _efeito: sp.efeito as any,
-        _motivo: `Copiada de ${email}`,
-      });
-    }
-    invalidateCaches();
-    await reloadPerms();
-    toast.success(`${srcPerms.length} permissões copiadas`);
+    await executarLote('copiar', `Copiada de ${email}`, [], src.user_id);
   }
 
   async function revogarTudo() {
     if (!colaborador) return;
-    if (!confirm("Remover TODAS as concessões individuais? Permissões via função/perfil permanecem.")) return;
-    await supabase.from("permissoes_colaborador").delete().eq("user_id", colaborador.user_id);
-    invalidateCaches();
-    await reloadPerms();
-    toast.success("Overrides removidos");
+    if (!confirm("Remover concessões E bloqueios individuais? Permissões da função/perfil voltam a valer.")) return;
+    await executarLote('limpar', 'Restaurar permissões da função/perfil');
   }
 
   const filt = perms.filter(p => !busca
@@ -143,6 +145,7 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-4xl">
+        <fieldset disabled={saving} className="min-w-0">
         <SheetHeader>
           <SheetTitle>{colaborador?.nome_completo}</SheetTitle>
           <p className="text-sm text-muted-foreground">
@@ -241,6 +244,7 @@ export function ColaboradorPermissoesDrawer({ colaborador, open, onOpenChange }:
             )}
           </div>
         )}
+        </fieldset>
       </SheetContent>
     </Sheet>
   );

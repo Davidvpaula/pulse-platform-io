@@ -3,6 +3,8 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LOCAL_PREVIEW } from "@/lib/local-preview";
 import LocalPreviewLogin from "@/components/auth/LocalPreviewLogin";
+import LocalAdminLogin from "@/components/auth/LocalAdminLogin";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +49,7 @@ const medicoSchema = z.object({
 }).refine(d => d.senha === d.confirmarSenha, { message: "Senhas não conferem", path: ["confirmarSenha"] });
 
 export default function Auth() {
-  return LOCAL_PREVIEW ? <LocalPreviewLogin /> : <ProductionAuth />;
+  return LOCAL_BACKEND ? <LocalAdminLogin /> : LOCAL_PREVIEW ? <LocalPreviewLogin /> : <ProductionAuth />;
 }
 
 function ProductionAuth() {

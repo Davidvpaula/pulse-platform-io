@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 import { LOCAL_PREVIEW, previewFetch } from '@/lib/local-preview';
+import { LOCAL_BACKEND } from '@/lib/local-backend';
+import { createBackendFetch } from '@/lib/backend-fetch';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -11,7 +13,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(LOCAL_PREVIEW ? 'http://127.0.0.1:54321' : SUPABASE_URL, LOCAL_PREVIEW ? 'local-preview-public-key' : SUPABASE_PUBLISHABLE_KEY, {
-  ...(LOCAL_PREVIEW ? { global: { fetch: previewFetch } } : {}),
+  global: { fetch: LOCAL_PREVIEW ? previewFetch : createBackendFetch(fetch.bind(globalThis), LOCAL_BACKEND) },
   auth: {
     storage: localStorage,
     persistSession: !LOCAL_PREVIEW,

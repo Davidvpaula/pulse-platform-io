@@ -147,8 +147,8 @@ export default function AdminFaq() {
                   <button onClick={() => toggleAtivo(f)} title={f.ativo ? "Desativar" : "Ativar"} className="text-muted-foreground hover:text-foreground">
                     {f.ativo ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(f)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => remove(f.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <Button aria-label="Editar FAQ" size="icon" variant="ghost" onClick={() => openEdit(f)}><Pencil className="h-4 w-4" /></Button>
+                  <Button aria-label="Excluir FAQ" size="icon" variant="ghost" className="text-destructive" onClick={() => remove(f.id)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardContent>
             </Card>

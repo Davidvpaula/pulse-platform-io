@@ -38,7 +38,7 @@ export function ImpersonationBanner() {
     <div className="sticky top-0 z-[60] flex flex-wrap items-center gap-3 border-b-2 border-destructive/60 bg-destructive px-4 py-2 text-destructive-foreground shadow-md">
       <Eye className="h-4 w-4 shrink-0" />
       <div className="flex-1 text-sm">
-        <span className="font-bold">Visualizando como </span>
+        <span className="font-bold">Inspecionando </span>
         <span className="font-semibold">{active.target.nome}</span>
         <span className="opacity-90"> ({active.target.role}) — modo somente leitura</span>
       </div>

@@ -27,6 +27,9 @@ import { ImpersonationBanner } from "@/components/impersonation/ImpersonationBan
 import { usePermissionsBatch } from "@/lib/permissions/usePermissionsBatch";
 import { colaboradorMenu, collectMenuKeys, type MenuNode } from "@/lib/menu/menuCatalog";
 import { validateMenuKeys } from "@/lib/menu/validateMenuKeys";
+import { useImpersonation } from "@/lib/impersonation";
+import UserInspection from "@/components/impersonation/UserInspection";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 
 /* ─── Flow context detection ─── */
 type FlowContext = { cls: string; label: string; icon: typeof Building2; description: string };
@@ -60,6 +63,7 @@ function getFlowContext(profileKey: ProfileKey, pathname: string): FlowContext {
 const SIDEBAR_STORAGE_KEY = "app:sidebar-open";
 
 export default function AppLayout() {
+  const { active: inspection } = useImpersonation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
@@ -199,7 +203,8 @@ export default function AppLayout() {
 
         <main className="flex-1 p-4 md:p-8 min-w-0">
           <ProtectedRoute>
-            <PageBoundary><Outlet /></PageBoundary>
+            {LOCAL_BACKEND && <p className="mb-4 rounded border border-amber-400 bg-amber-50 p-2 text-sm text-amber-950">Admin local · dados de teste persistentes · integrações externas desativadas</p>}
+            <PageBoundary>{inspection ? <UserInspection /> : <Outlet />}</PageBoundary>
           </ProtectedRoute>
         </main>
       </div>

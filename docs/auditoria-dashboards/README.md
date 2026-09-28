@@ -1,5 +1,7 @@
 # Auditoria dos dashboards — Pulse Platform
 
+> Retomada em 28/09/2026: consulte [correções e validação funcional do Admin](../admin-funcional/README.md). Os relatórios abaixo preservam o retrato da auditoria original.
+
 Data: 22/09/2026. Escopo: código local em `pulse-platform-git`, rotas React, páginas, dependências, controles de acesso e definições SQL relacionadas. Esta entrega é documental: não modifica comportamento, dados, credenciais ou serviços.
 
 ## Relatórios separados

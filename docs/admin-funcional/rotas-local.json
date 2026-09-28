@@ -1,0 +1,287 @@
+[
+  {
+    "route": "/app/admin/dashboard",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nVisão geral da operação\n\nIndicadores em tempo real da plataforma Nova Saúde.\n\nHoje\nSemana\nMês\nExportar\nRelatório completo\n\nPACIENTES\n\n2\n\n2 novos no período\n\nMÉDICOS ATIVOS\n\n1\n\nNenhum pendente\n\nEMPRESAS\n\n0\n\nAGENDAMENTOS\n\n0\n\nMês\nServiços da plataforma\nGerenciar serviços\n\nServiços ativos\n\n5\n\n0 inativos\n\nVínculos médico↔serviço\n\n0\n\nativos na vitrine\n\nOverrides pendentes\n\n0\n\naguardando aprovação\n\nTicket médio do catálogo\n\nR$ 163\n\npor atendimento\n\nFATURAMENTO\n\nR$ 0\n\nMês\n\nCONSULTAS HOJE\n\n0\n\n0 em andamento\n\nCONFIRMADAS HOJE\n\n0\n\n0 concluídas · 0 canceladas\n\nMédicos sem sala padrão\n\n1 aprovados sem link de sala\n\nÚltimos agendamentos\nVer todos\nHORA\tPACIENTE\tMÉDICO\tCANAL\tSTATUS\nNenhum agendamento ainda.\nPendências operacionais\nConfirmar consultas amanhã\n0\nAguardando pagamento\n0\nMédicos sem sala padrão\n1\nMédicos aguardando aprovação\n0\nColaboradores não convidados\n0\nÚltimos pacientes cadastrados\nVer fluxo\nNOME\tVÍNCULO\tSTATUS\tCRIADO\tAÇÕES\n—\tParticular\t\n\t28 de set.\tAbrir\n\nE2E Paciente\tParticular\t\n\t28 de set.\tAbrir\nIntegrações\n\nAssinatura Digital\n\nICP-Brasil ou provider futuro\n\nModo simulado\n\nEventos do Sistema\n\nFila interna de eventos e webhooks\n\nConectado\n\nFeegow\n\nProntuário, pacientes, profissionais e agendamentos\n\nM"
+  },
+  {
+    "route": "/app/admin/pacientes",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nPacientes\nGestão de pacientes\nGestão de usuários/pacientes\n\nCadastro, vínculo e ações administrativas sobre contas de pacientes.\n\nNovo paciente\nTotal\n2\nAtivos\n2\nSuspensos/Bloqueados\n0\nPgto pendente\n0\n2 de 2\nTodos\nAtivos\nSuspensos\nBloqueados\nBanidos\nPendentes\nParticular\nEmpresarial\nCom pagamento pendente\nNOME\tCPF\tTELEFONE\tE-MAIL\tVÍNCULO\tCONTA\tÚLTIMA\tAÇÕES\n\n—\n\t—\t—\tadmin@pulse.local\tParticular\tAtivo\t—\t\n\n\nE2E Paciente\n\t—\t—\te2e_paciente@pulse.test\tParticular\tAtivo\t—\t"
+  },
+  {
+    "route": "/app/admin/medicos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nCADASTROS MÉDICOS\n\nGestão de médicos\n\nAprovação, suspensão, bloqueio e reativação. Toda ação fica auditada.\n\nAuditoria ativa\n\nPENDENTE\n\n0\n\nEM ANÁLISE\n\n0\n\nAPROVADO\n\n1\n\nSUSPENSO\n\n0\n\nBLOQUEADO\n\n0\n\nREPROVADO\n\n0\n\nTodos\nPendente\nEm análise\nAprovado\nSuspenso\nBloqueado\nReprovado\nEM\n\nE2E Medico\n\nClínica Médica · CRM E2E0001/SP\n\nAprovado\n\nSelecione um cadastro para revisar."
+  },
+  {
+    "route": "/app/admin/medicos/contratos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nJurídico & Termos\nContratos médicos assinados\nContratos médicos\n\nAnalise e aprove os contratos assinados enviados pelos médicos.\n\nBuscar\nStatus\nAguardando\nNenhum contrato encontrado."
+  },
+  {
+    "route": "/app/admin/medicos/contratos-modelo",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nJurídico & Termos\nContrato modelo médico\nContrato modelo (PDF)\n\nGerencie as versões do PDF oficial de contrato que os médicos baixam, assinam e reenviam.\n\nApenas 1 modelo fica ativo por vez. Ativar uma versão desativa as anteriores automaticamente.\n\nNova versão\nNenhum modelo publicado. Use \"Nova versão\" para enviar o primeiro PDF."
+  },
+  {
+    "route": "/app/admin/colaboradores",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nCadastros\nColaboradores\nGestão de colaboradores internos\n\nCadastre colaboradores, defina funções, permissões e acessos à comunicação da plataforma.\n\nNovo colaborador\nTotal\n2\nAtivos\n2\nPendentes\n0\nSuspensos\n0\nBloqueados\n0\nTodos\nAtivos\nPendentes\nSuspensos\nBloqueados\nRemovidos\nSupervisores\nFinanceiro\nComercial\nSuporte\nNome\tFunção\tE-mail\tTelefone\tStatus\tSetor\tÚltimo acesso\t\nColaborador de teste local\tSecretaria\tcolaborador@pulse.local\t—\tAtivo\t—\t—\t\n\nE2E Colaborador\tSecretaria\te2e_colaborador@pulse.test\t—\tAtivo\t—\t—\t"
+  },
+  {
+    "route": "/app/admin/empresas",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nCadastro\nEmpresas B2B\n\nGestão completa de empresas contratantes, clínicas parceiras e parceiros de saúde ocupacional.\n\nNova empresa\n\nEMPRESAS CADASTRADAS\n\n0\n\nATIVAS\n\n0\n\nINADIMPLENTES\n\n0\n\nFaturas em atraso\n\nFATURAMENTO DO MÊS\n\nR$ 0,00\n\nTodos os tipos\nTodos os status\nEMPRESA\tTIPO\tCNPJ\tFUNCIONÁRIOS\tCONSULTAS/MÊS\tFATURAMENTO\tSTATUS\tAÇÕES\nNenhuma empresa encontrada."
+  },
+  {
+    "route": "/app/admin/gestao-b2b",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nGestão B2B\nGestão B2B Centralizada\n\nVisão consolidada de contratos, faturamento e utilização corporativa.\n\nGerenciar empresas\n\nCONTRATOS ATIVOS\n\n0/0\n\nVIDAS ATIVAS / CONTRATADAS\n\n0/0\n\n0% ocupação\n\nRECEITA MENSAL B2B\n\nR$ 0,00\n\nFATURAS EM ABERTO\n\n0\n\nR$ 0,00\nContratos (0)\nFaturamento (0)\nUtilização\nEMPRESA\tPLANO\tVALOR MENSAL\tVIDAS\tINÍCIO\tFIM\tSTATUS\t\nNenhum contrato encontrado."
+  },
+  {
+    "route": "/app/admin/relatorios-b2b",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nRelatórios\nRelatórios B2B Corporativos\n\nConsumo por funcionário, coparticipação, taxas & repasses e faturamento detalhado.\n\nExportar CSV\nDe: 01/07/2026\nAté: 30/09/2026\nTodas as empresas\nAtualizar\n\nCONSULTAS NO PERÍODO\n\n0\n\n0 realizadas\n\nFUNCIONÁRIOS ATIVOS\n\n0\n\nRECEITA B2B\n\nR$ 0,00\n\nCUSTO MÉDIO/FUNCIONÁRIO\n\nR$ 0,00\n\nNO-SHOW\n\n0%\n\n0 ocorrências\nConsumo por funcionário\nComparativo empresas\nTaxas & Repasses\nFaturamento detalhado\n0 funcionários\nFUNCIONÁRIO\tSETOR\tCONSULTAS\tVALOR TOTAL\tVALOR MÉDIO\tNO-SHOW\nNenhum dado no período."
+  },
+  {
+    "route": "/app/admin/faturamento-b2b",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nFaturamento\nFaturamento B2B\n\nFaturas corporativas detalhadas por empresa, competência e status.\n\nExportar CSV\n\nTOTAL NO PERÍODO\n\nR$ 0,00\n\n0 faturas\n\nEM ABERTO\n\nR$ 0,00\n\n0 faturas\n\nATRASADAS\n\nR$ 0,00\n\n0 faturas\n\nPAGAS\n\nR$ 0,00\n\n0 faturas\nTodos\n2026\nTodas as empresas\n0 resultado(s)\nEMPRESA\tCOMPETÊNCIA \tVALOR \tFUNCIONÁRIOS\tCONSULTAS\tVENCIMENTO \tPAGO EM\tSTATUS\tAÇÕES\n\nNenhuma fatura encontrada para os filtros selecionados."
+  },
+  {
+    "route": "/app/admin/propostas-b2b",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nPropostas B2B\nPropostas Empresa → Médico\n\nGerencie propostas comerciais com intermediação da plataforma.\n\nTotal\n\n0\n\nPendentes\n\n0\n\nEnviadas\n\n0\n\nAceitas\n\n0\n\nRecusadas\n\n0\n\nTodos os status\n0 resultado(s)\nEMPRESA\tMÉDICO\tVALOR\tTAXA %\tREPASSE MÉDICO\tTIPO\tSTATUS\tCRIADA EM\tAÇÕES\nNenhuma proposta encontrada."
+  },
+  {
+    "route": "/app/admin/agendamentos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAgendamentos\nCentral de Agendamentos\n\nMonitoramento, auditoria e otimização — não é uma agenda manual.\n\nAtualizar\nGerar insights IA\nHoje\n0\nConfirmadas\n0\nNão confirm.\n0\nEm atendimento\n0\nFinalizadas\n0\nCanceladas\n0\nNo-show\n0\nAlertas operacionais\n0\n\nSem alertas críticos no momento.\n\nInteligência operacional\n\nOperação fluindo sem alertas inteligentes.\n\nPróx. 7 dias\nTodos os canais\nAtivos\nTodos\nAgendadas\nConfirmadas\nEm atendimento\nFinalizadas\nCanceladas\nNo-show\nAguardando pgto\nHORÁRIO\tPACIENTE\tMÉDICO\tEMPRESA\tCANAL\tSTATUS\tVALOR\tLINK\t\nNenhum agendamento encontrado."
+  },
+  {
+    "route": "/app/admin/financeiro",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nFinanceiro\nVisão geral\nCentral Financeira\n\nPagamentos, reembolsos, links, faturas, repasses e relatórios\n\nInício\nFim\nAtualizar\nPagamentos\nReembolsos\nLinks\nFaturamento\nR$ 0,00\nPendentes\nR$ 0,00\nReembolsos\nR$ 0,00\nA repassar\nR$ 0,00\nReceita empresas\nR$ 0,00\nReceita particular\nR$ 0,00\nEm aberto\nR$ 0,00\nRecusados\nR$ 0,00\nPagamentos\nReembolsos\nLinks\nRepasses\nBuscar\nStatus\nTodos\n\tID\tPaciente / Médico / Empresa\tValor\tForma\tStatus\tPago em\tAções\nSem pagamentos\n0 resultado(s) · página 1/1\nAnteriorPróxima"
+  },
+  {
+    "route": "/app/admin/financeiro/repasse",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nFinanceiro\nRepasse e comissões\nRepasse financeiro\n\nDefina a divisão entre médico e plataforma para consultas particulares (especialidades). Serviços da plataforma usam regra própria.\n\nPrévia de impacto\nRepasse global · Consultas particulares\n\nAplica a todas as consultas de especialidade sem serviço da plataforma vinculado, exceto médicos com exceção configurada.\n\nSalvar\n% REPASSE PARA O MÉDICO\n%\n% RETIDO PELA PLATAFORMA\n%\nSoma: 100.00%\n\nEdite qualquer um dos dois lados — o outro é recalculado automaticamente para somar 100%.\n\nAlterações afetam apenas novas consultas. Consultas já agendadas mantêm o snapshot financeiro original e nunca são recalculadas.\nExceções de repasse por médico\n\nDefina um % de repasse específico para médicos individuais (sobrepõe a regra global em consultas particulares).\n\nNova exceção\n\nNenhuma exceção cadastrada. Todos os médicos seguem a regra global.\n\nComo funciona a hierarquia\n\nOrdem de prioridade aplicada automaticamente em cada consulta agendada.\n\n1\nExceção médico + serviço — quando o médico tem exceção específica para um serviço da plataforma.\n2\nExceção médico (sem serviço) — regra particular do médico, aplicada em todas as consultas de especialidade dele. (gerenciada "
+  },
+  {
+    "route": "/app/admin/financeiro/previa-repasse",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nFinanceiro\nPrévia de repasse\nPrévia de impacto do repasse\n\nSimule alterações no repasse e veja o impacto em consultas particulares já agendadas e em slots futuros. Esta tela é somente leitura — nada é alterado no banco.\n\nVoltar para configuração\nFiltros\nPeríodo\nA partir de hoje\nStatus\nTodos\nBuscar médico\nItens\n0\nSoma médico (atual)\nR$ 0,00\nSoma médico (simulado)\nR$ 0,00\nDiferença total\nR$ 0,00\nComparativo\nExportar CSV\nJá agendadas\nNovas (slots futuros)\n\nO snapshot financeiro é imutável: alterar o repasse global ou criar uma exceção não recalcula consultas já criadas. As colunas \"atual\" mostram o valor real que o médico vai receber; as \"simulado\" indicam o que seria caso a regra simulada fosse aplicada.\n\nNenhuma consulta particular encontrada para os filtros atuais.\nSimulação (não altera nada)\nUsar regras vigentes\n\nAplica exceção do médico (se houver) ou o repasse global atual de 56.00% médico.\n\nSimular novo repasse global\n% REPASSE MÉDICO\n%\n% PLATAFORMA\n%\nSoma: 100.00%\nSimular exceção para um médico\nSelecionar médico…\n% REPASSE MÉDICO\n%\n% PLATAFORMA\n%\nSoma: 100.00%\n\nApenas as consultas/slots desse médico são recalculadas; os demais usam a regra vigente.\n\nComo ler\n\nJá agendadas: mostram o snapshot "
+  },
+  {
+    "route": "/app/admin/financeiro/saques-medicos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nFinanceiro\nSaques médicos\nSaques Médicos\n\nGerencie solicitações de saque dos médicos.\n\nConfigurar regras\n\nTOTAL SOLICITADO\n\nR$ 0,00\n\nTOTAL APROVADO\n\nR$ 0,00\n\nTOTAL PAGO\n\nR$ 0,00\n\nPENDENTES\n\n0\n\nStatus:\nTodos\n\nNenhum saque encontrado."
+  },
+  {
+    "route": "/app/admin/financeiro/reembolsos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nPolíticas de reembolso\n\nConfigure regras de reembolso para cancelamentos e situações especiais. Regras por médico sobrepõem a regra global.\n\nRegras globais (0)\nPor médico (0)\nRegras globais de reembolso\n\nAplicadas a todos os médicos que não possuem regra específica.\n\nNova regra\n\nNenhuma regra global configurada. Crie regras para cada situação.\n\nSituações cobertas\nCancelamento antecipado\n\nPaciente cancela com X horas de antecedência mínima. Normalmente reembolso total.\n\nCancelamento tardio\n\nPaciente cancela com menos de X horas. Pode ser parcial ou zero.\n\nMédico não atendeu (no-show médico)\n\nConsulta marcada mas o médico não compareceu. Reembolso total automático.\n\nSem início/finalização no sistema\n\nConsulta não foi iniciada nem finalizada no sistema. Indica que o atendimento não ocorreu."
+  },
+  {
+    "route": "/app/admin/financeiro/ledger-observabilidade",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nLedger Financeiro — Observabilidade\n\nPainel técnico interno. Read-only. Sem impacto operacional.\n\nAtualizar\nRodar reconciliação agora\nMovimentos totais\n0\nÚltimas 24h\n0\nMédicos cobertos\n0\nIdempotência (chaves)\n0\nAlertas abertos\n0\nOutbox pendente\n0\nÚltima reconciliação\n—\ndrift R$ 0,00\nHash global\n—\nReconciliações\nDrift atual (0)\nAlertas (0)\nMovimentos recentes\nVolume diário (14d)\nINICIADO\tORIGEM\tMÉDICOS\tCOM DRIFT\tDRIFT TOTAL\tDURAÇÃO\tHASH\tSTATUS\nSem execuções ainda.\nFrente 2.5 — observação interna. Este painel é read-only e não afeta operação. Ledger paralelo + reconciliação diária às 03h BRT. UX, saldos do médico, saques e pagamentos continuam usando os fluxos atuais. Nenhuma automação financeira ativa nesta fase."
+  },
+  {
+    "route": "/app/admin/noc",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nNOC — Operação\n\nCentral de monitoramento operacional em tempo real\n\nAtualizado 12:43:40\nAtualizar\nEm andamento agora\n0\nFila operacional\n0\n0 próximos · 0 atrasados\nAtrasos ativos (>10min)\n0\nMédicos online\n0\nTempo médio de espera\n—\nPacientes aguardando início\nFalhas integração (24h)\n0\nAlertas tipo integracao_*\nAlertas financeiros (24h)\n0\nAlertas tipo financeiro_*\nEventos críticos (2h)\n0\nSeveridade crítica\nAgora\nHoje\nAtenção\nAlertas\nResumo IA\nConsultas em andamento\n\nNenhuma consulta em andamento.\n\nFila — próximos 60 minutos\n\nSem pacientes confirmados na próxima hora.\n\nMédicos online\n\nNenhum médico com presença ativa registrada.\n\nAtualizado às 12:43:40 · refresh automático 30s"
+  },
+  {
+    "route": "/app/admin/planos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nPlanos\nPlanos da plataforma\nPlanos e assinaturas\n\nCrie, edite, analise e otimize todos os planos da plataforma.\n\nAtualizar\nNovo plano\nDashboard\nPlanos (0)\nAssinaturas (0)\nAuditoria\nDescontos\nTaxa plataforma\nPlanos ativos\n0\nAssinaturas ativas\n0\nMRR\nR$ 0,00\nPlanos em risco\n0\nLucro médio / plano\nR$ 0,00\nTaxa de cancelamento\n0.0%\nPlano mais vendido\n—\nTotal de planos\n0\nVisão por classificação\nSaudável\n0\nAtenção\n0\nRisco alto\n0\nPrejuízo\n0\nSem dados\n0"
+  },
+  {
+    "route": "/app/admin/planos-medicos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nPlanos\nPlanos de médicos\nPlanos de Médicos\n\nPlanos personalizados criados pelos médicos — aprovação e controle.\n\nTotal\n\n0\n\nAtivos\n\n0\n\nPendentes aprovação\n\n0\n\nReceita mensal (ativos)\n\nR$ 0,00\n\nTodos status\nTodas aprovações\n0 resultado(s)\nPLANO\tMÉDICO\tESPECIALIDADE\tVALOR MENSAL\tSTATUS\tAPROVAÇÃO\tCRIADO EM\tAÇÕES\nNenhum plano encontrado."
+  },
+  {
+    "route": "/app/admin/planos-cancelamentos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nNOVA SAÚDE\nCancelamentos de Planos\n\nGerencie solicitações de encerramento de planos de médicos\n\nCancelamentos (0)\nReembolsos (0)\nNenhuma solicitação de cancelamento."
+  },
+  {
+    "route": "/app/admin/planos-empresariais",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nEmpresas\nPlanos empresariais\nPlanos Empresariais\n\nGerencie planos B2B com valor por vida, coparticipação, SLA e regras de uso por especialidade.\n\nNovo plano empresarial\n\nTOTAL DE PLANOS\n\n0\n\nATIVOS\n\n0\n\nCOM VALOR/VIDA\n\n0\n\nCOM COPARTICIPAÇÃO\n\n0\n\nTodos\nNenhum plano empresarial encontrado."
+  },
+  {
+    "route": "/app/admin/gamificacao",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nGamificação\nConfiguração & Ranking\nGamificação & Ranking\n\nConfigure pesos, regras premium, CPC, saldo e monitore campanhas.\n\nRecalcular ranking\nRanking\nPremium\nCPC & Campanhas\nSaldo\nAuditoria\nPesos do Ranking\nAvaliação média\n\nPeso das estrelas\n\nAtendimentos\n\nVolume log(n+1)\n\nConversão\n\nConcluídas / agendadas\n\nNo-show\n\nPenalidade por faltas\n\nRecência\n\nAtividade recente\n\nPremium\n\nBônus para premium ativos\n\nSoma:\n1.00\nSalvar\nParâmetros Gerais\nMínimo de avaliações para exibir\nDias para considerar ativo\nDias para penalidade de inatividade\nTop Médicos\n0 médicos\nNenhum médico no ranking. Clique em \"Recalcular ranking\" para popular."
+  },
+  {
+    "route": "/app/admin/gamificacao/financeiro",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nGamificação\nFinanceiro\nFinanceiro da Gamificação\n\nReceita de assinaturas premium, consumo CPC, conversões e métricas de ROI.\n\nExportar KPIs\n\nRECEITA CPC TOTAL\n\nR$ 0,00\n\nR$ 0,00 em orçamento\n\nCLIQUES TOTAIS\n\n0\n\n0 campanhas ativas\n\nCONVERSÕES\n\n0\n\n0.0% de taxa\n\nPREMIUM ATIVOS\n\n0\n\n0 registros totais\n\nCAMPANHAS\n\n0\n\n0 ativas agora\nMembros Premium\n0 ativos\nNenhum membro premium ainda.\nCampanhas CPC — ROI\n0 total\nNenhuma campanha criada."
+  },
+  {
+    "route": "/app/admin/termos-condicoes",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nJurídico & Termos\nTermos & Condições\nTermos & Condições\n\nGerencie todos os termos legais da plataforma com versionamento completo.\n\nBuscar\nTipo\nTodos os tipos\nStatus\nTodos\nVersão\nTodas\nCriar novo termo\nPaciente\nMédico\nEmpresa\nTermos para Pacientes\n\nTermos de uso da plataforma (geral)\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nTermos de compra de consulta\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nPolítica de privacidade\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nLGPD — Lei Geral de Proteção de Dados\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nTermos de planos da plataforma\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nTermos de planos de médicos\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão\n\nTermos de cancelamento e reembolso\n\n0 versão(ões) • Nenhuma ativa\n\nSem versão ativa\nNova versão"
+  },
+  {
+    "route": "/app/admin/configuracoes",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nConfigurações\nConfigurações da plataforma\n\nEspecialidades disponíveis no site e atalhos para módulos de gestão.\n\nTermos & Condições\n\nVersionamento e aceites auditáveis\n\nTreinamento\n\nConteúdos e materiais para a equipe\n\nFAQ do Site\n\nPerguntas frequentes da página pública\n\nPagamentos\nStripe conectado\n\nProvider atual: Stripe\n\nPagamentos reais via Stripe. Webhooks confirmam o pagamento e liberam a consulta.\n\nConectar Stripe (em breve)\nEspecialidades cadastradas\nOrdem A–Z\nNOME\nDESCRIÇÃO (OPCIONAL)\nAdicionar\n\nA ordem definida aqui controla a exibição na home pública e nas listagens de especialidades.\n\n#\nNOME\nDESCRIÇÃO\nORDEM\nATIVO\nAÇÕES\n1\n\nCardiologia\n\ncardiologia\n\n—\n2\n\nClínica Geral\n\nclinica-geral\n\n—\n3\n\nDermatologia\n\ndermatologia\n\n—\n4\n\nEndocrinologia\n\nendocrinologia\n\n—\n5\n\nGinecologia\n\nginecologia\n\n—\n6\n\nOrtopedia\n\nortopedia\n\n—\n7\n\nPediatria\n\npediatria\n\n—\n8\n\nPsiquiatria\n\npsiquiatria\n\n—"
+  },
+  {
+    "route": "/app/admin/perfil",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nMeu perfil\n\nGerencie seus dados de acesso e configurações.\n\nDados\nConta & senha\nTermos\nSeus dados\nNOME *\nE-MAIL (SOMENTE LEITURA)\nTELEFONE\nSalvar alterações"
+  },
+  {
+    "route": "/app/admin/permissoes",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nSegurança & Acessos\nPermissões\nPermissões\n\nGerencie acessos por perfil, função interna ou colaborador específico — sem precisar criar dashboards separados.\n\nVisualizar como…\n\nCOLABORADORES ATIVOS\n\n2\n\nCOM SUPERVISÃO\n\n0\n\nACESSO FINANCEIRO\n\n0\n\nACESSO WHATSAPP\n\n2\n\nALTERAÇÕES 24H\n\n0\n\nColaboradores\nPor função interna\nPor perfil\nHistórico\nTodas as funções\nTodos os status\nNome\tE-mail\tFunção\tStatus\tÚltimo acesso\tAções\nColaborador de teste local\tcolaborador@pulse.local\tSecretaria\tativo\t—\tPermissões\n\nE2E Colaborador\te2e_colaborador@pulse.test\tSecretaria\tativo\t—\tPermissões"
+  },
+  {
+    "route": "/app/admin/permissoes/log",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nSegurança & Acessos\nLog de permissões\nHistórico de permissões\n\nAuditoria completa de quem alterou o quê, quando e por quê. Use os filtros para investigar mudanças específicas.\n\nVoltar\nAtualizar\nExportar CSV\n0 registros no período\nÚltimos 30 dias\nTodos os escopos\nTodos os alvos\nTodas as ações\nNenhum registro encontrado para os filtros aplicados"
+  },
+  {
+    "route": "/app/admin/impersonar",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nSegurança & Acessos\nImpersonar usuário\nVisualizar como\n\nInspecione cadastro e permissões efetivas de um usuário, em uma tela somente leitura. Toda inspeção é registrada.\n\nComo funciona\n\nA inspeção mostra o cadastro e as permissões do usuário selecionado.\nModo somente leitura: criar, editar e excluir ficam bloqueados.\nSessão expira automaticamente em 60 minutos.\nOutros administradores não podem ser usados como alvo.\nTudo fica registrado: quem, quando, por que e por quanto tempo.\nBuscar\nNome\tE-mail\tPerfil\t\n\te2e_colaborador@pulse.test\tPaciente\t\nVisualizar\n\te2e_paciente@pulse.test\tPaciente\t\nVisualizar\nColaborador de teste local\tcolaborador@pulse.local\tSecretaria\t\nVisualizar\nE2E Colaborador\te2e_colaborador@pulse.test\tSecretaria\t\nVisualizar\nE2E Medico\te2e_medico@pulse.test\tPaciente\t\nVisualizar\nTeste local colaborador\tcolaborador@pulse.local\tPaciente\t\nVisualizar\nÚltimas sessões\nQuando\tAdmin\tAlvo\tPerfil\tMotivo\tDuração\nSem registros"
+  },
+  {
+    "route": "/app/admin/sessoes",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nSessões ativas\n\nMonitore e revogue sessões de usuários em qualquer dispositivo.\n\n3 sessões\n\nApenas ativas\n\nMostrar revogadas\nRevogar todas\nUsuário\tIP\tDispositivo\tCriada\tÚltimo acesso\tStatus\tAção\nSessão sem perfil\n27339ebb…\n\tIP não capturado\t\nWindows\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\n\t1 min atrás\tagora\tAtiva\t\nRevogar\nSessão sem perfil\n27339ebb…\n\tIP não capturado\t\nWindows\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\n\t4 h atrás\t4 h atrás\tAtiva\t\nRevogar\nSessão sem perfil\n27339ebb…\n\tIP não capturado\t\nWindows\nMozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36\n\t5 h atrás\t5 h atrás\tAtiva\t\nRevogar"
+  },
+  {
+    "route": "/app/admin/seguranca",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nSegurança\n\nPolítica de senhas e proteção contra ataques.\n\nPolítica de senha\nTentativas de login\nRegras globais\n\nAplicadas a todos os usuários.\n\nExpiração (dias)\n\n0 = nunca expira. Padrão: 90.\n\nTamanho mínimo\nBloquear senhas vazadas (HIBP)\n\nVerifica contra a base Have I Been Pwned.\n\nExigir complexidade\n\nMaiúscula, número e símbolo.\n\nSalvar política\nStatus de enforcement\nInativo\nComplexidade (maiúscula, número, símbolo) — validada no cadastro e troca de senha\n✓ Ativo\nHIBP — senhas vazadas rejeitadas pelo backend de autenticação\n✓ 90 dias\nExpiração — redireciona para troca de senha após o período\n✓ Ativo\nRate limiting — 5 tentativas falhas em 15 min bloqueiam login"
+  },
+  {
+    "route": "/app/admin/alertas-seguranca",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nSegurança & Acessos\nAlertas de segurança\nAlertas de Segurança\n\nMonitore atividades suspeitas detectadas automaticamente no sistema.\n\nAtualizar\nAnalisar agora\n\nNÃO LIDOS\n\n0\n\nBRUTE FORCE\n\n0\n\nMÚLTIPLAS SESSÕES\n\n0\n\nTOTAL RESOLVIDOS\n\n0\n\nTodos os tipos\nTodas severidades\nNão lidos\nNenhum alerta pendente 🎉"
+  },
+  {
+    "route": "/app/admin/servicos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nServiços da plataforma\n\nCatálogo comercial — pronto atendimento, consultas, pacotes.\n\nNovo serviço\n⚡ Atendimento imediato (porta pública)\n\nConfigure o serviço vinculado à porta pública, preço, duração e repasse no painel dedicado.\n\nServiço vinculado ativo\nAbrir página pública →\nAbrir painel completo →\n5 serviços\n\nOrdenados por prioridade.\n\nTodos os tipos\nTodos\nNome\tTipo\tDuração\tValor paciente\tRepasse\tPrio\tMédicos\tAtivo\tAções\n\nAtendimento Imediato Clínico\natendimento-imediato\n\tconsulta\t15 min\tR$ 89,00\t40%\t10\t0\t\n\t\n\n\nConsulta Pediátrica Online\npediatria-online\n\tconsulta\t30 min\tR$ 149,00\t38%\t50\t0\t\n\t\n\n\nCardiologia · Avaliação\ncardiologia-avaliacao\n\tconsulta\t40 min\tR$ 249,00\t35%\t60\t0\t\n\t\n\n\nSaúde Mental · Acolhimento\nsaude-mental-acolhimento\n\tconsulta\t50 min\tR$ 199,00\t42%\t70\t0\t\n\t\n\n\nCheck-up Preventivo\ncheckup-preventivo\n\tconsulta\t30 min\tR$ 129,00\t38%\t80\t0\t\n\t"
+  },
+  {
+    "route": "/app/admin/atendimento-imediato",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAtendimento imediato\nAtendimento imediato\n\nEdite preço, duração e repasse do serviço público de pronto atendimento. Mudanças refletem automaticamente no calendário compartilhado.\n\nVoltar\nServiço vinculado à porta pública\n\nApenas serviços ativos do tipo pronto_atendimento com pelo menos 1 médico aderido aparecem.\n\nAbrir página pública\nGerenciar catálogo →\n\nNenhum serviço elegível. Crie um em\nServiços\n.\n\nParâmetros operacionais\n\nPreço único cobrado do paciente e duração de cada slot do calendário compartilhado.\n\n PREÇO ÚNICO (R$)\n\nValor que o paciente paga por atendimento.\n\n DURAÇÃO POR SLOT (MIN)\n\nMúltiplo de 5. Define o passo do calendário compartilhado.\n\nSalvar parâmetros\nRepasse Médico × Plataforma\n\nDefine como o valor pago é dividido entre médico e plataforma para cada atendimento imediato.\n\nMODELO\nPercentual\n% REPASSE MÉDICO\n%\n% PLATAFORMA\n%\nSoma: 100.00%\n\nPREVIEW POR ATENDIMENTO DE R$ 89,00\n\nMédico recebe\n\nR$ 35,60\n\nPlataforma fica com\n\nR$ 53,40\n\nSalvar repasse\nReflexo no calendário compartilhado\n\nPróximos slots gerados com a duração de 15 min e preço de R$ 89,00. Abrir página pública →\n\n08:00 → 08:15\n\n15 min\n\nR$ 89,00\n\n08:15 → 08:30\n\n15 min\n\nR$ 89,00\n\n08:30 → 08:45\n\n15 min\n\nR$ 89,00\n\n08:45 →"
+  },
+  {
+    "route": "/app/admin/treinamentos",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nTreinamento\nGestão de Treinamento\n\nCrie módulos, adicione vídeos e acompanhe a conclusão dos médicos.\n\nNovo módulo\nMódulos & Aulas\nConclusão por Médico\n\nNenhum módulo criado ainda.\n\nCriar primeiro módulo"
+  },
+  {
+    "route": "/app/admin/analises",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nVisão geral\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nCSV\n\nSESSÕES\n\n3\n\n100% vs período anterior\n\nVISITANTES ÚNICOS\n\n3\n\n100% vs período anterior\n\nCONVERSÕES\n\n0\n\n0% vs período anterior\n\nRECEITA\n\nR$ 0,00\n\n0% vs período anterior\n\nTAXA CONVERSÃO\n\n0%\n\nTICKET MÉDIO\n\nR$ 0,00\n\nSessões ao longo do tempo\n28/09\n0\n0.75\n1.5\n2.25\n3"
+  },
+  {
+    "route": "/app/admin/analises/tempo-real",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nTempo real\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\n\nATIVOS AGORA (5MIN)\n\n1\n\nPÁGINAS ATIVAS\n\n20\n\nEVENTOS RECENTES\n\n30\n\nPáginas sendo acessadas\n/app/admin/agendamentos\n1\n/app/admin/alertas-seguranca\n1\n/app/admin/analises\n1\n/app/admin/analises/tempo-real\n1\n/app/admin/atendimento-imediato\n1\n/app/admin/colaboradores\n1\n/app/admin/configuracoes\n1\n/app/admin/dashboard\n1\n/app/admin/empresas\n1\n/app/admin/faturamento-b2b\n1\n/app/admin/financeiro\n1\n/app/admin/financeiro/ledger-observabilidade\n1\n/app/admin/financeiro/previa-repasse\n1\n/app/admin/financeiro/reembolsos\n1\n/app/admin/financeiro/repasse\n1\n/app/admin/financeiro/saques-medicos\n1\n/app/admin/gamificacao\n1\n/app/admin/gamificacao/financeiro\n1\n/app/admin/gestao-b2b\n1\n/app/admin/impersonar\n1\nÚltimos eventos\npage_view\n/app/admin/analises/tempo-real\n12:44:21\npage_view\n/app/admin/analises\n12:44:19\npage_view\n/app/admin/treinamentos\n12:44:17\npage_view\n/app/admin/atendimento-imediato\n12:44:14\npage_view\n/app/admin/servicos\n12:44:12\npage_view\n/app/admin/alertas-seguranca\n12:44:10\np"
+  },
+  {
+    "route": "/app/admin/analises/trafego",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nTráfego\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nCSV Origens\n\nSESSÕES\n\n3\n\nÚNICOS\n\n3\n\nNOVOS\n\n3\n\nRECORRENTES\n\n0\n\nOrigem do tráfego\ndireto\nDispositivo\ndesktop\n0\n0.75\n1.5\n2.25\n3"
+  },
+  {
+    "route": "/app/admin/analises/comportamento",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nComportamento\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nPáginas mais acessadas\nCSV\nRota\tVisitas\tIniciaram agendamento\tConversão %\n/app/admin/dashboard\t6\t0\t0%\n/app/admin/perfil\t3\t0\t0%\n/app/admin/configuracoes\t3\t0\t0%\n/app/admin/gestao-b2b\t3\t0\t0%\n/app/admin/treinamentos\t3\t0\t0%\n/app/admin/empresas\t3\t0\t0%\n/app/admin/atendimento-imediato\t3\t0\t0%\n/app/admin/gamificacao\t3\t0\t0%\n/app/admin/planos-cancelamentos\t3\t0\t0%\n/app/admin/servicos\t3\t0\t0%\n/app/admin/termos-condicoes\t3\t0\t0%\n/app/admin/medicos/contratos\t3\t0\t0%\n/app/admin/medicos\t3\t0\t0%\n/app/admin/planos-medicos\t3\t0\t0%\n/app/admin/financeiro/previa-repasse\t3\t0\t0%\n/app/admin/planos\t3\t0\t0%\n/app/admin/relatorios-b2b\t3\t0\t0%\n/app/admin/propostas-b2b\t3\t0\t0%\n/app/admin/permissoes\t3\t0\t0%\n/app/admin/analises/tempo-real\t3\t0\t0%"
+  },
+  {
+    "route": "/app/admin/analises/conversao",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nConversão\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nCSV Serviços\nFunil de conversão\nVisitantes\n3\nIniciaram agendamento\n0 (0%)\nAgendaram\n0\nPagaram\n0\nConversão por página\n/app/admin/treinamentos\n/app/admin/gestao-b2b\n/app/admin/empresas\n/app/admin/gamificacao\n0\n1\n2\n3\n4\nConversões por serviço\nSem dados no período selecionado"
+  },
+  {
+    "route": "/app/admin/analises/financeiro",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nFinanceiro\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\n\nRECEITA DO PERÍODO\n\nR$ 0,00\n\n0% vs período anterior\n\nCONVERSÕES PAGAS\n\n0\n\nTICKET MÉDIO\n\nR$ 0,00\n\nReceita por canal\nSem dados no período selecionado\nReceita por serviço\nSem dados no período selecionado\nROI das campanhas\nNenhuma campanha cadastrada — vá para a aba Marketing"
+  },
+  {
+    "route": "/app/admin/analises/marketing",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nMarketing\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nCSV\nNova campanha\nCampanhas cadastradas\nCadastre sua primeira campanha para medir ROI"
+  },
+  {
+    "route": "/app/admin/analises/comparativo",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAnálises\nComparativo\nAnálises\n\nPainel estratégico — tráfego, conversão, receita por canal e ROI de marketing.\n\nÚltimos 30 dias\nAtualizar\n1 ativos agora\nVisão geral\nTempo real\nTráfego\nComportamento\nConversão\nFinanceiro\nMarketing\nComparativo\nCSV\nComparativo: período atual vs anterior\n\nSESSÕES\n\n3\n\natual\n\n0\n\nanterior\n\n100%\n\nVISITANTES ÚNICOS\n\n3\n\natual\n\n0\n\nanterior\n\n100%\n\nCONVERSÕES\n\n0\n\natual\n\n0\n\nanterior\n\n0%\n\nRECEITA\n\nR$ 0,00\n\natual\n\nR$ 0,00\n\nanterior\n\n0%"
+  },
+  {
+    "route": "/app/admin/relatorios",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nRelatórios\nVisão geral\nRelatórios\n\nCentro de inteligência da plataforma — operação, financeiro, comunicação, marketing e mais.\n\nExportar PDF geral\nFiltros\nHoje\n7d\n30d\n90d\nMês\nAno\nLimpar\nInício\nFim\nMédico\nTodos\nEspecialidade\nTodas\nCanal\nTodos\nStatus\nTodos\nEmpresa\nTodas\nVisão Executiva\nOperação Clínica\nFinanceiro\nMédicos\nPacientes\nEmpresas\nComunicação\nMarketing\nPlanos\nAuditoria\nExportar CSV\nReceita bruta\nR$ 0,00\n0.0%\nLucro estimado\nR$ 0,00\nComissão da plataforma\nConsultas\n0\n0.0%\nTicket médio\nR$ 0,00\nSobre concluídas\nTaxa comparecimento\n0.0%\nTaxa no-show\n0.0%\nNovos pacientes\n2\n0 recorrentes\nConversão lead→consulta\n0.0%\n0 leads\nReceita e consultas por dia\n\nEvolução diária no período selecionado\n\nSem dados no período.\nReceita por especialidade\nSem dados.\nDistribuição de consultas\nSem dados."
+  },
+  {
+    "route": "/app/admin/relatorios/financeiro",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nRelatórios\nAdmin\nRelatórios\nFinanceiro\nRelatório Financeiro\n\nIndicadores baseados em snapshots imutáveis de pagamentos e consultas concluídas.\n\nInício\nFim\nComparar com\nPeríodo imediatamente anterior\nCSV\nPDF\nComparando com — a —. Pagamentos pendentes não entram nos snapshots e não aparecem aqui.\nReceita bruta\nR$ 0,00\nvs R$ 0,00 · —\nReceita líquida\nR$ 0,00\nvs R$ 0,00 · —\nComissão plataforma\nR$ 0,00\nvs R$ 0,00 · —\nRepasse médicos\nR$ 0,00\nvs R$ 0,00 · —\nTaxas (gateway+imposto)\nR$ 0,00\nReembolsos\nR$ 0,00\nConsultas concluídas\n0\nvs 0 · —\nTicket médio\nR$ 0,00\nvs R$ 0,00 · —\nReceita diária\nSem dados.\nPor médico\nEspecialidade\nModalidade\nMétodo\nCanal\nReceita por médico\nSem dados no período."
+  },
+  {
+    "route": "/app/admin/auditoria",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nAuditoria\nAuditoria\n\nRastreamento e análise de ações sensíveis na plataforma.\n\nAtualizar\nCSV\nPDF\nFiltros\n7d\n30d\n90d\nInício\nFim\nSeveridade\nTodas\nMódulo\nTodos\nOrigem\nTodas\nAção contém\nAtor (UUID)\nEntidade ID\nTipo de ator\nTodos\nCategoria financeira\nTodas\nCorrelation ID\nBusca livre\nAplicar\nLimpar\nEventos\nPainel Analítico\nTotal no período\n14\nÚltimas 24h\n14\nCríticos\n0\nAltos\n0\nNão revisados\n14\nRevisados\n0\n14 evento(s)\nPágina 1 / 1\nData/hora\tSev.\tMódulo\tAção\tAtor\tEntidade\tStatus\tAções\n28/09/2026, 07:32:52\tbaixo\tGeral\tINSERT\tSistema\tcolaboradores\n18c42bba…\n\tPendente\t\n\n28/09/2026, 07:32:52\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\n131301de…\n\tPendente\t\n\n28/09/2026, 07:32:52\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\n5579261a…\n\tPendente\t\n\n28/09/2026, 07:32:52\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\nc4feea59…\n\tPendente\t\n\n28/09/2026, 07:32:52\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\n7a451504…\n\tPendente\t\n\n28/09/2026, 07:28:36\tbaixo\tGeral\tINSERT\tSistema\tcolaboradores\nf6b0d601…\n\tPendente\t\n\n28/09/2026, 07:28:36\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\ned2efcb6…\n\tPendente\t\n\n28/09/2026, 07:28:36\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\n1ee5d4f5…\n\tPendente\t\n\n28/09/2026, 07:28:36\tbaixo\tGeral\tINSERT\tSistema\tuser_roles\n49db7e8a…\n\tPendente\t\n"
+  },
+  {
+    "route": "/app/admin/fluxo",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nFluxo operacional\nFluxo operacional\n\nVisão interna da jornada: cadastro → agenda → atendimento → financeiro → comunicação.\n\nPACIENTES NOVOS HOJE\n\n2\n\nAGENDAMENTOS HOJE\n\n0\n\nAGUARDANDO CONFIRMAÇÃO\n\n0\n\nagendada ou aguardando pagamento\n\nOPERAÇÃO\n\nOK\n\ndados em tempo real\nJornada operacional padrão\n\nPlataforma é a fonte da verdade operacional. Prontuário clínico fica no provider externo via deep-link, ao final.\n\nCadastro do paciente\n\nPlataforma · auto/manual\n\nAgenda & reserva\n\nPaciente / Colaborador\n\nPagamento\n\nStripe (sandbox)\n\nAtendimento\n\nMédico — presencial ou Meet\n\nDocumentos & financeiro\n\nPlataforma — recibo, repasse\n\nComunicação & follow-up\n\nInbox interno + notificações\n\nProvider clínico externo (opcional)\n\nApós o atendimento, o médico pode abrir o prontuário no provider externo via deep-link direto na ficha do paciente. Não há sincronização operacional, fila, espelhamento ou dependência.\n\nAgenda de hoje\nVer agenda completa\nSem agendamentos hoje\n\nNenhuma consulta marcada para o dia atual."
+  },
+  {
+    "route": "/app/admin/comunicacao-interna",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nComunicação\nEquipe (interna)\nComunicação interna da equipe\n\nMensagens entre Secretaria, Médicos, Admin e Empresas — separado das conversas com pacientes (WhatsApp).\n\nNova conversa\nCANAIS:\nTodos\nSecretaria ↔ Médico\nSecretaria ↔ Admin\nEmpresa ↔ Secretaria\nMédico ↔ Admin\n\n0 CONVERSAS\n\nNenhuma conversa.\n\nSelecione uma conversa ou crie uma nova\n\nSelecione uma conversa para ver detalhes."
+  },
+  {
+    "route": "/app/admin/comunicacao/operacao",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nOperação da Comunicação\n\nVisão central das filas, atendentes, SLA e desempenho do Inbox.\n\nAbertas\n\n0\n\nSem responsável\n\n0\n\nSLA vencido\n\n0\n\nResolvidas hoje\n\n0\n\nAtendentes online\n\n0\n\n1ª resposta (min)\n\n—\n\nPor atendente\n\nSem dados.\n\nTransferências recentes\n\nNenhuma transferência registrada."
+  },
+  {
+    "route": "/app/admin/observabilidade",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nObservabilidade\n\nEventos de comunicação, IA e produção registrados em tempo real.\n\nExportar CSV\nFiltros\nTodos os módulos\nTodas\nAplicar\nQuando\tMódulo\tEvento\tSev.\tMetadata\n28/09 12:00:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_ms\":4,\"excesso_no_show\":0,\"inicio_atrasado\":0,\"medico_atrasado\":0,\"paciente_aguardando\":0,\"excesso_cancelamento_tardio\":0}\n\n28/09 11:55:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_ms\":3,\"excesso_no_show\":0,\"inicio_atrasado\":0,\"medico_atrasado\":0,\"paciente_aguardando\":0,\"excesso_cancelamento_tardio\":0}\n\n28/09 11:50:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_ms\":3,\"excesso_no_show\":0,\"inicio_atrasado\":0,\"medico_atrasado\":0,\"paciente_aguardando\":0,\"excesso_cancelamento_tardio\":0}\n\n28/09 11:45:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_ms\":3,\"excesso_no_show\":0,\"inicio_atrasado\":0,\"medico_atrasado\":0,\"paciente_aguardando\":0,\"excesso_cancelamento_tardio\":0}\n\n28/09 11:40:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_ms\":8,\"excesso_no_show\":0,\"inicio_atrasado\":0,\"medico_atrasado\":0,\"paciente_aguardando\":0,\"excesso_cancelamento_tardio\":0}\n\n28/09 11:35:00\toperacao\toperacao.alertas_scan\tINFO\t\n{\"total\":0,\"duracao_"
+  },
+  {
+    "route": "/app/admin/faq",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nFAQ do Site\n\nGerencie as perguntas frequentes exibidas na página pública.\n\nNovo FAQ\n▲\n▼\n\nComo funciona a telemedicina?\n\nVocê agenda, recebe um link de vídeo seguro e atende pelo navegador ou app.\n\n▲\n▼\n\nAs receitas têm validade legal?\n\nSim, com assinatura digital ICP-Brasil válida em todo território nacional.\n\n▲\n▼\n\nEmpresas têm acesso ao prontuário?\n\nNão. Empresas só visualizam relatórios e documentos liberados pelo paciente.\n\n▲\n▼\n\nPosso cancelar uma consulta?\n\nSim, com até 4h de antecedência sem custo."
+  },
+  {
+    "route": "/app/admin/feedbacks",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nNOVA SAÚDE\nFeedbacks do site\n\nMensagens enviadas pelos formulários de contato e feedback no FAQ.\n\n0 novos\nTodos os tipos\nNovos\n\nNenhuma mensagem encontrada\n\nAjuste os filtros para ver outros registros."
+  },
+  {
+    "route": "/app/admin/saude",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nSaúde do Sistema\n\nVisão interna de readiness do Dashboard Admin\n\nVerificar novamente\n7 OK\n6 Adiados\nComponentes Internos\nRPCs Principais\nOperacional\n\n5/5 respondendo. Todas operacionais.\n\nTabelas Críticas\nOperacional\n\n6/6 acessíveis via RLS.\n\nAutenticação\nOperacional\n\nSessão ativa: admin@pulse.local\n\nRBAC (user_roles)\nOperacional\n\nTabela user_roles acessível. Roles atribuídos via has_permission().\n\nAudit Log\nOperacional\n\n14 registros no audit_log.\n\nFinanceiro (pagamentos)\nOperacional\n\n0 pagamentos registrados.\n\nFila de Eventos (event_queue)\nOperacional\n\n0 eventos na fila.\n\nIntegrações Externas (Adiadas)\nIA Auditora\nAdiado\n\nIntegração externa adiada. 1 médicos cadastrados.\n\nWhatsApp Business API (Meta)\nAdiado\n\nIntegração planejada — não configurada ainda. Ativação na etapa final.\n\nFeegow (PEP/Prontuário)\nAdiado\n\nIntegração planejada — não configurada ainda. Ativação na etapa final.\n\nGoogle Calendar / Meet\nAdiado\n\nIntegração planejada — não configurada ainda. Ativação na etapa final.\n\nNFe Nacional\nAdiado\n\nIntegração planejada — não configurada ainda. Ativação na etapa final.\n\nStripe (modo live)\nAdiado\n\nIntegração planejada — não configurada ainda. Ativação na etapa final."
+  },
+  {
+    "route": "/app/admin/cupons",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nCupons\nCupons de desconto\n\nCrie cupons globais ou restritos a um médico/especialidade.\n\nNovo cupom\n\nTotal\n\n0\n\nAtivos\n\n0\n\nInativos\n\n0\n\nExpirados\n\n0\n\nEsgotados\n\n0\n\nTodos os escopos\nTodos status\n\nNenhum cupom cadastrado ainda."
+  },
+  {
+    "route": "/app/admin/cupons/log",
+    "errors": [],
+    "text": "Admin local · dados de teste persistentes · integrações externas desativadas\n\nAdmin\nCupons\nLog de uso\nLog de uso de cupons\n\nQuem aplicou, quando, em qual consulta e quanto de desconto.\n\nExportar CSV\nAplicações\n\n0\n\nCupons distintos\n\n0\n\nDesconto total\n\nR$ 0,00\n\nValor bruto\n\nR$ 0,00\n\nÚltimos 30 dias\nÚltimos 90 dias\nTudo\nNenhum uso de cupom registrado para esse filtro."
+  }
+]

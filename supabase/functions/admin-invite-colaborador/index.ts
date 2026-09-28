@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     if (!userId) return json({ error: "Falha ao obter user_id" }, 500);
 
     // 2) Atribui role interna
-    await admin.rpc("colaborador_set_role", { _user_id: userId, _role: role, _motivo: "Convite admin" });
+    await userClient.rpc("colaborador_set_role", { _user_id: userId, _role: role, _motivo: "Convite admin" }).throwOnError();
 
     // 3) Upsert colaborador
     const { data: existingColab } = await admin
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
           status_conta: "pendente_convite",
           convite_enviado_em: new Date().toISOString(),
         })
-        .eq("id", colabId);
+        .eq("id", colabId).throwOnError();
     } else {
       const { data: created, error: cErr } = await admin
         .from("colaboradores")

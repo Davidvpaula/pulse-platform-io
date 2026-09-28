@@ -428,7 +428,7 @@ export function useRelatoriosClinica(params: {
         p_inicio: params.inicio || null,
         p_fim: params.fim || null,
         p_medico_id: params.medico_id || null,
-        p_especialidade_id: null,
+        p_especialidade: params.especialidade || null,
       } as never);
       if (error) throw error;
       return data as unknown as RelatoriosClinica;

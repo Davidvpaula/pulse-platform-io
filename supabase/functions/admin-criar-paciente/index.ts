@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       }
       const { data: temPerm } = await userClient.rpc("has_permission", {
         _user_id: u.user.id,
-        _capability: "pacientes.criar",
+        _key: "pacientes.criar",
       });
       if (!temPerm) return json({ error: "Sem permissão pacientes.criar" }, 403);
     }
@@ -88,13 +88,13 @@ Deno.serve(async (req) => {
     await admin.from("user_roles").upsert(
       { user_id: userId, role: "paciente" },
       { onConflict: "user_id,role" }
-    );
+    ).throwOnError();
 
     // 3) Upsert profile
     await admin.from("profiles").upsert(
-      { id: userId, email, nome: nome_completo, role: "paciente" },
+      { id: userId, email, nome: nome_completo },
       { onConflict: "id" }
-    );
+    ).throwOnError();
 
     // 4) Cria/encontra paciente
     const { data: existingPac } = await admin
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
         empresa_id: vinculo === "empresarial" ? (empresa_id ?? null) : null,
         origem_cadastro: "admin",
         responsavel_cadastro_id: u.user.id,
-      }).eq("id", pacienteId);
+      }).eq("id", pacienteId).throwOnError();
     } else {
       const { data: created, error: cErr } = await admin
         .from("pacientes")

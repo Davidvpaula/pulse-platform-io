@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { ReceitaPorOrigem } from "@/components/planos/ReceitaPorOrigem";
 import { useAdminVisaoGeral, useServicosResumo, useIntegracoesResumo } from "@/lib/admin/queries";
 import { AdminLoading, AdminError, AdminEmpty } from "@/components/admin/AdminStates";
+import { downloadCSV } from "@/lib/relatorios/utils";
 
 const periodos = [
   { key: "hoje", label: "Hoje" },
@@ -63,8 +64,15 @@ export default function AdminDashboard() {
                 >{po.label}</button>
               ))}
             </div>
-            <Button variant="outline" disabled><Download className="mr-2 h-4 w-4" />Exportar</Button>
-            <Button disabled><TrendingUp className="mr-2 h-4 w-4" />Relatório completo</Button>
+            <Button variant="outline" disabled={!data || isError || isLoading} onClick={() => {
+              if (!data) return;
+              downloadCSV(`visao-geral-${periodo}.csv`, [
+                ["Período", "Indicador", "Valor", "Unidade"],
+                ...Object.entries(data.kpis).map(([key, value]) => [periodoLabel, key, value, key.endsWith('_centavos') ? 'centavos' : 'quantidade']),
+                ...Object.entries(data.pendencias).map(([key, value]) => [periodoLabel, `pendencia_${key}`, value, 'quantidade']),
+              ]);
+            }}><Download className="mr-2 h-4 w-4" />Exportar</Button>
+            <Button asChild><Link to="/app/admin/relatorios"><TrendingUp className="mr-2 h-4 w-4" />Relatório completo</Link></Button>
           </div>
         }
       />

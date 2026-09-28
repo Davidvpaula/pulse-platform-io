@@ -22,6 +22,10 @@
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report",
     "dev:local": "vite --mode localpreview",
+    "admin:local": "node scripts/start-admin-local.mjs",
+    "admin:setup": "node scripts/setup-local-admin.mjs",
+    "admin:test": "node scripts/test-admin-local.mjs && node scripts/test-admin-browser.mjs",
+    "admin:routes": "node scripts/check-admin-pages.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
@@ -101,6 +105,7 @@
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
     "postcss": "^8.5.6",
+    "supabase": "^2.118.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",

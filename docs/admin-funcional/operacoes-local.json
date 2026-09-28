@@ -1,0 +1,12 @@
+{
+  "testedAt": "2026-09-28T15:56:11.679Z",
+  "passed": [
+    "FAQ: criar, editar, publicar e ocultar para visitante",
+    "Permissões: conceder/revogar, preservar bloqueios e negar autoelevação",
+    "Inspeção: iniciar, ler, restringir a administrador e encerrar",
+    "admin-criar-paciente: autenticação e validação de entrada",
+    "admin-invite-colaborador: autenticação e validação de entrada",
+    "admin-criar-paciente: convite local e cadastro persistido",
+    "admin-invite-colaborador: convite local e cadastro persistido"
+  ]
+}

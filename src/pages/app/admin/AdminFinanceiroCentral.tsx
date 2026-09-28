@@ -1,3 +1,4 @@
+import { requireSuccess } from '@/lib/supabase-result';
 import React, { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminLoading, AdminError } from "@/components/admin/AdminStates";
@@ -122,11 +123,12 @@ export default function AdminFinanceiroCentral() {
     setLoteRunning(true);
     let ok = 0, fail = 0;
     for (const p of selecionadosPendentes) {
-      try { await supabase.rpc("financeiro_pagamento_confirmar" as never, { _pagamento_id: p.id } as never); ok++; }
+      try { await requireSuccess(supabase.rpc("financeiro_pagamento_confirmar" as never, { _pagamento_id: p.id } as never)); ok++; }
       catch { fail++; }
     }
     setLoteRunning(false); setSelecionados(new Set());
-    toast.success(`${ok} aprovados${fail ? `, ${fail} com erro` : ""}`);
+    if (fail) toast.error(`${ok} aprovados; ${fail} falharam. Confira os pagamentos antes de tentar novamente.`);
+    else toast.success(`${ok} aprovados`);
     invalidate();
   }
 
@@ -135,11 +137,12 @@ export default function AdminFinanceiroCentral() {
     setLoteRunning(true);
     let ok = 0, fail = 0;
     for (const p of selecionadosPendentes) {
-      try { await supabase.rpc("financeiro_pagamento_cancelar" as never, { _pagamento_id: p.id, _motivo: loteCancelMotivo } as never); ok++; }
+      try { await requireSuccess(supabase.rpc("financeiro_pagamento_cancelar" as never, { _pagamento_id: p.id, _motivo: loteCancelMotivo } as never)); ok++; }
       catch { fail++; }
     }
     setLoteRunning(false); setLoteCancelOpen(false); setLoteCancelMotivo(""); setSelecionados(new Set());
-    toast.success(`${ok} cancelados${fail ? `, ${fail} com erro` : ""}`);
+    if (fail) toast.error(`${ok} cancelados; ${fail} falharam. Confira os pagamentos antes de tentar novamente.`);
+    else toast.success(`${ok} cancelados`);
     invalidate();
   }
 
@@ -156,13 +159,13 @@ export default function AdminFinanceiroCentral() {
   }
 
   async function confirmarPagamento(id: string) {
-    try { await supabase.rpc("financeiro_pagamento_confirmar" as never, { _pagamento_id: id } as never); toast.success("Pagamento confirmado"); invalidate(); }
+    try { await requireSuccess(supabase.rpc("financeiro_pagamento_confirmar" as never, { _pagamento_id: id } as never)); toast.success("Pagamento confirmado"); invalidate(); }
     catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Erro"); }
   }
 
   async function cancelarPagamento() {
     if (!cancelId || !cancelMotivo.trim()) return;
-    try { await supabase.rpc("financeiro_pagamento_cancelar" as never, { _pagamento_id: cancelId, _motivo: cancelMotivo } as never); toast.success("Cobrança cancelada"); setCancelId(null); setCancelMotivo(""); invalidate(); }
+    try { await requireSuccess(supabase.rpc("financeiro_pagamento_cancelar" as never, { _pagamento_id: cancelId, _motivo: cancelMotivo } as never)); toast.success("Cobrança cancelada"); setCancelId(null); setCancelMotivo(""); invalidate(); }
     catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Erro"); }
   }
 
@@ -170,11 +173,11 @@ export default function AdminFinanceiroCentral() {
     if (!reembolsoModal) return;
     try {
       if (reembolsoModal.aprovar) {
-        await supabase.rpc("financeiro_reembolso_aprovar" as never, { _reembolso_id: reembolsoModal.id, _observacao: reembolsoModal.observacao || null } as never);
+        await requireSuccess(supabase.rpc("financeiro_reembolso_aprovar" as never, { _reembolso_id: reembolsoModal.id, _observacao: reembolsoModal.observacao || null } as never));
         supabase.functions.invoke("notificar-reembolso", { body: { reembolso_id: reembolsoModal.id, evento: "aprovado" } }).catch(() => {});
         toast.success("Reembolso aprovado");
       } else {
-        await supabase.rpc("financeiro_reembolso_recusar" as never, { _reembolso_id: reembolsoModal.id, _motivo: reembolsoModal.motivo || "Recusado" } as never);
+        await requireSuccess(supabase.rpc("financeiro_reembolso_recusar" as never, { _reembolso_id: reembolsoModal.id, _motivo: reembolsoModal.motivo || "Recusado" } as never));
         supabase.functions.invoke("notificar-reembolso", { body: { reembolso_id: reembolsoModal.id, evento: "recusado" } }).catch(() => {});
         toast.success("Reembolso recusado");
       }
@@ -183,14 +186,14 @@ export default function AdminFinanceiroCentral() {
   }
 
   async function marcarPagoRepasse(id: string) {
-    try { await supabase.rpc("financeiro_repasse_marcar_pago" as never, { _fechamento_id: id } as never); toast.success("Repasse pago"); invalidate(); }
+    try { await requireSuccess(supabase.rpc("financeiro_repasse_marcar_pago" as never, { _fechamento_id: id } as never)); toast.success("Repasse pago"); invalidate(); }
     catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Erro"); }
   }
 
   async function bloquearRepasse(id: string) {
     const motivo = prompt("Motivo do bloqueio:");
     if (!motivo) return;
-    try { await supabase.rpc("financeiro_repasse_bloquear" as never, { _fechamento_id: id, _motivo: motivo } as never); toast.success("Repasse bloqueado"); invalidate(); }
+    try { await requireSuccess(supabase.rpc("financeiro_repasse_bloquear" as never, { _fechamento_id: id, _motivo: motivo } as never)); toast.success("Repasse bloqueado"); invalidate(); }
     catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Erro"); }
   }
 

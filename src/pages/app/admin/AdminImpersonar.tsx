@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Loader2, Search, Eye, AlertTriangle, History } from "lucide-react";
 import { toast } from "sonner";
 import { useImpersonation } from "@/lib/impersonation";
-import { profiles } from "@/lib/profiles";
 
 interface Alvo {
   user_id: string;
@@ -85,15 +84,10 @@ export default function AdminImpersonar() {
     setIniciando(true);
     try {
       await start(escolhido, motivo.trim());
-      toast.success(`Visualizando como ${escolhido.nome}`);
+      toast.success(`Inspeção de ${escolhido.nome} iniciada`);
       setEscolhido(null);
       setMotivo("");
-      // Redireciona para a primeira rota do perfil simulado
-      const pk = profiles[
-        (escolhido.role === "colaborador" ? "secretaria" : escolhido.role) as keyof typeof profiles
-      ];
-      const dest = pk?.nav.find(n => n.to)?.to ?? "/app";
-      navigate(dest);
+      navigate('/app/admin/impersonar');
     } catch (e: any) {
       toast.error("Falha ao iniciar: " + (e?.message ?? e));
     } finally {
@@ -105,7 +99,7 @@ export default function AdminImpersonar() {
     <div className="space-y-6">
       <PageHeader
         title="Visualizar como"
-        description="Inspecione o sistema do ponto de vista de outro usuário (modo somente leitura). Toda sessão é registrada para auditoria."
+        description="Inspecione cadastro e permissões efetivas de um usuário, em uma tela somente leitura. Toda inspeção é registrada."
       />
 
       {active && (
@@ -123,7 +117,7 @@ export default function AdminImpersonar() {
           <div>
             <p className="font-semibold text-warning">Como funciona</p>
             <ul className="mt-1 list-disc pl-5 text-muted-foreground space-y-0.5">
-              <li>A interface assume o perfil escolhido — você vê o que o usuário veria.</li>
+              <li>A inspeção mostra o cadastro e as permissões do usuário selecionado.</li>
               <li><strong>Modo somente leitura</strong>: criar, editar e excluir ficam bloqueados.</li>
               <li>Sessão expira automaticamente em 60 minutos.</li>
               <li>Outros administradores não podem ser usados como alvo.</li>
@@ -239,7 +233,7 @@ export default function AdminImpersonar() {
           <DialogHeader>
             <DialogTitle>Visualizar como {escolhido?.nome}?</DialogTitle>
             <DialogDescription>
-              Você verá a aplicação no perfil <strong>{escolhido?.role}</strong>.
+              Você verá o cadastro e as permissões do usuário com perfil <strong>{escolhido?.role}</strong>.
               Todas as ações de escrita ficarão desabilitadas. A sessão expira em 60 minutos.
             </DialogDescription>
           </DialogHeader>
