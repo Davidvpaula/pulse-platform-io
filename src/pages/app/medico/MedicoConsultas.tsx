@@ -1,3 +1,5 @@
+import { transicionarConsulta } from "@/lib/medico-actions";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Video, MessageCircle, Repeat, XCircle,
@@ -111,16 +113,13 @@ export default function MedicoConsultas() {
   }, [lista, filtro]);
 
   const cancelar = async (id: string) => {
-    if (!confirm("Cancelar esta consulta? O paciente será notificado.")) return;
+    if (!confirm("Cancelar esta consulta?")) return;
     setAcaoId(id);
-    const result = await updateConsultaStatus(id, "cancelada");
-    setAcaoId(null);
-    if (result.ok) {
-      toast.success("Consulta cancelada");
-      void carregar();
-    } else {
-      toast.error(result.error ?? "Não foi possível cancelar");
-    }
+    try {
+      await transicionarConsulta(id, 'cancelada');
+      toast.success('Consulta cancelada'); void carregar();
+    } catch(e) { toast.error(e instanceof Error ? e.message : 'Falha ao cancelar'); }
+    finally { setAcaoId(null); }
   };
 
   const iniciar = async (c: ConsultaDetalhada) => {
@@ -146,17 +145,12 @@ export default function MedicoConsultas() {
 
     setAcaoId(c.id);
     try {
-      if (c.status === "agendada") {
-        const r1 = await updateConsultaStatus(c.id, "confirmada");
-        if (!r1.ok) throw new Error(r1.error);
-      }
-      const result = await updateConsultaStatus(c.id, "em_andamento");
-      if (!result.ok) throw new Error(result.error);
+      await transicionarConsulta(c.id, "em_andamento");
       toast.success("Consulta iniciada");
 
       // Fallback defensivo: se for online e ainda sem link_sala, tenta gerar agora.
       let linkParaAbrir = c.link_sala;
-      if (!linkParaAbrir && c.modalidade === "online") {
+      if (!linkParaAbrir && c.modalidade === "online" && !LOCAL_BACKEND) {
         try {
           await supabase.functions.invoke("google-calendar-sync", {
             body: { consulta_id: c.id, action: "upsert" },

@@ -2,7 +2,6 @@ import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
-import { useAuth } from "@/lib/auth";
 import { Loader2, ShieldX, Clock, Ban, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,12 +36,14 @@ function BlockScreen({ icon: Icon, title, description, action }: {
  * Bloqueia: pacientes, empresas, colaboradores sem registro médico.
  */
 export default function MedicoGuard({ children }: { children: ReactNode }) {
-  const { medico, loading, situacao } = useMedicoAtual();
-  const { profileKey } = useAuth();
+  const { medico, loading, situacao, error, refetch } = useMedicoAtual();
   const location = useLocation();
 
   // Loading — mostra spinner
   if (previewProfile()) return <>{children}</>;
+
+  if (error) return <BlockScreen icon={AlertTriangle} title="Não foi possível verificar o cadastro" description={error}
+    action={<Button onClick={refetch}>Tentar novamente</Button>} />;
 
   if (loading || situacao === null) {
     return (
@@ -54,10 +55,6 @@ export default function MedicoGuard({ children }: { children: ReactNode }) {
 
   // Usuário logado não é médico (paciente, empresa, colaborador)
   if (situacao === "nao_encontrado") {
-    // Admin pode acessar via impersonação futuramente
-    if (profileKey === "admin") {
-      return <>{children}</>;
-    }
     return (
       <BlockScreen
         icon={ShieldX}

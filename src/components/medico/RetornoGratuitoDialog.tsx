@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Gift } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -29,36 +29,37 @@ export default function RetornoGratuitoDialog({
   const [dias, setDias] = useState(30);
   const [observacao, setObservacao] = useState("");
   const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    if (open) { setOferecer(true); setDias(30); setObservacao(''); }
+  }, [open, consultaId]);
 
   const handleConfirmar = async () => {
-    if (!consultaId) return;
+    if (!consultaId || salvando) return;
     if (!oferecer) {
       onOpenChange(false);
       onConcluido();
       return;
     }
-    if (dias < 1 || dias > 365) {
+    if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
       toast.error("Período deve estar entre 1 e 365 dias.");
       return;
     }
     setSalvando(true);
-    const res = await criarRetornoGratuito({
-      consulta_id: consultaId,
-      dias_validade: dias,
-      observacao,
-    });
-    setSalvando(false);
-    if (!res.ok) {
-      toast.error(res.error ?? "Não foi possível liberar o retorno.");
-      return;
+    try {
+      const res = await criarRetornoGratuito({ consulta_id: consultaId, dias_validade: dias, observacao });
+      if (!res.ok) throw new Error(res.error ?? 'Não foi possível liberar o retorno.');
+      toast.success(`Retorno gratuito liberado por ${dias} dias.`);
+      onOpenChange(false);
+      onConcluido();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao liberar retorno.');
+    } finally {
+      setSalvando(false);
     }
-    toast.success(`Retorno gratuito liberado por ${dias} dias.`);
-    onOpenChange(false);
-    onConcluido();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!salvando) onOpenChange(value); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "./session";
-import { obs } from "./observability";
+
 
 export type MedicoStatus = "pendente" | "em_analise" | "aprovado" | "reprovado" | "suspenso" | "bloqueado";
 
@@ -40,81 +40,23 @@ interface UseMedicoAtualReturn {
 }
 
 export function useMedicoAtual(): UseMedicoAtualReturn {
-  const { session } = useSession();
-  const [medico, setMedico] = useState<MedicoAtual | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
-
-  const uid = session?.user?.id;
-
-  useEffect(() => {
-    if (!uid) {
-      setMedico(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    let active = true;
-    setLoading(true);
-
-    (async () => {
-      const start = performance.now();
-      const { data, error: err } = await supabase
-        .from("medicos")
-        .select("id, user_id, nome, email, crm, crm_estado, especialidade, status, link_sala_padrao, foto_url, telefone, bio, suspenso_ate, suspenso_indeterminado, suspensao_motivo, bloqueio_motivo, prioridade_atendimento, tipo_sala")
-        .eq("user_id", uid)
-        .maybeSingle();
-      const durationMs = Math.round(performance.now() - start);
-
-      if (!active) return;
-
-      if (err) {
-        obs.error("auth", "useMedicoAtual — falha ao buscar médico", { module: "medico", durationMs, meta: { error: err.message } });
-        setError(err.message);
-        setMedico(null);
-      } else if (!data) {
-        obs.info("auth", "useMedicoAtual — registro não encontrado", { module: "medico", durationMs });
-        setError(null);
-        setMedico(null);
-      } else {
-        obs.info("auth", "useMedicoAtual — carregado", { module: "medico", durationMs, meta: { medicoId: data.id, status: data.status } });
-        setError(null);
-        setMedico({
-          id: data.id,
-          userId: data.user_id,
-          nome: data.nome,
-          email: data.email,
-          crm: data.crm,
-          crm_estado: data.crm_estado,
-          especialidade: data.especialidade,
-          status: data.status as MedicoStatus,
-          link_sala_padrao: data.link_sala_padrao,
-          foto_url: data.foto_url,
-          telefone: data.telefone,
-          bio: data.bio,
-          suspenso_ate: data.suspenso_ate,
-          suspenso_indeterminado: data.suspenso_indeterminado,
-          suspensao_motivo: data.suspensao_motivo,
-          bloqueio_motivo: data.bloqueio_motivo,
-          prioridade_atendimento: data.prioridade_atendimento,
-          tipo_sala: data.tipo_sala,
-        });
-      }
-      setLoading(false);
-    })();
-
-    return () => { active = false; };
-  }, [uid, tick]);
-
-  const situacao: UseMedicoAtualReturn["situacao"] = loading
-    ? null
-    : !medico
-      ? "nao_encontrado"
-      : medico.status;
-
-  return { medico, loading, error, situacao, refetch: () => setTick(t => t + 1) };
+  const { session, loading: sessionLoading } = useSession();
+  const uid = session?.user.id;
+  const query = useQuery({
+    queryKey: ['medico-atual', uid], enabled: !!uid && !sessionLoading,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('medicos')
+        .select('id, user_id, nome, email, crm, crm_estado, especialidade, status, link_sala_padrao, foto_url, telefone, bio, suspenso_ate, suspenso_indeterminado, suspensao_motivo, bloqueio_motivo, prioridade_atendimento, tipo_sala')
+        .eq('user_id', uid!).abortSignal(signal).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? { ...data, userId: data.user_id, status: data.status as MedicoStatus } : null;
+    },
+    staleTime: 10_000, refetchInterval: 30_000, refetchOnWindowFocus: true, retry: false,
+  });
+  const loading = sessionLoading || (!!uid && query.isPending);
+  const medico = !sessionLoading && uid && !query.isError ? query.data ?? null : null;
+  return { medico, loading, error: query.error?.message ?? null,
+    situacao: loading ? null : medico?.status ?? 'nao_encontrado', refetch: () => { void query.refetch(); } };
 }
 
 /**

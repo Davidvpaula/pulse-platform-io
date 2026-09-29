@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import { chromium } from '@playwright/test';
 const inventory=JSON.parse(fs.readFileSync('docs/auditoria-dashboards/inventario.json','utf8'));
+const role = process.argv.includes('--medico') ? 'medico' : 'admin';
+const directory = `docs/${role}-funcional`;
 const excluded=/\/(feegow|integracoes|whatsapp|ia-medicos|comunicacao\/producao|pendencias-integracao)/;
-const routes=inventory.routes.filter(r=>r.path.startsWith('/app/admin/')&&!r.redirect&&!r.path.includes(':')&&!excluded.test(r.path));
+const routes=inventory.routes.filter(r=>r.path.startsWith(`/app/${role}/`)&&!r.redirect&&!r.path.includes(':')&&!excluded.test(r.path));
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const context=await browser.newContext();
 // Nunca permitir rede externa durante a homologação.
@@ -12,8 +14,8 @@ await context.route('**/*',route=>{
 });
 const page=await context.newPage();
 await page.goto('http://127.0.0.1:8082/auth');
-await page.getByRole('button',{name:'Entrar como administrador'}).click();
-await page.waitForURL('**/app/admin/dashboard');
+await page.getByRole('button',{name:role === 'admin' ? 'Entrar como administrador' : 'Entrar como médico'}).click();
+await page.waitForURL(`**/app/${role}/dashboard`);
 await page.waitForTimeout(1500);
 const results=[];
 for(const route of routes) {
@@ -28,9 +30,9 @@ for(const route of routes) {
  }catch(e){results.push({route:route.path,errors:[...errors,{message:e.message}]});}
  page.off('pageerror',onError);page.off('response',onResponse);
  console.log(`${route.path}: ${errors.length} erros`);
- fs.mkdirSync('docs/admin-funcional',{recursive:true});
- fs.writeFileSync('docs/admin-funcional/rotas-local.json',JSON.stringify(results,null,2));
+ fs.mkdirSync(directory,{recursive:true});
+ fs.writeFileSync(`${directory}/rotas-local.json`,JSON.stringify(results,null,2));
 }
-fs.mkdirSync('docs/admin-funcional',{recursive:true});
-fs.writeFileSync('docs/admin-funcional/rotas-local.json',JSON.stringify(results,null,2));
+fs.mkdirSync(directory,{recursive:true});
+fs.writeFileSync(`${directory}/rotas-local.json`,JSON.stringify(results,null,2));
 await browser.close();

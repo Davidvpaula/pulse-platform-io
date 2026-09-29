@@ -203,7 +203,7 @@ export default function AppLayout() {
 
         <main className="flex-1 p-4 md:p-8 min-w-0">
           <ProtectedRoute>
-            {LOCAL_BACKEND && <p className="mb-4 rounded border border-amber-400 bg-amber-50 p-2 text-sm text-amber-950">Admin local · dados de teste persistentes · integrações externas desativadas</p>}
+            {LOCAL_BACKEND && <p className="mb-4 rounded border border-amber-400 bg-amber-50 p-2 text-sm text-amber-950">Ambiente local · dados de teste persistentes · integrações externas desativadas</p>}
             <PageBoundary>{inspection ? <UserInspection /> : <Outlet />}</PageBoundary>
           </ProtectedRoute>
         </main>

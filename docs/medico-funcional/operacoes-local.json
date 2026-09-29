@@ -1,0 +1,14 @@
+{
+  "testedAt": "2026-09-29T10:48:38.697Z",
+  "passed": [
+    "Médico não altera valores financeiros por UPDATE direto",
+    "Compartilhamento individual auditado; segundo anexo permanece privado; outro médico bloqueado",
+    "PDF: envio, registro e leitura autorizada; segundo médico sem acesso",
+    "Navegador: cartão médico, receita própria, documentos sem emissão simulada, compartilhamento e início de consulta",
+    "Navegador: finalização sem pagamento simulado, perfil persistido e layout móvel",
+    "Consulta: início concorrente idempotente, conclusão, transições inválidas e ausência de pagamento simulado",
+    "Perfil: edição pessoal permitida e alteração administrativa de status negada",
+    "Horário presencial: criação e exclusão pelo médico",
+    "Formações: substituição atômica, erro preserva dados anteriores e remoção de todas"
+  ]
+}

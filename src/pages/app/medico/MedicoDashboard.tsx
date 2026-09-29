@@ -1,3 +1,4 @@
+import { transicionarConsulta } from "@/lib/medico-actions";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -19,7 +20,6 @@ import {
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { useSession } from "@/lib/session";
 import { useAuth, useCan } from "@/lib/auth";
-import { usePermission } from "@/lib/permissions/usePermission";
 import { useTermsCheck } from "@/hooks/useTermsCheck";
 import { TermsAcceptanceDialog } from "@/components/shared/TermsAcceptanceDialog";
 import { getRankingMedico, getSaldoAtual, type MedicoRanking } from "@/lib/gamificacao";
@@ -57,15 +57,14 @@ export default function MedicoDashboard() {
   const { medico: medicoAtual } = useMedicoAtual();
   const { profileKey } = useAuth();
   const can = useCan();
-  const { has: hasPerm } = usePermission("financeiro.ver");
 
   // Permissões finas
   const isMedico = profileKey === "medico";
   const isAdmin = profileKey === "admin";
   const podeAtuar = isMedico || isAdmin; // só esses iniciam/concluem consulta
   const podeIniciar = can("consulta.start", "edit"); // mutativo
-  const podeVerFinanceiro = isMedico ? hasPerm("financeiro.ver") : isAdmin;
-  const podeVerPacientes = isMedico || isAdmin || profileKey === "secretaria";
+  const podeVerFinanceiro = isMedico || isAdmin;
+  const podeVerPacientes = isMedico || isAdmin;
   const [loading, setLoading] = useState(true);
   const termsContrato = useTermsCheck("contrato_medico");
   const [medicoNome, setMedicoNome] = useState<string>("");
@@ -247,19 +246,7 @@ export default function MedicoDashboard() {
     }
     setIniciandoId(c.id);
     try {
-      // State machine: agendada → confirmada → em_andamento
-      if (c.status === "agendada") {
-        const { error: errConfirm } = await supabase
-          .from("consultas")
-          .update({ status: "confirmada" })
-          .eq("id", c.id);
-        if (errConfirm) throw errConfirm;
-      }
-      const { error } = await supabase
-        .from("consultas")
-        .update({ status: "em_andamento" })
-        .eq("id", c.id);
-      if (error) throw error;
+      await transicionarConsulta(c.id, "em_andamento");
       toast.success("Consulta iniciada");
       if (c.modalidade === "online" && c.link_sala) {
         window.open(c.link_sala, "_blank", "noopener,noreferrer");
@@ -320,7 +307,7 @@ export default function MedicoDashboard() {
       ok: !onb.semSala,
       titulo: "Link da sala virtual configurado",
       desc: onb.semSala
-        ? "Configure o link padrão (Meet, Zoom...) ou ative o modo Google Meet dinâmico."
+        ? "Configure o link fixo da sua sala de atendimento."
         : (medicoAtual as any)?.tipo_sala === "dinamico"
           ? "Google Meet dinâmico ativo — link gerado automaticamente em cada consulta."
           : "Sala configurada — slots online liberados.",

@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-09-28T15:57:13.322Z",
+  "testedAt": "2026-09-29T10:50:31.835Z",
   "passed": [
     "Dashboard: exportação CSV pelo botão",
     "FAQ: criação, edição e exclusão pela interface",

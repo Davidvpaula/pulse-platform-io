@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { toast } from "sonner";
+import { requireSuccess } from "@/lib/supabase-result";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listDocumentosDoMedico,
-  emitirPrescricaoSimulada,
+  getDocumentoPacienteUrl,
   type DocumentoMedico,
   type DocumentoFiltro,
 } from "@/lib/clinico";
@@ -51,40 +52,34 @@ export default function MedicoDocumentos() {
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<DocumentoFiltro>("todos");
   const [loading, setLoading] = useState(false);
-  const [emitindo, setEmitindo] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocumentoMedico[]>([]);
-  // Mapa consulta_id -> visibilidade_empresa dos anexos
-  const [visibMap, setVisibMap] = useState<Record<string, boolean>>({});
-
-  async function carregar() {
-    if (!session) { setDocs([]); return; }
+  const [anexos, setAnexos] = useState<{id: string; consulta_id: string; nome_arquivo: string; visibilidade_empresa: boolean}[]>([]);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setDocs([]); setAnexos([]); setError(null);
+    if (!session) { setLoading(false); return; }
     setLoading(true);
-    const r = await listDocumentosDoMedico();
-    setDocs(r);
-    // Carregar visibilidade dos anexos
-    const ids = r.filter(d => d.qtd_anexos > 0).map(d => d.consulta_id);
-    if (ids.length > 0) {
-      const { data: anexos } = await supabase
-        .from("anexos_consulta")
-        .select("consulta_id, visibilidade_empresa")
-        .in("consulta_id", ids);
-      const map: Record<string, boolean> = {};
-      (anexos ?? []).forEach((a: any) => {
-        if (a.visibilidade_empresa) map[a.consulta_id] = true;
-      });
-      setVisibMap(map);
-    }
-    setLoading(false);
-  }
-
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [session?.user.id]);
+    (async () => {
+      try {
+        const rows = await listDocumentosDoMedico();
+        const ids = rows.map(row => row.consulta_id);
+        const files = ids.length ? await requireSuccess(supabase.from('anexos_consulta')
+          .select('id, consulta_id, nome_arquivo, visibilidade_empresa').in('consulta_id', ids)) : [];
+        if (!cancelled) { setDocs(rows); setAnexos(files ?? []); }
+      } catch (e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Falha ao carregar documentos'); }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [session?.user.id]);
 
   const lista = useMemo(() => {
     const term = q.trim().toLowerCase();
     return docs.filter((d) => {
       const dias = diasAteVencimento(d.prescricao_emitida_em, d.prescricao_validade_dias);
-      if (filtro === "emitidas" && !d.prescricao_id) return false;
-      if (filtro === "pendentes" && d.prescricao_id) return false;
+      if (filtro === "emitidas" && !d.prescricao_id && !d.prescricao_pdf) return false;
+      if (filtro === "pendentes" && (d.prescricao_id || d.prescricao_pdf)) return false;
       if (filtro === "vencidas" && (!d.prescricao_id || (dias ?? 1) > 0)) return false;
       if (!term) return true;
       return (
@@ -96,40 +91,28 @@ export default function MedicoDocumentos() {
   }, [docs, q, filtro]);
 
   const stats = useMemo(() => {
-    const emitidas = docs.filter((d) => d.prescricao_id).length;
-    const pendentes = docs.filter((d) => !d.prescricao_id && d.consulta_status === "concluida").length;
+    const emitidas = docs.filter((d) => d.prescricao_id || d.prescricao_pdf).length;
+    const pendentes = docs.filter((d) => !d.prescricao_id && !d.prescricao_pdf && d.consulta_status === "concluida").length;
     const vencidas = docs.filter((d) => {
       const dias = diasAteVencimento(d.prescricao_emitida_em, d.prescricao_validade_dias);
       return d.prescricao_id && dias !== null && dias <= 0;
     }).length;
-    const anexos = docs.reduce((acc, d) => acc + d.qtd_anexos, 0);
+    const anexos = docs.reduce((acc, d) => acc + d.qtd_anexos + d.arquivos.length, 0);
     return { total: docs.length, emitidas, pendentes, vencidas, anexos };
   }, [docs]);
 
-  async function handleEmitir(consultaId: string) {
-    setEmitindo(consultaId);
-    const r = await emitirPrescricaoSimulada(consultaId);
-    setEmitindo(null);
-    if (!r.ok) {
-      toast.error(r.error ?? "Não foi possível emitir a prescrição");
-      return;
-    }
-    toast.success("Prescrição simulada emitida");
-    carregar();
-  }
-
-  async function toggleVisibilidadeEmpresa(consultaId: string) {
-    const novoValor = !visibMap[consultaId];
-    const { error } = await supabase
-      .from("anexos_consulta")
-      .update({ visibilidade_empresa: novoValor } as any)
-      .eq("consulta_id", consultaId);
-    if (error) {
-      toast.error("Erro ao alterar visibilidade");
-      return;
-    }
-    setVisibMap(prev => ({ ...prev, [consultaId]: novoValor }));
-    toast.success(novoValor ? "Documentos compartilhados com empresa" : "Documentos marcados como privados");
+  async function toggleVisibilidadeEmpresa(anexo: typeof anexos[number]) {
+    if (saving) return;
+    if (!anexo.visibilidade_empresa && !confirm('Compartilhar somente o arquivo "' + anexo.nome_arquivo + '" com a empresa vinculada ao paciente?')) return;
+    setSaving(anexo.id);
+    try {
+      await requireSuccess(supabase.rpc('medico_compartilhar_anexo' as never, {
+        _anexo_id: anexo.id, _compartilhar: !anexo.visibilidade_empresa,
+      } as never));
+      setAnexos(current => current.map(file => file.id === anexo.id ? {...file, visibilidade_empresa: !file.visibilidade_empresa} : file));
+      toast.success('Visibilidade do arquivo atualizada');
+    } catch(e) { toast.error(e instanceof Error ? e.message : 'Falha ao alterar visibilidade'); }
+    finally { setSaving(null); }
   }
 
   return (
@@ -148,6 +131,8 @@ export default function MedicoDocumentos() {
         </div>
       )}
 
+      <p className="rounded-xl border p-4 text-sm text-muted-foreground">Prescrições e atestados podem ser anexados em PDF ao finalizar o atendimento. A emissão eletrônica e a assinatura digital não estão disponíveis nesta etapa.</p>
+      {error && <p role="alert" className="text-destructive">{error}</p>}
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatCard icon={<FileText className="h-4 w-4" />} label="Consultas" value={stats.total} />
@@ -232,7 +217,7 @@ export default function MedicoDocumentos() {
                         </span>
                       )}
                     </p>
-                    {d.prescricao_id ? (
+                    {d.prescricao_pdf ? <p className="text-xs text-muted-foreground">Prescrição em PDF anexada. Consulte o arquivo para os dados do documento.</p> : d.prescricao_id ? (
                       <p className="text-xs text-muted-foreground">
                         Prescrição com {d.prescricao_qtd_medicamentos} medicamento(s) ·
                         emitida em {fmtData(d.prescricao_emitida_em)} ·{" "}
@@ -248,49 +233,28 @@ export default function MedicoDocumentos() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    {d.arquivos.map(file => <Button key={file.id} variant="outline" size="sm" onClick={async () => {
+                      const popup = window.open('about:blank', '_blank');
+                      if (popup) popup.opener = null;
+                      try {
+                        const url = await getDocumentoPacienteUrl(file.storage_path);
+                        if (!url) throw new Error('Não foi possível abrir o documento');
+                        if (popup) popup.location.href = url;
+                        else toast.error('Permita abrir uma nova aba para visualizar o documento.');
+                      } catch(error) { popup?.close(); toast.error(error instanceof Error ? error.message : 'Falha ao abrir documento'); }
+                    }}><FileText className="mr-2 h-4 w-4" />{file.titulo}</Button>)}
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/app/medico/agenda?consulta=${d.consulta_id}`}>
                         <Eye className="mr-2 h-4 w-4" /> Ver consulta
                       </Link>
                     </Button>
-                    {!d.prescricao_id ? (
-                      <Button
-                        size="sm"
-                        onClick={() => handleEmitir(d.consulta_id)}
-                        disabled={emitindo === d.consulta_id}
-                      >
-                        {emitindo === d.consulta_id ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <FilePlus2 className="mr-2 h-4 w-4" />
-                        )}
-                        Emitir prescrição
+                    {anexos.filter(a => a.consulta_id === d.consulta_id).map(anexo => (
+                      <Button key={anexo.id} size="sm" variant="outline" disabled={!!saving}
+                        onClick={() => toggleVisibilidadeEmpresa(anexo)}>
+                        {anexo.visibilidade_empresa ? <Unlock className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
+                        {anexo.nome_arquivo} · {anexo.visibilidade_empresa ? 'Compartilhado' : 'Privado'}
                       </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEmitir(d.consulta_id)}
-                        disabled
-                        title="Já existe prescrição para esta consulta"
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" /> Emitida
-                      </Button>
-                    )}
-                    {d.qtd_anexos > 0 && (
-                      <Button
-                        size="sm"
-                        variant={visibMap[d.consulta_id] ? "default" : "outline"}
-                        onClick={() => toggleVisibilidadeEmpresa(d.consulta_id)}
-                        title={visibMap[d.consulta_id] ? "Documentos visíveis para empresa — clique para tornar privado" : "Documentos privados — clique para compartilhar com empresa"}
-                      >
-                        {visibMap[d.consulta_id] ? (
-                          <><Unlock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
-                        ) : (
-                          <><Lock className="mr-1.5 h-3.5 w-3.5" /> <Building2 className="h-3.5 w-3.5" /></>
-                        )}
-                      </Button>
-                    )}
+                    ))}
                   </div>
                 </li>
               );

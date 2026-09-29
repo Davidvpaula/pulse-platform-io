@@ -1,0 +1,112 @@
+[
+  {
+    "route": "/app/medico/aguardando-aprovacao",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nDashboard\nBom dia, Dr(a). Médico\n\nO que você precisa fazer agora — atendimentos, fila e alertas.\n\nConfigure o link da sua sala virtual\n\nSem link de sala você não pode oferecer horários online. Configure agora — leva menos de 1 minuto.\n\nConfigurar\n\nFinalize sua configuração (3 pendências)\n\nConclua os passos abaixo para começar a receber agendamentos.\n\n4/7\n!\nLink da sala virtual configurado\nConfigure o link fixo da sua sala de atendimento.\nResolver →\n!\nEspecialidade e preço definidos\nVincule ao menos uma especialidade com preço para aparecer na busca.\nResolver →\n!\nDados financeiros configurados\nCadastre conta bancária ou chave PIX para receber repasses.\nResolver →\n\nPRÓXIMO ATENDIMENTO\n\nSem agendamentos hoje\n\nSua agenda está livre. Configure horários para receber pacientes.\n\nCONSULTAS HOJE\n\n0\n\npor telemedicina\n\nPACIENTES (MÊS)\n\n0\n\n0 consultas na semana\n\nDOCUMENTOS EMITIDOS\n\n0\n\nPrescrições do mês\n\nRECEITA DO MÊS\n\nR$ 0,00\n\nConsultas concluídas\n\nRECEITA PARTICULAR (MÊS)\n\nR$ 0,00\n\nConsultas com seu preço próprio (sem serviço da plataforma)\n\nRECEITA SERVIÇOS PLATAFORMA (MÊS)\n\nR$ 0,00\n\n0 consultas via serviços da plataforma · valor de repasse\n\nRanking & Crescimento\nVer detalhes →\n—\n\nPosição\n\n—\n\nScore\n\n"
+  },
+  {
+    "route": "/app/medico/dashboard",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nDashboard\nBom dia, Dr(a). Médico\n\nO que você precisa fazer agora — atendimentos, fila e alertas.\n\nConfigure o link da sua sala virtual\n\nSem link de sala você não pode oferecer horários online. Configure agora — leva menos de 1 minuto.\n\nConfigurar\n\nFinalize sua configuração (3 pendências)\n\nConclua os passos abaixo para começar a receber agendamentos.\n\n4/7\n!\nLink da sala virtual configurado\nConfigure o link fixo da sua sala de atendimento.\nResolver →\n!\nEspecialidade e preço definidos\nVincule ao menos uma especialidade com preço para aparecer na busca.\nResolver →\n!\nDados financeiros configurados\nCadastre conta bancária ou chave PIX para receber repasses.\nResolver →\n\nPRÓXIMO ATENDIMENTO\n\nSem agendamentos hoje\n\nSua agenda está livre. Configure horários para receber pacientes.\n\nCONSULTAS HOJE\n\n0\n\npor telemedicina\n\nPACIENTES (MÊS)\n\n0\n\n0 consultas na semana\n\nDOCUMENTOS EMITIDOS\n\n0\n\nPrescrições do mês\n\nRECEITA DO MÊS\n\nR$ 0,00\n\nConsultas concluídas\n\nRECEITA PARTICULAR (MÊS)\n\nR$ 0,00\n\nConsultas com seu preço próprio (sem serviço da plataforma)\n\nRECEITA SERVIÇOS PLATAFORMA (MÊS)\n\nR$ 0,00\n\n0 consultas via serviços da plataforma · valor de repasse\n\nRanking & Crescimento\nVer detalhes →\n—\n\nPosição\n\n—\n\nScore\n\n"
+  },
+  {
+    "route": "/app/medico/agenda",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nAgenda\nAgenda\n\nSua agenda com filtros por período, status e ações rápidas.\n\nVer fila de atendimento\nDados em tempo real\n\nTOTAL\n\n0\n\nAGENDADAS\n\n0\n\nAGUARD. PGTO\n\n0\n\nCONFIRMADAS\n\n0\n\nEM ANDAMENTO\n\n0\n\nCONCLUÍDAS\n\n0\n\nCANCELADAS\n\n0\n\nHoje\nSemana\nMês\nTodos\nTodos os status\nAgendada\nConfirmada\nAguardando pagamento\nEm andamento\nConcluída\nCancelada\nNão compareceu\n0 consulta(s)\nNenhuma consulta encontrada para este período/filtro."
+  },
+  {
+    "route": "/app/medico/horarios",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nMeus horários\nMeus horários\n\nConfigure sua disponibilidade e o sistema gera os slots automaticamente conforme a duração da consulta.\n\nDados em tempo real\nVocê ainda não tem especialidade com duração configurada. Configure em Configurações antes de cadastrar horários.\nTelemedicina (online)\n\nTIPO DE HORÁRIO A GERAR\n\nParticular (preço/duração da sua especialidade)\nServiço da plataforma (adira em /app/medico/servicos)\nNenhuma especialidade ativa configurada. Configurar agora →\n\nConfigure o link da sala antes de criar horários online\n\nToda consulta online precisa de um link de sala (Google Meet, Zoom, Jitsi…). Configure em Meu perfil → Sala de atendimento online e o link será enviado automaticamente ao paciente em cada consulta.\n\nIr para Meu perfil →\nRecorrência semanal\nPor dia\n\nDIAS DA SEMANA\n\nSeg\nTer\nQua\nQui\nSex\nSáb\nDom\n\nFAIXAS DE HORÁRIO\n\nAdicionar faixa\nInício\nFim\nRepetir por\n4 semanas\nSerão geradas datas em\n19\ndia(s)\nGerar horários\nHorários cadastrados\nTodos (0)\nParticular (0)\nServiço (0)\n\nNenhum horário cadastrado\n\nUse as abas acima para gerar sua disponibilidade."
+  },
+  {
+    "route": "/app/medico/consultas",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nConsultas\nFila de atendimento\n\nSua fila operacional — consultas do dia, ações rápidas e acompanhamento.\n\nVer agenda\nHorários\nHoje\n0 consultas\nNenhuma consulta encontrada para esse filtro."
+  },
+  {
+    "route": "/app/medico/pacientes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPacientes\nPacientes\n\nPacientes que você atende ou já atendeu — busca, filtros e ações rápidas.\n\nDados em tempo real\n\nTOTAL\n\n0\n\nATIVOS\n\n0\n\nPENDÊNCIAS\n\n0\n\nEMPRESARIAIS\n\n0\n\nTodos\nAtivos\nPendentes\nEmpresariais\n0 paciente(s)\nVocê ainda não tem pacientes vinculados."
+  },
+  {
+    "route": "/app/medico/documentos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nDocumentos\nDocumentos & Prescrições\n\nHistórico de prescrições, prontuários e anexos por consulta.\n\nPrescrições e atestados podem ser anexados em PDF ao finalizar o atendimento. A emissão eletrônica e a assinatura digital não estão disponíveis nesta etapa.\n\nConsultas\n\n0\n\nPrescrições emitidas\n\n0\n\nSem prescrição\n\n0\n\nVencidas\n\n0\n\nAnexos\n\n0\n\nTodas as consultas\nPrescrição emitida\nSem prescrição\nPrescrição vencida\nNenhuma consulta encontrada para esse filtro."
+  },
+  {
+    "route": "/app/medico/financeiro",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nFinanceiro\nFinanceiro\n\nExtrato dos seus repasses por consulta e controle de saques.\n\nA RECEBER (LIBERADO)\n\nR$ 0,00\n\nPENDENTE\n\nR$ 0,00\n\nCONSULTAS NO PERÍODO\n\n9\n\nTICKET MÉDIO (VOCÊ)\n\nR$ 0,00\n\nReceita por origem\n\nParticular (B2C)\n\nR$ 0,00\n\n9 consultas\n\nCorporativo (B2B)\n\nR$ 0,00\n\n0 consultas\nSaldo para saque\nSolicitar saque\n\nDisponível para saque\n\nR$ 0,00\n\nAguardando liberação\n\nR$ 0,00\n\nPrazo de segurança\n\n7 dias\n\nPróxima liberação\n\n01/10/2026\n\nHistórico de saques\n\nNenhum saque solicitado.\n\nPeríodo:\nÚltimos 30 dias\nÚltimos 90 dias\nEste ano\nTudo\nDATA\tPACIENTE\tSERVIÇO\tMODELO\tBRUTO\tPLATAFORMA\tVOCÊ\tSTATUS\n29/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n29/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n29/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n29/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n29/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n28/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n28/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n28/09/2026\t—\tParticular\tpercentual (44%)\tR$ 0,00\tR$ 0,00\tR$ 0,00\tLiberado\n28/09/2026\t—\tP"
+  },
+  {
+    "route": "/app/medico/perfil",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPerfil\nMeu perfil\n\nGerencie seu perfil público, dados pessoais e dados bancários.\n\nPerfil Público\nDados Pessoais\nDados Bancários\nDocumentos Fiscais\nTermos & Contrato\nSalvar perfil\nPerfil profissional\nTRATAMENTO\nNenhum\nNOME COMPLETO\nCRM\n\nEditável em Dados Pessoais\n\nESPECIALIDADE PRINCIPAL\n\nEditável em Dados Pessoais\n\nFOTO DE PERFIL\n\n400×400px. Máx 2MB.\n\nMF\nEnviar foto\nBIO\n\n45/500\n\nFormação acadêmica\n0/3\nSalvar formações\nAdicionar\n\nNenhuma formação cadastrada.\n\nAdicione até 3 formações que serão exibidas no seu perfil público.\n\nPRÉVIA\nComo você aparecerá no site\nMF\n—\n· sem avaliações\nMédico fictício medico\nClínica Geral\n·\nCRM TESTE001/SP\n\nCadastro fictício exclusivo de testes locais.\n\nTelemedicina\nAgendar"
+  },
+  {
+    "route": "/app/medico/configuracoes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nConfigurações\nConfigurações\n\nGoogle Meet, atendimento e notificações.\n\nGoogle Meet & Calendar\nSalvar vídeo\n\nGoogle Calendar não conectado\n\nConecte para gerar salas Meet dinâmicas por consulta.\n\nConectar Google Calendar\nTIPO DE LINK DE VÍDEO\nFixo\nDinâmico (Google Meet)\nEM BREVE\nLINK FIXO DE ATENDIMENTO\n\nCole seu link permanente do Google Meet.\n\nAtendimento\nSalvar atendimento\n\nESPECIALIDADES ATIVAS\n\n0\n\nEM PRONTO ATENDIMENTO\n\n0\n\nDURAÇÃO PA\n\nsomente leitura\n\n15 min\n\nDefinido pelo Admin\n\nConsulta particular (agendada)\nMarque as especialidades que atende e defina duração / preço para cada uma.\nESPECIALIDADE\nDURAÇÃO (MIN)\nPREÇO (R$)\nATIVO\n\nCardiologia\n\nClínica Geral\n\nCFM: não exige RQE\n\nDermatologia\n\nEndocrinologia\n\nGinecologia\n\nOrtopedia\n\nPediatria\n\nPsiquiatria\n\nPronto Atendimento\nMarque as especialidades disponíveis em PA. Duração (15 min) definida pelo Admin.\n\nAtive pelo menos uma especialidade acima para liberar o Pronto Atendimento.\n\nAlém das especialidades particulares, você também pode aderir aos Serviços da Plataforma gerenciados pelo Admin, com comissões e regras específicas.\n\nNotificações\nSalvar notificações\nLembretes de consulta (10 min antes)\nAlertas operacionais (pagamentos, agenda)\nResu"
+  },
+  {
+    "route": "/app/medico/google-callback",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nIntegração Google desativada no ambiente local.\n\nRedirecionando para configurações…"
+  },
+  {
+    "route": "/app/medico/servicos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nServiços que eu atendo\n\nVocê atende 0 de 5 serviços disponíveis na plataforma.\n\nAtendimento Imediato Clínico\nconsulta\n\nFale com um clínico em minutos, 24/7.\n\n15 min\nPaciente paga R$ 89,00\nVocê recebe\nR$ 53,40\nConsulta Pediátrica Online\nconsulta\n\nAcompanhe a saúde do seu filho sem sair de casa.\n\n30 min\nPaciente paga R$ 149,00\nVocê recebe\nR$ 92,38\nCardiologia · Avaliação\nconsulta\n\nAvaliação completa com cardiologista certificado.\n\n40 min\nPaciente paga R$ 249,00\nVocê recebe\nR$ 161,85\nSaúde Mental · Acolhimento\nconsulta\n\nConversa segura com profissional de saúde mental.\n\n50 min\nPaciente paga R$ 199,00\nVocê recebe\nR$ 115,42\nCheck-up Preventivo\nconsulta\n\nCuide da sua saúde antes que apareça problema.\n\n30 min\nPaciente paga R$ 129,00\nVocê recebe\nR$ 79,98"
+  },
+  {
+    "route": "/app/medico/treinamento",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nTreinamento\nTreinamento\n\nVídeos, aulas e boas práticas para uso da plataforma.\n\nNenhum módulo de treinamento disponível ainda.\n\nO administrador adicionará conteúdo em breve.\n\nConteúdo gerenciado pelo Admin — novos módulos aparecem automaticamente."
+  },
+  {
+    "route": "/app/medico/notificacoes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nNotificações\nNotificações\n\nEventos e alertas do sistema em tempo real\n\nTodos\nAgendamentos\nPagamentos\nCancelamentos\nSistema\nMarcar todas como lidas (9)\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 29/09 07:48\n\n29/09/2026 às 07:48 · há 1 minuto\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 29/09 07:47\n\n29/09/2026 às 07:47 · há 2 minutos\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 29/09 07:44\n\n29/09/2026 às 07:44 · há 4 minutos\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 29/09 07:43\n\n29/09/2026 às 07:43 · há 6 minutos\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 29/09 07:42\n\n29/09/2026 às 07:42 · há 7 minutos\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 28/09 13:34\n\n28/09/2026 às 13:34 · há cerca de 18 horas\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 28/09 13:33\n\n28/09/2026 às 13:33 · há cerca de 18 horas\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 28/09 13:32\n\n28/09/2026 às 13:32 · há cerca de 18 horas\n\nNova consulta agendada\n\nAgendamento\n\nPaciente fictício de validação · 28/09 13:32\n\n28"
+  },
+  {
+    "route": "/app/medico/comunicacao-interna",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nComunicação interna\nComunicação interna da equipe\n\nMensagens entre Secretaria, Médicos, Admin e Empresas — separado das conversas com pacientes (WhatsApp).\n\nNova conversa\nCANAIS:\nTodos\nSecretaria ↔ Médico\nSecretaria ↔ Admin\nEmpresa ↔ Secretaria\nMédico ↔ Admin\n\n0 CONVERSAS\n\nNenhuma conversa.\n\nSelecione uma conversa ou crie uma nova\n\nSelecione uma conversa para ver detalhes."
+  },
+  {
+    "route": "/app/medico/planos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nNOVA SAÚDE\nMeus Planos\n\nCrie e gerencie planos personalizados para seus pacientes\n\nNovo plano\n\nVocê ainda não criou nenhum plano.\n\nCrie um plano personalizado para oferecer aos seus pacientes."
+  },
+  {
+    "route": "/app/medico/gamificacao",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nGamificação & Ranking\nVisão geral\nGamificação & Ranking\n\nAcompanhe sua performance, avaliações e posição no ranking da plataforma.\n\nConhecer Premium\n1\n\nIniciante\n\n69 pts para Ativo\n\nTotal acumulado: 31 pontos\n\nNOTA MÉDIA\n\n—\n\n0 avaliações\n\nPOSIÇÃO\n\n—\n\nNo ranking geral\n\nCONVERSÃO\n\n—\n\nConsultas / agendamentos\n\nSALDO\n\n90\n\nPontos disponíveis\nScore Multi-Dimensional\nAtualizar\nOperacional\n80%\nClínico\n0%\nComercial\n35%\nReputacional\n0%\n\n31.1\n\nScore final (0-100)\n\nDetalhamento das Métricas\n\nOperacional\n\n80.2/100\nTaxa de conclusão\n100%\nTaxa no-show\n0%\nConsultas concluídas\n1\nRecência (fator)\n1\nDias desde última\n0\n\nClínico\n\n0.0/100\nNota média\n0/5.0\nTotal avaliações\n0\nAvaliações públicas\n0\n% públicas\n0%\n\nComercial\n\n35.4/100\nTaxa conversão\n100%\nPacientes únicos\n1\nPacientes retorno\n0\nTaxa retorno\n0%\n\nReputacional\n\n0.0/100\nBadges conquistados\n0\nMelhor streak\n0 dias\nMeses na plataforma\n0\nFoto de perfil\n❌\nEspecialidade\n❌\nBadges\n0\nContinue atendendo para desbloquear badges!\nStreaks\nRealize consultas consecutivas para iniciar seu streak!\n\nPlano Premium\n\nDesbloqueie campanhas, relatórios avançados e recomendações IA.\n\nVer planos\nSaldo de Crescimento\n90 pts\n\nGanhe 10 pontos por consulta concluída. Use para impulsiona"
+  },
+  {
+    "route": "/app/medico/premium",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPremium\nPremium\n\nImpulsione seu crescimento profissional com campanhas patrocinadas e ferramentas avançadas.\n\nCresça além do orgânico\n\nO Premium não compra posição no ranking interno — seu mérito orgânico permanece intacto. O investimento é direcionado exclusivamente para campanhas externas, impulsionamento de perfil na busca pública e ferramentas avançadas de análise.\n\nRanking orgânico preservado\nCampanhas externas\nRelatórios avançados\nRecomendações IA\nBásico\nR$ 149,00\n/mês\nSelo Premium no perfil\n1 campanha CPC interna ativa\nRelatórios básicos de performance\nDestaque sutil nos resultados de busca\n\nAlcance estimado mensal\n\n~15 visualizações\n\nBaseado nos seus 0 atendimentos\n\nAssinar\nMais popular\nProfissional\nR$ 349,00\n/mês\nTudo do Básico\nAté 3 campanhas CPC simultâneas\nRelatórios avançados com IA\nDestaque prioritário na busca\nRecomendações estratégicas semanais\n\nAlcance estimado mensal\n\n~30 visualizações\n\nBaseado nos seus 0 atendimentos\n\nAssinar\nEnterprise\nR$ 699,00\n/mês\nTudo do Profissional\nCampanhas ilimitadas\nIntegração futura com Google Ads\nConsultor IA personalizado\nSuporte prioritário\nRelatórios de ROI detalhados\n\nAlcance estimado mensal\n\n~50 visualizações\n\nBaseado nos seus 0 atendimentos"
+  },
+  {
+    "route": "/app/medico/campanhas",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPremium\nCampanhas\nCampanhas\n\nGerencie suas campanhas CPC\n\nRecurso Premium\n\nAssine o Premium para criar e gerenciar campanhas de impulsionamento.\n\nVer planos Premium"
+  },
+  {
+    "route": "/app/medico/roi",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPremium\nROI\nROI Premium\n\nRetorno sobre investimento\n\nRecurso Premium\n\nAssine o Premium para acessar relatórios detalhados de ROI.\n\nVer planos Premium"
+  },
+  {
+    "route": "/app/medico/corporativo",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nCorporativo\nCorporativo\n\nConsultas e pacientes vinculados a empresas parceiras e particulares.\n\nB2B / B2C\n\nCONSULTAS EMPRESA\n\n0\n\nCONSULTAS PARTICULAR\n\n0\n\nPACIENTES ÚNICOS\n\n0\n\nEMPRESAS ATENDIDAS\n\n0\n\nFiltros avançados\nBusca\nEmpresa\nTodas\nOrigem\nTodas\nVínculo\nTodos\nStatus consulta\nTodos\nConsultas (0)\nPacientes (0)\nPropostas (0)\nNenhuma consulta encontrada com os filtros aplicados."
+  },
+  {
+    "route": "/app/medico/propostas",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMédico\nPropostas Comerciais\nPropostas Comerciais\n\nPropostas de empresas para atendimento direto.\n\nNenhuma proposta recebida ainda."
+  }
+]

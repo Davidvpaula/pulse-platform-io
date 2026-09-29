@@ -12,6 +12,7 @@ import { useSession } from "@/lib/session";
 import { useMedicoAtual } from "@/lib/useMedicoAtual";
 import { updateMedicoPerfil, formatNomeMedico, type MedicoRow } from "@/lib/clinico";
 import { supabase } from "@/integrations/supabase/client";
+import { requireSuccess } from '@/lib/supabase-result';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MedicoDadosPessoais } from "@/components/medico/MedicoDadosPessoais";
 import { MedicoDadosBancarios } from "@/components/medico/MedicoDadosBancarios";
@@ -107,16 +108,18 @@ export default function MedicoPerfil() {
     setUploadingFoto(true);
     const ext = fotoFile.name.split(".").pop() ?? "jpg";
     const path = `${session.user.id}/avatar_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("medico-avatars").upload(path, fotoFile, { upsert: true });
-    setUploadingFoto(false);
-    if (error) { toast.error("Erro ao enviar foto: " + error.message); return fotoUrl; }
-    const { data: urlData } = supabase.storage.from("medico-avatars").getPublicUrl(path);
-    return urlData.publicUrl;
+    try {
+      await requireSuccess(supabase.storage.from("medico-avatars").upload(path, fotoFile, { upsert: false }));
+      return supabase.storage.from("medico-avatars").getPublicUrl(path).data.publicUrl;
+    } finally { setUploadingFoto(false); }
   }
 
   async function salvarPerfilPublico() {
     if (!session) { toast.error("Sessão expirada."); return; }
+    if (saving) return;
+    if (!nome.trim()) { toast.error('Informe seu nome.'); return; }
     setSaving(true);
+    try {
     let newFotoUrl = fotoUrl;
     if (fotoFile) newFotoUrl = await uploadFoto();
     const res = await updateMedicoPerfil({
@@ -125,12 +128,13 @@ export default function MedicoPerfil() {
       foto_url: newFotoUrl,
       tratamento: tratamento || null,
     });
-    setSaving(false);
-    if (!res.ok) { toast.error(res.error ?? "Erro ao salvar"); return; }
+    if (!res.ok) throw new Error(res.error ?? "Erro ao salvar");
     setFotoUrl(newFotoUrl);
     setFotoFile(null);
     setFotoPreview(null);
     toast.success("Perfil atualizado");
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Falha ao salvar perfil'); }
+    finally { setSaving(false); }
   }
 
   /* ── Formação CRUD ── */
@@ -165,23 +169,12 @@ export default function MedicoPerfil() {
     }
     setSavingFormacoes(true);
 
-    // Delete existing then insert all (simpler than diffing)
-    await supabase.from("medico_formacoes").delete().eq("medico_id", medico.id);
-    if (formacoes.length > 0) {
-      const { error } = await supabase.from("medico_formacoes").insert(
-        formacoes.map(f => ({
-          medico_id: medico.id,
-          titulo: f.titulo.trim(),
-          instituicao: f.instituicao.trim(),
-          status: f.status,
-          ordem: f.ordem,
-        }))
-      );
-      if (error) { toast.error(error.message); setSavingFormacoes(false); return; }
-    }
-    toast.success("Formações salvas");
-    setSavingFormacoes(false);
-    loadFormacoes(medico.id);
+    try {
+      await requireSuccess(supabase.rpc('medico_salvar_formacoes' as never, { _formacoes: formacoes } as never));
+      toast.success('Formações salvas');
+      await loadFormacoes(medico.id);
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Falha ao salvar formações'); }
+    finally { setSavingFormacoes(false); }
   }
 
   return (
@@ -189,7 +182,7 @@ export default function MedicoPerfil() {
       <PageHeader title="Meu perfil" description="Gerencie seu perfil público, dados pessoais e dados bancários." />
 
       <Tabs defaultValue="publico" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex h-auto flex-wrap justify-start gap-1">
           <TabsTrigger value="publico"><User className="mr-1.5 h-3.5 w-3.5" />Perfil Público</TabsTrigger>
           <TabsTrigger value="pessoal"><FileText className="mr-1.5 h-3.5 w-3.5" />Dados Pessoais</TabsTrigger>
           <TabsTrigger value="bancario"><Landmark className="mr-1.5 h-3.5 w-3.5" />Dados Bancários</TabsTrigger>
@@ -269,14 +262,14 @@ export default function MedicoPerfil() {
 
               {/* Formação acadêmica */}
               <section className="card-elevated p-6">
-                <div className="mb-4 flex items-center justify-between gap-2 border-b border-border pb-3">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-primary" />
                     <h3 className="font-display text-lg font-semibold">Formação acadêmica</h3>
                     <Badge variant="secondary" className="text-[10px]">{formacoes.length}/3</Badge>
                   </div>
                   <div className="flex gap-2">
-                    {formacoes.length > 0 && (
+                    {(
                       <Button size="sm" onClick={salvarFormacoes} disabled={savingFormacoes} className="bg-gradient-primary hover:opacity-90">
                         <Save className="mr-1.5 h-3.5 w-3.5" /> {savingFormacoes ? "Salvando…" : "Salvar formações"}
                       </Button>
@@ -301,7 +294,7 @@ export default function MedicoPerfil() {
                       <div key={idx} className="rounded-lg border border-border p-4 space-y-3 relative group">
                         <div className="flex items-start justify-between gap-2">
                           <Badge variant="outline" className="text-[10px] shrink-0">#{f.ordem}</Badge>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          <Button aria-label="Remover formação" size="icon" variant="ghost" className="h-7 w-7 text-destructive"
                             onClick={() => removeFormacao(idx)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { LOCAL_BACKEND } from '@/lib/local-backend';
 
 export default function MedicoGoogleCallback() {
   const [searchParams] = useSearchParams();
@@ -10,30 +11,39 @@ export default function MedicoGoogleCallback() {
   const [message, setMessage] = useState("Conectando ao Google Calendar…");
 
   useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const redirect = (url: string, ms: number) => { if (active) timer = setTimeout(() => navigate(url), ms); };
+    const cleanup = () => { active = false; clearTimeout(timer); };
+    if (LOCAL_BACKEND) {
+      setStatus('error'); setMessage('Integração Google desativada no ambiente local.');
+      redirect('/app/medico/configuracoes', 3000); return cleanup;
+    }
     const code = searchParams.get("code");
     const error = searchParams.get("error");
 
     if (error) {
       setStatus("error");
       setMessage(error === "access_denied" ? "Acesso negado. Tente novamente." : `Erro: ${error}`);
-      setTimeout(() => navigate("/app/medico/configuracoes"), 3000);
-      return;
+      redirect("/app/medico/configuracoes", 3000);
+      return cleanup;
     }
 
     if (!code) {
       setStatus("error");
       setMessage("Código de autorização não encontrado.");
-      setTimeout(() => navigate("/app/medico/configuracoes"), 3000);
-      return;
+      redirect("/app/medico/configuracoes", 3000);
+      return cleanup;
     }
 
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!active) return;
         if (!session) {
           setStatus("error");
           setMessage("Sessão expirada. Faça login novamente.");
-          setTimeout(() => navigate("/auth"), 3000);
+          redirect("/auth", 3000);
           return;
         }
 
@@ -42,6 +52,7 @@ export default function MedicoGoogleCallback() {
         const { data, error: fnError } = await supabase.functions.invoke("google-oauth", {
           body: { action: "exchange-code", code, redirect_uri: redirectUri },
         });
+        if (!active) return;
 
         if (fnError || data?.error) {
           throw new Error(data?.error || fnError?.message || "Erro desconhecido");
@@ -49,14 +60,16 @@ export default function MedicoGoogleCallback() {
 
         setStatus("success");
         setMessage(`Google Calendar conectado! (${data.google_email || ""})`);
-        setTimeout(() => navigate("/app/medico/configuracoes"), 2000);
+        redirect("/app/medico/configuracoes", 2000);
       } catch (err: any) {
+        if (!active) return;
         console.error("Google callback error:", err);
         setStatus("error");
         setMessage(err.message || "Falha ao conectar.");
-        setTimeout(() => navigate("/app/medico/configuracoes"), 4000);
+        redirect("/app/medico/configuracoes", 4000);
       }
     })();
+    return cleanup;
   }, [searchParams, navigate]);
 
   return (

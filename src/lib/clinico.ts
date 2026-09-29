@@ -1446,6 +1446,8 @@ export type DocumentoMedico = {
   prescricao_qtd_medicamentos: number;
   tem_prontuario: boolean;
   qtd_anexos: number;
+  arquivos: { id: string; titulo: string; tipo: string; storage_path: string }[];
+  prescricao_pdf: boolean;
 };
 
 export type DocumentoFiltro = "todos" | "emitidas" | "pendentes" | "vencidas";
@@ -1460,14 +1462,18 @@ export async function listDocumentosDoMedico(): Promise<DocumentoMedico[]> {
 
   const consultaIds = consultas.map((c) => c.id);
 
-  const [{ data: presc }, { data: pront }, { data: anex }] = await Promise.all([
+  const responses = await Promise.all([
     supabase
       .from("prescricoes")
       .select("id, consulta_id, emitida_em, validade_dias, medicamentos")
       .in("consulta_id", consultaIds),
     supabase.from("prontuarios").select("consulta_id").in("consulta_id", consultaIds),
     supabase.from("anexos_consulta").select("consulta_id").in("consulta_id", consultaIds),
+    supabase.from('documentos_paciente').select('id, consulta_id, titulo, tipo, storage_path').in('consulta_id', consultaIds),
   ]);
+
+  for (const response of responses) if (response.error) throw new Error(response.error.message);
+  const [{ data: presc }, { data: pront }, { data: anex }, { data: arquivos }] = responses;
 
   const prescPorConsulta = new Map<string, any>();
   (presc ?? []).forEach((p: any) => prescPorConsulta.set(p.consulta_id, p));
@@ -1493,41 +1499,10 @@ export async function listDocumentosDoMedico(): Promise<DocumentoMedico[]> {
       prescricao_qtd_medicamentos: meds.length,
       tem_prontuario: prontSet.has(c.id),
       qtd_anexos: anexCount.get(c.id) ?? 0,
+      arquivos: (arquivos ?? []).filter(file => file.consulta_id === c.id),
+      prescricao_pdf: (arquivos ?? []).some(file => file.consulta_id === c.id && file.tipo === 'prescricao'),
     };
   });
-}
-
-/** Emite uma prescrição simulada para a consulta (apenas se ainda não houver). */
-export async function emitirPrescricaoSimulada(consultaId: string): Promise<{ ok: boolean; error?: string }> {
-  const { data: existente } = await supabase
-    .from("prescricoes")
-    .select("id")
-    .eq("consulta_id", consultaId)
-    .maybeSingle();
-  if (existente) return { ok: false, error: "Já existe uma prescrição para esta consulta." };
-
-  const medicamentos = [
-    {
-      nome: "Dipirona Sódica 500mg",
-      posologia: "1 comprimido a cada 6 horas se dor ou febre",
-      duracao: "5 dias",
-    },
-    {
-      nome: "Omeprazol 20mg",
-      posologia: "1 cápsula em jejum, uma vez ao dia",
-      duracao: "14 dias",
-    },
-  ];
-
-  const { error } = await supabase.from("prescricoes").insert({
-    consulta_id: consultaId,
-    medicamentos,
-    orientacoes:
-      "Prescrição simulada gerada automaticamente para fins de demonstração. Ingerir bastante líquido e retornar em caso de piora.",
-    validade_dias: 30,
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
 }
 
 // ============================================================

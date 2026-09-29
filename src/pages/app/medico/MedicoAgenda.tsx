@@ -1,8 +1,9 @@
+import { transicionarConsulta } from "@/lib/medico-actions";
 import { useEffect, useMemo, useState } from "react";
 import {
   Play, Filter, Database, Loader2, Video, ExternalLink, CheckCircle2, History, Calendar, LogIn, ListChecks,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -75,13 +76,18 @@ function dataLabel(iso: string): string {
 
 export default function MedicoAgenda() {
   const { session } = useSession();
-  const [periodo, setPeriodo] = useState<Periodo>("hoje");
+  const [searchParams] = useSearchParams();
+  const consultaSelecionada = searchParams.get('consulta');
+  const [periodo, setPeriodo] = useState<Periodo>(consultaSelecionada ? 'todos' : 'hoje');
   const [statusFiltro, setStatusFiltro] = useState<(typeof statusOptions)[number]["value"]>("todos");
 
   const [dbConsultas, setDbConsultas] = useState<ConsultaDetalhada[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [acaoId, setAcaoId] = useState<string | null>(null);
   const [historicoId, setHistoricoId] = useState<string | null>(null);
+  useEffect(() => {
+    if (consultaSelecionada && dbConsultas?.some(c => c.id === consultaSelecionada)) setHistoricoId(consultaSelecionada);
+  }, [consultaSelecionada, dbConsultas]);
   const [finalizar, setFinalizar] = useState<ConsultaDetalhada | null>(null);
 
   const carregar = async () => {
@@ -129,19 +135,7 @@ export default function MedicoAgenda() {
     }
     setAcaoId(c.id);
     try {
-      // State machine: agendada → confirmada → em_andamento
-      if (c.status === "agendada") {
-        const { error: errConfirm } = await supabase
-          .from("consultas")
-          .update({ status: "confirmada" })
-          .eq("id", c.id);
-        if (errConfirm) throw errConfirm;
-      }
-      const { error } = await supabase
-        .from("consultas")
-        .update({ status: "em_andamento" })
-        .eq("id", c.id);
-      if (error) throw error;
+      await transicionarConsulta(c.id, "em_andamento");
       toast.success("Consulta iniciada");
       if (c.modalidade === "online" && c.link_sala) {
         window.open(c.link_sala, "_blank", "noopener,noreferrer");

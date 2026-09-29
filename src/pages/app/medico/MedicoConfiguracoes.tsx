@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { LOCAL_BACKEND } from '@/lib/local-backend';
 import {
   listEspecialidades,
   listVinculosDoMedico,
@@ -95,6 +96,7 @@ export default function MedicoConfiguracoes() {
     }
 
     // Check Google OAuth connection via edge function
+    if (LOCAL_BACKEND) { setGoogleLoading(false); return; }
     try {
       const { data, error } = await supabase.functions.invoke("google-oauth", {
         body: { action: "status" },
@@ -115,6 +117,7 @@ export default function MedicoConfiguracoes() {
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
   const handleGoogleConnect = async () => {
+    if (LOCAL_BACKEND) { toast.info('Integração Google desativada no ambiente local. Use uma sala fixa.'); return; }
     setGoogleActionLoading(true);
     try {
       const redirectUri = `${window.location.origin}/app/medico/google-callback`;

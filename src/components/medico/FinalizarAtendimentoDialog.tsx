@@ -1,3 +1,4 @@
+import { transicionarConsulta } from "@/lib/medico-actions";
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2, ClipboardList, Pill, Wallet, AlertCircle } from "lucide-react";
 import {
@@ -49,7 +50,7 @@ async function uploadDocPaciente(
   const titulo = tipo === "prescricao" ? "Prescrição médica" : "Atestado médico";
 
   const { error: errDoc } = await supabase.from("documentos_paciente").insert({
-    paciente_id: consulta.paciente_id,
+    paciente_id: consulta.paciente_atendido_id ?? consulta.paciente_id,
     user_id: pac.user_id,
     tipo: tipo as any,
     titulo,
@@ -61,7 +62,7 @@ async function uploadDocPaciente(
     uploaded_by: userId,
   });
 
-  if (errDoc) throw new Error(`Erro ao registrar ${tipo}: ${errDoc.message}`);
+  if (errDoc) { await supabase.storage.from("paciente-docs").remove([storagePath]); throw new Error(`Erro ao registrar ${tipo}: ${errDoc.message}`); }
 }
 
 export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFinalizado }: Props) {
@@ -79,13 +80,11 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
 
   // Pagamento
   const [pagamentoStatus, setPagamentoStatus] = useState<string | null>(null);
-  const [marcarPago, setMarcarPago] = useState(false);
 
   useEffect(() => {
     if (!open || !consulta) return;
     setCriarPrescricao(false); setPrescricaoFile(null);
     setCriarAtestado(false); setAtestadoFile(null);
-    setMarcarPago(false);
     setPagamentoStatus(null);
 
     supabase
@@ -108,7 +107,10 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
     consulta.status === "aguardando_pagamento";
 
   async function finalizar() {
-    if (!consulta) return;
+    if (!consulta || salvando) return;
+    if ((criarPrescricao && !prescricaoFile) || (criarAtestado && !atestadoFile)) {
+      toast.error('Selecione os PDFs solicitados antes de finalizar.'); return;
+    }
     setSalvando(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -126,40 +128,7 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
         await uploadDocPaciente(atestadoFile, "atestado", consulta, user.id);
       }
 
-      // 4) Pagamento simulado
-      if (marcarPago && valor > 0) {
-        if (semPagamento) {
-          const { error: errPag } = await supabase.from("pagamentos").insert({
-            consulta_id: consulta.id,
-            valor_centavos: valor,
-            status: "pago",
-            metodo: "simulado",
-            provider: "mock",
-            paid_at: new Date().toISOString(),
-            metadata: { origem: "finalizacao_atendimento" } as any,
-          });
-          if (errPag) throw errPag;
-        } else if (pagamentoPendente) {
-          const { error: errUp } = await supabase
-            .from("pagamentos")
-            .update({
-              status: "pago",
-              paid_at: new Date().toISOString(),
-              metodo: "simulado",
-              provider: "mock",
-            })
-            .eq("consulta_id", consulta.id)
-            .in("status", ["pendente", "processando"]);
-          if (errUp) throw errUp;
-        }
-      }
-
-      // 5) Atualiza status da consulta
-      const { error: errCon } = await supabase
-        .from("consultas")
-        .update({ status: "concluida" })
-        .eq("id", consulta.id);
-      if (errCon) throw errCon;
+      await transicionarConsulta(consulta.id, "concluida");
 
       toast.success("Atendimento finalizado");
       onFinalizado?.();
@@ -172,7 +141,7 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!salvando) onOpenChange(value); }}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Finalizar atendimento</DialogTitle>
@@ -250,19 +219,14 @@ export function FinalizarAtendimentoDialog({ consulta, open, onOpenChange, onFin
               {valor > 0 && semPagamento && (
                 <div className="flex items-start gap-2 rounded-md bg-info/10 p-3 text-info">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>Não há pagamento registrado. Será criado um lançamento simulado se você marcar como pago.</p>
+                  <p>Não há pagamento registrado. A confirmação financeira deve ser feita pela equipe responsável.</p>
                 </div>
               )}
               {valor > 0 && pagamentoStatus === "pago" && (
                 <p className="text-success">Pagamento já confirmado.</p>
               )}
 
-              {valor > 0 && pagamentoStatus !== "pago" && (
-                <label className="flex items-center gap-2">
-                  <Switch checked={marcarPago} onCheckedChange={setMarcarPago} />
-                  <span>Registrar como <strong>pago</strong> agora (simulado)</span>
-                </label>
-              )}
+
             </div>
           </section>
         </div>
