@@ -132,32 +132,17 @@ export function SeletorPacienteAtendido({ titularId, onChange, value, onNovoDepe
           user_id: null,
         };
 
-        const { data: inserted, error } = await supabase
-          .from("pacientes")
-          .insert(payload)
-          .select("id")
-          .single();
+        const { data: dependentId, error } = await supabase.rpc('paciente_criar_dependente' as any, {
+        _nome: payload.nome_completo, _cpf: payload.cpf, _nascimento: payload.data_nascimento,
+        _sexo: payload.sexo, _parentesco: payload.parentesco, _termo: TERMO_TEXTO,
+      });
+      if (error) { toast.error(error.message); return null; }
 
-        if (error) {
-          toast.error("Erro ao cadastrar dependente: " + error.message);
-          return null;
-        }
-
-        // Save consent
-        await supabase.from("dependente_consentimentos").insert({
-          responsavel_id: titularId,
-          dependente_id: inserted.id,
-          tipo_consentimento: "cadastro_dependente",
-          aceite: true,
-          accepted_at: new Date().toISOString(),
-          texto_termo_snapshot: TERMO_TEXTO,
-        });
-
-        toast.success("Dependente cadastrado com sucesso!");
+      toast.success("Dependente cadastrado com sucesso!");
         // Refresh list and select the new dependent
         await fetchDependentes();
-        onChange(inserted.id);
-        return inserted.id;
+        onChange(dependentId as unknown as string);
+        return dependentId as unknown as string;
       },
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps

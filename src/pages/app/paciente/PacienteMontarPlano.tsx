@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { brl } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
+import { usePacienteAtual } from "@/lib/usePacienteAtual";
 import { useSession } from "@/lib/session";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export default function PacienteMontarPlano() {
   const { session } = useSession();
   const navigate = useNavigate();
   const uid = session?.user?.id;
+  const { paciente } = usePacienteAtual();
   const termsPlano = useTermsCheck("plano_plataforma");
 
   const [step, setStep] = useState(1);
@@ -59,7 +61,7 @@ export default function PacienteMontarPlano() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid]);
+  }, [uid, paciente?.id]);
 
   async function loadData() {
     if (!uid) return;
@@ -90,7 +92,7 @@ export default function PacienteMontarPlano() {
       const { data: existentes } = await supabase
         .from("assinaturas")
         .select("id")
-        .eq("paciente_id", uid)
+        .eq("paciente_id", paciente?.id ?? "00000000-0000-0000-0000-000000000000")
         .in("status", ["ativa", "trial"] as any[])
         .limit(1);
 

@@ -276,7 +276,7 @@ const App = () => (
                 path="agendamento/confirmar/:slotId"
                 element={
                   <PacienteParamGuard param="slotId" pattern={UUID_RE}>
-                    <AgendamentoConfirmar />
+                    <PacienteGuard><AgendamentoConfirmar /></PacienteGuard>
                   </PacienteParamGuard>
                 }
               />

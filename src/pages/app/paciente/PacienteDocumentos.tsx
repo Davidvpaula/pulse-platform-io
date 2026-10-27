@@ -33,18 +33,22 @@ import UploadDialogContent from "@/components/paciente/UploadDocumentoDialog";
 import DocStatusChip from "@/components/paciente/DocStatusChip";
 
 const TIPO_LABEL: Record<DocumentoPacienteTipo, string> = {
+  prescricao: "Prescrições", atestado: "Atestados",
   exame: "Exames", laudo: "Laudos", receita: "Receitas",
   identidade: "Identidade", plano: "Plano de saúde", vacina: "Vacinas", outro: "Outros",
 };
 const TIPO_LABEL_SING: Record<DocumentoPacienteTipo, string> = {
+  prescricao: "Prescrição", atestado: "Atestado",
   exame: "Exame", laudo: "Laudo", receita: "Receita",
   identidade: "Identidade", plano: "Plano de saúde", vacina: "Vacina", outro: "Outro",
 };
 const TIPO_ICON: Record<DocumentoPacienteTipo, typeof FileText> = {
+  prescricao: Pill, atestado: FileCheck2,
   exame: FileCheck2, laudo: FileText, receita: Pill,
   identidade: IdCard, plano: FileText, vacina: Syringe, outro: FileQuestion,
 };
 const TIPO_TONE: Record<DocumentoPacienteTipo, string> = {
+  prescricao: "bg-success/10 text-success", atestado: "bg-info/10 text-info",
   exame: "bg-info/10 text-info",
   laudo: "bg-primary-soft text-primary",
   receita: "bg-success/10 text-success",
@@ -107,6 +111,7 @@ export default function PacienteDocumentos() {
     setLoadingDocs(true);
     setLoadingPresc(true);
 
+    try {
     // Load dependentes list
     const pac = await getPacienteAtual();
     if (pac) {
@@ -150,8 +155,10 @@ export default function PacienteDocumentos() {
       setPrescricoes([]);
       setProntuariosSet(new Set());
     }
-    setLoadingDocs(false);
-    setLoadingPresc(false);
+    } catch (e) {
+      setDocs([]); setAnexos([]); setConsultas([]); setPrescricoes([]); setProntuariosSet(new Set());
+      toast.error(e instanceof Error ? e.message : 'Falha ao carregar documentos');
+    } finally { setLoadingDocs(false); setLoadingPresc(false); }
   };
 
   useEffect(() => { void carregar(); /* eslint-disable-next-line */ }, [session]);
@@ -159,6 +166,7 @@ export default function PacienteDocumentos() {
   // Contagem por categoria (meus anexos)
   const contagemPorTipo = useMemo(() => {
     const c: Record<DocumentoPacienteTipo, number> = {
+      prescricao: 0, atestado: 0,
       exame: 0, laudo: 0, receita: 0, identidade: 0, plano: 0, vacina: 0, outro: 0,
     };
     docs.forEach((d) => { c[d.tipo] = (c[d.tipo] ?? 0) + 1; });
@@ -172,7 +180,7 @@ export default function PacienteDocumentos() {
     const q = busca.trim().toLowerCase();
     if (q) arr = arr.filter((d) => d.titulo.toLowerCase().includes(q) || (d.descricao ?? "").toLowerCase().includes(q));
     return arr;
-  }, [docs, busca, filtroTipo]);
+  }, [docs, busca, filtroTipo, filtroPaciente]);
 
   // Pendências por consulta (apenas consultas concluídas/agendadas no passado)
   const consultasComStatus = useMemo(() => {
@@ -307,12 +315,12 @@ export default function PacienteDocumentos() {
             <Button
               variant="outline"
               size="sm"
-              onClick={importarFeegow}
-              disabled={importingFeegow}
+              onClick={() => void carregar()}
+              disabled={loadingDocs}
               className="text-xs"
             >
-              {importingFeegow ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
-              {importingFeegow ? "Atualizando…" : "Atualizar documentos"}
+              {loadingDocs ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+              {loadingDocs ? "Atualizando…" : "Atualizar documentos"}
             </Button>
             <Dialog open={openUpload} onOpenChange={setOpenUpload}>
               <DialogTrigger asChild>
@@ -320,7 +328,7 @@ export default function PacienteDocumentos() {
                   <Upload className="mr-2 h-4 w-4" /> Anexar documento
                 </Button>
               </DialogTrigger>
-              <UploadDialogContent onClose={() => setOpenUpload(false)} onSaved={() => { setOpenUpload(false); void carregar(); }} />
+              <UploadDialogContent dependentes={dependentes} onClose={() => setOpenUpload(false)} onSaved={() => { setOpenUpload(false); void carregar(); }} />
             </Dialog>
           </div>
         }

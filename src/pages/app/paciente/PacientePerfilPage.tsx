@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { isValidCpf } from "@/lib/validation/cpf";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 import {
   User, Save, Loader2, Database as DbIcon, ShieldCheck, Heart,
   MapPin, FileText,
@@ -28,7 +30,7 @@ const onlyDigits = (v: string) => v.replace(/\D/g, "");
 const perfilSchema = z.object({
   nome_completo: z.string().trim().min(3, "Nome completo deve ter ao menos 3 caracteres").max(120, "Nome muito longo"),
   cpf: z.string().trim().refine(
-    (v) => v === "" || onlyDigits(v).length === 11,
+    (v) => v === "" || isValidCpf(v),
     "CPF deve ter 11 dígitos",
   ),
   telefone: z.string().trim().refine(
@@ -102,6 +104,7 @@ export default function PacientePerfilPage() {
     (async () => {
       if (!session) { setLoading(false); return; }
       setLoading(true);
+      try {
       const [{ data: prof }, paciente] = await Promise.all([
         supabase.from("profiles").select("nome, telefone, email").eq("id", session.user.id).maybeSingle(),
         getPacienteAtual(),
@@ -127,7 +130,7 @@ export default function PacientePerfilPage() {
         contato_emergencia_nome: p.contato_emergencia_nome ?? "",
         contato_emergencia_telefone: p.contato_emergencia_telefone ?? "",
       });
-      setLoading(false);
+      } catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao carregar perfil"); } finally { setLoading(false); }
     })();
   }, [session]);
 
@@ -136,6 +139,7 @@ export default function PacientePerfilPage() {
 
   // Auto-preenche endereço por CEP (ViaCEP)
   const buscarCep = async () => {
+    if (LOCAL_BACKEND || import.meta.env.VITE_DISABLE_EXTERNAL === "true") { toast.info("Consulta externa desativada. Preencha o endereco manualmente."); return; }
     const cep = form.cep.replace(/\D/g, "");
     if (cep.length !== 8) { toast.error("Informe um CEP de 8 dígitos."); return; }
     try {
@@ -163,7 +167,9 @@ export default function PacientePerfilPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos.");
       return;
     }
+    if (saving) return;
     setSaving(true);
+    try {
     const r1 = await updatePacientePerfil({
       nome_completo: form.nome_completo.trim(),
       cpf: form.cpf.replace(/\D/g, "") || null,
@@ -183,6 +189,7 @@ export default function PacientePerfilPage() {
       contato_emergencia_nome: form.contato_emergencia_nome || null,
       contato_emergencia_telefone: form.contato_emergencia_telefone || null,
     });
+    if (!r1.ok) { toast.error(r1.error); return; }
     const r2 = await updateProfileBasico({
       nome: form.nome_completo.trim(),
       telefone: form.telefone || null,
@@ -191,6 +198,7 @@ export default function PacientePerfilPage() {
     if (!r1.ok) { toast.error(r1.error ?? "Falha ao salvar."); return; }
     if (!r2.ok) { toast.error(r2.error ?? "Perfil base não atualizado."); return; }
     toast.success("Perfil atualizado com sucesso.");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar perfil"); } finally { setSaving(false); }
   };
 
   if (!session) {
@@ -224,7 +232,7 @@ export default function PacientePerfilPage() {
         </div>
       ) : (
         <Tabs defaultValue="dados" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
+          <TabsList className="h-auto flex w-full max-w-2xl flex-wrap justify-start">
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="saude">Saúde</TabsTrigger>

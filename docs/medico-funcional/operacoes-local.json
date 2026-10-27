@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-09-29T10:48:38.697Z",
+  "testedAt": "2026-10-27T13:00:38.110Z",
   "passed": [
     "Médico não altera valores financeiros por UPDATE direto",
     "Compartilhamento individual auditado; segundo anexo permanece privado; outro médico bloqueado",

@@ -11,26 +11,27 @@ export default function PacientePagamentoSucesso() {
   const [p, setP] = useState<Pagamento | null>(null);
   const [polling, setPolling] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (!id) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
     let attempts = 0;
+    setP(null); setError(null); setPolling(!!id);
+    if (!id) return;
     const tick = async () => {
-      const data = await getPagamento(id);
-      if (cancelled) return;
-      setP(data);
-      attempts += 1;
-      if (data?.status === "pago" || data?.status === "falhou" || attempts >= 12) {
-        setPolling(false);
-        return;
-      }
-      setTimeout(tick, 3000);
+      try {
+        const data = await getPagamento(id);
+        if (cancelled) return;
+        setP(data); attempts++;
+        if (!data || data.status !== 'pendente' && data.status !== 'processando' || attempts >= 12) { setPolling(false); return; }
+        timer = setTimeout(tick, 3000);
+      } catch (e) { if (!cancelled) { setError(e instanceof Error ? e.message : 'Falha ao consultar pagamento'); setPolling(false); } }
     };
-    tick();
-    return () => {
-      cancelled = true;
-    };
+    void tick();
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [id]);
+
+  if (!id || error || !polling && !p) return <div className="space-y-4"><PageHeader title="Pagamento indisponivel" description={error ?? 'Pagamento nao encontrado ou nao informado.'} /><Button asChild><Link to="/app/paciente/financeiro">Ver pagamentos</Link></Button></div>;
 
   const pago = p?.status === "pago";
   const meta = p?.metadata as Record<string, any> | null;
@@ -68,7 +69,7 @@ export default function PacientePagamentoSucesso() {
         description={
           pago
             ? "Sua consulta está garantida. Confira os detalhes abaixo."
-            : "Recebemos seu pagamento — confirmando com o provedor."
+            : "A consulta estara garantida somente quando o pagamento for confirmado."
         }
       />
 
@@ -89,7 +90,7 @@ export default function PacientePagamentoSucesso() {
             )}
           </div>
           <h2 className="font-display text-2xl font-bold">
-            {pago ? "Pagamento aprovado" : "Confirmando pagamento…"}
+            {pago ? "Pagamento aprovado" : polling ? "Confirmando pagamento…" : `Status: ${p?.status ?? 'indisponível'}`}
           </h2>
           {p && (
             <p className="text-sm text-muted-foreground">

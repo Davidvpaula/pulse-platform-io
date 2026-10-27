@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { CreditCard, QrCode, Lock, ShieldCheck, Loader2, AlertTriangle, Ticket, X, CheckCircle2, AlertCircle, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -62,8 +62,15 @@ export default function PacienteCheckout() {
     | { state: "error"; message: string };
   const [preview, setPreview] = useState<Preview>({ state: "idle" });
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const request = useRef(0);
   async function carregar() {
+    const current = ++request.current;
+    setLoading(true); setLoadError(null);
+    setPagamento(null); setConsultaCtx(null); setCupomAplicado(null); setAtendidoInfo(null);
+    try {
     const p = await getPagamento(sessionId);
+    if (current !== request.current) return;
     setPagamento(p);
 
     // Lê cupom já aplicado (caso volte na página)
@@ -88,6 +95,7 @@ export default function PacienteCheckout() {
           .select("paciente_id, medico_id, especialidade_id")
           .eq("id", p.consulta_id)
           .maybeSingle();
+        if (current !== request.current) return;
         if (c) setConsultaCtx(c as ConsultaCtx);
       } else {
         // Contexto da reserva unificada (pré-consulta)
@@ -109,18 +117,22 @@ export default function PacienteCheckout() {
           .select("nome_completo, parentesco")
           .eq("id", pacienteAtendidoId)
           .maybeSingle();
+        if (current !== request.current) return;
         if (dep) setAtendidoInfo({ nome: dep.nome_completo ?? "Dependente", parentesco: dep.parentesco });
       }
 
       // Titular name (from session)
       const { data: { session: s } } = await supabase.auth.getSession();
+      if (current !== request.current) return;
       setTitularNome(s?.user?.user_metadata?.nome ?? s?.user?.email ?? "Você");
     }
 
-    setLoading(false);
+    } catch (e) {
+      if (current === request.current) { setPagamento(null); setLoadError(e instanceof Error ? e.message : 'Falha ao carregar pagamento'); }
+    } finally { if (current === request.current) setLoading(false); }
   }
 
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [sessionId]);
+  useEffect(() => { void carregar(); return () => { request.current++; }; }, [sessionId]);
 
   const valorOriginal = cupomAplicado?.valor_original_centavos ?? pagamento?.valor_centavos ?? 0;
   const desconto = cupomAplicado?.desconto_centavos ?? 0;
@@ -186,7 +198,7 @@ export default function PacienteCheckout() {
   }
 
   async function removerCupom() {
-    if (!pagamento) return;
+    if (!pagamento || processando) return;
     setCupomLoading(true);
     try {
       const r = await removerCupomDoPagamento(pagamento.id);
@@ -208,25 +220,6 @@ export default function PacienteCheckout() {
     try {
       await new Promise((r) => setTimeout(r, 1200));
       await confirmarPagamento(pagamento.id, metodo);
-
-      // Registra uso do cupom (após pagamento confirmado)
-      if (cupomAplicado && consultaCtx) {
-        const reg = await registrarUsoCupom({
-          cupomId: cupomAplicado.cupom_id,
-          consultaId: pagamento.consulta_id ?? pagamento.id,
-          pacienteId: consultaCtx.paciente_id,
-          medicoId: consultaCtx.medico_id,
-          codigoSnapshot: cupomAplicado.codigo,
-          tipoSnapshot: cupomAplicado.tipo,
-          valorOriginalCentavos: cupomAplicado.valor_original_centavos,
-          valorDescontoCentavos: cupomAplicado.desconto_centavos,
-          valorFinalCentavos: cupomAplicado.valor_final_centavos,
-        });
-        if (!reg.ok) {
-          // Não bloqueia o sucesso do pagamento, só registra log
-          console.warn("[checkout] falha ao registrar uso de cupom:", reg.error);
-        }
-      }
 
       // analytics: conversão paga
       try {
@@ -255,7 +248,7 @@ export default function PacienteCheckout() {
       navigate(`/app/paciente/pagamento/cancelado?p=${pagamento.id}`);
     } catch (e: any) {
       toast.error(e.message ?? "Falha ao cancelar");
-    }
+    } finally { setProcessando(false); }
   };
 
   if (loading) {
@@ -265,6 +258,8 @@ export default function PacienteCheckout() {
       </div>
     );
   }
+
+  if (loadError) return <div role="alert" className="space-y-4"><PageHeader title="Falha ao carregar pagamento" description={loadError} /><Button onClick={() => void carregar()}>Tentar novamente</Button></div>;
 
   if (!pagamento) {
     return (
@@ -290,6 +285,8 @@ export default function PacienteCheckout() {
 
 
   // ─── Branch Stripe (provider real) ─────────────────────────────────
+  if (pagamento.status !== 'pendente' && pagamento.status !== 'processando') return <div className="space-y-4"><PageHeader title="Pagamento encerrado" description={'Status: ' + pagamento.status} /><Button asChild><Link to="/app/paciente/financeiro">Ver pagamentos</Link></Button></div>;
+
   if (pagamento.provider === "stripe") {
     const clientSecret = lerStripeClientSecret(pagamento.id);
     return (
@@ -370,8 +367,8 @@ export default function PacienteCheckout() {
       <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning-foreground">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div>
-          <strong>Modo simulado.</strong> A integração real com Stripe será conectada
-          em seguida. Aqui você pode testar o fluxo completo sem cobrança.
+          <strong>Simulação local.</strong> Teste o agendamento sem cobrança real.
+          Nenhum dado bancário ou de cartão deve ser informado neste ambiente.
         </div>
       </div>
 

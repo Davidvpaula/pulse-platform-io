@@ -1,0 +1,15 @@
+{
+  "executadoEm": "2026-10-27T12:59:52.410Z",
+  "passed": [
+    "Isolamento entre pacientes e proteção de status administrativo",
+    "Dependente: cadastro e consentimento atômicos, edição, CPF inválido rejeitado e titularidade protegida",
+    "Concorrência: somente um paciente reserva o horário; outro não cria cobrança",
+    "Cupom: aplicar, remover e confirmar com uso registrado uma unica vez",
+    "Checkout: preço calculado no servidor, dependente validado, pagamento protegido e confirmação idempotente",
+    "Reserva expirada não confirma pagamento nem cria consulta",
+    "Documentos: upload, leitura assinada e bloqueio de outro paciente",
+    "Navegador: login por card, dependentes, documento, checkout, recibo e perfil em celular",
+    "Cancelamento autorizado libera o horário e rejeita outro paciente",
+    "Retorno preserva o dependente, impede reutilizacao e avaliacao respeita o titular"
+  ]
+}

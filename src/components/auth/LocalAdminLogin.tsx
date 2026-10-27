@@ -7,13 +7,13 @@ import { LOCAL_BACKEND } from '@/lib/local-backend';
 export default function LocalAdminLogin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function enter(role: 'admin' | 'medico') {
+  async function enter(role: 'admin' | 'medico' | 'paciente') {
     if (!LOCAL_BACKEND || busy) return;
     setBusy(true); setError('');
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: role === 'admin' ? import.meta.env.VITE_LOCAL_ADMIN_EMAIL : import.meta.env.VITE_LOCAL_MEDICO_EMAIL,
-        password: role === 'admin' ? import.meta.env.VITE_LOCAL_ADMIN_PASSWORD : import.meta.env.VITE_LOCAL_MEDICO_PASSWORD,
+        email: role === 'paciente' ? import.meta.env.VITE_LOCAL_PACIENTE_EMAIL : role === 'admin' ? import.meta.env.VITE_LOCAL_ADMIN_EMAIL : import.meta.env.VITE_LOCAL_MEDICO_EMAIL,
+        password: role === 'paciente' ? import.meta.env.VITE_LOCAL_PACIENTE_PASSWORD : role === 'admin' ? import.meta.env.VITE_LOCAL_ADMIN_PASSWORD : import.meta.env.VITE_LOCAL_MEDICO_PASSWORD,
       });
       if (error) throw error;
       window.location.assign(`/app/${role}/dashboard`);
@@ -27,6 +27,7 @@ export default function LocalAdminLogin() {
     <div className="grid gap-3 sm:grid-cols-2">
       <Button onClick={() => enter('admin')} disabled={busy}>Entrar como administrador</Button>
       <Button onClick={() => enter('medico')} disabled={busy}>Entrar como médico</Button>
+      <Button onClick={() => enter('paciente')} disabled={busy}>Entrar como paciente</Button>
     </div>
     {error && <p role="alert" className="text-destructive">{error}</p>}
   </main>;

@@ -2,6 +2,7 @@
  * React Query hooks centralizados para o Dashboard Paciente.
  * Todas as páginas paciente devem usar estes hooks.
  */
+import { useSession } from "@/lib/session";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -37,8 +38,9 @@ export const pacienteKeys = {
 
 /* ─── Consultas ─── */
 export function usePacienteConsultas(enabled = true) {
+  const { session } = useSession();
   return useQuery<ConsultaDetalhada[]>({
-    queryKey: pacienteKeys.consultas(),
+    queryKey: [...pacienteKeys.consultas(), session?.user.id],
     queryFn: async () => {
       const start = performance.now();
       const data = await listConsultasDoPaciente();
@@ -49,58 +51,63 @@ export function usePacienteConsultas(enabled = true) {
       });
       return data;
     },
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_DYNAMIC,
   });
 }
 
 /* ─── Retornos gratuitos ─── */
 export function usePacienteRetornos(enabled = true) {
+  const { session } = useSession();
   return useQuery<RetornoComContexto[]>({
-    queryKey: pacienteKeys.retornos(),
+    queryKey: [...pacienteKeys.retornos(), session?.user.id],
     queryFn: listRetornosDisponiveis,
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_DYNAMIC,
   });
 }
 
 /* ─── Documentos ─── */
 export function usePacienteDocumentos(enabled = true) {
+  const { session } = useSession();
   return useQuery<DocumentoPaciente[]>({
-    queryKey: pacienteKeys.documentos(),
+    queryKey: [...pacienteKeys.documentos(), session?.user.id],
     queryFn: () => listDocumentosDoPaciente(),
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_DYNAMIC,
   });
 }
 
 /* ─── Anexos de consultas ─── */
 export function usePacienteAnexos(enabled = true) {
+  const { session } = useSession();
   return useQuery<AnexoConsulta[]>({
-    queryKey: pacienteKeys.anexos(),
+    queryKey: [...pacienteKeys.anexos(), session?.user.id],
     queryFn: listAnexosConsultaDoPaciente,
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_DYNAMIC,
   });
 }
 
 /* ─── Conversas / Mensagens ─── */
 export function usePacienteConversas(enabled = true) {
+  const { session } = useSession();
   return useQuery({
-    queryKey: pacienteKeys.conversas(),
+    queryKey: [...pacienteKeys.conversas(), session?.user.id],
     queryFn: async () => {
       const result = await listConversasPaciente();
       return result.data;
     },
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_REALTIME,
   });
 }
 
 /* ─── Dashboard Stats (plano, pendências, empresa) ─── */
 export function usePacienteDashboardStats(pacienteId: string | null, enabled = true) {
+  const { session } = useSession();
   return useQuery({
-    queryKey: pacienteKeys.dashboardStats(pacienteId ?? ""),
+    queryKey: [...pacienteKeys.dashboardStats(pacienteId ?? ""), session?.user.id],
     queryFn: async () => {
       if (!pacienteId) throw new Error("pacienteId required");
 
@@ -147,8 +154,9 @@ export function usePacienteDashboardStats(pacienteId: string | null, enabled = t
 
 /* ─── Financeiro (pagamentos) ─── */
 export function usePacienteFinanceiro(enabled = true) {
+  const { session } = useSession();
   return useQuery({
-    queryKey: pacienteKeys.financeiro(),
+    queryKey: [...pacienteKeys.financeiro(), session?.user.id],
     queryFn: async () => {
       const start = performance.now();
 
@@ -157,7 +165,7 @@ export function usePacienteFinanceiro(enabled = true) {
         .select(`
           id, consulta_id, valor_centavos, status, metodo, provider,
           checkout_url, paid_at, cancelled_at, created_at, metadata,
-          consultas!inner(inicio, modalidade, medico_id, especialidade_id, paciente_atendido_id)
+          consultas(inicio, modalidade, medico_id, especialidade_id, paciente_atendido_id)
         `)
         .order("created_at", { ascending: false });
 
@@ -189,10 +197,10 @@ export function usePacienteFinanceiro(enabled = true) {
         created_at: p.created_at,
         metadata: p.metadata ?? {},
         consulta: {
-          inicio: p.consultas?.inicio,
-          modalidade: p.consultas?.modalidade,
-          medico_nome: medMap.get(p.consultas?.medico_id) ?? "Médico",
-          especialidade_nome: espMap.get(p.consultas?.especialidade_id) ?? "—",
+          inicio: p.consultas?.inicio ?? p.metadata?.snapshot?.inicio,
+          modalidade: p.consultas?.modalidade ?? p.metadata?.snapshot?.modalidade,
+          medico_nome: medMap.get(p.consultas?.medico_id) ?? p.metadata?.snapshot?.medico_nome ?? "Médico",
+          especialidade_nome: espMap.get(p.consultas?.especialidade_id) ?? p.metadata?.snapshot?.referencia_nome ?? "—",
           paciente_atendido_nome: atendidoMap.get(p.consultas?.paciente_atendido_id) ?? null,
         },
       }));
@@ -205,15 +213,16 @@ export function usePacienteFinanceiro(enabled = true) {
 
       return linhas;
     },
-    enabled,
+    enabled: enabled && !!session?.user.id,
     ...QUERY_DYNAMIC,
   });
 }
 
 /* ─── Planos (assinaturas + planos disponíveis) ─── */
 export function usePacientePlanos(pacienteId: string | null, enabled = true) {
+  const { session } = useSession();
   return useQuery({
-    queryKey: pacienteKeys.plano(pacienteId ?? ""),
+    queryKey: [...pacienteKeys.plano(pacienteId ?? ""), session?.user.id],
     queryFn: async () => {
       if (!pacienteId) throw new Error("pacienteId required");
 
@@ -268,8 +277,9 @@ export function usePacientePlanos(pacienteId: string | null, enabled = true) {
 
 /* ─── Consultas avaliadas (gamificação) ─── */
 export function usePacienteAvaliadas(consultaIds: string[], enabled = true) {
+  const { session } = useSession();
   return useQuery<Set<string>>({
-    queryKey: pacienteKeys.avaliadas(consultaIds),
+    queryKey: [...pacienteKeys.avaliadas(consultaIds), session?.user.id],
     queryFn: () => consultasAvaliadasIds(consultaIds),
     enabled: enabled && consultaIds.length > 0,
     ...QUERY_STATIC,

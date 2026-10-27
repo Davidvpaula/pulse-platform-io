@@ -110,7 +110,7 @@ export async function updatePacientePerfil(patch: {
  * ────────────────────────────────────────────────────────────────────── */
 
 export type DocumentoPacienteTipo =
-  | "exame" | "laudo" | "receita" | "identidade" | "plano" | "vacina" | "outro";
+  | "exame" | "laudo" | "receita" | "prescricao" | "atestado" | "identidade" | "plano" | "vacina" | "outro";
 
 export type DocumentoPaciente = {
   id: string;
@@ -149,7 +149,7 @@ export async function listDocumentosDoPaciente(filtroId?: string | null): Promis
     .select("*")
     .in("paciente_id", targetIds)
     .order("created_at", { ascending: false });
-  if (error) { console.error("[clinico] listDocumentosDoPaciente:", error); return []; }
+  if (error) throw new Error(error.message);
   return (data ?? []) as DocumentoPaciente[];
 }
 
@@ -168,6 +168,7 @@ export async function uploadDocumentoPaciente(input: {
 
   const targetPacienteId = input.dependenteId || paciente.id;
 
+  if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(input.file.type) || input.file.size === 0) return { ok: false, error: 'Selecione um PDF ou imagem valido.' };
   if (input.file.size > 20 * 1024 * 1024) {
     return { ok: false, error: "Arquivo muito grande (máx. 20 MB)." };
   }
@@ -212,7 +213,8 @@ export async function getDocumentoPacienteUrl(path: string, expiresInSec = 60): 
 }
 
 export async function deletarDocumentoPaciente(doc: DocumentoPaciente): Promise<boolean> {
-  await supabase.storage.from("paciente-docs").remove([doc.storage_path]);
+  const { error: storageError } = await supabase.storage.from("paciente-docs").remove([doc.storage_path]);
+  if (storageError) return false;
   const { error } = await supabase.from("documentos_paciente").delete().eq("id", doc.id);
   if (error) { console.error("[clinico] deletar doc:", error); return false; }
   return true;

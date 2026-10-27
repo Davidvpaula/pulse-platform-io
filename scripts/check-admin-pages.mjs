@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import { chromium } from '@playwright/test';
 const inventory=JSON.parse(fs.readFileSync('docs/auditoria-dashboards/inventario.json','utf8'));
-const role = process.argv.includes('--medico') ? 'medico' : 'admin';
+const role = process.argv.includes('--paciente') ? 'paciente' : process.argv.includes('--medico') ? 'medico' : 'admin';
 const directory = `docs/${role}-funcional`;
 const excluded=/\/(feegow|integracoes|whatsapp|ia-medicos|comunicacao\/producao|pendencias-integracao)/;
-const routes=inventory.routes.filter(r=>r.path.startsWith(`/app/${role}/`)&&!r.redirect&&!r.path.includes(':')&&!excluded.test(r.path));
+const routes=inventory.routes.filter(r=>r.path.startsWith(`/app/${role}/`)&&!r.redirect&&!r.path.includes(':')&&!r.path.includes('*')&&!excluded.test(r.path));
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const context=await browser.newContext();
 // Nunca permitir rede externa durante a homologação.
@@ -14,7 +14,7 @@ await context.route('**/*',route=>{
 });
 const page=await context.newPage();
 await page.goto('http://127.0.0.1:8082/auth');
-await page.getByRole('button',{name:role === 'admin' ? 'Entrar como administrador' : 'Entrar como médico'}).click();
+await page.getByRole('button',{name:role === 'paciente' ? 'Entrar como paciente' : role === 'admin' ? 'Entrar como administrador' : 'Entrar como médico'}).click();
 await page.waitForURL(`**/app/${role}/dashboard`);
 await page.waitForTimeout(1500);
 const results=[];

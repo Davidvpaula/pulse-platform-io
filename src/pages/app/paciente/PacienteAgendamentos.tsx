@@ -23,6 +23,7 @@ import {
 import { whatsappUrl } from "@/components/FloatingWhatsApp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 import { supabase } from "@/integrations/supabase/client";
 import AgendarRetornoDialog from "@/components/paciente/AgendarRetornoDialog";
 import AvaliarMedicoDialog from "@/components/paciente/AvaliarMedicoDialog";
@@ -98,7 +99,8 @@ export default function PacienteAgendamentos() {
 
   const confirmarCancelamento = async (id: string) => {
     setCancelando(id);
-    const result = await updateConsultaStatus(id, "cancelada");
+    const { error } = await supabase.rpc("paciente_cancelar_consulta" as any, { _consulta_id: id });
+    const result = { ok: !error, error: error?.message };
     setCancelando(null);
     if (!result.ok) {
       const msg = result.error?.includes("4 horas")
@@ -108,7 +110,7 @@ export default function PacienteAgendamentos() {
       return;
     }
     setCancelarConsulta(null);
-    supabase.functions.invoke("audit-log", {
+    if (!LOCAL_BACKEND) supabase.functions.invoke("audit-log", {
       body: { action: "consulta.cancelada", entity_type: "consulta", entity_id: id },
     }).catch(() => {});
     toast.success("Consulta cancelada.");

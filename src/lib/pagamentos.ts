@@ -1,20 +1,6 @@
-/**
- * Camada de pagamentos.
- *
- * Suporta dois providers atrás da mesma interface:
- *  - "mock"   → checkout simulado (atual). Toda a UX é interna ao app.
- *  - "stripe" → futura integração real (Checkout Session via edge function).
- *
- * Hoje só "mock" está habilitado. Quando ligarmos o Stripe, basta:
- *   1. Criar a edge function que cria a Checkout Session.
- *   2. Implementar `stripeProvider.criarCheckout` chamando `supabase.functions.invoke`.
- *   3. Mudar `pagamentos_provider` em `app_settings` para "stripe".
- *
- * Nada nas telas precisa mudar.
- */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { syncConsultaToGoogle } from "@/lib/googleCalendarSync";
+import { LOCAL_BACKEND } from "@/lib/local-backend";
 
 export type Pagamento = Database["public"]["Tables"]["pagamentos"]["Row"];
 export type PagamentoStatus = Database["public"]["Enums"]["pagamento_status"];
@@ -104,182 +90,38 @@ export function limparStripeClientSecret(pagamentoId: string): void {
 /* ─────────── Provider: configuração ─────────── */
 
 export async function getProviderAtual(): Promise<PagamentoProvider> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("app_settings")
     .select("value")
     .eq("key", "pagamentos_provider")
     .maybeSingle();
+  if (error) throw new Error("Falha ao consultar a configuração de pagamentos. Tente novamente.");
   const v = data?.value as unknown;
   if (v === "stripe") return "stripe";
-  return "mock";
+  if (v === "mock" && LOCAL_BACKEND) return "mock";
+  throw new Error("Pagamentos indisponíveis neste ambiente. Nenhuma cobrança foi realizada.");
 }
 
 /* ─────────── Provider: MOCK (simulado) ─────────── */
 
 const mockProvider = {
   async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
-    const metadata: Record<string, unknown> = {
-      descricao: input.descricao ?? null,
-      simulated: true,
-    };
-    // Armazena dados da reserva unificada para criação pós-pagamento
-    if (input.reserva) {
-      metadata.slot_id = input.reserva.slot_id;
-      metadata.tipo = input.reserva.tipo;
-      metadata.referencia_id = input.reserva.referencia_id;
-      metadata.motivo = input.reserva.motivo ?? null;
-      metadata.paciente_id = input.reserva.paciente_id;
-      metadata.medico_id = input.reserva.medico_id;
-      if (input.reserva.paciente_atendido_id) {
-        metadata.paciente_atendido_id = input.reserva.paciente_atendido_id;
-      }
-    }
-    // Snapshot financeiro imutável
-    if (input.snapshot) {
-      metadata.snapshot = input.snapshot;
-    }
-
-    const insertObj: Record<string, unknown> = {
-      valor_centavos: input.valorCentavos,
-      metodo: input.metodo ?? "simulado",
-      provider: "mock" as const,
-      status: "pendente" as const,
-      metadata,
-    };
-    if (input.consultaId) insertObj.consulta_id = input.consultaId;
-    if (input.reserva?.paciente_id) insertObj.paciente_id = input.reserva.paciente_id;
-    if (input.reserva?.medico_id) insertObj.medico_id = input.reserva.medico_id;
-
-    const { data, error } = await supabase
-      .from("pagamentos")
-      .insert(insertObj as any)
-      .select("*")
-      .single();
-    if (error || !data) throw error ?? new Error("Falha ao criar pagamento");
-
-    const checkoutUrl = `/app/paciente/checkout/${data.id}`;
-    await supabase
-      .from("pagamentos")
-      .update({ checkout_url: checkoutUrl })
-      .eq("id", data.id);
-
-    return {
-      pagamentoId: data.id,
-      checkoutUrl,
-      simulated: true,
-      provider: "mock",
-    };
+    if (!LOCAL_BACKEND || !input.reserva) throw new Error('Checkout local requer uma reserva');
+    const { data, error } = await supabase.rpc('paciente_checkout_local' as any, {
+      _slot_id: input.reserva.slot_id, _tipo: input.reserva.tipo, _referencia_id: input.reserva.referencia_id,
+      _motivo: input.reserva.motivo ?? null, _paciente_atendido_id: input.reserva.paciente_atendido_id ?? null,
+    });
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Falha ao criar checkout');
+    const id = data as unknown as string;
+    return { pagamentoId: id, checkoutUrl: '/app/paciente/checkout/' + id, simulated: true, provider: 'mock' };
   },
-
-  /** No mock, "confirmar" o pagamento é o próprio paciente clicando "Pagar". */
-  async confirmar(pagamentoId: string, metodo: PagamentoMetodo): Promise<void> {
-    // 1) Atualiza pagamento → pago
-    const { error } = await supabase
-      .from("pagamentos")
-      .update({
-        status: "pago" as const,
-        metodo,
-        paid_at: new Date().toISOString(),
-        provider_payment_id: `mock_${Date.now()}`,
-      })
-      .eq("id", pagamentoId);
-    if (error) throw error;
-
-    // 2) Cria consulta via RPC (fluxo unificado) ou atualiza consulta existente (legado)
-    const { data: rpcResult, error: rpcError } = await supabase.rpc(
-      "criar_consulta_pos_pagamento" as any,
-      { _pagamento_id: pagamentoId },
-    );
-
-    if (rpcError) {
-      console.error("[pagamentos] criar_consulta_pos_pagamento:", rpcError);
-      // Fallback: tenta lógica legada (consulta_id já vinculada)
-    }
-
-    const res = rpcResult as any;
-    if (res && !res.ok) {
-      console.warn("[pagamentos] criar_consulta_pos_pagamento:", res.erro);
-    }
-
-    // 3) Espelhar no Google Calendar do médico (fire-and-forget).
-    // Falhas no Google NUNCA quebram o pagamento ou a UI.
-    try {
-      const { data: pag } = await supabase
-        .from("pagamentos")
-        .select("consulta_id")
-        .eq("id", pagamentoId)
-        .maybeSingle();
-      if (pag?.consulta_id) {
-        syncConsultaToGoogle(pag.consulta_id, "upsert").catch(() => {});
-      }
-    } catch (e) {
-      console.warn("[pagamentos] google-sync trigger falhou (ignorado):", e);
-    }
-  },
-
-  async cancelar(pagamentoId: string): Promise<void> {
-    const { error } = await supabase
-      .from("pagamentos")
-      .update({
-        status: "cancelado" as const,
-        cancelled_at: new Date().toISOString(),
-      })
-      .eq("id", pagamentoId);
-    if (error) throw error;
-
-    // Libera consulta e slot ao cancelar pagamento
-    const { data: pag } = await supabase
-      .from("pagamentos")
-      .select("consulta_id, metadata")
-      .eq("id", pagamentoId)
-      .maybeSingle();
-
-    // Se tem consulta vinculada (fluxo legado), cancela
-    if (pag?.consulta_id) {
-      const { data: consulta } = await supabase
-        .from("consultas")
-        .select("slot_id, status")
-        .eq("id", pag.consulta_id)
-        .maybeSingle();
-
-      if (consulta?.status === "aguardando_pagamento") {
-        await supabase
-          .from("consultas")
-          .update({ status: "cancelada" as const, updated_at: new Date().toISOString() })
-          .eq("id", pag.consulta_id);
-
-        if (consulta.slot_id) {
-          await supabase
-            .from("agenda_slots")
-            .update({
-              status: "disponivel" as const,
-              reservado_por: null,
-              reserva_expira_em: null,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", consulta.slot_id);
-        }
-      }
-    }
-
-    // Se não tem consulta mas tem slot_id na metadata (fluxo unificado), libera slot
-    const meta = (pag?.metadata as any) ?? {};
-    if (!pag?.consulta_id && meta.slot_id) {
-      await supabase
-        .from("agenda_slots")
-        .update({
-          status: "disponivel" as const,
-          reservado_por: null,
-          reserva_expira_em: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", meta.slot_id)
-        .eq("status", "reservado");
-    }
+  async confirmar(pagamentoId: string, _metodo: PagamentoMetodo): Promise<void> {
+    if (!LOCAL_BACKEND) throw new Error('Simulacao disponivel apenas no ambiente local');
+    const { error } = await supabase.rpc('paciente_confirmar_pagamento_local' as any, { _pagamento_id: pagamentoId });
+    if (error) throw new Error(error.message);
   },
 };
-
-/* ─────────── Provider: STRIPE (placeholder) ─────────── */
 
 const stripeProvider = {
   async criarCheckout(input: CriarCheckoutInput): Promise<CheckoutSession> {
@@ -356,25 +198,25 @@ export async function confirmarPagamento(
   pagamentoId: string,
   metodo: PagamentoMetodo,
 ): Promise<void> {
-  const provider = await getProviderAtual();
-  return provider === "stripe"
+  const pagamento = await getPagamento(pagamentoId);
+  if (!pagamento) throw new Error("Pagamento indisponivel");
+  return pagamento.provider === "stripe"
     ? stripeProvider.confirmar(pagamentoId, metodo)
     : mockProvider.confirmar(pagamentoId, metodo);
 }
 
 export async function cancelarPagamento(pagamentoId: string): Promise<void> {
-  const provider = await getProviderAtual();
-  return provider === "stripe"
-    ? stripeProvider.cancelar(pagamentoId)
-    : mockProvider.cancelar(pagamentoId);
+  const { error } = await supabase.rpc('paciente_cancelar_pagamento' as any, { _pagamento_id: pagamentoId });
+  if (error) throw new Error(error.message);
 }
 
 export async function getPagamento(pagamentoId: string): Promise<Pagamento | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("pagamentos")
     .select("*")
     .eq("id", pagamentoId)
     .maybeSingle();
+  if (error) throw new Error(error.message);
   return data;
 }
 

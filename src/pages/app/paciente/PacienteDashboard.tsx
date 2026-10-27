@@ -21,7 +21,7 @@ import { useSession } from "@/lib/session";
 import { formatDataBR, formatHora, toStatusBadge } from "@/lib/clinico";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { usePacienteConsultas, usePacienteRetornos, usePacienteDashboardStats } from "@/lib/paciente/queries";
+import { usePacienteConsultas, usePacienteRetornos, usePacienteDashboardStats, usePacienteDocumentos } from "@/lib/paciente/queries";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Status type used by StatusBadge */
@@ -42,6 +42,7 @@ export default function PacienteDashboard() {
   const { paciente: pacienteAtual } = usePacienteAtual();
 
   const hasSession = !!session;
+  const { data: documentos } = usePacienteDocumentos(hasSession);
   const pacienteId = pacienteAtual?.id ?? null;
 
   const { data: rawConsultas, isLoading: loadingConsultas, error: errorConsultas, refetch } = usePacienteConsultas(hasSession);
@@ -70,7 +71,8 @@ export default function PacienteDashboard() {
   const statsConsultas = useMemo(() => {
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-    return (rawConsultas ?? []).filter(c => new Date(c.inicio) >= inicioMes).length;
+    const fimMes = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return (rawConsultas ?? []).filter(c => new Date(c.inicio) >= inicioMes && new Date(c.inicio) < fimMes).length;
   }, [rawConsultas]);
 
   const loading = loadingConsultas;
@@ -224,7 +226,7 @@ export default function PacienteDashboard() {
           <StatCard label="Consultas no mês" value={String(statsConsultas)} icon={Calendar} hint={`${futuras.length} agendada(s)`} />
         </Link>
         <Link to="/app/paciente/documentos" className="block transition hover:-translate-y-0.5">
-          <StatCard label="Documentos" value="—" icon={FileText} hint="Receitas e atestados" />
+          <StatCard label="Documentos" value={documentos ? String(documentos.length) : "—"} icon={FileText} hint="Arquivos disponíveis" />
         </Link>
         <Link to="/app/paciente/plano" className="block transition hover:-translate-y-0.5">
           <StatCard label="Plano" value={planoNome ?? "—"} icon={BadgeCheck} hint={planoNome ? "Plano ativo" : "Nenhum plano ativo"} />

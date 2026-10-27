@@ -58,6 +58,7 @@ export default function AdminConfiguracoes() {
 
   const load = async () => {
     setLoading(true);
+    try {
     const { data } = await supabase
       .from("especialidades")
       .select("*")
@@ -65,7 +66,7 @@ export default function AdminConfiguracoes() {
       .order("nome", { ascending: true });
     setEsps((data ?? []) as Especialidade[]);
     setProvider(await getProviderAtual());
-    setLoading(false);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao carregar configuracoes"); } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);

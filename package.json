@@ -29,7 +29,9 @@
     "admin:setup": "node scripts/setup-local-admin.mjs",
     "admin:test": "node scripts/test-admin-local.mjs && node scripts/test-admin-browser.mjs",
     "admin:routes": "node scripts/check-admin-pages.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "paciente:test": "node scripts/test-paciente-local.mjs --browser",
+    "paciente:routes": "node scripts/check-admin-pages.mjs --paciente"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

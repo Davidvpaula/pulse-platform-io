@@ -1,7 +1,6 @@
 import { previewProfile } from "@/lib/local-preview";
 import { ReactNode } from "react";
 import { usePacienteAtual } from "@/lib/usePacienteAtual";
-import { useAuth } from "@/lib/auth";
 import { Loader2, ShieldX, Clock, Ban, XCircle, AlertTriangle, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +35,12 @@ function BlockScreen({ icon: Icon, title, description, action }: {
  * Bloqueia: médicos, empresas, colaboradores sem registro de paciente.
  */
 export default function PacienteGuard({ children }: { children: ReactNode }) {
-  const { paciente, loading, situacao } = usePacienteAtual();
-  const { profileKey } = useAuth();
+  const { paciente, loading, situacao, error, refetch } = usePacienteAtual();
 
   if (previewProfile()) return <>{children}</>;
+
+  if (error) return <BlockScreen icon={AlertTriangle} title="Falha ao verificar cadastro" description={error}
+    action={<Button onClick={refetch}>Tentar novamente</Button>} />;
 
   if (loading || situacao === null) {
     return (
@@ -51,7 +52,6 @@ export default function PacienteGuard({ children }: { children: ReactNode }) {
 
   // Usuário não possui registro na tabela pacientes
   if (situacao === "nao_encontrado") {
-    if (profileKey === "admin") return <>{children}</>;
     return (
       <BlockScreen
         icon={ShieldX}

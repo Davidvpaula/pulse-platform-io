@@ -1,0 +1,62 @@
+[
+  {
+    "route": "/app/paciente/dashboard",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nDashboard\nOlá, Teste 👋\n\nSua central de saúde — ações rápidas, próximas consultas e suporte direto.\n\nAgendar consulta\n\nTIPO DE VÍNCULO\n\nParticular\n\nParticular\n\nPRÓXIMA CONSULTA\n\nSem consultas agendadas\n\nAgende uma consulta para começar.\n\nCONSULTAS NO MÊS\n\n0\n\n0 agendada(s)\n\nDOCUMENTOS\n\n0\n\nArquivos disponíveis\n\nPLANO\n\n—\n\nNenhum plano ativo\n\nFINANCEIRO\n\n✓\n\nSem pendências\nPróximos agendamentos\nVer todos\n\nNenhuma consulta agendada. Agende sua primeira consulta!\n\nComunicação\n\nConversas e status com sua equipe de atendimento\n\n12 não lidas\nVer todas\nPT\nSUPORTE\n\nPaciente Teste Local\n\nsistema\n\n1\nAguardando você\nagora\nOlá! Sua conversa referente à consulta foi criada. Por aqui você poderá acompanhar orientações, anexos e comunicações relacionadas ao atendimento.\nAbrir\nWhatsApp\nPT\nSUPORTE\n\nPaciente Teste Local\n\nsistema\n\n1\nAguardando você\nagora\nOlá! Sua conversa referente à consulta foi criada. Por aqui você poderá acompanhar orientações, anexos e comunicações relacionadas ao atendimento.\nAbrir\nWhatsApp\nPT\nSUPORTE\n\nPaciente Teste Local\n\nsistema\n\n1\nAguardando você\n29/09/2026\nOlá! Sua conversa referente à consulta foi criada. Por aqui você poderá acompanhar orientações, anexos e comunicações relacionadas a"
+  },
+  {
+    "route": "/app/paciente/agendamentos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nAgendamentos\nMeus agendamentos\n\nHistórico completo de consultas, com ações rápidas para entrar, remarcar ou cancelar.\n\nNova consulta\nPróximas\nTodos pacientes\n\nVocê não tem consultas próximas agendadas.\n\nAgende sua consulta online agora — rápido, seguro e sem sair de casa.\n\nAgendar nova consulta"
+  },
+  {
+    "route": "/app/paciente/documentos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nDocumentos\nMeus documentos\n\nReceitas e laudos emitidos por médicos, anexos das consultas e seus próprios documentos.\n\nAtualizar documentos\nAnexar documento\n\nPrescrições\n\n0\n\nAtestados\n\n0\n\nExames\n\n0\n\nLaudos\n\n0\n\nReceitas\n\n0\n\nIdentidade\n\n0\n\nPlano de saúde\n\n0\n\nVacinas\n\n0\n\nOutros\n\n0\n\nMeus anexos\nPor consulta\nTodos os tipos\n\nNenhum documento anexado.\n\nAnexe exames antigos, laudos, identidade médica, carteirinha de plano. PDF e imagens (JPG/PNG) até 20 MB.\n\nAnexar agora\n\nSeus arquivos são privados. Médicos vinculados às suas consultas podem visualizá-los para apoiar o atendimento."
+  },
+  {
+    "route": "/app/paciente/plano",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nMeu Plano\nMeu plano\n\nGerencie todos os seus planos e assinaturas\n\nVocê ainda não tem um plano\n\nConheça nossos planos ou monte um personalizado com profissionais e benefícios sob medida.\n\nMontar meu plano\nVer planos disponíveis"
+  },
+  {
+    "route": "/app/paciente/montar-plano",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nNOVA SAÚDE\nMonte seu Plano\n\nEscolha planos de médicos e ganhe desconto progressivo\n\n1\nEscolher planos\n2\nRevisar\n3\nPagamento\n4\nConfirmado\n\nNenhum plano disponível no momento\n\nPróximo"
+  },
+  {
+    "route": "/app/paciente/plano-checkout-retorno",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nNOVA SAÚDE\nResultado do Pagamento\nPagamento não confirmado\n\nNão foi possível confirmar o pagamento. Tente novamente.\n\nTentar novamente"
+  },
+  {
+    "route": "/app/paciente/financeiro",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nFinanceiro\nFinanceiro\n\nHistórico de pagamentos, faturas pendentes e recibos das suas consultas\n\nTOTAL ACUMULADO\n\nR$ 0,00\n\nPAGO\n\nR$ 0,00\n\nEM ABERTO\n\nR$ 0,00\n\nTodos os status\nVocê ainda não tem pagamentos registrados."
+  },
+  {
+    "route": "/app/paciente/perfil",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPaciente\nPerfil\nMeu perfil\n\nMantenha seus dados atualizados — eles são usados nos agendamentos, prescrições e comunicação.\n\nDados em tempo real\nDados\nEndereço\nSaúde\nConta & senha\nTermos\nIdentificação\nNOME COMPLETO *\nE-MAIL (SOMENTE LEITURA)\nCPF\nTELEFONE\nDATA DE NASCIMENTO\nSEXO BIOLÓGICO\nNão informado\nFeminino\nMasculino\nIntersexo\nNão informado\nContato de emergência\nNOME\nTELEFONE\nSalvar alterações"
+  },
+  {
+    "route": "/app/paciente/notificacoes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nNotificações\n\nEventos e alertas do sistema em tempo real\n\nTodos\nAgendamentos\nPagamentos\nCancelamentos\nSistema\n\nNenhuma notificação ainda"
+  },
+  {
+    "route": "/app/paciente/dependentes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nDependentes\n\nGerencie pessoas sob sua responsabilidade para agendamentos futuros.\n\nAdicionar dependente\n\nNenhum dependente cadastrado.\n\nCadastrar primeiro dependente"
+  },
+  {
+    "route": "/app/paciente/pagamento/sucesso",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nPagamento indisponivel\n\nPagamento nao encontrado ou nao informado.\n\nVer pagamentos"
+  },
+  {
+    "route": "/app/paciente/pagamento/cancelado",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nStatus do pagamento\n\nPagamento nao encontrado ou nao informado.\n\nVoltar ao painel\nVer pagamentos"
+  }
+]

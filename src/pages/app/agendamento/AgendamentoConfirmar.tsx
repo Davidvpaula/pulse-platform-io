@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { reservarSlotUnificado, getPacienteAtual, formatDataBR, formatHora } from "@/lib/clinico";
-import { abrirCheckout, criarCheckoutSession } from "@/lib/pagamentos";
+import { abrirCheckout, criarCheckoutSession, getProviderAtual } from "@/lib/pagamentos";
 import { useSession } from "@/lib/session";
 import { cpfSchema, maskCpf } from "@/lib/validation/cpf";
 import { buscarTermoAtivo, registrarAceite, verificarAceite, type TermoRow } from "@/lib/termos";
@@ -221,6 +221,8 @@ export default function AgendamentoConfirmar() {
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
+      try {
       if (!session) {
         toast.error("Faça login para continuar.");
         navigate(`/auth?redirect=/app/agendamento/confirmar/${slotId}?tipo=${tipo}&ref=${ref}`);
@@ -264,15 +266,16 @@ export default function AgendamentoConfirmar() {
           motivo: "",
         });
       }
-      setLoading(false);
+      } catch (e) { setSlotInfo(null); toast.error(e instanceof Error ? e.message : "Falha ao carregar horario"); } finally { setLoading(false); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slotId, session]);
+  }, [slotId, session, tipo, ref]);
 
   const doSubmit = useCallback(async (values: FormData) => {
-    if (!slotInfo) return;
+    if (!slotInfo || submitting) return;
     setSubmitting(true);
     try {
+      await getProviderAtual();
       // 0) If "novo" dependente selected, validate and save first
       let resolvedAtendidoId = pacienteAtendidoId;
       if (pacienteAtendidoId === "novo" && novoDependenteRef) {
@@ -357,10 +360,10 @@ export default function AgendamentoConfirmar() {
     // Register acceptance for terms not yet registered
     try {
       const promises: Promise<void>[] = [];
-      if (termoConsulta) promises.push(registrarAceite(termoConsulta.id).catch(() => {}));
-      if (termoPrivacidade) promises.push(registrarAceite(termoPrivacidade.id).catch(() => {}));
+      if (termoConsulta) promises.push(registrarAceite(termoConsulta.id));
+      if (termoPrivacidade) promises.push(registrarAceite(termoPrivacidade.id));
       await Promise.all(promises);
-    } catch { /* non-blocking */ }
+    } catch { toast.error("Falha ao registrar aceite dos termos. Tente novamente."); return; }
     await doSubmit(values);
   };
 

@@ -65,7 +65,7 @@ export default function PacienteDependentes() {
   const titularId = paciente?.id;
 
   async function fetchDependentes() {
-    if (!titularId) return;
+    if (!titularId) { setLoading(false); return; }
     setLoading(true);
     const { data, error } = await supabase
       .from("pacientes")
@@ -112,7 +112,10 @@ export default function PacienteDependentes() {
     if (!parentesco) { toast.error("Selecione o parentesco"); return; }
     if (!editId && !aceiteTermos) { toast.error("É necessário aceitar o termo de responsabilidade"); return; }
 
+    if (saving) return;
+    if (nascimento > new Date().toISOString().slice(0,10) || nascimento < "1900-01-01") { toast.error("Data de nascimento invalida"); return; }
     setSaving(true);
+    try {
     const payload: any = {
       nome_completo: nome.trim(),
       cpf: onlyDigits(cpf),
@@ -132,22 +135,11 @@ export default function PacienteDependentes() {
       if (error) { toast.error("Erro ao atualizar: " + error.message); setSaving(false); return; }
       toast.success("Dependente atualizado");
     } else {
-      const { data: inserted, error } = await supabase
-        .from("pacientes")
-        .insert(payload)
-        .select("id")
-        .single();
-      if (error) { toast.error("Erro ao cadastrar: " + error.message); setSaving(false); return; }
-
-      // Save consent
-      await supabase.from("dependente_consentimentos").insert({
-        responsavel_id: titularId,
-        dependente_id: inserted.id,
-        tipo_consentimento: "cadastro_dependente",
-        aceite: true,
-        accepted_at: new Date().toISOString(),
-        texto_termo_snapshot: TERMO_TEXTO,
+      const { data: dependentId, error } = await supabase.rpc('paciente_criar_dependente' as any, {
+        _nome: payload.nome_completo, _cpf: payload.cpf, _nascimento: payload.data_nascimento,
+        _sexo: payload.sexo, _parentesco: payload.parentesco, _termo: TERMO_TEXTO,
       });
+      if (error) { toast.error(error.message); setSaving(false); return; }
 
       toast.success("Dependente cadastrado com sucesso");
     }
@@ -155,7 +147,8 @@ export default function PacienteDependentes() {
     setSaving(false);
     setDialogOpen(false);
     resetForm();
-    fetchDependentes();
+    await fetchDependentes();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar dependente"); } finally { setSaving(false); }
   }
 
   async function handleToggleStatus(d: Dependente) {

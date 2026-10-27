@@ -12,11 +12,13 @@ import { uploadDocumentoPaciente, type DocumentoPacienteTipo } from "@/lib/clini
 import { toast } from "sonner";
 
 const TIPO_LABEL: Record<DocumentoPacienteTipo, string> = {
+  prescricao: "Prescrições", atestado: "Atestados",
   exame: "Exames", laudo: "Laudos", receita: "Receitas",
   identidade: "Identidade", plano: "Plano de saúde", vacina: "Vacinas", outro: "Outros",
 };
 
-export default function UploadDialogContent({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+export default function UploadDialogContent({ onClose, onSaved, dependentes = [] }: { onClose: () => void; onSaved: () => void; dependentes?: {id: string; nome: string}[] }) {
+  const [dependenteId, setDependenteId] = useState("titular");
   const [file, setFile] = useState<File | null>(null);
   const [tipo, setTipo] = useState<DocumentoPacienteTipo>("exame");
   const [titulo, setTitulo] = useState("");
@@ -26,13 +28,16 @@ export default function UploadDialogContent({ onClose, onSaved }: { onClose: () 
   const enviar = async () => {
     if (!file) { toast.error("Selecione um arquivo."); return; }
     if (!titulo.trim()) { toast.error("Informe um título."); return; }
+    if (enviando) return;
     setEnviando(true);
-    const r = await uploadDocumentoPaciente({ file, tipo, titulo, descricao });
+    try {
+    const r = await uploadDocumentoPaciente({ file, tipo, titulo, descricao, dependenteId: dependenteId === "titular" ? null : dependenteId });
     setEnviando(false);
     if (!r.ok) { toast.error(r.error ?? "Falha no envio."); return; }
     toast.success("Documento anexado.");
     setFile(null); setTitulo(""); setDescricao(""); setTipo("exame");
     onSaved();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Falha no envio"); } finally { setEnviando(false); }
   };
 
   return (
@@ -44,6 +49,10 @@ export default function UploadDialogContent({ onClose, onSaved }: { onClose: () 
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4">
+        {dependentes.length > 0 && <div className="space-y-1.5"><Label>Documento de quem?</Label>
+          <Select value={dependenteId} onValueChange={setDependenteId}><SelectTrigger aria-label="Paciente do documento"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="titular">Meu documento</SelectItem>{dependentes.map(d => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
+          </Select></div>}
         <div className="space-y-1.5">
           <Label className="text-xs uppercase tracking-wider text-muted-foreground">Arquivo *</Label>
           <Input type="file" accept="application/pdf,image/jpeg,image/png,image/webp"

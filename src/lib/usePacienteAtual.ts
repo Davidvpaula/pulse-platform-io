@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "./session";
-import { obs } from "./observability";
 
 export type PacienteStatus = "ativo" | "suspenso" | "bloqueado" | "banido" | "pendente";
 
@@ -35,83 +34,28 @@ interface UsePacienteAtualReturn {
 }
 
 export function usePacienteAtual(): UsePacienteAtualReturn {
-  const { session } = useSession();
-  const [paciente, setPaciente] = useState<PacienteAtual | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+  const { session, loading: sessionLoading } = useSession();
+  const uid = session?.user.id;
+  const query = useQuery({
+    queryKey: ['paciente-atual', uid], enabled: !!uid && !sessionLoading,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('pacientes')
+        .select('id, user_id, nome_completo, cpf, telefone, data_nascimento, sexo, status_conta, status_motivo, empresa_id, bloqueado_ate, whatsapp_opt_in, tags')
+        .eq('user_id', uid!).abortSignal(signal).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? { ...data, userId: data.user_id, status_conta: data.status_conta as PacienteStatus, tags: data.tags ?? [] } : null;
+    },
+    staleTime: 10_000, refetchInterval: 30_000, refetchOnWindowFocus: true, retry: false,
+  });
+  const loading = sessionLoading || (!!uid && query.isPending);
+  const paciente = !sessionLoading && uid && !query.isError ? query.data ?? null : null;
+  return { paciente, loading, error: query.error?.message ?? null,
+    situacao: loading ? null : paciente?.status_conta ?? 'nao_encontrado', refetch: () => { void query.refetch(); } };
 
-  const uid = session?.user?.id;
-
-  useEffect(() => {
-    if (!uid) {
-      setPaciente(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    let active = true;
-    setLoading(true);
-
-    (async () => {
-      const start = performance.now();
-      const { data, error: err } = await supabase
-        .from("pacientes")
-        .select("id, user_id, nome_completo, cpf, telefone, data_nascimento, sexo, status_conta, status_motivo, empresa_id, bloqueado_ate, whatsapp_opt_in, tags")
-        .eq("user_id", uid)
-        .maybeSingle();
-      const durationMs = Math.round(performance.now() - start);
-
-      if (!active) return;
-
-      if (err) {
-        obs.error("auth", "usePacienteAtual — falha ao buscar paciente", { module: "paciente", durationMs, meta: { error: err.message } });
-        setError(err.message);
-        setPaciente(null);
-      } else if (!data) {
-        obs.info("auth", "usePacienteAtual — registro não encontrado", { module: "paciente", durationMs });
-        setError(null);
-        setPaciente(null);
-      } else {
-        obs.info("auth", "usePacienteAtual — carregado", { module: "paciente", durationMs, meta: { pacienteId: data.id, status: data.status_conta } });
-        setError(null);
-        setPaciente({
-          id: data.id,
-          userId: data.user_id,
-          nome_completo: data.nome_completo,
-          cpf: data.cpf,
-          telefone: data.telefone,
-          data_nascimento: data.data_nascimento,
-          sexo: data.sexo,
-          status_conta: data.status_conta as PacienteStatus,
-          status_motivo: data.status_motivo,
-          empresa_id: data.empresa_id,
-          bloqueado_ate: data.bloqueado_ate,
-          whatsapp_opt_in: data.whatsapp_opt_in,
-          tags: data.tags ?? [],
-        });
-      }
-      setLoading(false);
-    })();
-
-    return () => { active = false; };
-  }, [uid, tick]);
-
-  const situacao: PacienteSituacao = loading
-    ? null
-    : !paciente
-      ? "nao_encontrado"
-      : paciente.status_conta;
-
-  return { paciente, loading, error, situacao, refetch: () => setTick(t => t + 1) };
 }
 
-/**
- * Convenience: inside PacienteGuard, paciente is guaranteed to exist and be active.
- */
 export function usePacienteId(): string {
   const { paciente } = usePacienteAtual();
-  if (!paciente) throw new Error("usePacienteId must be used inside PacienteGuard (paciente is null)");
+  if (!paciente) throw new Error("usePacienteId requires an active patient");
   return paciente.id;
 }
