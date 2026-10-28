@@ -80,6 +80,8 @@
     "paciente_checkout_local",
     "paciente_confirmar_pagamento_local",
     "paciente_criar_dependente",
+    "paciente_salvar_observacoes",
+    "paciente_reembolsos_recentes",
     "password_mark_changed",
     "password_status",
     "permissoes_dashboard",

@@ -10509,6 +10509,8 @@ export type Database = {
       }
     }
     Functions: {
+      paciente_reembolsos_recentes: { Args: { _paciente_id: string }; Returns: Json }
+      paciente_salvar_observacoes: { Args: { _paciente_id: string; _texto: string }; Returns: undefined }
       colaborador_listar_pacientes: {
         Args: { _busca?: string; _status?: string; _offset?: number }
         Returns: Json

@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-10-28T10:51:15.576Z",
+  "executadoEm": "2026-10-28T11:20:35.351Z",
   "passed": [
     "Sem permissões: central sem dados, leituras diretas negadas; paciente não chama a central",
     "Agenda: total acima de 50, paginação, identidade ocultada sem pacientes.ver e ação não autorizada negada",
@@ -10,6 +10,7 @@
     "Revogação pelo Admin bloqueia imediatamente a RPC e atualiza a tela aberta sem recarga",
     "Suspensão bloqueia central, tabelas operacionais e sessão aberta",
     "Alias legado mantém o identificador do paciente",
+    "Detalhe: abas por permissão, edição negada sem capacidade, nota auditada atomicamente e paciente inexistente sem dados anteriores",
     "Falha de carga exibe erro explícito e permite recuperar a lista sem perder o filtro",
     "Navegador: busca de pacientes, próxima página e filtro de conta suspensa",
     "Tarefas: criação e avanço persistem após recarga, isolamento por proprietário e transferência não autorizada negada"

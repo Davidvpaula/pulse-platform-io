@@ -11,6 +11,7 @@ Atualizado em 28/10/2026. Dashboard único, configurado pelas permissões conced
 | /app/colaborador/agenda e /agendamentos | Criação manual atômica, validação de paciente/médico/horário e preço no servidor. Reserva concorrente não cria duas consultas. Troca de médico exige permissão, valida especialidade e transfere o horário. |
 | /app/colaborador/tarefas | Tarefas pessoais persistentes, prioridade, prazo, filtro, paginação e avanço/reabertura. Sem pacientes ou atividades fictícias apresentados como reais. |
 | /app/colaborador/pacientes | Busca por nome, CPF ou ID exato e paginação no servidor, 50 por página, sem corte nos primeiros 500. Filtro pelo status real da conta. Contagem de consultas como paciente atendido e indicação de pagamento em aberto exigem permissões próprias. Erro de carga tem opção de tentar novamente. |
+| /app/colaborador/pacientes/:id | Consultas, financeiro/planos, comunicação e auditoria carregam apenas com a permissão correspondente. Observações exigem pacientes.editar e são salvas junto da auditoria em transação. Falhas de leitura têm opção de tentar novamente; troca de paciente limpa os dados anteriores. |
 | /app/secretaria/pacientes/:id | Redirecionamento preserva o identificador e a busca da URL. |
 | Login local | Cartão de colaborador autentica uma conta fictícia real no banco local. Ausente no build de produção. |
 | Layout móvel compartilhado | Menu começa fechado no celular e fecha ao navegar ou reduzir a janela, evitando sobrepor botões. |
@@ -25,7 +26,7 @@ Atualizado em 28/10/2026. Dashboard único, configurado pelas permissões conced
 - Tarefas exigem proprietário e colaborador ativo. Não há atribuição a terceiros nesta etapa, nem acesso automático do Admin às tarefas pessoais de outra conta.
 - O setup local preserva o status de colaboradores já cadastrados.
 
-As migrações 20261027110000 até 20261027114000 e 20261028110000 estão versionadas. Não houve reset de banco, publicação remota ou integração externa.
+As migrações 20261027110000 até 20261027114000, 20261028110000, 20261028120000 e 20261028121000 estão versionadas. Não houve reset de banco, publicação remota ou integração externa.
 
 ## Validação executada
 
@@ -43,13 +44,21 @@ Executar as suítes que usam as contas locais em sequência: testes do Admin alt
 
 ## Pendências e sequência
 
-1. Concluir pacientes/detalhe: abas ainda usam consultas limitadas e precisam de autorização por área, tratamento de erros e revisão dos rótulos de integração. A listagem foi corrigida; o cadastro existente e os fluxos do detalhe precisam de cobertura específica do colaborador. O atalho da lista abre a agenda; não promete pré-selecionar o paciente. Validar desempenho da busca em volumes de produção.
+1. Concluir pacientes/detalhe: autorização das abas, erros e salvamento auditado de notas foram corrigidos. As abas ainda mostram registros recentes (100 consultas/pagamentos, 50 reembolsos/eventos, 30 conversas, 20 assinaturas), com limites explícitos; adicionar paginação completa e totais históricos no servidor. Revisar cadastro, transições de conta e solicitação de reembolso, que não estão homologados nesta etapa. Os atalhos abrem agenda/comunicação; não prometem pré-selecionar paciente ou enviar mensagem externa. Validar desempenho da busca em volumes de produção.
 2. Revisar supervisão, comunicação, financeiro delegado e gamificação por ação; revisar RPCs legadas SECURITY DEFINER, que não são protegidas apenas adicionando RLS às tabelas.
 3. Agendamento manual usa a primeira especialidade ativa configurada do profissional; adicionar seleção explícita quando houver múltiplas. Troca com preço diferente e pagamento pago/processando é rejeitada; conciliação/reembolso ficam pendentes.
 4. Avaliar trilha de auditoria e vínculo da conversa após troca de profissional; testar cenários de pagamento, conta removida e matrizes adicionais de permissão.
 5. Concluir dashboard Empresa e regressão cruzada; depois preparar Supabase independente, configuração de produção, backups, monitoramento e servidor.
 
 Novas tabelas precisam de políticas próprias. A restrição adicionada às tabelas existentes não se propaga automaticamente. Não conectar dados reais ou anunciar prontidão de produção antes dessas revisões.
+
+### Continuação: detalhe do paciente
+
+Financeiro e planos usam financeiro.ver; consultas usam agenda.ver_todas (médicos continuam sujeitos às políticas de suas consultas); comunicação usa comunicacao.ver_inbox; auditoria usa auditoria.ver. URL com aba proibida abre a visão geral. Políticas restritivas adicionais protegem a leitura de reembolsos, assinaturas e auditoria para colaboradores. Conversas continuam sujeitas às políticas existentes de distribuição/acesso; revisar integralmente no módulo de comunicação.
+
+paciente_salvar_observacoes exige conta operacional ativa, pacientes.ver e pacientes.editar, limita o texto a 10 mil caracteres, trava o paciente e grava nota/auditoria na mesma transação. A tela não anuncia sucesso se a gravação falhar. Essa garantia é da RPC; revisar caminhos legados de escrita direta antes da produção.
+
+paciente_reembolsos_recentes faz a associação explícita por pagamento ou consulta, pois não existe chave estrangeira entre reembolsos.pagamento_id e pagamentos no esquema atual. A RPC retorna somente dados permitidos e até 50 registros recentes. Não executa solicitações, aprovações ou repasses financeiros.
 
 ## Acesso
 

@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { usePermission } from '@/lib/permissions/usePermission';
+import { useSession } from '@/lib/session';
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fmtHora } from "@/lib/format";
 import { useParams, Link, useLocation, useSearchParams } from "react-router-dom";
 import {
@@ -157,6 +159,15 @@ export default function PacientePerfil() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { roles } = useSession();
+  const { has, loading: permissionsLoading } = usePermission(['agenda.ver_todas','financeiro.ver','comunicacao.ver_inbox','auditoria.ver','pacientes.editar']);
+  const verAgenda = has('agenda.ver_todas') || roles.includes('medico');
+  const verFinanceiro = has('financeiro.ver');
+  const verComunicacao = has('comunicacao.ver_inbox');
+  const verAuditoria = has('auditoria.ver');
+  const editar = has('pacientes.editar');
+  const [loadError, setLoadError] = useState(false);
+  const requestVersion = useRef(0);
   const [loading, setLoading] = useState(true);
   const [pac, setPac] = useState<Paciente | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -186,7 +197,9 @@ export default function PacientePerfil() {
   const [statusBloqueadoAte, setStatusBloqueadoAte] = useState("");
   const [statusSalvando, setStatusSalvando] = useState(false);
 
-  const defaultTab = searchParams.get("tab") || "visao-geral";
+  const requestedTab = searchParams.get("tab") || "visao-geral";
+  const tabAllowed: Record<string, boolean> = { 'visao-geral': true, observacoes: true, consultas: verAgenda, financeiro: verFinanceiro, planos: verFinanceiro, comunicacao: verComunicacao, auditoria: verAuditoria };
+  const defaultTab = tabAllowed[requestedTab] ? requestedTab : 'visao-geral';
 
   const voltarTo = location.pathname.startsWith("/app/admin")
     ? "/app/admin/pacientes"
@@ -195,101 +208,39 @@ export default function PacientePerfil() {
     : "/app/colaborador/pacientes";
 
   const carregar = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-
-    // 1. Paciente
-    const { data: p } = await supabase
-      .from("pacientes")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-    if (!p) { setLoading(false); return; }
-    setPac(p);
-    setObsEdit(p.observacoes_internas ?? "");
-
-    // 2. Email from profiles
-    if (p.user_id) {
-      const { data: prof } = await supabase.from("profiles").select("email").eq("id", p.user_id).maybeSingle();
-      setEmail(prof?.email ?? null);
+    if (!id || permissionsLoading) return;
+    const version = ++requestVersion.current;
+    setLoading(true); setLoadError(false); setPac(null); setEmail(null);
+    setConsultas([]); setPagamentos([]); setReembolsos([]); setAssinaturas([]); setConversas([]); setAuditLogs([]);
+    const empty = Promise.resolve({ data: [], error: null });
+    try {
+      const { data: p, error } = await supabase.from("pacientes").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      if (!p || version !== requestVersion.current) return;
+      const [prof, cons, pags, refunds, plans, chats, audits] = await Promise.all([
+        p.user_id ? supabase.from("profiles").select("email").eq("id",p.user_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        verAgenda ? supabase.from("consultas").select("id,inicio,fim,status,modalidade,valor_centavos,medico_id,link_sala,link_enviado_em,medicos:medico_id(nome)")
+          .or('paciente_id.eq.'+id+',paciente_atendido_id.eq.'+id).order("inicio",{ascending:false}).limit(100) : empty,
+        verFinanceiro ? supabase.from("pagamentos").select("id,consulta_id,valor_centavos,status,metodo,created_at,paid_at,valor_reembolsado_centavos").eq("paciente_id",id).order("created_at",{ascending:false}).limit(100) : empty,
+        verFinanceiro ? supabase.rpc("paciente_reembolsos_recentes", { _paciente_id: id }) : empty,
+        verFinanceiro ? supabase.from("assinaturas").select("id,plano_id,status,ciclo,valor_cobrado_centavos,data_inicio,proxima_cobranca,planos:plano_id(nome)").eq("paciente_id",id).order("created_at",{ascending:false}).limit(20) : empty,
+        verComunicacao ? supabase.from("conversations").select("id,contact_phone,contact_name,status,channel,last_message_at,last_message_preview,unread_count,tags").eq("patient_id",id).order("last_message_at",{ascending:false}).limit(30) : empty,
+        verAuditoria ? supabase.from("pacientes_auditoria").select("*").eq("paciente_id",id).order("created_at",{ascending:false}).limit(50) : empty,
+      ]);
+      for (const result of [prof,cons,pags,refunds,plans,chats,audits]) if (result.error) throw result.error;
+      if (version !== requestVersion.current) return;
+      setPac(p); setObsEdit(p.observacoes_internas ?? ""); setEmail(prof.data?.email ?? null);
+      setConsultas((cons.data ?? []).map((c: any) => ({...c,medico_nome:c.medicos?.nome ?? "—"})));
+      setPagamentos(pags.data ?? []); setReembolsos((refunds.data ?? []) as Reembolso[]);
+      setAssinaturas((plans.data ?? []).map((plan: any) => ({...plan,plano_nome:plan.planos?.nome ?? "—"})));
+      setConversas(chats.data ?? []); setAuditLogs(audits.data ?? []);
+    } catch {
+      if (version === requestVersion.current) setLoadError(true);
+    } finally {
+      if (version === requestVersion.current) setLoading(false);
     }
-
-    // 3. Parallel data fetching
-    const [consultasRes, pagamentosRes, reembolsosRes, assinaturasRes, conversasRes, auditRes] = await Promise.all([
-      // Consultas
-      supabase
-        .from("consultas")
-        .select("id,inicio,fim,status,modalidade,valor_centavos,medico_id,link_sala,link_enviado_em")
-        .eq("paciente_id", id)
-        .order("inicio", { ascending: false })
-        .limit(100),
-      // Pagamentos
-      supabase
-        .from("pagamentos")
-        .select("id,consulta_id,valor_centavos,status,metodo,created_at,paid_at,valor_reembolsado_centavos")
-        .eq("paciente_id", id)
-        .order("created_at", { ascending: false })
-        .limit(100),
-      // Reembolsos
-      supabase
-        .from("reembolsos")
-        .select("id,consulta_id,valor_centavos,status,motivo,created_at")
-        .in("consulta_id", (
-          await supabase.from("consultas").select("id").eq("paciente_id", id)
-        ).data?.map(c => c.id) ?? [])
-        .order("created_at", { ascending: false })
-        .limit(50),
-      // Assinaturas
-      supabase
-        .from("assinaturas")
-        .select("id,plano_id,status,ciclo,valor_cobrado_centavos,data_inicio,proxima_cobranca")
-        .eq("paciente_id", id)
-        .order("created_at", { ascending: false })
-        .limit(20),
-      // Conversas
-      supabase
-        .from("conversations")
-        .select("id,contact_phone,contact_name,status,channel,last_message_at,last_message_preview,unread_count,tags")
-        .eq("patient_id", id)
-        .order("last_message_at", { ascending: false })
-        .limit(30),
-      // Auditoria
-      supabase
-        .from("pacientes_auditoria")
-        .select("*")
-        .eq("paciente_id", id)
-        .order("created_at", { ascending: false })
-        .limit(50),
-    ]);
-
-    // Resolve médico names
-    if (consultasRes.data?.length) {
-      const medicoIds = [...new Set(consultasRes.data.map(c => c.medico_id))];
-      const { data: medicos } = await supabase.from("medicos").select("id,nome").in("id", medicoIds);
-      const medicoMap = new Map(medicos?.map(m => [m.id, m.nome]) ?? []);
-      setConsultas(consultasRes.data.map(c => ({ ...c, medico_nome: medicoMap.get(c.medico_id) ?? "—" })));
-    } else {
-      setConsultas([]);
-    }
-
-    // Resolve plano names
-    if (assinaturasRes.data?.length) {
-      const planoIds = [...new Set(assinaturasRes.data.map(a => a.plano_id))];
-      const { data: planos } = await supabase.from("planos").select("id,nome").in("id", planoIds);
-      const planoMap = new Map(planos?.map(p => [p.id, p.nome]) ?? []);
-      setAssinaturas(assinaturasRes.data.map(a => ({ ...a, plano_nome: planoMap.get(a.plano_id) ?? "—" })));
-    } else {
-      setAssinaturas([]);
-    }
-
-    setPagamentos(pagamentosRes.data ?? []);
-    setReembolsos(reembolsosRes.data ?? []);
-    setConversas(conversasRes.data ?? []);
-    setAuditLogs(auditRes.data ?? []);
-    setLoading(false);
-  }, [id]);
-
-  useEffect(() => { carregar(); }, [carregar]);
+  }, [id, permissionsLoading, verAgenda, verFinanceiro, verComunicacao, verAuditoria]);
+  useEffect(() => { void carregar(); return () => { requestVersion.current++; }; }, [carregar]);
 
   // KPIs financeiros
   const finKpis = useMemo(() => {
@@ -302,26 +253,16 @@ export default function PacientePerfil() {
   }, [pagamentos, reembolsos]);
 
   async function salvarObservacoes() {
-    if (!pac) return;
+    if (!pac || !editar || obsSalvando) return;
     setObsSalvando(true);
-    const { error } = await supabase
-      .from("pacientes")
-      .update({ observacoes_internas: obsEdit.trim() || null, updated_at: new Date().toISOString() })
-      .eq("id", pac.id);
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Observações salvas" });
-      // Audit
-      await supabase.from("pacientes_auditoria").insert({
-        paciente_id: pac.id,
-        actor_id: (await supabase.auth.getUser()).data.user?.id,
-        acao: "observacao_editada",
-        motivo: "Edição de observações internas",
-        payload: { texto: obsEdit.trim() },
-      });
-    }
-    setObsSalvando(false);
+    try {
+      const { error } = await supabase.rpc("paciente_salvar_observacoes", { _paciente_id: pac.id, _texto: obsEdit });
+      if (error) throw error;
+      toast({ title: "Observações salvas e auditadas" });
+      await carregar();
+    } catch {
+      toast({ title: "Não foi possível salvar as observações", description: "Verifique seu acesso e tente novamente.", variant: "destructive" });
+    } finally { setObsSalvando(false); }
   }
 
   // ── Solicitar reembolso ──
@@ -400,7 +341,7 @@ export default function PacientePerfil() {
     }
   }
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -408,6 +349,7 @@ export default function PacientePerfil() {
     );
   }
 
+  if (loadError) return <div role="alert" className="space-y-4 p-8">Não foi possível carregar o paciente. <Button onClick={() => void carregar()}>Tentar novamente</Button></div>;
   if (!pac) {
     return (
       <div className="space-y-4 py-10 text-center">
@@ -433,11 +375,11 @@ export default function PacientePerfil() {
             <Button variant="outline" onClick={carregar}>
               <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
             </Button>
-            <Button className="bg-gradient-primary hover:opacity-90" asChild>
-              <Link to={`/app/secretaria/agenda?paciente=${pac.id}`}>
-                <Calendar className="mr-2 h-4 w-4" />Novo agendamento
+            {verAgenda && <Button className="bg-gradient-primary hover:opacity-90" asChild>
+              <Link to="/app/colaborador/agenda">
+                <Calendar className="mr-2 h-4 w-4" />Abrir agenda
               </Link>
-            </Button>
+            </Button>}
           </div>
         }
       />
@@ -496,14 +438,14 @@ export default function PacientePerfil() {
       </div>
 
       {/* TABS */}
-      <Tabs defaultValue={defaultTab} className="space-y-4">
+      <Tabs key={id + String(verAgenda) + String(verFinanceiro) + String(verComunicacao) + String(verAuditoria)} defaultValue={defaultTab} className="space-y-4">
         <TabsList className="flex flex-wrap gap-1 h-auto">
           <TabsTrigger value="visao-geral"><User className="h-3.5 w-3.5 mr-1" />Visão geral</TabsTrigger>
-          <TabsTrigger value="consultas"><Stethoscope className="h-3.5 w-3.5 mr-1" />Consultas ({consultas.length})</TabsTrigger>
-          <TabsTrigger value="financeiro"><Wallet className="h-3.5 w-3.5 mr-1" />Financeiro</TabsTrigger>
-          <TabsTrigger value="comunicacao"><MessageCircle className="h-3.5 w-3.5 mr-1" />Comunicação ({conversas.length})</TabsTrigger>
-          <TabsTrigger value="planos"><Gift className="h-3.5 w-3.5 mr-1" />Planos ({assinaturas.length})</TabsTrigger>
-          <TabsTrigger value="auditoria"><Shield className="h-3.5 w-3.5 mr-1" />Auditoria</TabsTrigger>
+          {verAgenda && <TabsTrigger value="consultas"><Stethoscope className="h-3.5 w-3.5 mr-1" />Consultas ({consultas.length})</TabsTrigger>}
+          {verFinanceiro && <TabsTrigger value="financeiro"><Wallet className="h-3.5 w-3.5 mr-1" />Financeiro</TabsTrigger>}
+          {verComunicacao && <TabsTrigger value="comunicacao"><MessageCircle className="h-3.5 w-3.5 mr-1" />Comunicação ({conversas.length})</TabsTrigger>}
+          {verFinanceiro && <TabsTrigger value="planos"><Gift className="h-3.5 w-3.5 mr-1" />Planos ({assinaturas.length})</TabsTrigger>}
+          {verAuditoria && <TabsTrigger value="auditoria"><Shield className="h-3.5 w-3.5 mr-1" />Auditoria</TabsTrigger>}
           <TabsTrigger value="observacoes"><StickyNote className="h-3.5 w-3.5 mr-1" />Observações</TabsTrigger>
         </TabsList>
 
@@ -561,44 +503,44 @@ export default function PacientePerfil() {
               <div className="card-elevated p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ações rápidas</p>
                 <div className="mt-3 grid gap-2">
-                  <Button size="sm" className="bg-gradient-primary hover:opacity-90 justify-start" asChild>
-                    <Link to={`/app/secretaria/agenda?paciente=${pac.id}`}>
-                      <Calendar className="mr-2 h-4 w-4" />Criar agendamento
+                  {verAgenda && <Button size="sm" className="bg-gradient-primary hover:opacity-90 justify-start" asChild>
+                    <Link to="/app/colaborador/agenda">
+                      <Calendar className="mr-2 h-4 w-4" />Abrir agenda
                     </Link>
-                  </Button>
-                  <Button size="sm" variant="outline" className="justify-start" asChild>
-                    <Link to={`/app/admin/whatsapp?to=${encodeURIComponent(pac.telefone ?? "")}`}>
-                      <Phone className="mr-2 h-4 w-4" />Enviar WhatsApp
+                  </Button>}
+                  {verComunicacao && <Button size="sm" variant="outline" className="justify-start" asChild>
+                    <Link to="/app/comunicacao/inbox">
+                      <Phone className="mr-2 h-4 w-4" />Abrir comunicação
                     </Link>
-                  </Button>
+                  </Button>}
                 </div>
               </div>
 
-              <div className="card-elevated p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resumo financeiro</p>
+              {verFinanceiro && <div className="card-elevated p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resumo financeiro (até 100 pagamentos e 50 reembolsos recentes)</p>
                 <div className="mt-3 space-y-1 text-sm">
                   <p>Total gasto: <strong>{brl(finKpis.totalGasto)}</strong></p>
                   <p>Pagtos pendentes: <strong>{finKpis.pendentes}</strong></p>
                   <p>Pagtos falhos: <strong>{finKpis.falhos}</strong></p>
                   <p>Reembolsado: <strong>{brl(finKpis.totalReembolsado)}</strong></p>
                 </div>
-              </div>
+              </div>}
 
-              <div className="card-elevated p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consultas</p>
+              {verAgenda && <div className="card-elevated p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Consultas (até 100 recentes)</p>
                 <div className="mt-3 space-y-1 text-sm">
                   <p>Total: <strong>{consultas.length}</strong></p>
                   <p>Concluídas: <strong>{consultas.filter(c => c.status === "concluida").length}</strong></p>
                   <p>Canceladas: <strong>{consultas.filter(c => c.status === "cancelada").length}</strong></p>
                   <p>No-show: <strong>{consultas.filter(c => c.status === "no_show").length}</strong></p>
                 </div>
-              </div>
+              </div>}
             </aside>
           </div>
         </TabsContent>
 
         {/* ── CONSULTAS ── */}
-        <TabsContent value="consultas">
+        {verAgenda && <TabsContent value="consultas"><p className="mb-3 text-sm text-muted-foreground">Até 100 consultas recentes como titular ou paciente atendido.</p>
           <div className="card-elevated p-6">
             <h3 className="font-display text-lg font-semibold mb-4">Histórico de consultas</h3>
             {consultas.length === 0 ? (
@@ -638,10 +580,10 @@ export default function PacientePerfil() {
               </div>
             )}
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── FINANCEIRO ── */}
-        <TabsContent value="financeiro">
+        {verFinanceiro && <TabsContent value="financeiro"><p className="mb-3 text-sm text-muted-foreground">Resumo dos até 100 pagamentos e 50 reembolsos recentes carregados; não representa o saldo histórico completo.</p>
           <div className="flex justify-end mb-4">
             <RequirePermission perm="pacientes.reembolsar">
               <Button variant="outline" onClick={() => setReembolsoOpen(true)} disabled={pagamentos.filter(p => p.status === "pago").length === 0}>
@@ -729,10 +671,10 @@ export default function PacientePerfil() {
               </div>
             </div>
           )}
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── COMUNICAÇÃO ── */}
-        <TabsContent value="comunicacao">
+        {verComunicacao && <TabsContent value="comunicacao"><p className="mb-3 text-sm text-muted-foreground">Até 30 conversas recentes permitidas para sua conta.</p>
           <div className="card-elevated p-6">
             <h3 className="font-display text-lg font-semibold mb-4">Conversas vinculadas</h3>
             {conversas.length === 0 ? (
@@ -742,7 +684,7 @@ export default function PacientePerfil() {
                 {conversas.map(c => (
                   <Link
                     key={c.id}
-                    to={`/app/admin/whatsapp?conversa=${c.id}`}
+                    to={`/app/comunicacao/inbox?conversa=${c.id}`}
                     className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/40 transition-colors"
                   >
                     <MessageCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -770,10 +712,10 @@ export default function PacientePerfil() {
               </div>
             )}
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── PLANOS ── */}
-        <TabsContent value="planos">
+        {verFinanceiro && <TabsContent value="planos"><p className="mb-3 text-sm text-muted-foreground">Até 20 assinaturas recentes.</p>
           <div className="card-elevated p-6">
             <h3 className="font-display text-lg font-semibold mb-4">Planos e assinaturas</h3>
             {assinaturas.length === 0 ? (
@@ -802,10 +744,10 @@ export default function PacientePerfil() {
               </div>
             )}
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── AUDITORIA ── */}
-        <TabsContent value="auditoria">
+        {verAuditoria && <TabsContent value="auditoria"><p className="mb-3 text-sm text-muted-foreground">Até 50 eventos recentes.</p>
           <div className="card-elevated p-6">
             <h3 className="font-display text-lg font-semibold mb-4">Timeline de auditoria</h3>
             {auditLogs.length === 0 ? (
@@ -839,7 +781,7 @@ export default function PacientePerfil() {
               </div>
             )}
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── OBSERVAÇÕES ── */}
         <TabsContent value="observacoes">
@@ -849,13 +791,15 @@ export default function PacientePerfil() {
               Estas notas são visíveis apenas para a equipe administrativa. Cada edição é registrada na auditoria.
             </p>
             <Textarea
+              readOnly={!editar}
+              maxLength={10000}
               value={obsEdit}
               onChange={e => setObsEdit(e.target.value)}
               rows={8}
               placeholder="Notas internas sobre o paciente..."
             />
             <div className="mt-3 flex justify-end">
-              <Button onClick={salvarObservacoes} disabled={obsSalvando}>
+              <Button onClick={salvarObservacoes} disabled={obsSalvando || !editar}>
                 {obsSalvando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Salvar observações
               </Button>
