@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PageBoundary from "@/components/PageBoundary";
+import ColaboradorGuard from "@/components/ColaboradorGuard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import { LOCAL_PREVIEW } from "@/lib/local-preview";
@@ -191,6 +192,12 @@ function SmartRedirect() {
   return <Navigate to={`/app/${profileKey}/dashboard`} replace />;
 }
 
+function LegacyPacienteRedirect() {
+  const { id } = useParams();
+  const [search] = useSearchParams();
+  return <Navigate to={'/app/colaborador/pacientes/' + encodeURIComponent(id ?? '') + (search.size ? '?' + search.toString() : '')} replace />;
+}
+
 function AgendamentoRedirect() {
   const { slotId } = useParams();
   const [sp] = useSearchParams();
@@ -313,7 +320,7 @@ const App = () => (
 
               {/* Secretaria → Colaborador (redirects de compatibilidade) */}
               <Route path="secretaria/dashboard" element={<Navigate to="/app/colaborador/dashboard" replace />} />
-              <Route path="secretaria/pacientes/:id" element={<Navigate to="/app/colaborador/pacientes/:id" replace />} />
+              <Route path="secretaria/pacientes/:id" element={<LegacyPacienteRedirect />} />
               <Route path="secretaria/pacientes" element={<Navigate to="/app/colaborador/pacientes" replace />} />
               <Route path="secretaria/agenda" element={<Navigate to="/app/colaborador/agenda" replace />} />
               <Route path="secretaria/agendamentos" element={<Navigate to="/app/colaborador/agendamentos" replace />} />
@@ -332,6 +339,7 @@ const App = () => (
               <Route path="supervisor/*" element={<Navigate to="/app/colaborador/dashboard" replace />} />
 
               {/* Colaborador — aliases das mesmas páginas, protegidos por has_permission */}
+              <Route element={<ColaboradorGuard />} >
               <Route path="colaborador/dashboard" element={<SecretariaDashboard />} />
               <Route path="colaborador/pacientes" element={<G perm="pacientes.ver"><SecretariaPacientes /></G>} />
               <Route path="colaborador/pacientes/:id" element={<G perm="pacientes.ver"><PacientePerfil /></G>} />
@@ -350,6 +358,7 @@ const App = () => (
               <Route path="colaborador/auditoria" element={<G perm="auditoria.ver"><AdminAuditoria /></G>} />
               <Route path="colaborador/gamificacao" element={<G perm="gamificacao.configurar"><AdminGamificacao /></G>} />
               <Route path="colaborador/gamificacao/financeiro" element={<G perm="gamificacao.configurar"><AdminGamificacaoFinanceiro /></G>} />
+              </Route>
 
               {/* Admin — todas as rotas protegidas por RequireRoutePermission */}
               <Route path="admin/dashboard" element={<G perm="admin.dashboard"><AdminDashboard /></G>} />

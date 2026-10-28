@@ -31,7 +31,9 @@
     "admin:routes": "node scripts/check-admin-pages.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "paciente:test": "node scripts/test-paciente-local.mjs --browser",
-    "paciente:routes": "node scripts/check-admin-pages.mjs --paciente"
+    "paciente:routes": "node scripts/check-admin-pages.mjs --paciente",
+    "colaborador:test": "node scripts/test-colaborador-local.mjs",
+    "colaborador:routes": "node scripts/check-admin-pages.mjs --colaborador"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

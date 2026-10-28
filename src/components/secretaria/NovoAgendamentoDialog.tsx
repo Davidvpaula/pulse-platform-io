@@ -120,36 +120,8 @@ export default function NovoAgendamentoDialog({ open, onOpenChange, onCriado }: 
 
     setSubmitting(true);
     try {
-      // Buscar especialidade_id do médico
-      const { data: medEsp } = await supabase
-        .from("medico_especialidades")
-        .select("especialidade_id")
-        .eq("medico_id", slot.medico_id)
-        .limit(1)
-        .maybeSingle();
-
-      const { error: errSlot } = await supabase
-        .from("agenda_slots")
-        .update({ status: "reservado" as const })
-        .eq("id", slotId)
-        .eq("status", "disponivel" as const);
-
-      if (errSlot) throw errSlot;
-
-      const { error: errConsulta } = await supabase.from("consultas").insert({
-        slot_id: slotId,
-        medico_id: slot.medico_id,
-        paciente_id: pacienteId,
-        especialidade_id: medEsp?.especialidade_id ?? null,
-        inicio: slot.inicio,
-        fim: slot.fim,
-        modalidade: slot.modalidade as "online",
-        status: "agendada" as const,
-        motivo: motivo.trim() || null,
-        canal_origem: "manual_secretaria" as const,
-      });
-
-      if (errConsulta) throw errConsulta;
+      const { error } = await supabase.rpc('colaborador_criar_agendamento' as any, { _slot_id: slotId, _paciente_id: pacienteId, _motivo: motivo.trim() || null });
+      if (error) throw new Error(error.message);
 
       toast.success("Consulta agendada com sucesso!");
       onOpenChange(false);

@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      colaborador_tarefas: {
+        Row: { id: string; owner_id: string; titulo: string; prioridade: string; prazo: string | null; status: string; created_at: string }
+        Insert: { id?: string; owner_id?: string; titulo: string; prioridade?: string; prazo?: string | null; status?: string; created_at?: string }
+        Update: { id?: string; owner_id?: string; titulo?: string; prioridade?: string; prazo?: string | null; status?: string; created_at?: string }
+        Relationships: []
+      }
       admin_acoes_medico: {
         Row: {
           admin_id: string

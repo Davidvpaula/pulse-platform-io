@@ -1,5 +1,7 @@
 # Auditoria dos dashboards — Pulse Platform
 
+> Continuidade em 28/10/2026: [central, agenda, tarefas e limites do Colaborador/Secretaria](../colaborador-funcional/README.md).
+
 > Continuidade em 27/10/2026: [correções, testes e limites do dashboard Paciente](../paciente-funcional/README.md).
 
 > Retomada em 28/09/2026: consulte [correções e validação funcional do Admin](../admin-funcional/README.md). Os relatórios abaixo preservam o retrato da auditoria original.

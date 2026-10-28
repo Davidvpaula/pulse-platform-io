@@ -1,0 +1,77 @@
+[
+  {
+    "route": "/app/colaborador/dashboard",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nDashboard\nCentral operacional\n\nSuas áreas de trabalho são liberadas pelo administrador.\n\nAtualizar\n\nCONSULTAS HOJE\n\n0\n\n0 concluídas\n\nFILA ATIVA\n\n0\n\n0 começam nos próximos 30 minutos\nAgendamentos\nPacientes\nMinhas tarefas\nEquipe\nFila do dia\n\nOrdenada por horário. Os indicadores incluem todas as consultas do dia.\n\nNenhuma consulta ativa nesta página.\n\nAnterior\nPágina 1\nPróxima"
+  },
+  {
+    "route": "/app/colaborador/pacientes",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nPacientes\nPacientes\n\nBusca global, status operacional e ações rápidas.\n\nCadastrar paciente\nTodos\nAtivo\nAguardando\nInadimplente\n\nTeste automático descartável\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\n—\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nTeste automático descartável\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nPaciente ficticio paciente2\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nPaciente ficticio paciente\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nTeste automático descartável\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\n—\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nTeste automático descartável\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\n—\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar\n\nE2E Paciente\n\nParticular · 0 consulta(s)\n\nAguardando\nFeegow: nao_enviado\nAgendar"
+  },
+  {
+    "route": "/app/colaborador/agenda",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nAgenda\nAgenda operacional\n\nVisão por médico e por dia. Reatribua consultas quando um profissional faltar.\n\nNovo agendamento\nTodos\nHoje\nAmanhã\nDepois\n 0 consultas\nSem consultas para esse filtro."
+  },
+  {
+    "route": "/app/colaborador/agendamentos",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nAgendamentos\nAgendamentos\n\nLista cronológica de todas as consultas — busca, filtros e ações operacionais.\n\nVer no calendário\n0 de 0\nPróximos 7 dias\nPróximos 30 dias\nÚltimos 7 dias\nÚltimos 30 dias\nTodos\nAgendadas\nConfirmadas\nAguardando pgto.\nEm andamento\nConcluídas\nCanceladas\nNo-show\n\nNenhum agendamento encontrado.\n\nAbrir calendário"
+  },
+  {
+    "route": "/app/colaborador/cupons",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/cupons/log",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/financeiro",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/tarefas",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nTarefas\nMinhas tarefas\n\nOrganize suas atividades, prioridades e prazos.\n\nNova tarefa\nStatus\nTodas\nPendente\nEm andamento\nConcluída\n\nNenhuma tarefa neste filtro.\n\nAnterior\n0 tarefas · Página 1\nPróxima"
+  },
+  {
+    "route": "/app/colaborador/equipe",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/relatorios",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/comunicacao-interna",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nColaborador\nComunicação interna\nComunicação interna da equipe\n\nMensagens entre Secretaria, Médicos, Admin e Empresas — separado das conversas com pacientes (WhatsApp).\n\nNova conversa\nCANAIS:\nTodos\nSecretaria ↔ Médico\nSecretaria ↔ Admin\nEmpresa ↔ Secretaria\nMédico ↔ Admin\n\n0 CONVERSAS\n\nNenhuma conversa.\n\nSelecione uma conversa ou crie uma nova\n\nSelecione uma conversa para ver detalhes."
+  },
+  {
+    "route": "/app/colaborador/perfil",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nMeu perfil\n\nGerencie seus dados de acesso.\n\nDados\nConta & senha\nTermos\nSeus dados\nNOME *\nE-MAIL (SOMENTE LEITURA)\nTELEFONE\nSalvar alterações"
+  },
+  {
+    "route": "/app/colaborador/auditoria",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/gamificacao",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  },
+  {
+    "route": "/app/colaborador/gamificacao/financeiro",
+    "errors": [],
+    "text": "Ambiente local · dados de teste persistentes · integrações externas desativadas\n\nAcesso restrito\n\nVocê não tem permissão para acessar esta página. Caso precise de acesso, fale com um administrador.\n\nVoltar ao início"
+  }
+]

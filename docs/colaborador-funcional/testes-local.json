@@ -1,0 +1,14 @@
+{
+  "executadoEm": "2026-10-28T10:41:50.107Z",
+  "passed": [
+    "Sem permissões: central sem dados, leituras diretas negadas; paciente não chama a central",
+    "Agenda: total acima de 50, paginação, identidade ocultada sem pacientes.ver e ação não autorizada negada",
+    "Troca de médico exige permissão, persiste o profissional e transfere a ocupação do horário",
+    "Agendamento exige permissão, impede reserva duplicada concorrente e libera o horário ao cancelar",
+    "Navegador: cartão, confirmação persistida, financeiro oculto e central responsiva",
+    "Revogação pelo Admin bloqueia imediatamente a RPC e atualiza a tela aberta sem recarga",
+    "Suspensão bloqueia central, tabelas operacionais e sessão aberta",
+    "Alias legado mantém o identificador do paciente",
+    "Tarefas: criação e avanço persistem após recarga, isolamento por proprietário e transferência não autorizada negada"
+  ]
+}

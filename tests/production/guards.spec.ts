@@ -14,6 +14,7 @@ test('production does not accept the local profile selector', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Entrar como administrador' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Entrar como paciente' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Entrar como médico' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Entrar como colaborador' })).toHaveCount(0);
   await expect(page.getByText('Trocar dashboard', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('navigation').getByText('Dashboard', { exact: true })).toHaveCount(0);
 });

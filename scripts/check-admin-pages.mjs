@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { chromium } from '@playwright/test';
 const inventory=JSON.parse(fs.readFileSync('docs/auditoria-dashboards/inventario.json','utf8'));
-const role = process.argv.includes('--paciente') ? 'paciente' : process.argv.includes('--medico') ? 'medico' : 'admin';
+const role = process.argv.includes('--colaborador') ? 'colaborador' : process.argv.includes('--paciente') ? 'paciente' : process.argv.includes('--medico') ? 'medico' : 'admin';
 const directory = `docs/${role}-funcional`;
 const excluded=/\/(feegow|integracoes|whatsapp|ia-medicos|comunicacao\/producao|pendencias-integracao)/;
 const routes=inventory.routes.filter(r=>r.path.startsWith(`/app/${role}/`)&&!r.redirect&&!r.path.includes(':')&&!r.path.includes('*')&&!excluded.test(r.path));
@@ -14,7 +14,7 @@ await context.route('**/*',route=>{
 });
 const page=await context.newPage();
 await page.goto('http://127.0.0.1:8082/auth');
-await page.getByRole('button',{name:role === 'paciente' ? 'Entrar como paciente' : role === 'admin' ? 'Entrar como administrador' : 'Entrar como médico'}).click();
+await page.getByRole('button',{name:role === 'colaborador' ? 'Entrar como colaborador' : role === 'paciente' ? 'Entrar como paciente' : role === 'admin' ? 'Entrar como administrador' : 'Entrar como médico'}).click();
 await page.waitForURL(`**/app/${role}/dashboard`);
 await page.waitForTimeout(1500);
 const results=[];
@@ -26,6 +26,7 @@ for(const route of routes) {
  try {
   await page.goto(`http://127.0.0.1:8082${route.path}`);
   await page.waitForTimeout(1800);
+  if (new URL(page.url()).pathname === '/auth') throw new Error('Sessão perdida durante a navegação');
   results.push({route:route.path,errors,text:(await page.locator('main').innerText().catch(()=>page.locator('body').innerText())).slice(0,1300)});
  }catch(e){results.push({route:route.path,errors:[...errors,{message:e.message}]});}
  page.off('pageerror',onError);page.off('response',onResponse);
@@ -36,3 +37,4 @@ for(const route of routes) {
 fs.mkdirSync(directory,{recursive:true});
 fs.writeFileSync(`${directory}/rotas-local.json`,JSON.stringify(results,null,2));
 await browser.close();
+if (results.some(result => result.errors.length)) process.exitCode = 1;

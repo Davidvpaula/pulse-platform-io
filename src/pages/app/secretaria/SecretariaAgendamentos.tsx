@@ -15,6 +15,7 @@ import {
 } from "@/lib/clinico";
 import TrocarMedicoDialog from "@/components/secretaria/TrocarMedicoDialog";
 import { ConsultaHistoricoDialog } from "@/components/shared/ConsultaHistoricoDialog";
+import { usePermission } from "@/lib/permissions/usePermission";
 import { useSession } from "@/lib/session";
 // whatsappUrl removido — botões redirecionam ao Inbox interno
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ function formatData(iso: string): string {
 
 export default function SecretariaAgendamentos() {
   const { session } = useSession();
+  const { has } = usePermission(["agenda.criar","agenda.trocar_medico","pacientes.ver"]);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ConsultaDetalhada[]>([]);
   const [busca, setBusca] = useState("");
@@ -205,7 +207,7 @@ export default function SecretariaAgendamentos() {
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost" size="icon" title="Trocar médico"
-                          onClick={() => setTrocando(c)}
+                          disabled={!has("agenda.trocar_medico")} onClick={() => setTrocando(c)}
                         >
                           <UserCog className="h-4 w-4" />
                         </Button>

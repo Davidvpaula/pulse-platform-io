@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
+import { usePermission } from "@/lib/permissions/usePermission";
 import { supabase } from "@/integrations/supabase/client";
 
 type StatusFilter = "todos" | "ativo" | "aguardando" | "inadimplente";
@@ -29,6 +30,7 @@ type PacRow = {
 };
 
 export default function SecretariaPacientes() {
+  const { has } = usePermission(["pacientes.criar","agenda.ver_todas","financeiro.ver"]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const [open, setOpen] = useState(false);
@@ -143,7 +145,7 @@ export default function SecretariaPacientes() {
         title="Pacientes"
         description="Busca global, status operacional e ações rápidas."
         actions={
-          <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setOpen(true)}>
+          <Button className="bg-gradient-primary hover:opacity-90" disabled={!has("pacientes.criar")} onClick={() => setOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Cadastrar paciente
           </Button>
         }

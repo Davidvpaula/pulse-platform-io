@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 // whatsappUrl removido — botões redirecionam ao Inbox interno
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { usePermission } from "@/lib/permissions/usePermission";
 import { useSession } from "@/lib/session";
 import {
   listConsultasParaSecretaria, formatHora, toStatusBadge,
@@ -31,6 +32,7 @@ function offsetDate(label: string): { inicio: Date; fim: Date; titulo: string } 
 
 export default function SecretariaAgenda() {
   const { session } = useSession();
+  const { has } = usePermission(["agenda.criar","agenda.trocar_medico","pacientes.ver"]);
   const navigate = useNavigate();
   const [medico, setMedico] = useState<string>("Todos");
   const [dia, setDia] = useState<string>("Hoje");
@@ -67,7 +69,7 @@ export default function SecretariaAgenda() {
           title="Agenda operacional"
           description="Visão por médico e por dia. Reatribua consultas quando um profissional faltar."
           actions={
-            <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setNovoOpen(true)}>
+            <Button className="bg-gradient-primary hover:opacity-90" disabled={!has("agenda.criar") || !has("pacientes.ver")} onClick={() => setNovoOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo agendamento
             </Button>
           }
@@ -139,8 +141,7 @@ export default function SecretariaAgenda() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setTrocando(c)}
-                      disabled={c.status === "cancelada" || c.status === "concluida"}
+                      disabled={!has("agenda.trocar_medico") || !['agendada', 'confirmada', 'aguardando_pagamento'].includes(c.status)} onClick={() => setTrocando(c)}
                       title="Trocar profissional"
                     >
                       <UserCog className="mr-1.5 h-3.5 w-3.5" /> Trocar médico

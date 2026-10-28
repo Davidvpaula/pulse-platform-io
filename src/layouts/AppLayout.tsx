@@ -68,6 +68,7 @@ export default function AppLayout() {
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
+    if (window.matchMedia("(max-width: 767px)").matches) return false;
     const v = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
     return v === null ? true : v === "1";
   });
@@ -75,6 +76,17 @@ export default function AppLayout() {
   const { session, signOut } = useSession();
   const profile = profiles[profileKey];
   const flow = getFlowContext(profileKey, pathname);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) setSidebarOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 767px)");
+    const close = () => { if (mobile.matches) setSidebarOpen(false); };
+    mobile.addEventListener("change", close);
+    return () => mobile.removeEventListener("change", close);
+  }, []);
 
   useEffect(() => {
     try { window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0"); } catch { void 0; }
@@ -99,7 +111,7 @@ export default function AppLayout() {
 
   // Em mobile, fechar a sidebar ao trocar de rota (comportamento de drawer).
   const handleNavClick = () => {
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
       setSidebarOpen(false);
     }
   };
