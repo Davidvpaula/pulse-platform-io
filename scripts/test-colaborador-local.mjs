@@ -18,7 +18,7 @@ const catalog=await ok(service.from('permissions_catalog').select('permission_ke
 const set=(key,efeito)=>ok(admin.rpc('colaborador_set_permissao',{_user_id:uid,_key:key,_efeito:efeito,_motivo:'Teste local automatizado'}));
 const start=new Date();start.setHours(0,0,0,0);const end=new Date(start);end.setDate(end.getDate()+1);
 const input={_inicio:start.toISOString(),_fim:end.toISOString(),_offset:0};
-const passed=[];let browser,page,ids=[],slots=[],taskId,specialty,patientIds=[];
+const passed=[];let browser,page,ids=[],slots=[],taskId,specialty,patientIds=[],paymentId,refundIds=[];
 const record=passed.push.bind(passed);passed.push=(message)=>{console.log(message);return record(message);};
 try {
   await ok(service.from('colaboradores').update({status_conta:'ativo',removido_em:null}).eq('user_id',uid));
@@ -134,6 +134,39 @@ try {
   await expect(page.getByRole('tab',{name:'Auditoria',exact:true})).toBeVisible();
   await page.getByRole('tab',{name:'Auditoria',exact:true}).click();
   await expect(page.getByText('observacao_editada',{exact:true})).toBeVisible();
+  const statusArgs={_paciente_id:patientIds[0],_novo_status:'suspenso',_motivo:'Teste local de status',_observacao:null,_bloqueado_ate:null};
+  assert.ok((await staff.from('pacientes').update({status_conta:'banido'}).eq('id',patientIds[0])).error);
+  assert.ok((await staff.rpc('alterar_status_conta_paciente',statusArgs)).error);
+  await set('pacientes.suspender','grant');
+  await ok(staff.rpc('alterar_status_conta_paciente',statusArgs));
+  assert.equal((await ok(service.from('pacientes').select('status_conta').eq('id',patientIds[0]).single())).status_conta,'suspenso');
+  assert.ok((await staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'banido'})).error);
+  assert.ok((await staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'ativo'})).error);
+  for(const key of ['pacientes.bloquear','pacientes.banir','pacientes.reativar']) await set(key,'grant');
+  assert.ok((await staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'bloqueado',_bloqueado_ate:new Date(Date.now()-60000).toISOString()})).error);
+  await ok(staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'banido'}));
+  await ok(staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'ativo'}));
+  await page.goto(detailUrl);await page.getByRole('button',{name:'Bloquear',exact:true}).click();
+  await page.getByPlaceholder('Motivo obrigatório...').fill('Bloqueio local pelo navegador');
+  await page.getByRole('dialog').getByRole('button',{name:'Confirmar',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  assert.equal((await ok(service.from('pacientes').select('status_conta').eq('id',patientIds[0]).single())).status_conta,'bloqueado');
+  await ok(staff.rpc('alterar_status_conta_paciente',{...statusArgs,_novo_status:'ativo'}));
+  passed.push('Status: suspender, bloquear, banir e reativar exigem capacidades distintas; prazo passado negado e bloqueio persistido pelo navegador');
+  paymentId=(await ok(service.from('pagamentos').insert({consulta_id:ids[0],paciente_id:p.id,valor_centavos:10000,status:'pago',metodo:'pix',provider:'mock'}).select('id').single())).id;
+  const refund={_paciente_id:p.id,_pagamento_id:paymentId,_tipo:'parcial',_valor_centavos:2500,_motivo:'Solicitacao ficticia local'};
+  assert.ok((await staff.rpc('paciente_solicitar_reembolso',refund)).error);
+  await set('pacientes.reembolsar','grant');
+  assert.ok((await patient.rpc('paciente_solicitar_reembolso',refund)).error);
+  assert.ok((await staff.rpc('paciente_solicitar_reembolso',{...refund,_paciente_id:patientIds[0]})).error);
+  assert.ok((await staff.rpc('paciente_solicitar_reembolso',{...refund,_valor_centavos:10001})).error);
+  const requests=await Promise.all([staff.rpc('paciente_solicitar_reembolso',refund),staff.rpc('paciente_solicitar_reembolso',refund)]);
+  refundIds=requests.filter(r=>r.data).map(r=>r.data);assert.equal(refundIds.length,1);
+  const stored=await ok(service.from('reembolsos').select('status,valor_centavos,actor_id').eq('id',refundIds[0]).single());
+  assert.equal(stored.status,'solicitado');assert.equal(stored.valor_centavos,2500);assert.equal(stored.actor_id,uid);
+  assert.equal((await ok(service.from('pagamentos').select('valor_reembolsado_centavos,status').eq('id',paymentId).single())).status,'pago');
+  assert.ok((await staff.from('reembolsos').insert({consulta_id:ids[0],pagamento_id:paymentId,valor_centavos:100,motivo:'Bypass local',status:'solicitado'})).error);
+  passed.push('Reembolso: pagamento e titular validados, valor excessivo rejeitado, concorrência gera uma solicitação e gravação direta pelo colaborador é negada');
   await page.goto('http://127.0.0.1:8082/app/colaborador/pacientes/00000000-0000-0000-0000-000000000000');
   await expect(page.getByText('Paciente não encontrado.',{exact:true})).toBeVisible();
   passed.push('Detalhe: abas por permissão, edição negada sem capacidade, nota auditada atomicamente e paciente inexistente sem dados anteriores');
@@ -175,6 +208,8 @@ try {
   if(page){fs.mkdirSync('logs',{recursive:true});fs.writeFileSync('logs/colaborador-failure.txt',await page.locator('body').innerText().catch(()=>String(e)));}throw e;
 } finally {
   await browser?.close();
+  if(refundIds.length){await ok(service.from('pacientes_auditoria').delete().in('payload->>reembolso_id',refundIds));await ok(service.from('reembolsos').delete().in('id',refundIds));}
+  if(paymentId)await ok(service.from('pagamentos').delete().eq('id',paymentId));
   if(ids.length)await ok(service.from('consultas').delete().in('id',ids));
   if(slots.length)await ok(service.from('agenda_slots').delete().in('id',slots));
   if(taskId)await ok(service.from('colaborador_tarefas').delete().eq('id',taskId));

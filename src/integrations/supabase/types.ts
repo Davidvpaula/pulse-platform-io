@@ -10509,6 +10509,7 @@ export type Database = {
       }
     }
     Functions: {
+      paciente_solicitar_reembolso: { Args: { _paciente_id: string; _pagamento_id: string; _tipo: "total" | "parcial"; _valor_centavos: number | null; _motivo: string }; Returns: string }
       paciente_reembolsos_recentes: { Args: { _paciente_id: string }; Returns: Json }
       paciente_salvar_observacoes: { Args: { _paciente_id: string; _texto: string }; Returns: undefined }
       colaborador_listar_pacientes: {

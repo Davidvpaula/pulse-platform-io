@@ -244,7 +244,7 @@ export default function PacientePerfil() {
 
   // KPIs financeiros
   const finKpis = useMemo(() => {
-    const pagos = pagamentos.filter(p => p.status === "pago");
+    const pagos = pagamentos.filter(p => p.status === "pago" && p.consulta_id);
     const totalGasto = pagos.reduce((s, p) => s + p.valor_centavos, 0);
     const pendentes = pagamentos.filter(p => ["pendente", "processando"].includes(p.status));
     const falhos = pagamentos.filter(p => p.status === "falhou");
@@ -267,46 +267,24 @@ export default function PacientePerfil() {
 
   // ── Solicitar reembolso ──
   async function criarReembolso() {
-    if (!pac || !reembolsoForm.pagamento_id || !reembolsoForm.motivo.trim()) {
-      toast({ title: "Preencha pagamento e motivo", variant: "destructive" });
-      return;
-    }
-    const pag = pagamentos.find(p => p.id === reembolsoForm.pagamento_id);
-    if (!pag) return;
-    const valorCentavos = reembolsoForm.tipo === "total"
-      ? pag.valor_centavos
-      : Math.round(parseFloat(reembolsoForm.valor || "0") * 100);
-    if (valorCentavos <= 0 || valorCentavos > pag.valor_centavos) {
-      toast({ title: "Valor inválido", description: "O valor deve ser maior que 0 e menor ou igual ao pagamento.", variant: "destructive" });
-      return;
+    if (!pac || reembolsoCriando) return;
+    const valor = reembolsoForm.tipo === "parcial" ? Math.round(Number(reembolsoForm.valor) * 100) : null;
+    if (!reembolsoForm.pagamento_id || reembolsoForm.motivo.trim().length < 3 || (valor !== null && (!Number.isSafeInteger(valor) || valor <= 0))) {
+      toast({ title: "Informe pagamento, motivo e valor válido", variant: "destructive" }); return;
     }
     setReembolsoCriando(true);
-    // Find consulta_id from pagamento
-    const consultaId = pag.consulta_id;
-    const { data: inserted, error } = await supabase.from("reembolsos").insert({
-      consulta_id: consultaId,
-      pagamento_id: pag.id,
-      valor_centavos: valorCentavos,
-      motivo: reembolsoForm.motivo.trim(),
-      tipo: reembolsoForm.tipo,
-      status: "solicitado",
-      actor_id: (await supabase.auth.getUser()).data.user?.id,
-    }).select("id").single();
-    setReembolsoCriando(false);
-    if (error) {
-      toast({ title: "Erro ao solicitar reembolso", description: error.message, variant: "destructive" });
-    } else {
-      // Notificar paciente e médico
-      if (inserted?.id) {
-        supabase.functions.invoke("notificar-reembolso", {
-          body: { reembolso_id: inserted.id, evento: "solicitado" },
-        }).catch(() => {});
-      }
-      toast({ title: "Reembolso solicitado", description: "O reembolso entrará na fila para aprovação." });
-      setReembolsoOpen(false);
-      setReembolsoForm({ pagamento_id: "", tipo: "total", valor: "", motivo: "" });
-      carregar();
-    }
+    try {
+      const { error } = await supabase.rpc("paciente_solicitar_reembolso", {
+        _paciente_id: pac.id, _pagamento_id: reembolsoForm.pagamento_id, _tipo: reembolsoForm.tipo,
+        _valor_centavos: valor, _motivo: reembolsoForm.motivo.trim(),
+      });
+      if (error) throw error;
+      toast({ title: "Solicitação registrada", description: "Aguardando análise. Nenhum valor foi devolvido por esta ação." });
+      setReembolsoOpen(false); setReembolsoForm({ pagamento_id: "", tipo: "total", valor: "", motivo: "" });
+      await carregar();
+    } catch (error) {
+      toast({ title: "Não foi possível solicitar reembolso", description: error instanceof Error ? error.message : (error as { message?: string })?.message, variant: "destructive" });
+    } finally { setReembolsoCriando(false); }
   }
 
   // ── Ação de status ──
@@ -319,26 +297,24 @@ export default function PacientePerfil() {
   }
 
   async function executarStatusAction() {
-    if (!pac || !statusMotivo.trim()) {
-      toast({ title: "Informe o motivo", variant: "destructive" });
-      return;
+    if (!pac || statusSalvando) return;
+    if (statusMotivo.trim().length < 3) {
+      toast({ title: "Informe um motivo com pelo menos 3 caracteres", variant: "destructive" }); return;
     }
     setStatusSalvando(true);
-    const { error } = await supabase.rpc("alterar_status_conta_paciente", {
-      _paciente_id: pac.id,
-      _novo_status: statusAction.novoStatus as "ativo" | "banido" | "bloqueado" | "pendente" | "suspenso",
-      _motivo: statusMotivo.trim(),
-      _observacao: statusObs.trim() || null,
-      _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? statusBloqueadoAte : null,
-    });
-    setStatusSalvando(false);
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const { error } = await supabase.rpc("alterar_status_conta_paciente", {
+        _paciente_id: pac.id,
+        _novo_status: statusAction.novoStatus as "ativo" | "banido" | "bloqueado" | "suspenso",
+        _motivo: statusMotivo.trim(), _observacao: statusObs.trim() || null,
+        _bloqueado_ate: statusAction.novoStatus === "bloqueado" && statusBloqueadoAte ? new Date(statusBloqueadoAte).toISOString() : null,
+      });
+      if (error) throw error;
       toast({ title: `Status alterado para "${statusAction.label}"` });
-      setStatusActionOpen(false);
-      carregar();
-    }
+      setStatusActionOpen(false); await carregar();
+    } catch (error) {
+      toast({ title: "Não foi possível alterar o status", description: error instanceof Error ? error.message : (error as { message?: string })?.message, variant: "destructive" });
+    } finally { setStatusSalvando(false); }
   }
 
   if (loading || permissionsLoading) {
@@ -414,21 +390,21 @@ export default function PacientePerfil() {
             </RequirePermission>
           )}
           {pac.status_conta !== "bloqueado" && pac.status_conta !== "banido" && (
-            <RequirePermission perm="pacientes.suspender">
+            <RequirePermission perm="pacientes.bloquear">
               <Button size="sm" variant="outline" className="border-destructive/40 text-destructive" onClick={() => openStatusAction("bloqueado", "Bloqueado")}>
                 <ShieldOff className="h-3.5 w-3.5 mr-1" />Bloquear
               </Button>
             </RequirePermission>
           )}
           {pac.status_conta !== "banido" && (
-            <RequirePermission perm="pacientes.bloquear">
+            <RequirePermission perm="pacientes.banir">
               <Button size="sm" variant="destructive" onClick={() => openStatusAction("banido", "Banido")}>
                 <Ban className="h-3.5 w-3.5 mr-1" />Banir
               </Button>
             </RequirePermission>
           )}
           {["suspenso", "bloqueado", "banido"].includes(pac.status_conta) && (
-            <RequirePermission perm="pacientes.suspender">
+            <RequirePermission perm="pacientes.reativar">
               <Button size="sm" variant="outline" className="border-success/40 text-success" onClick={() => openStatusAction("ativo", "Ativo")}>
                 <Play className="h-3.5 w-3.5 mr-1" />Reativar
               </Button>
@@ -586,7 +562,7 @@ export default function PacientePerfil() {
         {verFinanceiro && <TabsContent value="financeiro"><p className="mb-3 text-sm text-muted-foreground">Resumo dos até 100 pagamentos e 50 reembolsos recentes carregados; não representa o saldo histórico completo.</p>
           <div className="flex justify-end mb-4">
             <RequirePermission perm="pacientes.reembolsar">
-              <Button variant="outline" onClick={() => setReembolsoOpen(true)} disabled={pagamentos.filter(p => p.status === "pago").length === 0}>
+              <Button variant="outline" onClick={() => setReembolsoOpen(true)} disabled={pagamentos.filter(p => p.status === "pago" && p.consulta_id).length === 0}>
                 <Undo2 className="h-4 w-4 mr-2" />Solicitar reembolso
               </Button>
             </RequirePermission>
@@ -813,7 +789,7 @@ export default function PacientePerfil() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Solicitar reembolso</DialogTitle>
-            <DialogDescription>Selecione o pagamento e informe os detalhes do reembolso.</DialogDescription>
+            <DialogDescription>Registre uma solicitação para análise. Esta ação não transfere valores nem aciona provedores externos.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -821,7 +797,7 @@ export default function PacientePerfil() {
               <Select value={reembolsoForm.pagamento_id} onValueChange={v => setReembolsoForm(f => ({ ...f, pagamento_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
-                  {pagamentos.filter(p => p.status === "pago").map(p => (
+                  {pagamentos.filter(p => p.status === "pago" && p.consulta_id).map(p => (
                     <SelectItem key={p.id} value={p.id}>
                       {fmtData(p.created_at)} — {brl(p.valor_centavos)} ({p.metodo})
                     </SelectItem>
@@ -834,7 +810,7 @@ export default function PacientePerfil() {
               <Select value={reembolsoForm.tipo} onValueChange={v => setReembolsoForm(f => ({ ...f, tipo: v as "total" | "parcial" }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="total">Total</SelectItem>
+                  <SelectItem value="total">Saldo total disponível</SelectItem>
                   <SelectItem value="parcial">Parcial</SelectItem>
                 </SelectContent>
               </Select>
@@ -880,7 +856,7 @@ export default function PacientePerfil() {
               <div>
                 <Label>Bloqueio até (temporário)</Label>
                 <Input type="datetime-local" value={statusBloqueadoAte} onChange={e => setStatusBloqueadoAte(e.target.value)} />
-                <p className="text-xs text-muted-foreground mt-1">Deixe vazio para bloqueio permanente.</p>
+                <p className="text-xs text-muted-foreground mt-1">Deixe vazio para bloqueio permanente. O prazo é registrado; a reativação deve ser feita pela equipe.</p>
               </div>
             )}
           </div>

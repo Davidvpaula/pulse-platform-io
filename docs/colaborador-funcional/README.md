@@ -44,7 +44,7 @@ Executar as suítes que usam as contas locais em sequência: testes do Admin alt
 
 ## Pendências e sequência
 
-1. Concluir pacientes/detalhe: autorização das abas, erros e salvamento auditado de notas foram corrigidos. As abas ainda mostram registros recentes (100 consultas/pagamentos, 50 reembolsos/eventos, 30 conversas, 20 assinaturas), com limites explícitos; adicionar paginação completa e totais históricos no servidor. Revisar cadastro, transições de conta e solicitação de reembolso, que não estão homologados nesta etapa. Os atalhos abrem agenda/comunicação; não prometem pré-selecionar paciente ou enviar mensagem externa. Validar desempenho da busca em volumes de produção.
+1. Concluir pacientes/detalhe: autorização das abas, erros, notas auditadas, transições de status e registro interno de solicitação de reembolso foram corrigidos. As abas ainda mostram registros recentes (100 consultas/pagamentos, 50 reembolsos/eventos, 30 conversas, 20 assinaturas), com limites explícitos; adicionar paginação completa e totais históricos no servidor. Revisar cadastro e fluxo completo de análise/execução de reembolso. Os atalhos abrem agenda/comunicação; não prometem pré-selecionar paciente ou enviar mensagem externa. Validar desempenho da busca em volumes de produção.
 2. Revisar supervisão, comunicação, financeiro delegado e gamificação por ação; revisar RPCs legadas SECURITY DEFINER, que não são protegidas apenas adicionando RLS às tabelas.
 3. Agendamento manual usa a primeira especialidade ativa configurada do profissional; adicionar seleção explícita quando houver múltiplas. Troca com preço diferente e pagamento pago/processando é rejeitada; conciliação/reembolso ficam pendentes.
 4. Avaliar trilha de auditoria e vínculo da conversa após troca de profissional; testar cenários de pagamento, conta removida e matrizes adicionais de permissão.
@@ -59,6 +59,18 @@ Financeiro e planos usam financeiro.ver; consultas usam agenda.ver_todas (médic
 paciente_salvar_observacoes exige conta operacional ativa, pacientes.ver e pacientes.editar, limita o texto a 10 mil caracteres, trava o paciente e grava nota/auditoria na mesma transação. A tela não anuncia sucesso se a gravação falhar. Essa garantia é da RPC; revisar caminhos legados de escrita direta antes da produção.
 
 paciente_reembolsos_recentes faz a associação explícita por pagamento ou consulta, pois não existe chave estrangeira entre reembolsos.pagamento_id e pagamentos no esquema atual. A RPC retorna somente dados permitidos e até 50 registros recentes. Não executa solicitações, aprovações ou repasses financeiros.
+
+### Continuação: status e solicitações financeiras
+
+Migrações 20261028130000 e 20261028131000:
+
+- Status exige pacientes.ver, conta operacional ativa e a capacidade específica: pacientes.suspender, pacientes.bloquear, pacientes.banir ou pacientes.reativar. As duas últimas foram incluídas no catálogo sem concessão automática. Uma assinatura antiga redundante da função foi removida, preservando a RPC com parâmetros opcionais.
+- Motivo obrigatório, rejeição de prazo passado, trava do paciente e auditoria na mesma transação. Conta banida deve ser reativada antes de outra transição. Colaborador com pacientes.editar não pode contornar o fluxo usando UPDATE direto.
+- O prazo do bloqueio é registrado; esta etapa não implementa reativação automática por agendamento.
+- Solicitação de reembolso exige pacientes.ver, financeiro.ver e pacientes.reembolsar. O pagamento precisa estar pago, vinculado a consulta e ao titular informado. Pagamentos sem consulta não são elegíveis nesta etapa.
+- O servidor calcula o saldo considerando valores já reembolsados/aprovados/concluídos. Apenas uma solicitação pendente por pagamento; chamadas concorrentes são serializadas. Gravação direta por colaboradores foi retirada.
+- A operação registra somente a solicitação e a auditoria. Não aprova, não transfere dinheiro e não envia notificações externas. O fluxo completo de aprovação, conciliação e execução permanece pendente.
+- Testes locais cobrem capacidades distintas, bloqueio pelo navegador, prazo passado, titular incorreto, valor acima do saldo, concorrência e tentativa de escrita direta. Dados financeiros usados são fictícios.
 
 ## Acesso
 
