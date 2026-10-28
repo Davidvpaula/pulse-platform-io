@@ -10,6 +10,7 @@ Atualizado em 28/10/2026. Dashboard único, configurado pelas permissões conced
 | Central: confirmar/cancelar | RPC valida conta ativa, permissão da ação e transição de status. Cancelamento libera o horário vinculado; não representa reembolso. |
 | /app/colaborador/agenda e /agendamentos | Criação manual atômica, validação de paciente/médico/horário e preço no servidor. Reserva concorrente não cria duas consultas. Troca de médico exige permissão, valida especialidade e transfere o horário. |
 | /app/colaborador/tarefas | Tarefas pessoais persistentes, prioridade, prazo, filtro, paginação e avanço/reabertura. Sem pacientes ou atividades fictícias apresentados como reais. |
+| /app/colaborador/pacientes | Busca por nome, CPF ou ID exato e paginação no servidor, 50 por página, sem corte nos primeiros 500. Filtro pelo status real da conta. Contagem de consultas como paciente atendido e indicação de pagamento em aberto exigem permissões próprias. Erro de carga tem opção de tentar novamente. |
 | /app/secretaria/pacientes/:id | Redirecionamento preserva o identificador e a busca da URL. |
 | Login local | Cartão de colaborador autentica uma conta fictícia real no banco local. Ausente no build de produção. |
 | Layout móvel compartilhado | Menu começa fechado no celular e fecha ao navegar ou reduzir a janela, evitando sobrepor botões. |
@@ -24,12 +25,12 @@ Atualizado em 28/10/2026. Dashboard único, configurado pelas permissões conced
 - Tarefas exigem proprietário e colaborador ativo. Não há atribuição a terceiros nesta etapa, nem acesso automático do Admin às tarefas pessoais de outra conta.
 - O setup local preserva o status de colaboradores já cadastrados.
 
-As migrações 20261027110000 até 20261027114000 estão versionadas. Não houve reset de banco, publicação remota ou integração externa.
+As migrações 20261027110000 até 20261027114000 e 20261028110000 estão versionadas. Não houve reset de banco, publicação remota ou integração externa.
 
 ## Validação executada
 
 - 62 testes Vitest; TypeScript e build aprovados.
-- 9 cenários integrados de banco/navegador em [testes-local.json](testes-local.json): permissões, total acima de 50, concorrência, troca de médico, confirmação, cancelamento, revogação com sessão aberta, suspensão, alias e tarefas persistentes/isoladas.
+- Cenários integrados de banco/navegador em [testes-local.json](testes-local.json): permissões, total acima de 50, concorrência, troca de médico, confirmação, cancelamento, revogação com sessão aberta, suspensão, alias e tarefas persistentes/isoladas. A continuação acrescenta listagem de 53 pacientes, paginação, filtros de conta, busca por ID, ocultação de agregados sem permissão e recuperação de falha de carga.
 - Regressões de API do Admin, Médico e Paciente aprovadas; resultados nos respectivos diretórios de documentação.
 - 2 testes do bundle de produção aprovados: seletor local e editor local não ficam expostos.
 - [rotas-local.json](rotas-local.json) registra a navegação com as permissões da conta local. Uma rota que apresenta acesso restrito não equivale a uma função testada. Esse relatório não cobre todos os botões.
@@ -42,7 +43,7 @@ Executar as suítes que usam as contas locais em sequência: testes do Admin alt
 
 ## Pendências e sequência
 
-1. Concluir pacientes/detalhe: paginação de grandes volumes, contagens completas, erros de carga e rótulos que ainda dependem de estado Feegow. O cadastro existente e seus fluxos precisam de cobertura específica do colaborador.
+1. Concluir pacientes/detalhe: abas ainda usam consultas limitadas e precisam de autorização por área, tratamento de erros e revisão dos rótulos de integração. A listagem foi corrigida; o cadastro existente e os fluxos do detalhe precisam de cobertura específica do colaborador. O atalho da lista abre a agenda; não promete pré-selecionar o paciente. Validar desempenho da busca em volumes de produção.
 2. Revisar supervisão, comunicação, financeiro delegado e gamificação por ação; revisar RPCs legadas SECURITY DEFINER, que não são protegidas apenas adicionando RLS às tabelas.
 3. Agendamento manual usa a primeira especialidade ativa configurada do profissional; adicionar seleção explícita quando houver múltiplas. Troca com preço diferente e pagamento pago/processando é rejeitada; conciliação/reembolso ficam pendentes.
 4. Avaliar trilha de auditoria e vínculo da conversa após troca de profissional; testar cenários de pagamento, conta removida e matrizes adicionais de permissão.

@@ -1,14 +1,17 @@
 {
-  "executadoEm": "2026-10-28T10:41:50.107Z",
+  "executadoEm": "2026-10-28T10:51:15.576Z",
   "passed": [
     "Sem permissões: central sem dados, leituras diretas negadas; paciente não chama a central",
     "Agenda: total acima de 50, paginação, identidade ocultada sem pacientes.ver e ação não autorizada negada",
+    "Pacientes: paginação de 53 registros, busca por ID, status real e dados agregados restritos por permissão",
     "Troca de médico exige permissão, persiste o profissional e transfere a ocupação do horário",
     "Agendamento exige permissão, impede reserva duplicada concorrente e libera o horário ao cancelar",
     "Navegador: cartão, confirmação persistida, financeiro oculto e central responsiva",
     "Revogação pelo Admin bloqueia imediatamente a RPC e atualiza a tela aberta sem recarga",
     "Suspensão bloqueia central, tabelas operacionais e sessão aberta",
     "Alias legado mantém o identificador do paciente",
+    "Falha de carga exibe erro explícito e permite recuperar a lista sem perder o filtro",
+    "Navegador: busca de pacientes, próxima página e filtro de conta suspensa",
     "Tarefas: criação e avanço persistem após recarga, isolamento por proprietário e transferência não autorizada negada"
   ]
 }

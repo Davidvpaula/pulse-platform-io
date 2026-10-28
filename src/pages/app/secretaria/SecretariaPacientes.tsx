@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from '@/lib/session';
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Building2, User, Plus, Calendar, ExternalLink, Pencil, Filter, Loader2 } from "lucide-react";
+import { Search, Building2, User, Plus, Calendar, Eye, Filter, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,96 +16,49 @@ import { isValidCpf, maskCpf } from "@/lib/validation/cpf";
 import { usePermission } from "@/lib/permissions/usePermission";
 import { supabase } from "@/integrations/supabase/client";
 
-type StatusFilter = "todos" | "ativo" | "aguardando" | "inadimplente";
+type StatusFilter = "todos" | "ativo" | "pendente" | "suspenso" | "bloqueado" | "banido";
 
 type PacRow = {
   id: string;
   nome_completo: string | null;
   cpf: string | null;
-  telefone: string | null;
   empresa_id: string | null;
   status_conta: string;
-  feegow_status: string;
   created_at: string;
-  consultas_count: number;
-  tem_pgto_pendente: boolean;
+  consultas_count: number | null;
+  tem_pgto_pendente: boolean | null;
 };
 
 export default function SecretariaPacientes() {
-  const { has } = usePermission(["pacientes.criar","agenda.ver_todas","financeiro.ver"]);
+  const { session } = useSession();
+  const { has, allowed, loading: permissionsLoading } = usePermission(["pacientes.ver","pacientes.criar","agenda.ver_todas","agenda.criar","financeiro.ver"]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const [open, setOpen] = useState(false);
   const [novo, setNovo] = useState({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" as "particular" | "empresarial" });
   const [criando, setCriando] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<PacRow[]>([]);
-
-  async function carregar() {
-    setLoading(true);
-    const { data: pacientes } = await supabase
-      .from("pacientes")
-      .select("id,nome_completo,cpf,telefone,empresa_id,status_conta,feegow_status,created_at")
-      .order("created_at", { ascending: false })
-      .limit(500);
-
-    if (!pacientes?.length) { setRows([]); setLoading(false); return; }
-
-    const ids = pacientes.map(p => p.id);
-
-    // Count consultas per paciente
-    const { data: cons } = await supabase
-      .from("consultas")
-      .select("paciente_id")
-      .in("paciente_id", ids);
-    const countMap: Record<string, number> = {};
-    cons?.forEach(c => { countMap[c.paciente_id] = (countMap[c.paciente_id] ?? 0) + 1; });
-
-    // Pagamentos pendentes
-    const { data: pagPend } = await supabase
-      .from("pagamentos")
-      .select("consulta_id, status, consultas:consulta_id(paciente_id)")
-      .in("status", ["pendente", "processando"]);
-    const pendSet = new Set<string>();
-    pagPend?.forEach((p: any) => { if (p.consultas?.paciente_id) pendSet.add(p.consultas.paciente_id); });
-
-    setRows(pacientes.map(p => ({
-      id: p.id,
-      nome_completo: p.nome_completo,
-      cpf: p.cpf,
-      telefone: p.telefone,
-      empresa_id: p.empresa_id,
-      status_conta: p.status_conta ?? "ativo",
-      feegow_status: p.feegow_status ?? "nao_enviado",
-      created_at: p.created_at,
-      consultas_count: countMap[p.id] ?? 0,
-      tem_pgto_pendente: pendSet.has(p.id),
-    })));
-    setLoading(false);
-  }
-
-  useEffect(() => { carregar(); }, []);
-
-  const lista = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    return rows.filter(p => {
-      const aguardando = p.feegow_status === "pendente" || p.feegow_status === "nao_enviado";
-      const statusLabel: StatusFilter = p.tem_pgto_pendente ? "inadimplente" : aguardando ? "aguardando" : "ativo";
-      if (statusFilter !== "todos" && statusLabel !== statusFilter) return false;
-      if (!term) return true;
-      return (
-        (p.nome_completo ?? "").toLowerCase().includes(term) ||
-        (p.cpf ?? "").includes(term)
-      );
-    }).map(p => {
-      const aguardando = p.feegow_status === "pendente" || p.feegow_status === "nao_enviado";
-      const statusLabel: StatusFilter = p.tem_pgto_pendente ? "inadimplente" : aguardando ? "aguardando" : "ativo";
-      return { ...p, statusLabel };
-    });
-  }, [rows, q, statusFilter]);
+  const [page, setPage] = useState(0);
+  const [busca, setBusca] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => { setBusca(q.trim()); setPage(0); }, 300);
+    return () => clearTimeout(timer);
+  }, [q]);
+  const query = useQuery({
+    queryKey: ['colaborador-pacientes', session?.user.id, busca, statusFilter, page, allowed],
+    enabled: !!session && !permissionsLoading && has('pacientes.ver'),
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.rpc('colaborador_listar_pacientes', { _busca: busca, _status: statusFilter, _offset: page * 50 }).abortSignal(signal);
+      if (error) throw error;
+      return data as unknown as { total: number; pacientes: PacRow[] };
+    }, retry: false,
+  });
+  const loading = query.isPending;
+  const lista = has('pacientes.ver') ? query.data?.pacientes ?? [] : [];
+  const carregar = () => query.refetch();
 
   async function create() {
-    if (!novo.nome || !novo.email) {
+    if (criando || !has("pacientes.criar")) return;
+    if (!novo.nome.trim() || !novo.email.trim()) {
       toast.error("Preencha nome e e-mail.");
       return;
     }
@@ -112,6 +67,7 @@ export default function SecretariaPacientes() {
       return;
     }
     setCriando(true);
+    try {
     const { data, error } = await supabase.functions.invoke("admin-criar-paciente", {
       body: {
         email: novo.email.trim(),
@@ -121,7 +77,6 @@ export default function SecretariaPacientes() {
         vinculo: novo.vinculo,
       },
     });
-    setCriando(false);
     if (error || data?.error) {
       toast.error(data?.error ?? error?.message ?? "Falha ao criar paciente");
       return;
@@ -129,14 +84,19 @@ export default function SecretariaPacientes() {
     toast.success(`Paciente ${novo.nome} criado com sucesso`);
     setNovo({ nome: "", cpf: "", telefone: "", email: "", vinculo: "particular" });
     setOpen(false);
-    carregar();
+    setPage(0);
+    await carregar();
+    } catch { toast.error("Não foi possível criar o paciente. Tente novamente."); }
+    finally { setCriando(false); }
   }
 
   const statusBadge: Record<StatusFilter, string> = {
     todos: "",
+    bloqueado: "bg-destructive/10 text-destructive",
+    banido: "bg-destructive/10 text-destructive",
     ativo: "bg-success/10 text-success border-success/20",
-    aguardando: "bg-warning/10 text-warning border-warning/30",
-    inadimplente: "bg-destructive/10 text-destructive border-destructive/20",
+    pendente: "bg-warning/10 text-warning border-warning/30",
+    suspenso: "bg-destructive/10 text-destructive border-destructive/20",
   };
 
   return (
@@ -157,16 +117,16 @@ export default function SecretariaPacientes() {
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Nome, CPF, ID ou empresa…"
+            maxLength={200} aria-label="Buscar pacientes" placeholder="Nome, CPF ou ID exato…"
             className="w-full rounded-lg border border-border bg-card pl-9 pr-3 py-2.5 text-sm outline-none focus:border-primary"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          {(["todos", "ativo", "aguardando", "inadimplente"] as StatusFilter[]).map(s => (
+          {(["todos", "ativo", "pendente", "suspenso", "bloqueado", "banido"] as StatusFilter[]).map(s => (
             <button
               key={s}
-              onClick={() => setStatusFilter(s)}
+              onClick={() => { setStatusFilter(s); setPage(0); }}
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium border transition capitalize",
                 statusFilter === s ? "bg-primary text-primary-foreground border-primary" : "border-border bg-card text-muted-foreground hover:border-primary/40",
@@ -177,7 +137,7 @@ export default function SecretariaPacientes() {
       </div>
 
       <div className="card-elevated overflow-hidden">
-        {loading ? (
+        {query.isError ? <div role="alert" className="p-6">Não foi possível carregar os pacientes. <Button onClick={() => void carregar()}>Tentar novamente</Button></div> : loading ? (
           <div className="flex items-center justify-center p-12 text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
           </div>
@@ -195,29 +155,25 @@ export default function SecretariaPacientes() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-medium">
-                      <Link to={`/app/secretaria/pacientes/${p.id}`} className="hover:text-primary">{p.nome_completo ?? "—"}</Link>
+                      <Link to={`/app/colaborador/pacientes/${p.id}`} className="hover:text-primary">{p.nome_completo ?? "—"}</Link>
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {empresarial ? "Empresarial" : "Particular"} · {p.consultas_count} consulta(s)
+                      {empresarial ? "Empresarial" : "Particular"}{has("agenda.ver_todas") && p.consultas_count != null ? ` · ${p.consultas_count} consulta(s) como paciente atendido` : ""}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize", statusBadge[p.statusLabel])}>
-                        {p.statusLabel}
+                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize", statusBadge[p.status_conta])}>
+                        {p.status_conta}
                       </span>
-                      <Badge variant="outline" className={cn("text-[10px]",
-                        p.feegow_status === "liberado" ? "border-success/40 text-success" : "border-muted-foreground/30 text-muted-foreground"
-                      )}>
-                        Feegow: {p.feegow_status}
-                      </Badge>
+                      {has("financeiro.ver") && p.tem_pgto_pendente && <Badge variant="outline">Pagamento em aberto</Badge>}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" title="Editar" asChild>
-                      <Link to={`/app/secretaria/pacientes/${p.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
+                    <Button size="sm" variant="ghost" title="Ver detalhes" asChild>
+                      <Link to={`/app/colaborador/pacientes/${p.id}`}><Eye className="h-3.5 w-3.5" /></Link>
                     </Button>
-                    <Button size="sm" variant="outline" title="Agendar" asChild>
-                      <Link to={`/app/secretaria/agenda?paciente=${p.id}`}><Calendar className="mr-1.5 h-3.5 w-3.5" /> Agendar</Link>
-                    </Button>
+                    {has("agenda.ver_todas") && <Button size="sm" variant="outline" title="Abrir agenda" asChild>
+                      <Link to={`/app/colaborador/agenda`}><Calendar className="mr-1.5 h-3.5 w-3.5" /> Agenda</Link>
+                    </Button>}
                   </div>
                 </div>
               );
@@ -226,6 +182,11 @@ export default function SecretariaPacientes() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" disabled={page === 0 || loading} onClick={() => setPage(p => p - 1)}>Anterior</Button>
+        <span>{query.data?.total ?? 0} pacientes · Página {page + 1}</span>
+        <Button variant="outline" disabled={loading || (page + 1) * 50 >= (query.data?.total ?? 0)} onClick={() => setPage(p => p + 1)}>Próxima</Button>
+      </div>
       {/* Dialog novo paciente */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -249,7 +210,7 @@ export default function SecretariaPacientes() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={criando}>Cancelar</Button>
-            <Button onClick={create} disabled={criando}>
+            <Button onClick={create} disabled={criando || !has("pacientes.criar")}>
               {criando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar paciente
             </Button>

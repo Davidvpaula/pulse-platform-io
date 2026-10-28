@@ -18,7 +18,7 @@ const catalog=await ok(service.from('permissions_catalog').select('permission_ke
 const set=(key,efeito)=>ok(admin.rpc('colaborador_set_permissao',{_user_id:uid,_key:key,_efeito:efeito,_motivo:'Teste local automatizado'}));
 const start=new Date();start.setHours(0,0,0,0);const end=new Date(start);end.setDate(end.getDate()+1);
 const input={_inicio:start.toISOString(),_fim:end.toISOString(),_offset:0};
-const passed=[];let browser,page,ids=[],slots=[],taskId,specialty;
+const passed=[];let browser,page,ids=[],slots=[],taskId,specialty,patientIds=[];
 const record=passed.push.bind(passed);passed.push=(message)=>{console.log(message);return record(message);};
 try {
   await ok(service.from('colaboradores').update({status_conta:'ativo',removido_em:null}).eq('user_id',uid));
@@ -33,6 +33,8 @@ try {
   assert.equal((await ok(staff.from('consultas').select('id').in('id',ids))).length,0);
   assert.equal((await ok(staff.from('pacientes').select('id').eq('id',p.id))).length,0);
   assert.ok((await patient.rpc('colaborador_dashboard',input)).error);
+  assert.ok((await staff.rpc('colaborador_listar_pacientes',{})).error);
+  assert.ok((await patient.rpc('colaborador_listar_pacientes',{})).error);
   passed.push('Sem permissões: central sem dados, leituras diretas negadas; paciente não chama a central');
   await set('agenda.ver_todas','grant');
   const agenda=await ok(staff.rpc('colaborador_dashboard',input));assert.ok(agenda.agenda.total>=52);assert.equal(agenda.fila.length,50);assert.equal(agenda.financeiro,null);
@@ -43,6 +45,19 @@ try {
   assert.equal((await ok(service.from('consultas').select('status').eq('id',ids[0]).single())).status,'agendada');
   passed.push('Agenda: total acima de 50, paginação, identidade ocultada sem pacientes.ver e ação não autorizada negada');
   for(const key of ['agenda.confirmar','agenda.cancelar','pacientes.ver']) await set(key,'grant');
+  const prefix='Lista local '+Date.now();
+  patientIds=(await ok(service.from('pacientes').insert(Array.from({length:53},(_,i)=>({nome_completo:prefix+' '+i,status_conta:i===52?'suspenso':'ativo'}))).select('id'))).map(p=>p.id);
+  const list=await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix}));
+  assert.equal(list.total,53);assert.equal(list.pacientes.length,50);
+  assert.equal(list.pacientes[0].tem_pgto_pendente,null);
+  assert.equal((await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix,_offset:50}))).pacientes.length,3);
+  assert.equal((await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix,_status:'ativo'}))).total,52);
+  assert.equal((await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix,_status:'suspenso'}))).total,1);
+  assert.equal((await ok(staff.rpc('colaborador_listar_pacientes',{_busca:patientIds[0]}))).total,1);
+  await set('agenda.ver_todas','revoke');
+  assert.equal((await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix}))).pacientes[0].consultas_count,null);
+  await set('agenda.ver_todas','grant');
+  passed.push('Pacientes: paginação de 53 registros, busca por ID, status real e dados agregados restritos por permissão');
   const future=Date.now()+30*86400000;
   specialty=(await ok(service.from('especialidades').insert({nome:'Teste colaborador '+Date.now(),slug:'teste-colaborador-'+Date.now(),ativo:true}).select('id').single())).id;
   await ok(service.from('medico_especialidades').insert({medico_id:m.id,especialidade_id:specialty,preco_centavos:12345,duracao_minutos:30,ativo:true}));
@@ -95,6 +110,21 @@ try {
   await page.goto('http://127.0.0.1:8082/app/secretaria/pacientes/'+p.id);
   await page.waitForURL('**/app/colaborador/pacientes/'+p.id);
   passed.push('Alias legado mantém o identificador do paciente');
+  await page.goto('http://127.0.0.1:8082/app/colaborador/pacientes');
+  await page.getByRole('textbox',{name:'Buscar pacientes'}).fill(prefix);
+  await expect(page.getByText('53 pacientes · Página 1',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Próxima',exact:true}).click();
+  await expect(page.getByText('53 pacientes · Página 2',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'suspenso',exact:true}).click();
+  await expect(page.getByText('1 pacientes · Página 1',{exact:true})).toBeVisible();
+  await page.route('**/rest/v1/rpc/colaborador_listar_pacientes',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Falha simulada no teste'})}));
+  await page.getByRole('button',{name:'ativo',exact:true}).click();
+  await expect(page.getByRole('alert').filter({hasText:'Não foi possível carregar os pacientes.'})).toBeVisible();
+  await page.unroute('**/rest/v1/rpc/colaborador_listar_pacientes');
+  await page.getByRole('button',{name:'Tentar novamente',exact:true}).click();
+  await expect(page.getByText('52 pacientes · Página 1',{exact:true})).toBeVisible();
+  passed.push('Falha de carga exibe erro explícito e permite recuperar a lista sem perder o filtro');
+  passed.push('Navegador: busca de pacientes, próxima página e filtro de conta suspensa');
   await page.goto('http://127.0.0.1:8082/app/colaborador/tarefas');
   await page.getByRole('button',{name:'Nova tarefa',exact:true}).click();
   const title='Tarefa local '+Date.now();
@@ -121,6 +151,7 @@ try {
   if(ids.length)await ok(service.from('consultas').delete().in('id',ids));
   if(slots.length)await ok(service.from('agenda_slots').delete().in('id',slots));
   if(taskId)await ok(service.from('colaborador_tarefas').delete().eq('id',taskId));
+  if(patientIds.length)await ok(service.from('pacientes').delete().in('id',patientIds));
   if(specialty){await ok(service.from('medico_especialidades').delete().eq('especialidade_id',specialty));await ok(service.from('especialidades').delete().eq('id',specialty));}
   await ok(service.from('permissoes_colaborador').delete().eq('user_id',uid));
   if(previous.length)await ok(service.from('permissoes_colaborador').insert(previous));

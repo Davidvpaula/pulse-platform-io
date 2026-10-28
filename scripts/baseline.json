@@ -29,6 +29,7 @@
     "colaborador_alterar_consulta",
     "colaborador_criar_agendamento",
     "colaborador_dashboard",
+    "colaborador_listar_pacientes",
     "colaborador_atualizar",
     "colaborador_permissoes_lote",
     "colaborador_remover_permissao",

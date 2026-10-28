@@ -10509,6 +10509,10 @@ export type Database = {
       }
     }
     Functions: {
+      colaborador_listar_pacientes: {
+        Args: { _busca?: string; _status?: string; _offset?: number }
+        Returns: Json
+      }
       _financeiro_calc_comissao: {
         Args: { _medico_id: string; _servico_id: string }
         Returns: {
