@@ -1,6 +1,6 @@
 # Colaborador / Secretaria — etapa operacional local
 
-Atualizado em 28/10/2026. Dashboard único, configurado pelas permissões concedidas pelo Admin. Esta etapa valida a central, operações de agenda e tarefas pessoais no Supabase local; não certifica todos os módulos para produção.
+Atualizado em 29/10/2026. Dashboard único, configurado pelas permissões concedidas pelo Admin. Esta etapa valida a central, operações de agenda, pacientes e tarefas pessoais no Supabase local; não certifica todos os módulos para produção.
 
 ## Entregue
 
@@ -44,7 +44,7 @@ Executar as suítes que usam as contas locais em sequência: testes do Admin alt
 
 ## Pendências e sequência
 
-1. Concluir pacientes/detalhe: autorização das abas, erros, notas auditadas, transições de status e registro interno de solicitação de reembolso foram corrigidos. As abas ainda mostram registros recentes (100 consultas/pagamentos, 50 reembolsos/eventos, 30 conversas, 20 assinaturas), com limites explícitos; adicionar paginação completa e totais históricos no servidor. Revisar cadastro e fluxo completo de análise/execução de reembolso. Os atalhos abrem agenda/comunicação; não prometem pré-selecionar paciente ou enviar mensagem externa. Validar desempenho da busca em volumes de produção.
+1. Pacientes/detalhe: autorização, erros, notas auditadas, transições de status, registro interno de reembolso, paginação de todas as abas e totais históricos foram implementados. Revisar cadastro e fluxo completo de análise/execução de reembolso. Os atalhos abrem agenda/comunicação; não prometem pré-selecionar paciente ou enviar mensagem externa. Validar desempenho da busca e agregações em volumes de produção.
 2. Revisar supervisão, comunicação, financeiro delegado e gamificação por ação; revisar RPCs legadas SECURITY DEFINER, que não são protegidas apenas adicionando RLS às tabelas.
 3. Agendamento manual usa a primeira especialidade ativa configurada do profissional; adicionar seleção explícita quando houver múltiplas. Troca com preço diferente e pagamento pago/processando é rejeitada; conciliação/reembolso ficam pendentes.
 4. Avaliar trilha de auditoria e vínculo da conversa após troca de profissional; testar cenários de pagamento, conta removida e matrizes adicionais de permissão.
@@ -58,7 +58,17 @@ Financeiro e planos usam financeiro.ver; consultas usam agenda.ver_todas (médic
 
 paciente_salvar_observacoes exige conta operacional ativa, pacientes.ver e pacientes.editar, limita o texto a 10 mil caracteres, trava o paciente e grava nota/auditoria na mesma transação. A tela não anuncia sucesso se a gravação falhar. Essa garantia é da RPC; revisar caminhos legados de escrita direta antes da produção.
 
-paciente_reembolsos_recentes faz a associação explícita por pagamento ou consulta, pois não existe chave estrangeira entre reembolsos.pagamento_id e pagamentos no esquema atual. A RPC retorna somente dados permitidos e até 50 registros recentes. Não executa solicitações, aprovações ou repasses financeiros.
+paciente_reembolsos_recentes permanece no banco para compatibilidade. A tela passou a usar paciente_historico_pagina para todas as áreas. Nenhuma dessas operações de leitura executa solicitações, aprovações ou repasses financeiros.
+
+### Continuação: histórico paginado — 29/10/2026
+
+A migração 20261029110000 adiciona paciente_historico_pagina como SECURITY INVOKER, preservando RLS e exigindo a permissão de cada área. Consultas, pagamentos, reembolsos, assinaturas, conversas e auditoria têm páginas de 50 registros, contagem completa e ordenação com ID como desempate. O médico acessa apenas o histórico permitido pelas políticas de vínculo; não recebe acesso financeiro por ser médico.
+
+Os totais são calculados no banco sobre todos os registros visíveis, independentemente da página. Total pago (bruto) soma pagamentos com status pago, reembolsado ou reembolsado_parcial; Reembolsado soma valor_reembolsado_centavos dos pagamentos, não pedidos apenas aprovados. Consultas contam titular ou paciente atendido. Os pagamentos seguem o vínculo paciente_id existente; reconciliação de registros legados sem esse vínculo continua necessária.
+
+Trocar de página preserva a aba e o texto em edição nas observações; trocar de paciente reinicia a navegação. Para solicitar reembolso de um pagamento antigo, navegar até a página que contém o pagamento. O seletor de solicitação usa os pagamentos elegíveis da página atual.
+
+Testes cobrem 105 pagamentos distribuídos em três páginas, totais estáveis e reembolso parcial registrado, consultas sem repetição entre páginas, encerramento da paginação no navegador e isolamento do histórico entre médicos. Requisições separadas não fornecem um snapshot único entre páginas se houver gravações concorrentes; escala e desempenho devem ser avaliados antes de produção.
 
 ### Continuação: status e solicitações financeiras
 

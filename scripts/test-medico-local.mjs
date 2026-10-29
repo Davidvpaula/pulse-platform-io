@@ -33,6 +33,11 @@ try {
   const {user} = await ok(service.auth.admin.createUser({email:`paciente-teste-${Date.now()}@pulse.local`,email_confirm:true})); created.user=user.id;
   const paciente=await ok(service.from('pacientes').insert({user_id:user.id,nome_completo:'Paciente fictício de validação'}).select('id').single()); created.patient=paciente.id;
   const consulta=await ok(service.from('consultas').insert({medico_id:medico.id,paciente_id:paciente.id,inicio:new Date().toISOString(),fim:new Date(Date.now()+1800000).toISOString(),modalidade:'presencial',status:'agendada',valor_centavos:0}).select('id').single()); created.consult=consulta.id;
+  const history=await ok(doctor.rpc('paciente_historico_pagina',{_paciente_id:paciente.id,_area:'consultas'}));
+  assert.equal(history.total,1);assert.equal(history.items[0].id,consulta.id);
+  assert.ok((await other.rpc('paciente_historico_pagina',{_paciente_id:paciente.id,_area:'consultas'})).error);
+  assert.ok((await doctor.rpc('paciente_historico_pagina',{_paciente_id:paciente.id,_area:'pagamentos'})).error);
+  passed.push('Histórico paginado respeita vínculo do médico e não libera dados financeiros');
   const attachments = await ok(service.from('anexos_consulta').insert(['privado-a.txt','privado-b.txt'].map(nome=>({consulta_id:consulta.id,uploader_id:fixtures.medico.id,nome_arquivo:nome,storage_path:`${consulta.id}/${nome}`}))).select('id,visibilidade_empresa'));
   await doctor.from('consultas').update({valor_centavos:99999}).eq('id',consulta.id);
   assert.equal((await ok(service.from('consultas').select('valor_centavos').eq('id',consulta.id).single())).valor_centavos,0);

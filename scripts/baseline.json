@@ -82,7 +82,7 @@
     "paciente_criar_dependente",
     "paciente_salvar_observacoes",
     "paciente_solicitar_reembolso",
-    "paciente_reembolsos_recentes",
+    "paciente_historico_pagina",
     "password_mark_changed",
     "password_status",
     "permissoes_dashboard",

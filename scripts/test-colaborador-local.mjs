@@ -18,7 +18,7 @@ const catalog=await ok(service.from('permissions_catalog').select('permission_ke
 const set=(key,efeito)=>ok(admin.rpc('colaborador_set_permissao',{_user_id:uid,_key:key,_efeito:efeito,_motivo:'Teste local automatizado'}));
 const start=new Date();start.setHours(0,0,0,0);const end=new Date(start);end.setDate(end.getDate()+1);
 const input={_inicio:start.toISOString(),_fim:end.toISOString(),_offset:0};
-const passed=[];let browser,page,ids=[],slots=[],taskId,specialty,patientIds=[],paymentId,refundIds=[];
+const passed=[];let browser,page,ids=[],slots=[],taskId,specialty,patientIds=[],paymentId,refundIds=[],historyPayments=[];
 const record=passed.push.bind(passed);passed.push=(message)=>{console.log(message);return record(message);};
 try {
   await ok(service.from('colaboradores').update({status_conta:'ativo',removido_em:null}).eq('user_id',uid));
@@ -44,7 +44,14 @@ try {
   await staff.from('consultas').update({status:'confirmada',valor_centavos:1}).eq('id',ids[0]);
   assert.equal((await ok(service.from('consultas').select('status').eq('id',ids[0]).single())).status,'agendada');
   passed.push('Agenda: total acima de 50, paginação, identidade ocultada sem pacientes.ver e ação não autorizada negada');
+  assert.ok((await staff.rpc('paciente_historico_pagina',{_paciente_id:p.id,_area:'consultas'})).error);
   for(const key of ['agenda.confirmar','agenda.cancelar','pacientes.ver']) await set(key,'grant');
+  const history0=await ok(staff.rpc('paciente_historico_pagina',{_paciente_id:p.id,_area:'consultas',_pagina:0}));
+  const history1=await ok(staff.rpc('paciente_historico_pagina',{_paciente_id:p.id,_area:'consultas',_pagina:1}));
+  assert.ok(history0.total>=52);assert.equal(history0.items.length,50);assert.equal(history0.total,history1.total);
+  assert.equal(new Set([...history0.items,...history1.items].map(c=>c.id)).size,history0.items.length+history1.items.length);
+  assert.ok((await staff.rpc('paciente_historico_pagina',{_paciente_id:p.id,_area:'pagamentos'})).error);
+  assert.ok((await patient.rpc('paciente_historico_pagina',{_paciente_id:p.id,_area:'consultas'})).error);
   const prefix='Lista local '+Date.now();
   patientIds=(await ok(service.from('pacientes').insert(Array.from({length:53},(_,i)=>({nome_completo:prefix+' '+i,status_conta:i===52?'suspenso':'ativo'}))).select('id'))).map(p=>p.id);
   const list=await ok(staff.rpc('colaborador_listar_pacientes',{_busca:prefix}));
@@ -129,6 +136,17 @@ try {
   assert.equal((await ok(service.from('pacientes_auditoria').select('id').eq('paciente_id',patientIds[0]).eq('acao','observacao_editada'))).length,1);
   assert.equal((await ok(staff.from('pacientes_auditoria').select('id').eq('paciente_id',patientIds[0]))).length,0);
   for(const key of ['financeiro.ver','auditoria.ver']) await set(key,'grant');
+  historyPayments=(await ok(service.from('pagamentos').insert(Array.from({length:105},(_,i)=>({paciente_id:patientIds[1],valor_centavos:100,status:i<55?'pago':'pendente',metodo:'pix',provider:'mock'}))).select('id'))).map(row=>row.id);
+  for(const [index,length] of [[0,50],[1,50],[2,5]]) {
+    const result=await ok(staff.rpc('paciente_historico_pagina',{_paciente_id:patientIds[1],_area:'pagamentos',_pagina:index}));
+    assert.equal(result.total,105);assert.equal(result.items.length,length);assert.equal(result.resumo.totalGasto,5500);assert.equal(result.resumo.pendentes,50);
+  }
+  assert.ok((await staff.rpc('paciente_historico_pagina',{_paciente_id:patientIds[1],_area:'pagamentos',_pagina:-1})).error);
+  const paidRecord=await ok(service.from('pagamentos').select('id').eq('paciente_id',patientIds[1]).eq('status','pago').limit(1).single());
+  await ok(service.from('pagamentos').update({status:'reembolsado_parcial',valor_reembolsado_centavos:50}).eq('id',paidRecord.id));
+  const refundedHistory=await ok(staff.rpc('paciente_historico_pagina',{_paciente_id:patientIds[1],_area:'pagamentos',_pagina:2}));
+  assert.equal(refundedHistory.resumo.totalGasto,5500);assert.equal(refundedHistory.resumo.totalReembolsado,50);
+  passed.push('Histórico: páginas sem duplicação, 105 pagamentos em três páginas e totais financeiros completos independentes da página');
   await page.reload();
   await expect(page.getByRole('tab',{name:'Financeiro',exact:true})).toBeVisible();
   await expect(page.getByRole('tab',{name:'Auditoria',exact:true})).toBeVisible();
@@ -170,6 +188,16 @@ try {
   await page.goto('http://127.0.0.1:8082/app/colaborador/pacientes/00000000-0000-0000-0000-000000000000');
   await expect(page.getByText('Paciente não encontrado.',{exact:true})).toBeVisible();
   passed.push('Detalhe: abas por permissão, edição negada sem capacidade, nota auditada atomicamente e paciente inexistente sem dados anteriores');
+  await page.goto('http://127.0.0.1:8082/app/colaborador/pacientes/'+patientIds[1]+'?tab=financeiro');
+  const paymentNav=page.getByRole('navigation',{name:'Paginação de pagamentos'});
+  await expect(paymentNav.getByText('105 registros · Página 1',{exact:true})).toBeVisible();
+  await paymentNav.getByRole('button',{name:'Próxima',exact:true}).click();
+  await expect(paymentNav.getByText('105 registros · Página 2',{exact:true})).toBeVisible();
+  await paymentNav.getByRole('button',{name:'Próxima',exact:true}).click();
+  await expect(paymentNav.getByText('105 registros · Página 3',{exact:true})).toBeVisible();
+  await expect(paymentNav.getByRole('button',{name:'Próxima',exact:true})).toBeDisabled();
+  await expect(page.getByRole('tab',{name:'Financeiro',exact:true})).toHaveAttribute('data-state','active');
+  passed.push('Navegador: paginação financeira preserva a aba e encerra na terceira página');
   await page.goto('http://127.0.0.1:8082/app/colaborador/pacientes');
   await page.getByRole('textbox',{name:'Buscar pacientes'}).fill(prefix);
   await expect(page.getByText('53 pacientes · Página 1',{exact:true})).toBeVisible();
@@ -210,6 +238,7 @@ try {
   await browser?.close();
   if(refundIds.length){await ok(service.from('pacientes_auditoria').delete().in('payload->>reembolso_id',refundIds));await ok(service.from('reembolsos').delete().in('id',refundIds));}
   if(paymentId)await ok(service.from('pagamentos').delete().eq('id',paymentId));
+  if(historyPayments.length)await ok(service.from('pagamentos').delete().in('id',historyPayments));
   if(ids.length)await ok(service.from('consultas').delete().in('id',ids));
   if(slots.length)await ok(service.from('agenda_slots').delete().in('id',slots));
   if(taskId)await ok(service.from('colaborador_tarefas').delete().eq('id',taskId));

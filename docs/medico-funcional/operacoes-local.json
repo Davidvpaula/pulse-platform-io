@@ -1,11 +1,10 @@
 {
-  "testedAt": "2026-10-28T11:20:50.220Z",
+  "testedAt": "2026-10-29T12:21:32.466Z",
   "passed": [
+    "Histórico paginado respeita vínculo do médico e não libera dados financeiros",
     "Médico não altera valores financeiros por UPDATE direto",
     "Compartilhamento individual auditado; segundo anexo permanece privado; outro médico bloqueado",
     "PDF: envio, registro e leitura autorizada; segundo médico sem acesso",
-    "Navegador: cartão médico, receita própria, documentos sem emissão simulada, compartilhamento e início de consulta",
-    "Navegador: finalização sem pagamento simulado, perfil persistido e layout móvel",
     "Consulta: início concorrente idempotente, conclusão, transições inválidas e ausência de pagamento simulado",
     "Perfil: edição pessoal permitida e alteração administrativa de status negada",
     "Horário presencial: criação e exclusão pelo médico",
